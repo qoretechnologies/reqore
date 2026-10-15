@@ -1,10 +1,10 @@
 import React, { ReactElement, useCallback, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { ReqoreErrorBoundary } from '../..';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { IReqoreComponent, IWithReqoreLoading } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps } from '../Button';

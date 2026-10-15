@@ -1,6 +1,7 @@
 import { darken, rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
-import styled, { css, keyframes } from 'styled-components';
+import { css, keyframes } from 'styled-components';
+import styled from '../../helpers/styled';
 import {
   CONTROL_TEXT_FROM_SIZE,
   PROGRESS_HEIGHT_FROM_SIZE,

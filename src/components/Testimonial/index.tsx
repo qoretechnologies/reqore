@@ -1,6 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import {
   PADDING_FROM_SIZE,
   resolveRadius,
@@ -34,7 +35,7 @@ import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreEntityRow from '../EntityRow';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
-import { ReqoreP } from '../Paragraph';
+import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import ReqoreRating from '../Rating';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -54,7 +55,12 @@ export interface IReqoreTestimonialProps
     IWithReqoreFluid,
     IWithReqoreSize,
     IWithReqoreTooltip {
-  /** The testimonial body — the quote / endorsement copy. Falls back to `children`. */
+  /**
+   * The testimonial body — the quote / endorsement copy. Falls back to `children`.
+   *
+   * Text, inline content or blocks (several `ReqoreP`s, a list): it is drawn in a block container
+   * with the quote's typography, not in a paragraph, which could not hold a block.
+   */
   quote?: React.ReactNode;
   /** Effect applied to the quote text. */
   quoteEffect?: IReqoreEffect;
@@ -150,7 +156,17 @@ const tintedBgFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
     ? rgba(theme.intents[intent], 0.06)
     : changeDarkness(getMainBackgroundColor(theme), 0.03);
 
-const StyledTestimonial = styled(StyledEffect)<IStyledTestimonialProps>`
+// Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
+// its element's (nor a component it is rendered `as`). `disabled` still reaches an element that
+// has it, when the component is rendered `as` one (see `omitStyleProps`).
+const StyledTestimonial = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps(
+    'disabled',
+    'inheritCustomTheme',
+    'radiusSize',
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS
+  ),
+})<IStyledTestimonialProps>`
   position: relative;
   display: flex;
   flex-flow: column;
@@ -296,6 +312,8 @@ const ReqoreTestimonial = memo(
 
       return (
         <ReqoreTooltipComponent
+          // A div, not the effect's span: the card holds blocks, which a span may not.
+          as='div'
           {...rest}
           Component={StyledTestimonial}
           tooltip={tooltip}
@@ -347,7 +365,12 @@ const ReqoreTestimonial = memo(
               $wrap={wrap}
               className='reqore-testimonial-quote'
             >
-              <ReqoreP size={size} effect={quoteEffect}>
+              <ReqoreP
+                as={getReqoreTextElement(quoteContent)}
+                size={size}
+                effect={quoteEffect}
+                className='reqore-testimonial-quote-text'
+              >
                 {quoteContent}
               </ReqoreP>
             </StyledQuote>

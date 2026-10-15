@@ -1,10 +1,10 @@
 import { rgba } from 'polished';
-import styled, { css, keyframes } from 'styled-components';
+import { css, keyframes } from 'styled-components';
 import { PADDING_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { fadeIn } from '../../helpers/animations';
 import { changeDarkness, changeLightness, getNotificationIntent, getReadableColor } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { resolvePadding, TReqorePadded } from '../../helpers/utils';
 import { RaisedElement } from '../../styles';
 import { IWithReqoreOpaque } from '../../types/global';

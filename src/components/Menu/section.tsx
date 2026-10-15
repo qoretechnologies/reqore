@@ -43,12 +43,17 @@ export const ReqoreMenuSection = ({
     [_isCollapsed, onCollapseChange, collapsible, rest.onClick]
   );
 
-  const { clone } = useCloneThroughFragments((props) => ({
-    customTheme: props?.customTheme || customTheme,
-    wrap: 'wrap' in (props || {}) ? props.wrap : wrap,
-    flat: 'flat' in (props || {}) ? props.flat : flat,
-    minimal: 'minimal' in (props || {}) ? props.minimal : minimal,
-  }));
+  // As in the menu: the section's props go to the components in it, never to a plain DOM element.
+  const { clone } = useCloneThroughFragments((props, _reactIndex, _realIndex, childType) =>
+    typeof childType === 'string'
+      ? {}
+      : {
+          customTheme: props?.customTheme || customTheme,
+          wrap: 'wrap' in (props || {}) ? props.wrap : wrap,
+          flat: 'flat' in (props || {}) ? props.flat : flat,
+          minimal: 'minimal' in (props || {}) ? props.minimal : minimal,
+        }
+  );
 
   return (
     <ReqoreControlGroup vertical fluid className='reqore-menu-section'>

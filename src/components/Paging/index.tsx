@@ -1,7 +1,7 @@
 import { debounce } from 'lodash';
 import { memo, useEffect, useRef, useState } from 'react';
-import { useUnmount, useUpdateEffect } from 'react-use';
-import styled from 'styled-components';
+import { useUpdateEffect } from 'react-use';
+import styled from '../../helpers/styled';
 import { ReqoreDropdown } from '../..';
 import { IReqorePagingResult } from '../../hooks/usePaging';
 import ReqoreButton, { IReqoreButtonProps, StyledButton } from '../Button';
@@ -91,7 +91,6 @@ function Pagination<T>({
 }: IReqorePaginationProps<T>) {
   const [loadMoreRef, setLoadMoreRef] = useState<HTMLButtonElement>(undefined);
   const [scrollTargetRef, setScrollTargetRef] = useState<HTMLDivElement>(undefined);
-  const observer = useRef<IntersectionObserver>(null);
 
   useUpdateEffect(() => {
     // If scroll container is defined, do not scroll to load more button
@@ -160,28 +159,32 @@ function Pagination<T>({
     };
   }, [currentPage, scrollContainer, changePageOnScroll]);
 
-  useUpdateEffect(() => {
-    if (loadMoreRef && autoLoadMore) {
-      observer.current = new IntersectionObserver(
-        (entries: IntersectionObserverEntry[]) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              next();
-            }
-          });
-        },
-        {
-          threshold: 0.8,
-        }
-      );
+  /* One observer loads more when the end comes into view: the one before it is disconnected when it is made
+     again, and it calls the `next` of the render it fires in. Every observer made used to stay connected, each
+     calling the `next` it was made with, so one scroll loaded a page per observer. */
+  const latestNext = useRef(next);
+  latestNext.current = next;
 
-      observer.current.observe(loadMoreRef);
+  useEffect(() => {
+    if (!loadMoreRef || !autoLoadMore) {
+      return undefined;
     }
-  }, [loadMoreRef, autoLoadMore, isLastPage]);
 
-  useUnmount(() => {
-    observer.current?.disconnect();
-  });
+    const observer = new IntersectionObserver(
+      (entries: IntersectionObserverEntry[]) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          latestNext.current();
+        }
+      },
+      {
+        threshold: 0.8,
+      }
+    );
+
+    observer.observe(loadMoreRef);
+
+    return () => observer.disconnect();
+  }, [loadMoreRef, autoLoadMore, isLastPage]);
 
   if (!renderControls) {
     return null;

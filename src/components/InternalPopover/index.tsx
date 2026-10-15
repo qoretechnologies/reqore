@@ -12,7 +12,8 @@ import React, {
 import { createPortal } from 'react-dom';
 import { usePopper } from 'react-popper';
 import { useUnmount, useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import { useReqoreProperty } from '../..';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
@@ -387,23 +388,49 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
 
     // Popover content commonly changes size after opening (for example when
     // an async preview replaces its skeleton). Popper's event listeners track
-    // viewport and target movement, but not intrinsic content-size changes.
-    // Recalculate deterministically whenever the rendered popover resizes so
-    // flip/preventOverflow can keep the whole surface inside the viewport.
+    // scrolling and the window's size, but neither the popover's own size nor
+    // its target's. Recalculate deterministically whenever the rendered popover
+    // resizes, so flip/preventOverflow can keep the whole surface inside the
+    // viewport - and whenever its target does: a target that grows or shrinks
+    // with no scroll and no window resize (its container resized, a label or a
+    // font that loaded, a panel beside it collapsed) moves the edge the popover
+    // is placed by, and the popover stayed where that edge had been, its width
+    // too when it takes the target's (`useTargetWidth`). The mutation observer
+    // below sees only changes inside the target, and the rect polling only the
+    // first half second.
+    //
+    // The recalculation runs at the next frame, not inside the observer's
+    // callback: Popper applies its position at once (react-popper renders it
+    // with `flushSync`), and a new position can change the popover's size -
+    // a layout change inside the callback that the browser must leave
+    // unreported for the frame, which it reports as "ResizeObserver loop
+    // completed with undelivered notifications" (qorus#646: five Dropdown
+    // stories, Select's and MultiSelect's). One recalculation per frame,
+    // however many reports came in.
     useEffect(() => {
       resizeObserver.current?.disconnect();
       resizeObserver.current = null;
       if (!popperElement || typeof ResizeObserver === 'undefined') return undefined;
 
-      const observer = new ResizeObserver(() => forceUpdate?.());
+      let frame = 0;
+      const observer = new ResizeObserver(() => {
+        if (!frame) {
+          frame = requestAnimationFrame(() => {
+            frame = 0;
+            forceUpdate?.();
+          });
+        }
+      });
       observer.observe(popperElement);
+      if (targetElement) observer.observe(targetElement);
       resizeObserver.current = observer;
 
       return () => {
+        cancelAnimationFrame(frame);
         observer.disconnect();
         if (resizeObserver.current === observer) resizeObserver.current = null;
       };
-    }, [forceUpdate, popperElement]);
+    }, [forceUpdate, popperElement, targetElement]);
 
     // Preserve the documented explicit update contract as a fallback for
     // content changes that do not affect the content box dimensions.

@@ -1,6 +1,7 @@
 import { mix, rgba } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import { useContext } from 'use-context-selector';
 import { Colors } from '../../constants/colors';
 import { PADDING_FROM_SIZE, resolveRadius, SIZE_TO_PX, TSizes } from '../../constants/sizes';

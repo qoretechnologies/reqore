@@ -41,7 +41,8 @@ import {
   type ReactNode,
 } from 'react';
 import { rgba } from 'polished';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import {
   GAP_FROM_SIZE,
   PADDING_FROM_SIZE,
@@ -730,14 +731,13 @@ const PreservedDetails = memo(
       scrollTargetRef.current = findScrollTarget(summary);
     }, []);
 
+    // the host is told once, from the click: an updater is React's to run, twice in StrictMode (qorus#646)
     const toggle = useCallback(() => {
       preserveScroll();
-      setOpen((current) => {
-        const next = !current;
-        onToggle?.(next, path);
-        return next;
-      });
-    }, [onToggle, path, preserveScroll]);
+      const next = !open;
+      setOpen(next);
+      onToggle?.(next, path);
+    }, [open, onToggle, path, preserveScroll]);
 
     const onSummaryClick = useCallback(
       (event: MouseEvent<HTMLElement>) => {

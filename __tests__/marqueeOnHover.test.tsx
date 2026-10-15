@@ -302,6 +302,26 @@ describe('the provider installs it on the document', () => {
     expect(state(el)).toBeNull();
   });
 
+  test("a finger's tap scrolls nothing: the mouseover emulated after it is no hover", () => {
+    const el = mount();
+
+    fireEvent.pointerOver(el, { pointerType: 'touch', buttons: 1 });
+    fireEvent.pointerDown(el, { pointerType: 'touch', buttons: 1 });
+    fireEvent.pointerUp(el, { pointerType: 'touch', buttons: 0 });
+    fireEvent.mouseOver(el);
+    vi.advanceTimersByTime(2000);
+
+    expect(el.scrollLeft).toBe(0);
+    expect(state(el)).toBeNull();
+
+    // a mouse after it scrolls it, as before
+    fireEvent.mouseOut(el);
+    fireEvent.pointerOver(el, { pointerType: 'mouse', buttons: 0 });
+    fireEvent.mouseOver(el);
+    vi.advanceTimersByTime(2000);
+    expect(state(el)).toBe('running');
+  });
+
   test('a pointer that leaves before the delay sets nothing in motion', () => {
     const el = mount();
 

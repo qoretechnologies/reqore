@@ -137,6 +137,26 @@ test('does not drag from a text input, where press-and-move already means select
   expect(scroller.scrollLeft).toBe(0);
 });
 
+test('does not drag from an element marked reqore-no-drag-scroll, a grab handle of its own', () => {
+  const { container } = render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreFadeScroller dragToScroll>
+          <span className='reqore-no-drag-scroll probe-handle'>Handle</span>
+        </ReqoreFadeScroller>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+  const scroller = container.querySelector('.reqore-fade-scroller-content') as HTMLElement;
+  setOverflow(scroller);
+  const handle = container.querySelector('.probe-handle') as HTMLElement;
+
+  pointer(handle, 'pointerDown', { clientX: 400 });
+  pointer(handle, 'pointerMove', { clientX: 300 });
+
+  expect(scroller.scrollLeft).toBe(0);
+});
+
 test('does nothing when the row already fits', () => {
   // No overflow means no drag at all — a click on a row that fits must behave
   // exactly as it did before the feature existed.

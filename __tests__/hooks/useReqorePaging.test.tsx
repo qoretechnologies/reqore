@@ -343,3 +343,64 @@ test('useReqorePaging still opens a paged (non-infinite) list on page 1 when its
   rerender({ items: rows(31) });
   expect(result.current.currentPage).toEqual(1);
 });
+
+/* Two next() calls from one render at the page before the last (an infinite collection's auto-load observers,
+   each firing next()) took the page past the last one: the page read as undefined, the collection showed no rows
+   and still offered "Load more" (qorus#646, the IDE's App Connections Manager). Each step stops at the last page. */
+test('useReqorePaging never goes past the last page, however many steps one render takes', () => {
+  const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
+  const rows = Array.from({ length: 110 }, (_, i) => ({ id: i + 1 }));
+
+  for (const infinite of [true, false]) {
+    const { result } = renderHook(() => useReqorePaging({ items: rows, itemsPerPage: 30, infinite }), {
+      wrapper,
+    });
+
+    act(() => {
+      result.current.next();
+    });
+    act(() => {
+      result.current.next();
+    });
+    expect(result.current.currentPage).toEqual(3);
+
+    const next = result.current.next;
+    act(() => {
+      next();
+      next();
+    });
+    expect(result.current.currentPage).toEqual(4);
+    expect(result.current.isLastPage).toBe(true);
+    expect(result.current.items).toHaveLength(infinite ? 110 : 20);
+    expect(result.current.renderControls).toBe(!infinite);
+
+    // and back, as far as the first
+    const back = result.current.back;
+    act(() => {
+      back();
+      back();
+      back();
+      back();
+      back();
+    });
+    expect(result.current.currentPage).toEqual(1);
+    expect(result.current.items).toHaveLength(30);
+  }
+});
+
+test('useReqorePaging takes a page outside the list as the nearest page in it', () => {
+  const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
+  const rows = Array.from({ length: 110 }, (_, i) => ({ id: i + 1 }));
+  const { result } = renderHook(() => useReqorePaging({ items: rows, itemsPerPage: 30 }), {
+    wrapper,
+  });
+
+  act(() => {
+    result.current.setPage(9);
+  });
+  expect(result.current.currentPage).toEqual(4);
+  act(() => {
+    result.current.setPage(0);
+  });
+  expect(result.current.currentPage).toEqual(1);
+});

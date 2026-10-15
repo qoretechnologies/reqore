@@ -1,10 +1,10 @@
 import * as Slider from '@radix-ui/react-slider';
 import { forwardRef, memo, useCallback, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { HALF_PADDING_FROM_SIZE, ICON_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
-import { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
+import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';

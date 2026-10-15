@@ -1,7 +1,7 @@
 import { rgba } from 'polished';
 import React, { forwardRef, memo, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { useMeasure } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import {
   CONTROL_TEXT_FROM_SIZE,
   PADDING_FROM_SIZE,
@@ -16,7 +16,7 @@ import {
   getReadableColor,
   getReadableColorFrom,
 } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { useReqoreTheme } from '../../hooks/useTheme';

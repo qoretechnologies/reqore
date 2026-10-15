@@ -10,7 +10,8 @@ import {
   useState,
 } from 'react';
 import { FixedSizeList, VariableSizeList } from 'react-window';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { getRowExpandId, getTotalColumnsWidth } from './helpers';

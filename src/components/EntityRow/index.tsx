@@ -1,7 +1,8 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
-import styled, { css } from 'styled-components';
-import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { css } from 'styled-components';
+import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
+import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TOUCH_TARGET_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
 import {
@@ -30,8 +31,13 @@ import ReqoreDropdown, { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { IReqorePanelSubAction } from '../Panel';
-import { ReqoreP } from '../Paragraph';
+import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
+import ReqoreRowActionsMenu, {
+  getRowActionLabel,
+  hasRowActionLabel,
+  TReqoreNarrowRowActions,
+} from '../RowActionsMenu';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreEntityRowAction extends Omit<IReqoreButtonProps, 'children'> {
@@ -75,7 +81,13 @@ export interface IReqoreEntityRowProps
     IWithReqoreTooltip {
   /** Primary text — e.g. the Qog name. */
   label: React.ReactNode;
-  /** Secondary text — typically a one-line description. */
+  /**
+   * Secondary text — typically a one-line description.
+   *
+   * Text, inline content or blocks (a `ReqoreP`, a list, a `ReqoreControlGroup`): it is drawn in
+   * a block container with the description's typography, not in a paragraph, which could not
+   * hold a block.
+   */
   description?: React.ReactNode;
   /** Tertiary text — e.g. "Last run: success · 3 hours ago · 384ms". */
   metadata?: React.ReactNode;
@@ -91,6 +103,16 @@ export interface IReqoreEntityRowProps
   iconProps?: Partial<IReqoreIconProps>;
   /** Right-side action button(s). */
   actions?: IReqoreEntityRowAction[];
+  /**
+   * How two or more actions are shown when the row is narrow (below 480px of its container):
+   * `'menu'` (default) folds them into one menu button at the end of the label's line - an action
+   * that is itself a menu becomes a submenu there - and `'stack'` puts them under the label, one to
+   * a line, each the row's width. See `TReqoreNarrowRowActions`. A single action is a button under
+   * the label either way.
+   */
+  narrowActions?: TReqoreNarrowRowActions;
+  /** What the menu button of `narrowActions='menu'` is called (its accessible name and tooltip). */
+  actionsMenuLabel?: string;
   /** Hide the intent-tinted background. Mirrors `transparent` on other components. */
   transparent?: boolean;
   /** Round the row corners. Default `true`. */
@@ -179,7 +201,17 @@ const StyledContainer = styled.div<{ $fluid: boolean }>`
   width: ${({ $fluid }) => ($fluid ? '100%' : 'auto')};
 `;
 
-const StyledRow = styled(StyledEffect)<IStyledRowProps>`
+// Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
+// its element's (nor a component it is rendered `as`). `disabled` still reaches an element that
+// has it, when the component is rendered `as` one (see `omitStyleProps`).
+const StyledRow = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps(
+    'disabled',
+    'inheritCustomTheme',
+    'radiusSize',
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS
+  ),
+})<IStyledRowProps>`
   display: grid;
   grid-template-columns: ${({ $hasIcon, $iconHasBackground, size }) =>
     $hasIcon
@@ -228,6 +260,32 @@ const StyledRow = styled(StyledEffect)<IStyledRowProps>`
     grid-row: 2;
     max-width: 100%;
     justify-content: flex-start;
+  }
+
+  /* Narrow, the actions stack under the label, one to a line, each the row's width, with its label
+     whole, as ReqoreSeverityRow's do (qorus#646): on one line that does not wrap, labelled actions reached
+     past the row on a phone. An icon's tooltip is its label there, and a finger gets a target it can hit. */
+  @media (pointer: coarse) {
+    &[data-narrow='true'] > .reqore-entity-row-actions > .reqore-button {
+      min-height: ${TOUCH_TARGET_PX}px;
+    }
+  }
+
+  /* Narrow, two or more actions are one menu button at the end of the label's line (qorus#646), not
+     a line each under it: the label keeps its width, and a list of rows does not grow by a line per
+     action. The columns are the wide row's. */
+  &[data-narrow='true'][data-actions='menu'] {
+    grid-template-columns: ${({ $hasIcon, $iconHasBackground, size }) =>
+      $hasIcon
+        ? `${$iconHasBackground ? `${ICON_TILE_SIZE_FROM_SIZE[size]}px` : 'auto'} 1fr auto`
+        : '1fr auto'};
+  }
+  /* The last column, named: an item placed in a row with its column left to the grid is placed before
+     the items around it, in the first column. */
+  &[data-narrow='true'][data-actions='menu'] > .reqore-entity-row-actions {
+    grid-column: -2 / -1;
+    grid-row: 1;
+    align-self: start;
   }
 
   ${({ $clickable, theme, $intent, $transparent }) =>
@@ -321,6 +379,8 @@ const ReqoreEntityRow = memo(
         iconColor,
         iconProps,
         actions,
+        narrowActions = 'menu',
+        actionsMenuLabel,
         intent,
         transparent = false,
         showIcon,
@@ -362,6 +422,8 @@ const ReqoreEntityRow = memo(
          result is stamped as `data-narrow`; an attribute selector rewrites the
          grid so the actions move under the label. Shared with ReqoreSeverityRow. */
       const [containerRef, isNarrow] = useNarrowContainer<HTMLDivElement>();
+      // Narrow, two or more actions are one menu button, unless the caller wants them stacked.
+      const actionsAsMenu = isNarrow && narrowActions === 'menu' && (actions?.length ?? 0) > 1;
 
       const resolvedIconColor: TReqoreEffectColor = useMemo(() => {
         if (iconColor) return iconColor;
@@ -372,7 +434,10 @@ const ReqoreEntityRow = memo(
       return (
         <StyledContainer ref={containerRef} $fluid={fluid} className='reqore-entity-row-container'>
           <ReqoreTooltipComponent
+            // A div, not the effect's span: the row holds blocks, which a span may not.
+            as='div'
             data-narrow={isNarrow || undefined}
+            data-actions={actionsAsMenu ? 'menu' : undefined}
             {...rest}
             Component={StyledRow}
             tooltip={tooltip}
@@ -432,6 +497,7 @@ const ReqoreEntityRow = memo(
               {description && (
                 <StyledTextSlot $wrap={wrap}>
                   <ReqoreP
+                    as={getReqoreTextElement(description)}
                     size={secondarySize}
                     effect={{ opacity: 0.7, ...descriptionEffect }}
                     className='reqore-entity-row-description'
@@ -452,8 +518,23 @@ const ReqoreEntityRow = memo(
                 </StyledTextSlot>
               )}
             </StyledBody>
-            {actions && actions.length > 0 && (
-              <ReqoreControlGroup gapSize='small' className='reqore-entity-row-actions'>
+            {actionsAsMenu && (
+              <ReqoreRowActionsMenu
+                className='reqore-entity-row-actions'
+                actions={actions}
+                size={size}
+                intent={intent}
+                label={actionsMenuLabel}
+              />
+            )}
+            {!actionsAsMenu && actions && actions.length > 0 && (
+              <ReqoreControlGroup
+                gapSize='small'
+                className='reqore-entity-row-actions'
+                // narrow: one to a line, each the row's width (see the narrow rules above)
+                vertical={isNarrow}
+                fluid={isNarrow}
+              >
                 {actions.map(({ actions: subActions, actionsProps, ...action }, idx) =>
                   subActions?.length ? (
                     // An action carrying sub-actions is a menu, not a button — same
@@ -467,6 +548,17 @@ const ReqoreEntityRow = memo(
                       intent={action.intent ?? intent}
                       {...action}
                       {...actionsProps}
+                      /* Stacked, a menu is a button the row's width like the others, and an icon-only one
+                         says what it is: its tooltip is its label, as a finger gets no tooltip to read. */
+                      {...(isNarrow ?
+                        {
+                          fluid: true,
+                          fixed: false,
+                          label: hasRowActionLabel(action.label)
+                            ? action.label
+                            : getRowActionLabel({ tooltip: action.tooltip }),
+                        }
+                      : {})}
                       items={subActions.filter(isSubActionShown)}
                       onClick={stopRowClick}
                     />
@@ -476,6 +568,7 @@ const ReqoreEntityRow = memo(
                       size={size}
                       intent={action.intent ?? intent}
                       {...action}
+                      {...(isNarrow ? { fluid: true, wrap: true } : {})}
                       // After the spread, so it wraps the consumer's handler rather
                       // than being replaced by it. Applied even to an action with no
                       // handler of its own: an action button is a control, and a click
@@ -484,7 +577,13 @@ const ReqoreEntityRow = memo(
                       // toggles cancels itself out. Matches ReqoreSeverityRow.
                       onClick={withStoppedPropagation<HTMLButtonElement>(action.onClick)}
                     >
-                      {action.label}
+                      {/* Stacked, an icon-only action is a button the row's width: its tooltip is its
+                          label, as a finger gets no tooltip to read. */}
+                      {hasRowActionLabel(action.label)
+                        ? action.label
+                        : isNarrow
+                          ? getRowActionLabel({ tooltip: action.tooltip })
+                          : undefined}
                     </ReqoreButton>
                   )
                 )}

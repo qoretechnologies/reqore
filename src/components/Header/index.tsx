@@ -1,5 +1,5 @@
 import { forwardRef, memo, useMemo } from 'react';
-import styled from 'styled-components';
+import styled from '../../helpers/styled';
 import { HEADER_LEVEL_TO_PX, HEADER_SIZE_TO_NUMBER, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { isStringSize } from '../../helpers/utils';

@@ -1,6 +1,6 @@
 import { rgba } from 'polished';
 import { HTMLAttributes } from 'react';
-import styled, { css, keyframes } from 'styled-components';
+import { css, keyframes } from 'styled-components';
 import { Colors } from '../../constants/colors';
 import { getFontFamily, TReqoreFontFamilyShorthand } from '../../constants/fonts';
 import { TEXT_FROM_SIZE, TSizes, WEIGHT_TO_NUMBER } from '../../constants/sizes';
@@ -12,7 +12,7 @@ import {
   getGradientMix,
   getReadableColorFrom,
 } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { isStringSize } from '../../helpers/utils';
 import { IWithReqoreMinimal } from '../../types/global';
 
@@ -763,7 +763,12 @@ ${({ effect }: IReqoreTextEffectProps) =>
 // other props. Spreading `...props` here re-injects `className`, which styled-
 // components then concatenates on top of the prop className, duplicating any
 // custom class (e.g. `reqore-link` / `reqore-span`) on every text-effect element.
-export const StyledTextEffect = styled(StyledEffect).attrs({ isText: true })`
+//
+// `inline` and `block` pick the display below. Neither is the element's: a `p` or `span` drops
+// them, but a component given as `as` would write them onto its own element.
+export const StyledTextEffect = styled(StyledEffect)
+  .withConfig({ shouldForwardProp: omitStyleProps('block', 'inline') })
+  .attrs({ isText: true })`
   display: ${({ inline, block }) => (inline ? 'inline' : block ? 'block' : 'inline-block')};
 
   ${({ effect }: IReqoreTextEffectProps) =>

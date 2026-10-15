@@ -1,4 +1,5 @@
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { useState } from 'react';
 import {
   ReqoreContent,
   ReqoreLayoutContent,
@@ -231,4 +232,42 @@ test('Renders with custom icons', () => {
 
   expect(document.querySelectorAll('.reqore-rating-item').length).toBe(5);
   expect(document.querySelectorAll('.reqore-icon').length).toBe(5);
+});
+
+/** A rating that holds the value it is given, and says what it shows. */
+const HeldRating = () => {
+  const [value, setValue] = useState(3);
+  return (
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreRating value={value} onChange={setValue} allowClear showRatingValue />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+};
+
+test("A finger's tap previews nothing: a value the tap cleared reads as cleared", () => {
+  render(<HeldRating />);
+  const third = document.querySelectorAll('.reqore-rating-item')[2];
+
+  // a tap, as a browser sends it: the finger's pointer events, then the mouse events it emulates
+  fireEvent.pointerOver(third, { pointerType: 'touch', buttons: 1 });
+  fireEvent.pointerDown(third, { pointerType: 'touch', buttons: 1 });
+  fireEvent.pointerUp(third, { pointerType: 'touch', buttons: 0 });
+  fireEvent.mouseMove(third);
+  fireEvent.click(third);
+
+  expect(screen.getByText('0 / 5')).toBeTruthy();
+});
+
+test('A mouse resting on a star previews it', () => {
+  render(<HeldRating />);
+  const second = document.querySelectorAll('.reqore-rating-item')[1];
+
+  fireEvent.pointerMove(second, { pointerType: 'mouse', buttons: 0 });
+  fireEvent.mouseMove(second);
+
+  expect(screen.getByText('2 / 5')).toBeTruthy();
 });

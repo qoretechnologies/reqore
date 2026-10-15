@@ -1,11 +1,11 @@
 import { lighten, rgba } from 'polished';
 import { forwardRef, memo, useCallback, useLayoutEffect, useRef, useState } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { IReqoreTableColumn } from '.';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { IWithReqoreTooltip } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';

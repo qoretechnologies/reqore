@@ -1,12 +1,12 @@
 import { Resizable, ResizableProps } from 're-resizable';
 import React, { forwardRef, memo, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { ReqoreErrorBoundary } from '../..';
 import { HALF_PADDING_FROM_SIZE, RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeDarkness, changeLightness, getMainBackgroundColor } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -133,14 +133,20 @@ const ReqoreMenu = memo(
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent);
       const { targetRef } = useCombinedRefs(ref);
-      const { clone } = useCloneThroughFragments((props) => ({
-        customTheme: props?.customTheme || customTheme,
-        wrap: 'wrap' in (props || {}) ? props.wrap : wrapText,
-        flat: 'flat' in (props || {}) ? props.flat : flat,
-        minimal: 'minimal' in (props || {}) ? props.minimal : minimal,
-        size: 'size' in (props || {}) ? props.size : size,
-        closePopover,
-      }));
+      // The menu's props go to the components in it (items, dividers, sections, groups), never to a plain
+      // DOM element: a div takes none of them, and React warns about each one that reaches the DOM.
+      const { clone } = useCloneThroughFragments((props, _reactIndex, _realIndex, childType) =>
+        typeof childType === 'string'
+          ? {}
+          : {
+              customTheme: props?.customTheme || customTheme,
+              wrap: 'wrap' in (props || {}) ? props.wrap : wrapText,
+              flat: 'flat' in (props || {}) ? props.flat : flat,
+              minimal: 'minimal' in (props || {}) ? props.minimal : minimal,
+              size: 'size' in (props || {}) ? props.size : size,
+              closePopover,
+            }
+      );
 
       const style = useMemo(() => ({ minHeight: '0', flex: '1 1 auto' }), []);
 

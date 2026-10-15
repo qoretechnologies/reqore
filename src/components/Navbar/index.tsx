@@ -1,9 +1,9 @@
 import { darken } from 'polished';
 import React, { forwardRef } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { IReqoreNavbarTheme, IReqoreTheme } from '../../constants/theme';
 import { getMainColor, getReadableColor } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreEffect } from '../../types/global';
 import { IReqoreEffect, StyledEffect } from '../Effect';

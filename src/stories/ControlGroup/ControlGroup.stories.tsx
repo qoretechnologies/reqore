@@ -1,6 +1,8 @@
 import { StoryFn, StoryObj } from '@storybook/react';
+import { ChangeEvent, useState } from 'react';
 import { expect, waitFor } from 'storybook/test';
 import { IReqoreControlGroupProps } from '../../components/ControlGroup';
+import { IReqoreInputProps } from '../../components/Input';
 import { sleep } from '../../helpers/utils';
 import {
   ReqoreButton,
@@ -15,6 +17,21 @@ import {
 } from '../../index';
 import { StoryMeta } from '../utils';
 import { GapSizeArg, MinimalArg, SizeArg, argManager } from '../utils/args';
+
+/**
+ * An input in a group that can be typed into, as a page's would be: it holds its own text. Given a `value` and no
+ * `onChange`, an input is read-only and React warns of it (qorus#646: the story run's warning gate).
+ */
+const StoryInput = ({ value: initial, ...rest }: IReqoreInputProps) => {
+  const [value, setValue] = useState(initial);
+  return (
+    <ReqoreInput
+      {...rest}
+      value={value}
+      onChange={(event: ChangeEvent<HTMLInputElement>) => setValue(event.target.value)}
+    />
+  );
+};
 
 const { createArg } = argManager<IReqoreControlGroupProps>();
 
@@ -180,7 +197,7 @@ const Template: StoryFn<typeof ReqoreControlGroup> = (args) => {
           checked
           uncheckedIcon='CheckboxBlankLine'
         />
-        <ReqoreInput icon='4kFill' value='Hello I am fluid' fluid />
+        <StoryInput icon='4kFill' value='Hello I am fluid' fluid />
         <ReqoreControlGroup stack>
           <ReqoreControlGroup>
             <ReqoreButton customTheme={{ main: '#00e3e8' }}>Level 2 deep</ReqoreButton>
@@ -268,12 +285,12 @@ const Template: StoryFn<typeof ReqoreControlGroup> = (args) => {
         <ReqoreControlGroup intent='warning' className='group-4' id='group-4'>
           <ReqoreControlGroup id='group-4-1' fluid={false}>
             <ReqoreTag icon='PictureInPictureLine' label='Group 4' id='group-4-1-tag' />
-            <ReqoreInput icon='PictureInPictureLine' value='Group 4' id='group-4-1-input' />
+            <StoryInput icon='PictureInPictureLine' value='Group 4' id='group-4-1-input' />
           </ReqoreControlGroup>
           <ReqoreControlGroup id='group-4-3'>
             <ReqoreTag icon='PictureInPictureLine' label='Group 4' id='group-4-3-tag' />
             <>
-              <ReqoreInput icon='PictureInPictureLine' value='Group 4' id='group-4-3-input' />
+              <StoryInput icon='PictureInPictureLine' value='Group 4' id='group-4-3-input' />
               <ReqoreControlGroup id='group-5' intent='muted' fluid={false}>
                 <ReqoreTag icon='PictureInPictureLine' label='Group 5' id='group-4-3-1-tag' />
                 <ReqoreTag icon='PictureInPictureLine' label='Group 5' id='group-4-3-2-tag' />

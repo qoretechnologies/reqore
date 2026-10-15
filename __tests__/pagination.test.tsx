@@ -435,3 +435,42 @@ test('Renders <Pagination /> and changes pages with horizontal scroll', () => {
 
   expect(screen.getAllByText('Rob Pooley')).toBeTruthy();
 });
+
+/* The auto-load observer was made again (here: auto-load turned off and on) without the one before being
+   disconnected, so both answered the same scroll: two pages for one. */
+test('Renders <Pagination /> with auto load more: one page per time the end comes into view', () => {
+  const { rerender } = render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <Component
+            pagingOptions={{ infinite: true, itemsPerPage: 300 }}
+            componentOptions={{ autoLoadMore: true }}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+  const renderWith = (autoLoadMore: boolean) =>
+    rerender(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <Component
+              pagingOptions={{ infinite: true, itemsPerPage: 300 }}
+              componentOptions={{ autoLoadMore }}
+            />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+  renderWith(false);
+  renderWith(true);
+  // 300 rows, and the badge on each of the two buttons
+  expect(document.querySelectorAll('.reqore-tag').length).toBe(302);
+
+  mockAllIsIntersecting(true);
+
+  expect(document.querySelectorAll('.reqore-tag').length).toBe(602);
+});

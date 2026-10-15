@@ -1,7 +1,7 @@
 import { omit } from 'lodash';
 import { forwardRef, memo, useState, useTransition } from 'react';
 import { useUnmount, useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { IReqoreTabsListItem, TReqoreTabsActiveMarker } from '.';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
@@ -11,7 +11,7 @@ import {
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreFlat } from '../../types/global';
@@ -42,8 +42,22 @@ export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
   activeColor: string;
 }
 
+// The props the item's styles read. A `div` drops most of them on its own, but not `fill` (an SVG
+// attribute) or `disabled`, and a component given as the tab's `as` would receive all of them.
 export const StyledTabListItem = styled.div.withConfig({
-  shouldForwardProp: omitStyleProps('fill'),
+  shouldForwardProp: omitStyleProps(
+    'active',
+    'activeColor',
+    'activeTabMarker',
+    'disabled',
+    'fill',
+    'fixed',
+    'intent',
+    'padded',
+    'size',
+    'theme',
+    'vertical'
+  ),
 })<IReqoreTabListItemStyle>`
   ${({
     theme,

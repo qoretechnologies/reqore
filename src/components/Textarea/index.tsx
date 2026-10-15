@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
 import { rgba } from 'polished';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { ReqoreDropdown, useReqoreTheme } from '../..';
 import {
   CONTROL_TEXT_FROM_SIZE,
@@ -12,7 +12,12 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, {
+  listReqoreStyleProps,
+  omitStyleProps,
+  REQORE_CONTROL_GROUP_CHILD_PROPS,
+  TReqoreStylePropKeys,
+} from '../../helpers/styled';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -41,7 +46,8 @@ export interface IReqoreFormTemplates extends IReqoreDropdownProps {}
  * `autoComplete`, …) reaches the element, so the field posts with the form it sits in.
  */
 export interface IReqoreTextareaProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+  extends
+    React.TextareaHTMLAttributes<HTMLTextAreaElement>,
     IReqoreReadOnly,
     IReqoreDisabled,
     IWithReqoreCustomTheme,
@@ -98,7 +104,10 @@ export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
   _size?: TSizes;
 }
 
-export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
+// `width` and `height` size the wrapper through its styles; a `div` has neither attribute.
+export const StyledTextareaWrapper = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('height', 'width'),
+})<IReqoreTextareaStyle>`
   height: ${({ height }) => (height ? `${height}px` : undefined)};
   min-height: ${({ _size }) => SIZE_TO_PX[_size]}px;
   max-height: 100%;
@@ -120,12 +129,49 @@ export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
   }
 `;
 
+/**
+ * Every textarea prop that only styles or configures the field. None of them reaches the
+ * rendered element — the `<textarea>`, or a component given as `as` (Slate's editable in
+ * `ReqoreRichTextEditor`, which writes the props it does not know onto its `div`). Its own props
+ * (`renderElement`, `renderLeaf`, `decorate`, ...) and every `<textarea>` attribute still do. The
+ * compiler checks the record against `IReqoreTextareaStyle`, so a new prop that is not added
+ * here fails the build instead of leaking.
+ */
+export const REQORE_TEXTAREA_STYLE_PROPS = listReqoreStyleProps<
+  TReqoreStylePropKeys<IReqoreTextareaStyle, React.TextareaHTMLAttributes<HTMLTextAreaElement>>
+>({
+  customTheme: true,
+  effect: true,
+  fixed: true,
+  flat: true,
+  fluid: true,
+  focusRules: true,
+  hasClearButton: true,
+  height: true,
+  inheritCustomTheme: true,
+  intent: true,
+  keepTemplatesOpenWhileTyping: true,
+  minimal: true,
+  onClearClick: true,
+  radiusSize: true,
+  rounded: true,
+  scaleWithContent: true,
+  shortcutHint: true,
+  size: true,
+  _size: true,
+  templates: true,
+  theme: true,
+  tooltip: true,
+  transparent: true,
+  width: true,
+  wrapperStyle: true,
+});
+
 export const StyledTextarea = styled(StyledEffect).withConfig({
-  // `hasClearButton` drives padding only and must never reach the DOM. Everything else
-  // follows styled-components' own rule, so a polymorphic `as` component — Slate's
-  // editable in `ReqoreRichTextEditor` — still receives `renderElement` / `renderLeaf` /
-  // `decorate`, which are component props rather than HTML attributes.
-  shouldForwardProp: omitStyleProps('hasClearButton'),
+  shouldForwardProp: omitStyleProps(
+    ...REQORE_TEXTAREA_STYLE_PROPS,
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS
+  ),
 })<IReqoreTextareaStyle>`
   width: 100%;
   max-width: 100%;
@@ -214,7 +260,7 @@ function Textarea<T>(
     fluid,
     tooltip,
     customTheme,
-        inheritCustomTheme,
+    inheritCustomTheme,
     intent,
     rounded = true,
     radiusSize,
@@ -276,10 +322,15 @@ function Textarea<T>(
       // background, switching tabs, pressing Escape, or focus loss to
       // browser chrome. Without this guard, `.closest()` throws a
       // TypeError and the popover never closes.
-      if (
-        !e.relatedTarget ||
-        e.relatedTarget.closest(`#id-${uuid.current}`) === null
-      ) {
+      //
+      // Focus that moves WITHIN the field - from a rich-text editor to a chip in it and back, as a
+      // click on the chip does - has not left it, and a press inside the field is not one that puts
+      // the list away (`closeOnTargetClick={false}`).
+      const field = (e.target as Element | null)?.closest?.('.reqore-textarea');
+      if (field && e.relatedTarget && field.contains(e.relatedTarget)) {
+        return;
+      }
+      if (!e.relatedTarget || e.relatedTarget.closest(`#id-${uuid.current}`) === null) {
         popoverData?.close();
       }
     },
@@ -289,6 +340,76 @@ function Textarea<T>(
   const handlePassPopoverData = useCallback((data) => {
     setPopoverData(data);
   }, []);
+
+  /* The author comes into the field from the keyboard: the templates are listed, as a click lists them
+     (qorus#646). Focus brought by a pointer is the click's to answer - opening for it too would close the
+     list again on the click - and focus that comes back from the list (a template picked) or from nowhere
+     opens nothing. Nor does focus that moves within the field: a click on a chip in a rich-text field
+     moves the focus from the editor to the chip, and the editor is not outside the field. Taken for
+     an entry, it opened the list, the list's keep-below rule scrolled the page by its height, and the
+     chip, handing the focus back to the editor, closed the list: the page jumped and showed nothing.
+
+     A press brings the focus only to a field that does not have it: one on the field already focused
+     brings none, and its mark would be left for the next focus, from the keyboard, to be taken for a
+     pointer's. And a press ends in a click, after the focus it brings, with a mouse and a touch alike:
+     the mark goes with it, whatever became of the focus.
+
+     Not every press ends in a click. A touch that scrolls the page from the field is cancelled - no
+     focus, no click - and a mouse let go outside the window may click nothing; either left the mark
+     for the next keyboard entry, which then opened nothing. So a cancel ends the press too, and so
+     does a mouse's release: a mouse brings the focus as it is pressed, before it is let go. A
+     finger's release does not end it: a tap brings the focus after the release, with the click it
+     makes. */
+  const focusByPointer = useRef(false);
+  const handlePointerDownCapture = useCallback(
+    (event: React.PointerEvent<HTMLTextAreaElement>) => {
+      focusByPointer.current = !event.currentTarget.contains(document.activeElement);
+      rest.onPointerDownCapture?.(event);
+    },
+    [rest.onPointerDownCapture]
+  );
+  useEffect(() => {
+    if (!templates) {
+      return undefined;
+    }
+    const pressEnded = () => {
+      focusByPointer.current = false;
+    };
+    const released = (event: PointerEvent) => {
+      if (event.pointerType === 'mouse') {
+        pressEnded();
+      }
+    };
+    // after the click's own handlers: the bubble phase of the document, the last to hear it
+    document.addEventListener('click', pressEnded);
+    document.addEventListener('pointercancel', pressEnded);
+    document.addEventListener('pointerup', released);
+    return () => {
+      document.removeEventListener('click', pressEnded);
+      document.removeEventListener('pointercancel', pressEnded);
+      document.removeEventListener('pointerup', released);
+    };
+  }, [templates]);
+  const handleFocusCapture = useCallback(
+    (event: React.FocusEvent<HTMLTextAreaElement>) => {
+      const byPointer = focusByPointer.current;
+      focusByPointer.current = false;
+      const from = event.relatedTarget as Element | null;
+      if (
+        templates &&
+        !byPointer &&
+        from &&
+        !event.currentTarget.contains(from) &&
+        !from.closest('.reqore-popover-content') &&
+        popoverData &&
+        !popoverData.isOpen?.()
+      ) {
+        popoverData.open();
+      }
+      rest.onFocusCapture?.(event);
+    },
+    [templates, popoverData, rest.onFocusCapture]
+  );
 
   /* Typing is declining the offer.
 
@@ -342,6 +463,36 @@ function Textarea<T>(
     [popoverData, keepTemplatesOpenWhileTyping]
   );
 
+  /* Text written without a key goes the same way. An on-screen keyboard (a phone, a tablet) sends
+     no keydown for a character - only the input it makes - so on a touch device the list stayed
+     open over what was being written, and over the completion list a typed `@` or `$` opens beside
+     it (qorus#646). Heard natively: React's `onBeforeInput` is a composite of its own, not this
+     event.
+
+     Composition text counts when it has text in it. An Android keyboard (Gboard) writes ordinary
+     letters as a composition (its keydown is `Unidentified`, its input `insertCompositionText`), so
+     leaving composition out left the list over the text until a word was committed. Composition
+     text with nothing in it (a composition cleared or cancelled) writes nothing, and leaves the
+     list alone, as a key that changes nothing does. */
+  const latestTypingState = useRef({ popoverData, keepTemplatesOpenWhileTyping });
+  latestTypingState.current = { popoverData, keepTemplatesOpenWhileTyping };
+  useEffect(() => {
+    if (!inputRef || !templates) {
+      return undefined;
+    }
+    const handleBeforeInput = (event: Event) => {
+      const { popoverData: controls, keepTemplatesOpenWhileTyping: keep } = latestTypingState.current;
+      const { inputType = '', data } = event as InputEvent;
+      const writes =
+        inputType === 'insertCompositionText' ? !!data : /^(insert|delete)/.test(inputType);
+      if (writes && !keep && controls?.isOpen?.()) {
+        controls.close();
+      }
+    };
+    inputRef.addEventListener('beforeinput', handleBeforeInput);
+    return () => inputRef.removeEventListener('beforeinput', handleBeforeInput);
+  }, [inputRef, templates]);
+
   /* Chains rather than replaces: the Slate editable passes its own `onKeyDown`
      through here, and dismissing the template list must not swallow it. Held
      at the component's top level so the identity is stable — built inside the
@@ -371,6 +522,9 @@ function Textarea<T>(
           as={rest.as || 'textarea'}
           // After `{...rest}` so it wins — see `handleKeyDown`.
           onKeyDown={handleKeyDown}
+          // and so do these, which call the caller's own - see `handleFocusCapture`
+          onPointerDownCapture={handlePointerDownCapture}
+          onFocusCapture={handleFocusCapture}
           className={`${className || ''} reqore-control reqore-textarea`}
           _size={size}
           ref={(ref) => setInputRef(ref)}

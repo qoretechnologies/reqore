@@ -1,11 +1,11 @@
 import { omit } from 'lodash';
 import { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { IWithReqoreSize } from '../../types/global';
@@ -101,6 +101,9 @@ const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
 
     overflow-x: hidden;
     overflow-y: hidden;
+    /* A sideways swipe is the table's to handle (it scrolls the body, which this
+       header follows); the page still pans up and down under a finger. */
+    touch-action: pan-y;
 
     flex-shrink: 0;
     flex-flow: column;
@@ -209,10 +212,13 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
         return undefined;
       }
 
+      // The header does not scroll by itself: the wheel's sideways motion scrolls the body, which
+      // it follows - a trackpad's, or a plain wheel's with Shift held (Shift+wheel is sideways).
       const handleWheel = (e: WheelEvent) => {
-        if (e.deltaX) {
+        const dx = e.deltaX || (e.shiftKey ? e.deltaY : 0);
+        if (dx) {
           e.preventDefault();
-          bodyRef.current?.scrollTo({ left: bodyRef.current.scrollLeft + e.deltaX });
+          bodyRef.current?.scrollTo({ left: bodyRef.current.scrollLeft + dx });
         }
       };
 

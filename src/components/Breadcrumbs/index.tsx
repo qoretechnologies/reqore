@@ -1,7 +1,8 @@
 import { size as count } from 'lodash';
-import React from 'react';
-import { OverflowList } from 'react-overflow-list';
-import styled, { css } from 'styled-components';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import { ReqoreDropdown, ReqoreErrorBoundary } from '../..';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import { MARGIN_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
@@ -14,7 +15,7 @@ import { IReqoreDropdownItem } from '../Dropdown/list';
 import ReqoreIcon from '../Icon';
 import { IReqoreTabsListItem } from '../Tabs';
 import { StyledTabListItem } from '../Tabs/item';
-import ReqoreTabsList, { StyledReqoreTabsList } from '../Tabs/list';
+import ReqoreTabsList, { StyledReqoreTabsList, getTabsLength } from '../Tabs/list';
 import ReqoreBreadcrumbsItem from './item';
 
 export interface IReqoreBreadcrumbItemTabs {
@@ -44,7 +45,7 @@ export interface IReqoreBreadcrumbsProps
   items: IReqoreBreadcrumbItem[];
   rightElement?: JSX.Element;
   // Internal prop, ignore! (Kept for API compatibility — the trail width is now
-  // measured live via `OverflowList`, so this no longer drives the collapse.)
+  // measured live, so this no longer drives the collapse.)
   _testWidth?: number;
   customTheme?: IReqoreBreadcrumbsTheme;
   size?: TSizes;
@@ -89,8 +90,8 @@ const StyledReqoreBreadcrumbs = styled.div<IStyledBreadcrumbs>`
 // The trail region — takes all the width the right element leaves and clips.
 // `min-width: 0` lets it shrink below its content so the current page can
 // ellipsise; `overflow: hidden` is the final safety net. Its single child (the
-// `OverflowList` row, or the static row) fills it so `OverflowList` measures the
-// AVAILABLE width, not its own content.
+// folding row, or the static row) fills it, so the row's end is the end of the
+// AVAILABLE width, not of its own content.
 const StyledTrail = styled.div<{ $color: string }>`
   flex: 1 1 auto;
   min-width: 0;
@@ -102,14 +103,6 @@ const StyledTrail = styled.div<{ $color: string }>`
   > * {
     flex: 1 1 auto;
     min-width: 0;
-  }
-
-  /* The OverflowList container sets only display/flexWrap/minWidth inline (no
-     align-items), so without this its crumbs top-align against the tallest one
-     — e.g. a crumb carrying a two-line description. Center them so the row
-     reads as a single baseline, matching the static trail. */
-  .reqore-breadcrumbs-overflow-list {
-    align-items: center;
   }
 
   /* Force the readable item colour onto the crumbs + collapsed dropdowns, as the
@@ -139,8 +132,123 @@ const StyledStaticTrail = styled.div`
   min-width: 0;
 `;
 
-const StyledBreadcrumbsTabsWrapper = styled.div`
+// The responsive trail's row: its crumbs on one line, centred against the tallest
+// (a crumb with a two-line description), and as wide as the trail, whatever they
+// need - what does not fit is folded into the menu at its start.
+const StyledFoldingTrail = styled.div`
   display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  min-width: 0;
+`;
+
+/**
+ * Whether the crumb holding tabs is squeezed while a crumb before it could fold instead: it clips
+ * the tabs it draws, or - at the end of the trail, where it takes the room the other parts leave -
+ * it has less room than all its tabs need, so that some are in their "More" menu. That room is what
+ * the tabs list itself compares its width with (`getTabsLength`, in `data-tabs-width`), not the
+ * width of the tabs it draws now: once some are in "More", it draws narrower, and a trail made
+ * wider again would otherwise unfold its crumbs first. When it is the first crumb shown, it is
+ * squeezed rather than folded, and its tabs fold into their own menu.
+ */
+const tabsSqueezed = (part: Element): boolean => {
+  if (
+    !(part instanceof HTMLElement) ||
+    !part.classList.contains('reqore-breadcrumbs-tabs') ||
+    part.dataset.position === '0'
+  ) {
+    return false;
+  }
+
+  const list = part.querySelector('.reqore-tabs-list');
+  // its layout width, as the tabs list measures it: a transform on an ancestor scales neither
+  const room = list ? parseFloat(getComputedStyle(list).width) : NaN;
+
+  return Number(part.dataset.tabsWidth) > room || part.scrollWidth > part.clientWidth + 0.5;
+};
+
+/**
+ * Whether the trail draws more than it has room for: a part (a crumb, an arrow, the menu) reaches
+ * past its end, or the crumb holding tabs is squeezed while a crumb before it could fold instead.
+ */
+const trailOverflows = (row: HTMLElement | null): boolean => {
+  if (!row) {
+    return false;
+  }
+
+  const end = row.getBoundingClientRect().right;
+
+  return Array.from(row.children).some(
+    (part) => part.getBoundingClientRect().right > end + 0.5 || tabsSqueezed(part)
+  );
+};
+
+/**
+ * Whether a part is as wide as the room the other parts leave it in the trail: the crumb holding
+ * tabs at its end, the dropdown standing in for the current page. It gets narrower when the trail
+ * does, which leaves no more room for anything else.
+ */
+const fillsTrail = (part: Element): boolean =>
+  part.classList.contains('reqore-breadcrumbs-overflow-current') ||
+  (part instanceof HTMLElement && part.dataset.fills === 'true');
+
+/**
+ * Whether two trails are drawn alike, so the second needs no measuring again: the same crumbs, each with the
+ * same values. Handlers are left out (a page that passes new ones on every render still passes the same
+ * trail), and an object value (`props`, an `effect`) is compared one level down.
+ */
+const sameTrail = (one: IReqoreBreadcrumbItem[], other: IReqoreBreadcrumbItem[]): boolean => {
+  if (one === other) {
+    return true;
+  }
+
+  if (one.length !== other.length) {
+    return false;
+  }
+
+  const sameValue = (a: unknown, b: unknown): boolean => {
+    if (a === b || (typeof a === 'function' && typeof b === 'function')) {
+      return true;
+    }
+
+    if (!a || !b || typeof a !== 'object' || typeof b !== 'object' || React.isValidElement(a)) {
+      return false;
+    }
+
+    const keys = Object.keys(a);
+
+    return (
+      keys.length === Object.keys(b).length &&
+      keys.every((key) => (a as Record<string, unknown>)[key] === (b as Record<string, unknown>)[key])
+    );
+  };
+
+  return one.every((crumb, index) => {
+    const keys = Object.keys(crumb);
+    const otherCrumb = other[index] as Record<string, unknown>;
+
+    return (
+      keys.length === Object.keys(otherCrumb).length &&
+      keys.every((key) => sameValue((crumb as Record<string, unknown>)[key], otherCrumb[key]))
+    );
+  });
+};
+
+/** How many crumbs the trail folds, and what it was measured for. */
+interface IReqoreTrailFold {
+  items: IReqoreBreadcrumbItem[];
+  size: TSizes;
+  folded: number;
+  /** One fewer crumb folded at a time while everything still fits (more room, or a new trail). */
+  unfolding: boolean;
+}
+
+// At the end of the trail, the crumb holding tabs takes all the room the other parts leave
+// (`$fills`): the tabs list measures the room it is given, so a crumb only as wide as the tabs it
+// draws would keep the ones it once put in "More" there however wide the trail got again.
+const StyledBreadcrumbsTabsWrapper = styled.div<{ $fills?: boolean }>`
+  display: flex;
+  flex: ${({ $fills }) => ($fills ? '1 1 auto' : '0 1 auto')};
   align-items: center;
   overflow: hidden;
   min-width: 0;
@@ -207,6 +315,202 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
 
   const leafItem = items[items.length - 1];
 
+  /* The crumbs folded from the start of the trail into its menu: as many as it takes for every part the
+     trail draws to lie inside it - the current page too, into one dropdown labelled with it, when even it
+     does not fit. It is settled before the browser paints, so no frame ever draws a crumb past the trail
+     (qorus#646: when the page changed its crumbs, the trail used to fold one crumb per frame, and a phone
+     showed "… › New chat" running 79px past the trail for 50ms). After each render a layout effect
+     measures the parts and folds one more crumb while one reaches past the trail (or the crumb holding
+     tabs clips them, see `trailOverflows`), or one fewer while everything fits and the trail is
+     unfolding; each step is a render React makes before the browser paints.
+
+     What measures the trail again:
+     - a new trail (`items`, unless it is drawn alike) or crumb size: from what is folded now, unfolding
+       while everything fits;
+     - the trail getting wider, or a part narrower: unfolding the same way;
+     - the trail getting narrower, or a part wider (a badge arriving, padding animating after the page has
+       loaded), so that a part reaches past it: folding.
+     The last two come from a ResizeObserver, after the browser's layout and before its paint. It
+     renders the new fold there and then (`flushSync`), so that frame is painted folded too. It lets
+     go of every part first and takes them up again in the next frame: a size changed inside the
+     observer's own callback would be left unreported, which the browser reports as an error. For
+     the same reason the trail keeps its height until then: a crumb with a description is taller
+     than the others, and the trail's height changed inside the callback would change the size of
+     what holds it, which another observer may watch (a panel's, a page layout's).
+     A part's width is taken when the trail draws it, not from the observer's first report, which
+     can come after it has changed. The trail's own width is taken when it is first drawn and then
+     as the observer reports it, so a render that made it wider (a narrower right element, a wider
+     `maxWidth`) is reported too, and unfolds what fits. Widths are compared as
+     `getBoundingClientRect()` gives them, as `trailOverflows` measures: the box the observer
+     reports is not scaled by a transform on an ancestor, so under one every report would differ. */
+  const rowRef = useRef<HTMLDivElement>(null);
+  const [fold, setFold] = useState<IReqoreTrailFold>({ items, size, folded: 0, unfolding: false });
+  const folded = Math.min(fold.folded, count(items));
+  // as the trail last drew it, for the observer: with every crumb folded, none is left to fold
+  const drawnFold = useRef({ folded, total: count(items) });
+
+  if (fold.size !== size || !sameTrail(fold.items, items)) {
+    // measured again during this render, so no frame shows the old fold over the new crumbs
+    setFold({ items, size, folded, unfolding: folded > 0 });
+  }
+
+  // The width all of a crumb's tabs need, by the tabs list's own reckoning (see `tabsSqueezed`).
+  const tabsWidths = useMemo(
+    () =>
+      items.map((item) =>
+        item.withTabs
+          ? getTabsLength(
+              item.withTabs.tabs.filter((tab) => tab.show !== false),
+              'width',
+              item.withTabs.activeTab,
+              size
+            )
+          : undefined
+      ),
+    [items, size]
+  );
+
+  useLayoutEffect(() => {
+    if (!responsive) {
+      return;
+    }
+
+    if (trailOverflows(rowRef.current)) {
+      if (folded < count(items)) {
+        setFold((current) => ({ ...current, folded: folded + 1, unfolding: false }));
+      } else if (fold.unfolding) {
+        setFold((current) => ({ ...current, unfolding: false }));
+      }
+    } else if (fold.unfolding) {
+      setFold((current) =>
+        folded > 0 ? { ...current, folded: folded - 1 } : { ...current, unfolding: false }
+      );
+    }
+  });
+
+  // The parts the observer watches, taken up after every render (see above).
+  const watchParts = useRef<() => void>();
+
+  useLayoutEffect(() => {
+    if (!responsive || typeof ResizeObserver === 'undefined') {
+      return undefined;
+    }
+
+    // what the observer watches, and the width each part was last measured at (see above)
+    const watched = new Set<Element>();
+    const widths = new Map<Element, number>();
+    // the trail's height as the observer last reported it: its layout height, exact, which a
+    // transform does not scale
+    let rowHeight: number | undefined;
+    let pinned: HTMLElement | undefined;
+    let suspended = false;
+    let frame = 0;
+
+    const observer = new ResizeObserver((entries) => {
+      const row = rowRef.current;
+
+      if (!row || suspended) {
+        return;
+      }
+
+      let unfold = false;
+
+      for (const { target, borderBoxSize, contentRect } of entries) {
+        const width = target.getBoundingClientRect().width;
+        const was = widths.get(target);
+
+        if (target === row) {
+          rowHeight = borderBoxSize?.[0]?.blockSize ?? contentRect.height;
+        }
+
+        if (was !== undefined && Math.abs(width - was) >= 0.5) {
+          widths.set(target, width);
+          // the trail wider, or a part narrower: more may fit
+          if (target === row ? width > was : width < was && !fillsTrail(target)) {
+            unfold = true;
+          }
+        }
+      }
+
+      const { folded: drawn, total } = drawnFold.current;
+
+      // a part past the end with every crumb folded (a trail narrower than the current page's
+      // dropdown, which keeps a few characters of it) cannot be folded away
+      if (!unfold && (drawn >= total || !trailOverflows(row))) {
+        return;
+      }
+
+      observer.disconnect();
+      watched.clear();
+      suspended = true;
+      if (rowHeight !== undefined) {
+        pinned = row;
+        row.style.height = `${rowHeight}px`;
+      }
+      try {
+        flushSync(() =>
+          setFold((current) => ({ ...current, unfolding: unfold || current.unfolding }))
+        );
+      } finally {
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          suspended = false;
+          pinned?.style.removeProperty('height');
+          pinned = undefined;
+          watchParts.current?.();
+        });
+      }
+    });
+
+    watchParts.current = () => {
+      const row = rowRef.current;
+
+      if (!row || suspended) {
+        return;
+      }
+
+      const parts = [row, ...Array.from(row.children)];
+
+      for (const element of Array.from(watched)) {
+        if (!parts.includes(element)) {
+          observer.unobserve(element);
+          watched.delete(element);
+        }
+      }
+
+      for (const element of Array.from(widths.keys())) {
+        if (!parts.includes(element)) {
+          widths.delete(element);
+        }
+      }
+
+      for (const element of parts) {
+        if (!watched.has(element)) {
+          // the border box: a crumb that grows by its padding keeps its content box
+          observer.observe(element, { box: 'border-box' });
+          watched.add(element);
+        }
+
+        if (element !== row || !widths.has(row)) {
+          widths.set(element, element.getBoundingClientRect().width);
+        }
+      }
+    };
+    watchParts.current();
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      pinned?.style.removeProperty('height');
+      watchParts.current = undefined;
+    };
+  }, [responsive]);
+
+  useLayoutEffect(() => {
+    drawnFold.current = { folded, total: count(items) };
+    watchParts.current?.();
+  });
+
   const renderArrow = (key: string) => (
     <ReqoreIcon
       icon='ArrowRightSLine'
@@ -217,25 +521,32 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
     />
   );
 
-  // `OverflowList` calls this for every VISIBLE crumb (collapsed ancestors go to
-  // `renderOverflow` instead), passing the crumb's POSITION. Both the React key
-  // and the separator are derived from that position — NOT from the item's
-  // identity or `items.indexOf(item)`. This matters because on a re-render with a
-  // new `items` array, OverflowList briefly maps over its previous (stale) item
-  // objects; `indexOf` would return -1 for them, collapsing every crumb onto the
-  // same key `crumb--1` and making React accumulate DOM (a new crumb appended on
-  // every render). A positional key is always valid and unique.
+  // Draws every VISIBLE crumb (folded ones go to `renderOverflow` instead), by its
+  // POSITION among them. The React key is the crumb's place in the WHOLE trail
+  // (`folded + index`): a key by its place among the visible crumbs gave a folded
+  // crumb's element to the next crumb along, which then animated from that
+  // crumb's look to its own - and was measured while it did.
   //
   // The separator precedes every visible crumb except the one at position 0. When
   // ancestors collapse, `renderOverflow` emits the "…" group followed by its own
   // trailing "›", so the first visible crumb (position 0, no leading separator)
   // still connects to it.
-  const renderItem = (item: IReqoreBreadcrumbItem, index: number) => {
-    const key = `crumb-${index}`;
+  const renderItem = (item: IReqoreBreadcrumbItem, index: number, folded: number) => {
+    const key = `crumb-${folded + index}`;
 
     if (item.withTabs) {
+      // only at the end of a folding trail: a crumb after it would be pushed to the trail's end
+      const fills = responsive && folded + index === count(items) - 1;
+
       return (
-        <StyledBreadcrumbsTabsWrapper key={key}>
+        <StyledBreadcrumbsTabsWrapper
+          key={key}
+          className='reqore-breadcrumbs-tabs'
+          data-position={index}
+          data-fills={fills || undefined}
+          data-tabs-width={fills ? tabsWidths[folded + index] : undefined}
+          $fills={fills}
+        >
           {index !== 0 && renderArrow(`${key}-arrow`)}
           <ReqoreTabsList
             tabs={item.withTabs.tabs}
@@ -264,13 +575,17 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
             derives its readable text + intent shades from `theme.main`; handing
             it the resolved theme (whose `.main` is the base dark colour, not the
             breadcrumbs colour) turned the text white and shifted the pills. */}
-        <ReqoreBreadcrumbsItem customTheme={customTheme} {...item} size={size} />
+        <ReqoreBreadcrumbsItem
+          customTheme={customTheme}
+          {...item}
+          size={size}
+        />
       </React.Fragment>
     );
   };
 
   // The collapsed crumbs, folded into a dropdown at the start of the trail.
-  // Two shapes, because collapse happens from the start (`collapseFrom:'start'`):
+  // Two shapes, because crumbs fold from the start:
   //
   //  - Only ancestors collapsed → a compact "…" with a hidden-count badge; the
   //    current page stays inline (in full) to its right.
@@ -284,9 +599,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       return null;
     }
 
-    // Count-based, not identity-based: everything collapsed ⇒ the overflow holds
-    // as many crumbs as the trail has. (Identity would break when OverflowList
-    // maps over stale item objects during a re-render.)
+    // everything folded: the menu stands in for the current page
     const isFullyCollapsed = count(overflowItems) >= count(items);
 
     if (isFullyCollapsed) {
@@ -321,6 +634,13 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           intent={leafItem?.intent}
           label={leafItem?.label}
           badge={leafItem?.badge}
+          // ...and is NAMED as that crumb is, in full: its label may be cut with an ellipsis to
+          // fit, so a screen reader gets the whole name - the leaf's own, its label, or the label
+          // its menu row has (an icon-only leaf, a Home that is just a house). No title of its
+          // own: hovering opens the menu, which names every crumb in full, and a browser's tooltip
+          // would sit on it (a phone shows none).
+          aria-label={leafItem?.['aria-label'] ?? leafItem?.label ?? leafItem?.menuLabel}
+          title={leafItem?.title}
           // A floor so the current page always keeps a few readable characters —
           // never just an icon — however tight the bar gets. This can't cause an
           // overlap: the trail is `min-width: 0; overflow: hidden`, so it clips
@@ -365,20 +685,15 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       >
         <StyledTrail className='reqore-breadcrumbs-trail' $color={itemColor}>
           {responsive ? (
-            <OverflowList
-              className='reqore-breadcrumbs-overflow-list'
-              items={items}
-              collapseFrom='start'
-              // 0, not 1: when even the current page can't fit, it must be
-              // allowed to collapse too so `renderOverflow` can fold the trail
-              // into the single current-page-labelled dropdown. Keeping 1 here is
-              // what forced the leaf to stay and shrink to an unreadable stub.
-              minVisibleItems={0}
-              itemRenderer={renderItem}
-              overflowRenderer={renderOverflow}
-            />
+            // Every crumb may fold, the current page too: when even it does not fit, the trail is the one
+            // dropdown labelled with it. Keeping the current page out of the fold is what used to leave it
+            // squeezed to an unreadable stub.
+            <StyledFoldingTrail ref={rowRef} className='reqore-breadcrumbs-overflow-list'>
+              {renderOverflow(items.slice(0, folded))}
+              {items.slice(folded).map((item, index) => renderItem(item, index, folded))}
+            </StyledFoldingTrail>
           ) : (
-            <StyledStaticTrail>{items.map(renderItem)}</StyledStaticTrail>
+            <StyledStaticTrail>{items.map((item, index) => renderItem(item, index, 0))}</StyledStaticTrail>
           )}
         </StyledTrail>
         {rightElement && (

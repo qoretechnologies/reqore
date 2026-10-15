@@ -646,3 +646,52 @@ export const FormAttributesMobile: Story = {
     expect(form.scrollWidth).toBeLessThanOrEqual(form.clientWidth + 1);
   },
 };
+
+const fieldTemplates = {
+  items: [
+    { label: 'bestellnummer', value: '$record:{bestellnummer}' },
+    { label: 'pos', value: '$record:{pos}' },
+  ],
+};
+
+const EscapeInAnEditor = () => {
+  const [heard, setHeard] = useState(0);
+  return (
+    <div
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          setHeard((count) => count + 1);
+        }
+      }}
+    >
+      <ReqoreTextarea templates={fieldTemplates} onChange={() => undefined} />
+      <span className='escapes-heard' data-count={heard}>
+        Escape heard by the editor around the field: {heard}
+      </span>
+    </div>
+  );
+};
+
+export const EscapeClosesTheListNotTheEditorAroundIt: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders Textarea with a list of templates, inside an editor that discards on Escape. With the list open, Escape closes the list and goes no further: the editor around the field does not hear it, and the field keeps the cursor. With no list open, Escape is the editor's.",
+      },
+    },
+  },
+  render: () => <EscapeInAnEditor />,
+  play: async ({ canvasElement }) => {
+    const field = canvasElement.querySelector('textarea') as HTMLTextAreaElement;
+    const heard = () => Number(canvasElement.querySelector('.escapes-heard')?.getAttribute('data-count'));
+    await userEvent.click(field);
+    await waitFor(() => expect(document.querySelector('.reqore-popover-content')).toBeTruthy());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.querySelector('.reqore-popover-content')).toBeFalsy());
+    await expect(heard()).toBe(0);
+    await expect(document.activeElement).toBe(field);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(heard()).toBe(1));
+  },
+};

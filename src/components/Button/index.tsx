@@ -3,7 +3,7 @@ import { size } from 'lodash';
 import { rgba, saturate, tint } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import styled, { css, keyframes } from 'styled-components';
+import { css, keyframes } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
   CONTROL_HORIZONTAL_PADDING_FROM_SIZE,
@@ -27,7 +27,12 @@ import {
   isAchromatic,
 } from '../../helpers/colors';
 import { shortcutHasModifier, TReqoreKeyboardShortcut } from '../../helpers/shortcuts';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, {
+  listReqoreStyleProps,
+  omitStyleProps,
+  REQORE_CONTROL_GROUP_CHILD_PROPS,
+  TReqoreStylePropKeys,
+} from '../../helpers/styled';
 import { alignToFlexAlign, getOneLessSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -333,12 +338,76 @@ export const StyledAnimatedTextWrapper = styled.span`
   align-items: ${({ textAlign }) => alignToFlexAlign(textAlign)};
 `;
 
+/**
+ * Every button prop that only styles the button. None of them reaches the rendered element —
+ * the `<button>`, the `<a>`, or a component given as `as` (a router link writes every prop it does
+ * not know onto its `<a>`). The compiler checks the record against `IReqoreButtonStyle`, so a new
+ * styling prop that is not added here fails the build instead of leaking.
+ */
+export const REQORE_BUTTON_STYLE_PROPS = listReqoreStyleProps<
+  TReqoreStylePropKeys<
+    IReqoreButtonStyle,
+    React.ButtonHTMLAttributes<HTMLButtonElement> & React.AnchorHTMLAttributes<HTMLAnchorElement>
+  >
+>({
+  active: true,
+  alignSelf: true,
+  animate: true,
+  animated: true,
+  badge: true,
+  circle: true,
+  compact: true,
+  customTheme: true,
+  description: true,
+  descriptionEffect: true,
+  effect: true,
+  fixed: true,
+  flat: true,
+  fluid: true,
+  grow: true,
+  icon: true,
+  iconColor: true,
+  iconsAlign: true,
+  indicator: true,
+  intent: true,
+  label: true,
+  labelEffect: true,
+  leftIconColor: true,
+  leftIconProps: true,
+  loading: true,
+  loadingIconType: true,
+  maxWidth: true,
+  minimal: true,
+  pill: true,
+  radiusSize: true,
+  raised: true,
+  readOnly: true,
+  rightIcon: true,
+  rightIconColor: true,
+  rightIconProps: true,
+  rounded: true,
+  shortcut: true,
+  shortcutHint: true,
+  shrink: true,
+  size: true,
+  skeleton: true,
+  square: true,
+  textAlign: true,
+  theme: true,
+  tooltip: true,
+  transparent: true,
+  verticalPadding: true,
+  wrap: true,
+});
+
 export const StyledButton = styled(StyledEffect).withConfig({
-  // A containing ControlGroup can propagate its `fill` layout flag through
-  // polymorphic controls such as Dropdown. The flag is meaningful to the
-  // group, but it is not a valid boolean attribute for the rendered button.
-  // `color` is the button's colour and `wrap` how its label breaks, both for its styles.
-  shouldForwardProp: omitStyleProps('fill', 'color', 'wrap'),
+  // Its own styling props, and the layout flags a containing ControlGroup hands it (`fill`, its
+  // place in a stack, ...); `color` is the button's colour, read by its styles.
+  shouldForwardProp: omitStyleProps(
+    ...REQORE_BUTTON_STYLE_PROPS,
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS,
+    'color'
+  ),
 })<IReqoreButtonStyle>`
   display: flex;
   flex-flow: column;

@@ -1,7 +1,8 @@
 import { animated, to, useSpring, useTransition } from '@react-spring/web';
 import { getLuminance, rgba } from 'polished';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import styled, { css, keyframes } from 'styled-components';
+import { css, keyframes } from 'styled-components';
+import styled from '../../helpers/styled';
 import { SPRING_CONFIG } from '../../constants/animations';
 import {
   PADDING_FROM_SIZE,
@@ -20,6 +21,7 @@ import {
   getReadableColorFrom,
 } from '../../helpers/colors';
 import { getSwipeStep } from '../../helpers/gestures';
+import { useHoverGate } from '../../helpers/hoveringPointer';
 import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
 import { DRAG_CONTROL_SELECTOR, usePointerDrag } from '../../hooks/usePointerDrag';
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
@@ -597,14 +599,24 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       [duration, startTimer]
     );
 
+    /* A hover holds the timer: a mouse's, not a finger's tap - after which the browser emulates a
+       `mouseenter` of its own, and the notification, held, stayed until a tap elsewhere (see
+       `createHoverGate`). A finger dragging it holds the timer as a drag. */
+    const hoverGate = useHoverGate();
+    const handlePointerEnter = useCallback(
+      (e: React.PointerEvent<HTMLDivElement>) => hoverGate.notePointer(e),
+      [hoverGate]
+    );
+
     const handleMouseEnter = useCallback(() => {
-      if (pauseOnHover) {
+      if (pauseOnHover && hoverGate.isHover()) {
         holdTimer('hover');
       }
-    }, [pauseOnHover, holdTimer]);
+    }, [pauseOnHover, holdTimer, hoverGate]);
 
+    // only what a hover held: a leave no hover came before (a tap's) restarted a timer that was running
     const handleMouseLeave = useCallback(() => {
-      if (pauseOnHover) {
+      if (pauseOnHover && holdsRef.current.hover) {
         releaseTimer('hover');
       }
     }, [pauseOnHover, releaseTimer]);
@@ -774,6 +786,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             $text={palette.text}
             $accent={palette.accent}
             onClick={onClick ? () => onClick() : undefined}
+            onPointerEnter={handlePointerEnter}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             {...swipeHandlers}

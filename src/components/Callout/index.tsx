@@ -1,6 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import {
   PADDING_FROM_SIZE,
   resolveRadius,
@@ -34,7 +35,7 @@ import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, StyledEffect, StyledTextEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
-import { ReqoreP } from '../Paragraph';
+import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -61,9 +62,10 @@ export interface IReqoreCalloutProps
   /**
    * Body copy rendered under the label. Falls back to `children`.
    *
-   * Rendered inside a paragraph, so it takes text and inline content. For a
-   * body with blocks in it — a button row, a list — pass `children` instead
-   * and leave this unset; both render under the label.
+   * Text, inline content or blocks (a `ReqoreP`, a list, a `ReqoreControlGroup`):
+   * it is drawn in a block container with the description's typography, not in
+   * a paragraph, which could not hold a block. `children` render under it, in
+   * the callout's body typography.
    *
    * On its own — no label, no children — the icon is centred on it; under a
    * label the icon sits on the label line. See the note on `StyledCallout`.
@@ -150,7 +152,19 @@ interface IStyledCalloutProps
   $loneText?: boolean;
 }
 
-const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
+// Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
+// its element's (nor a component it is rendered `as`). `disabled` still reaches an element that
+// has it, when the component is rendered `as` one (see `omitStyleProps`).
+const StyledCallout = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps(
+    'accentPosition',
+    'disabled',
+    'inheritCustomTheme',
+    'interactive',
+    'radiusSize',
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS
+  ),
+})<IStyledCalloutProps>`
   position: relative;
   display: flex;
   /* Where the icon sits against the text.
@@ -370,6 +384,8 @@ export const ReqoreCallout = memo(
 
       return (
         <ReqoreTooltipComponent
+          // A div, not the effect's span: the callout holds blocks, which a span may not.
+          as='div'
           {...rest}
           ref={ref}
           Component={StyledCallout}
@@ -421,6 +437,7 @@ export const ReqoreCallout = memo(
               )}
               {description && (
                 <ReqoreP
+                  as={getReqoreTextElement(description)}
                   size={descriptionSize}
                   effect={{ opacity: 0.78, ...descriptionEffect }}
                   className='reqore-callout-description'
@@ -431,15 +448,16 @@ export const ReqoreCallout = memo(
               {/* A label with children used to render the label alone and DROP
                   the body — silently, which is the worst way for a component to
                   disagree with its caller. The body goes under the label, in
-                  the same block the unstructured branch uses: it is a div, so
-                  it takes arbitrary content (a button row, a list) that a
-                  `description` cannot, since that renders inside a paragraph.
+                  the same block the unstructured branch uses, in the callout's
+                  body typography rather than the description's.
 
                   Both render when both are given: prose in the description and
                   an affordance under it is a real shape, and picking a winner
                   would be the same silent drop in a smaller box. */}
               {children && (
                 <StyledCalloutContent
+                  // A div: children may be blocks (a button row, a list), which a span may not hold.
+                  as='div'
                   theme={theme}
                   size={label ? descriptionSize : size}
                   $underLabel={!!label}
@@ -453,6 +471,8 @@ export const ReqoreCallout = memo(
             </StyledCalloutBody>
           ) : (
             <StyledCalloutContent
+              // A div: children may be blocks (a button row, a list), which a span may not hold.
+              as='div'
               theme={theme}
               size={size}
               effect={contentEffect || {}}

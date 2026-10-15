@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import * as RemixIcons from 'react-icons/ri';
 import { useMeasure } from 'react-use';
 import { FixedSizeGrid as Grid, GridChildComponentProps } from 'react-window';
-import styled from 'styled-components';
+import styled from '../../helpers/styled';
 import { PADDING_FROM_SIZE, SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import {

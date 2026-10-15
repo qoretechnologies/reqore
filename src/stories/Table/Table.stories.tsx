@@ -1,6 +1,6 @@
-import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, fn, userEvent, waitFor, within } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { noop, slice } from 'lodash';
 import { StyledEffect } from '../../components/Effect';
 import { ReqoreEmptyState } from '../../components/EmptyState';
@@ -9,10 +9,11 @@ import { IReqoreCustomTableBodyCellProps } from '../../components/Table/cell';
 import { IReqoreCustomHeaderCellProps } from '../../components/Table/header';
 import { IReqoreCustomTableRowProps } from '../../components/Table/row';
 import { TReqorePaginationType } from '../../constants/paging';
-import { SIZES, SIZE_TO_PX, TEXT_FROM_SIZE } from '../../constants/sizes';
+import { SIZES, SIZE_TO_PX, TEXT_FROM_SIZE, TOUCH_TARGET_PX } from '../../constants/sizes';
 import { sleep } from '../../helpers/utils';
 import {
   ReqoreControlGroup,
+  ReqorePanel,
   ReqoreH3,
   ReqoreH4,
   ReqoreIcon,
@@ -26,8 +27,46 @@ import tableData from '../../mock/tableData';
 import { StoryMeta } from '../utils';
 import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 import { expectTableContentWithinItsRows } from '../utils/tableGeometry';
+import {
+  expectControlsInside,
+  expectWordsWhole,
+  wordsBrokenAcrossLines,
+} from '../utils/controlsInside';
+import {
+  expectRowActionsMenuClosed,
+  expectRowActionsMenuItems,
+  openRowActionsMenuItems,
+  rowActionsMenuButtons,
+} from '../utils/rowActionsMenu';
+import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
+import { withViewport } from '../utils/viewport';
 
 const { createArg } = argManager<IReqoreTableProps>();
+
+/* What each row's three actions do: the stories that use them check the one picked ran, and no other. */
+const onAddClick = fn();
+const onEditClick = fn();
+const onDeleteClick = fn();
+const clearRowActionSpies = () =>
+  [onAddClick, onEditClick, onDeleteClick].forEach((spy) => spy.mockClear());
+
+/**
+ * An input in a cell or a header that can be typed into: it starts with `initialValue` and keeps what is
+ * typed. Given a `value` and no `onChange`, it was a field React reports as read-only by mistake.
+ */
+const EditableInput = ({
+  initialValue,
+  ...rest
+}: Omit<React.ComponentProps<typeof ReqoreInput>, 'value' | 'onChange'> & { initialValue: string }) => {
+  const [value, setValue] = useState(initialValue);
+  return (
+    <ReqoreInput
+      {...rest}
+      value={value}
+      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setValue(event.target.value)}
+    />
+  );
+};
 
 const defaultColumns: IReqoreTableColumn[] = [
   {
@@ -71,10 +110,10 @@ const defaultColumns: IReqoreTableColumn[] = [
           cell: {
             padded: 'both',
             content: ({ firstName, isSelected }) => (
-              <ReqoreInput
+              <EditableInput
                 icon='PriceTag2Fill'
                 size='small'
-                value={firstName}
+                initialValue={firstName}
                 intent={isSelected ? 'info' : undefined}
               />
             ),
@@ -204,18 +243,25 @@ const defaultColumns: IReqoreTableColumn[] = [
 
     cell: {
       padded: 'none',
+      // Icon buttons: a tooltip is each one's accessible name, and its words in a narrow menu.
       actions: () => [
         {
           icon: 'AddLine',
           intent: 'info',
+          tooltip: 'Add',
+          onClick: onAddClick,
         },
         {
           icon: 'EditLine',
           intent: 'warning',
+          tooltip: 'Edit',
+          onClick: onEditClick,
         },
         {
           icon: 'DeleteBinLine',
           intent: 'danger',
+          tooltip: 'Delete',
+          onClick: onDeleteClick,
         },
       ],
     },
@@ -320,7 +366,9 @@ const defaultColumnsWithCustomContentHeaders: IReqoreTableColumn[] = defaultColu
         ...column,
         header: {
           ...column.header,
-          content: <ReqoreInput icon='PriceTag2Fill' value='Custom input value' rounded={false} />,
+          content: (
+            <EditableInput icon='PriceTag2Fill' initialValue='Custom input value' rounded={false} />
+          ),
         },
       };
     }
@@ -456,6 +504,56 @@ export const ScrollChange: Story = {
     Object.defineProperty(body, 'scrollTop', { value: 0, configurable: true });
     fireEvent.scroll(body);
     await waitFor(() => expect(state()).toContain('Scrolled: no'));
+  },
+};
+
+/** A press-and-pull on the table, by the browser's own pointer events (the story runner's mouse moves
+ *  the real pointer, so the table sees them as a person's drag). */
+const pullSideways = (element: Element, from: number, to: number, pointerType = 'mouse') => {
+  const box = element.getBoundingClientRect();
+  const y = box.top + box.height / 2;
+  const fire = (type: string, x: number, buttons: number) =>
+    element.dispatchEvent(
+      new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 7, pointerType, button: 0, buttons })
+    );
+  fire('pointerdown', from, 1);
+  fire('pointermove', (from + to) / 2, 1);
+  fire('pointermove', to, 1);
+  fire('pointerup', to, 0);
+};
+
+export const DragToScroll: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a table wider than its 400px frame with `dragToScroll`. Pulled sideways by its header or its rows, it scrolls; a swipe on the header scrolls it on a touch screen too.',
+      },
+    },
+  },
+  args: {
+    dragToScroll: true,
+    width: 400,
+    height: 300,
+    label: 'Pull me sideways',
+  },
+  play: async ({ canvasElement }) => {
+    const body = await waitFor(() => {
+      const el = canvasElement.querySelector('.reqore-table-body') as HTMLElement | null;
+      expect(el).not.toBeNull();
+      expect(el!.scrollWidth).toBeGreaterThan(el!.clientWidth);
+      return el!;
+    });
+    const headerCell = canvasElement.querySelector('.reqore-table-header-wrapper .reqore-table-header-cell') as HTMLElement;
+    // by the header, with the mouse
+    pullSideways(headerCell, 300, 200);
+    await waitFor(() => expect(body.scrollLeft).toBe(100));
+    // by the header, with a finger
+    pullSideways(headerCell, 300, 250, 'touch');
+    await waitFor(() => expect(body.scrollLeft).toBe(150));
+    // and the header follows the body
+    const header = canvasElement.querySelector('.reqore-table-header-wrapper') as HTMLElement;
+    await waitFor(() => expect(header.scrollLeft).toBe(150));
   },
 };
 
@@ -1228,7 +1326,8 @@ const CustomHeaderCell = (props: IReqoreCustomHeaderCellProps) => {
 
 const CustomCell = (props: IReqoreCustomTableBodyCellProps) => {
   return (
-    <ReqoreP style={{ width: props.width, flexGrow: props.grow }} block={false}>
+    // a div, not a p: a cell's content may be a block (a paragraph of its own), which a p cannot hold
+    <ReqoreP as='div' style={{ width: props.width, flexGrow: props.grow }} block={false}>
       {props.children}
     </ReqoreP>
   );
@@ -2377,4 +2476,599 @@ export const LongContentWrappedAndVirtualized: Story = {
     label: 'Wrapped rows in a virtualized body',
   },
   play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
+};
+
+/* A table's toolbar in a narrow box (qorus#646): on a phone, a table in a card is narrower than the screen,
+   and its search field and actions reached past the card - the search field kept its width and the
+   toolbar did not wrap. */
+
+/** The width of a card on a 390px phone screen, inside its page's gutters: what the IDE's tables sit in. */
+const NARROW_TABLE_WIDTH = 265;
+
+/* A narrow table's row actions (qorus#646): three icon buttons took a third of a phone's table from the
+   columns that say which row is which. Narrow, they are one menu button per row that names them. */
+
+/** The actions cells of the rows on screen. */
+const actionCells = (root: HTMLElement) =>
+  Array.from(
+    root.querySelectorAll<HTMLElement>('.reqore-table-row [data-reqore-table-column-id="actions"]')
+  );
+
+/** Each row's actions menu button. */
+const rowActionsMenus = (root: HTMLElement) =>
+  rowActionsMenuButtons(root).filter((button) => button.closest('.reqore-table-row'));
+
+/** One menu button per row, and the actions column no wider than it, so the content has the row. */
+const expectRowActionsFolded = async (root: HTMLElement, buttonWidth: number = SIZE_TO_PX.normal) =>
+  waitFor(() => {
+    const cells = actionCells(root);
+    expect(cells.length).toBeGreaterThan(0);
+    for (const cell of cells) {
+      expect(cell.querySelectorAll('.reqore-button')).toHaveLength(1);
+      expect(cell.querySelectorAll('.reqore-row-actions-menu-button')).toHaveLength(1);
+      expect(cell.getBoundingClientRect().width).toBeLessThanOrEqual(buttonWidth + 1);
+    }
+  });
+
+/** The open menu names each action in words, with its icon. */
+const expectRowActionsMenu = async () => expectRowActionsMenuItems(['Add', 'Edit', 'Delete']);
+
+export const FilterableInANarrowBox: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a searchable table in a 265px box, as a table sits in a card on a phone. The title comes first, its words whole; the search is a button with its icon until it is used, and it and the more button stay inside the box. Each row's three actions are one menu button in a column no wider than it; clicked, it opens a menu naming Add, Edit and Delete with their icons, and Edit runs and closes it without opening the row.",
+      },
+    },
+  },
+  args: {
+    filterable: true,
+    label: 'Services',
+    height: 400,
+    onRowClick: fn(),
+  },
+  render: (args) => (
+    <div className='narrow-table-box' style={{ width: NARROW_TABLE_WIDTH }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement, args }) => {
+    clearRowActionSpies();
+    const box = canvasElement.querySelector('.narrow-table-box') as HTMLElement;
+    // narrow, the search is its button until it is used
+    await waitFor(() => expect(box.querySelector('.reqore-table-search-toggle')).toBeTruthy());
+    expect(box.querySelector('.reqore-panel-title input')).toBeNull();
+    // the toolbar: the table's own header scrolls sideways with its columns
+    await expectControlsInside(box, box.querySelector('.reqore-panel-title') as HTMLElement);
+    // the title first: its words whole, the search field at what is left
+    await expectWordsWhole(box.querySelector('.reqore-panel-title-label-box') as HTMLElement);
+    // the row's actions: one menu button, which names them and runs the one picked
+    await expectRowActionsFolded(box);
+    const [first] = rowActionsMenus(box);
+    await userEvent.click(first);
+    await expectRowActionsMenu();
+    await userEvent.click(openRowActionsMenuItems()[1]);
+    await waitFor(() => expect(onEditClick).toHaveBeenCalledTimes(1));
+    await expectRowActionsMenuClosed();
+    expect(onAddClick).not.toHaveBeenCalled();
+    expect(onDeleteClick).not.toHaveBeenCalled();
+    expect(args.onRowClick).not.toHaveBeenCalled();
+    await userEvent.unhover(first);
+  },
+};
+
+/* A narrow table's search (qorus#646): a button with its icon until it is used, so the title keeps the
+   toolbar. Opened, the field takes the toolbar's line; empty, Escape or leaving it closes it again. */
+
+const onFiftyRows = fn();
+
+/** The IDE's list card: a title with its count, a page-size control, the search and the more button. */
+const WorkflowsCard = () => (
+  <div className='workflows-card' style={{ width: 320, maxWidth: '100%' }}>
+    <ReqoreTable
+      // its count is the table's own badge
+      label='Workflows'
+      filterable
+      height={300}
+      columns={defaultColumns}
+      data={tableData.data}
+      actions={[{ label: '50 rows', icon: 'ListCheck', onClick: onFiftyRows }]}
+    />
+  </div>
+);
+
+const searchToggle = (root: HTMLElement) =>
+  root.querySelector('.reqore-table-search-toggle') as HTMLElement | null;
+const openSearch = (root: HTMLElement) =>
+  root.querySelector('.reqore-panel-title input') as HTMLInputElement | null;
+
+/** Folded: the search is its button, and the title is whole, not squeezed. */
+const expectSearchFolded = async (root: HTMLElement) => {
+  await waitFor(() => {
+    expect(searchToggle(root)).toBeTruthy();
+    expect(openSearch(root)).toBeNull();
+  });
+  const title = root.querySelector('.reqore-panel-title-label-box') as HTMLElement;
+  await expectWordsWhole(title);
+  expect(title.textContent).toContain('Workflows');
+  for (const label of Array.from(title.querySelectorAll<HTMLElement>('*'))) {
+    expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
+  }
+  await expectControlsInside(root, root.querySelector('.reqore-panel-title') as HTMLElement);
+};
+
+/** Open: the field has the focus and the toolbar's line. */
+const expectSearchOpen = async (root: HTMLElement) => {
+  await waitFor(() => {
+    const input = openSearch(root);
+    expect(input).toBeTruthy();
+    expect(document.activeElement).toBe(input);
+    const card = root.getBoundingClientRect();
+    expect(input!.getBoundingClientRect().width).toBeGreaterThan(card.width * 0.5);
+  });
+  await expectControlsInside(root, root.querySelector('.reqore-panel-title') as HTMLElement);
+};
+
+export const SearchFoldsInANarrowCard: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a 320px card holding "Workflows" with its row count, a "50 rows" control, the search and the more button. The search is a button with its icon, so "Workflows" stays whole. Clicked, the search field opens across the toolbar with the focus in it; text typed in it keeps it open, and once emptied, Escape closes it and gives the button the focus back.',
+      },
+    },
+  },
+  render: () => <WorkflowsCard />,
+  play: async ({ canvasElement }) => {
+    const card = canvasElement.querySelector('.workflows-card') as HTMLElement;
+    await expectSearchFolded(card);
+    await userEvent.click(searchToggle(card)!);
+    await expectSearchOpen(card);
+    await userEvent.keyboard('ord');
+    await userEvent.keyboard('{Escape}');
+    // a search that holds text stays open
+    expect(openSearch(card)).toBeTruthy();
+    await userEvent.clear(openSearch(card)!);
+    await userEvent.keyboard('{Escape}');
+    await expectSearchFolded(card);
+    await waitFor(() => expect(document.activeElement).toBe(searchToggle(card)));
+  },
+};
+
+export const SearchFoldedFromTheKeyboard: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the same 320px card, used from the keyboard: Tab reaches the search button, Enter opens the field with the focus in it, Escape closes it while it is empty with the focus back on the button, and Space opens it again.',
+      },
+    },
+  },
+  render: () => <WorkflowsCard />,
+  play: async ({ canvasElement }) => {
+    const card = canvasElement.querySelector('.workflows-card') as HTMLElement;
+    await expectSearchFolded(card);
+    searchToggle(card)!.focus();
+    await userEvent.keyboard('{Enter}');
+    await expectSearchOpen(card);
+    await userEvent.keyboard('{Escape}');
+    await expectSearchFolded(card);
+    await waitFor(() => expect(document.activeElement).toBe(searchToggle(card)));
+    await userEvent.keyboard(' ');
+    await expectSearchOpen(card);
+  },
+};
+
+export const SearchFoldedOnATouchScreen: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders the card on a phone (390 px) with a finger: "Workflows" whole beside the search button. A tap on the button opens the search field across the toolbar; a tap on the rows while it is empty closes it, and the title is back.',
+      },
+    },
+  },
+  render: () => <WorkflowsCard />,
+  play: async ({ canvasElement }) => {
+    const card = canvasElement.querySelector('.workflows-card') as HTMLElement;
+    await withTouchScreen(async (touch) => {
+      await expectSearchFolded(card);
+      await touch.tap(searchToggle(card)!);
+      await expectSearchOpen(card);
+      await touch.tap(card.querySelector('.reqore-table-body') ?? card.querySelector('.reqore-table-row')!);
+      await expectSearchFolded(card);
+    });
+  },
+};
+
+export const FilterableOnAPhone: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders a searchable table in a card on a phone (390 px, a 16px gutter each side): its title, the search button and the other buttons share the toolbar's one line inside the card - the title is there to read - and none reaches past the screen. Each row's actions are one menu button, so the columns keep the card's width.",
+      },
+    },
+  },
+  args: {
+    filterable: true,
+    label: 'Services',
+    height: 400,
+  },
+  render: (args) => (
+    <div style={{ padding: '0 16px', maxWidth: 390, boxSizing: 'border-box' }}>
+      <ReqorePanel label='Running services' padded>
+        <ReqoreTable {...args} />
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    // in a card on a phone the search is its button until it is used
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.reqore-table .reqore-table-search-toggle')).toBeTruthy()
+    );
+    await withViewport(390, 844, async (narrowed) => {
+      const table = canvasElement.querySelector('.reqore-table') as HTMLElement;
+      await expectControlsInside(table, table.querySelector('.reqore-panel-title') as HTMLElement);
+      // the title keeps room to be read, its words whole: the search field gives up its width first
+      await waitFor(() =>
+        expect(
+          (table.querySelector('.reqore-panel-title-label-box') as HTMLElement).getBoundingClientRect()
+            .width
+        ).toBeGreaterThanOrEqual(40)
+      );
+      await expectWordsWhole(table.querySelector('.reqore-panel-title-label-box') as HTMLElement);
+      await expectRowActionsFolded(table);
+      if (narrowed) {
+        await waitFor(() =>
+          expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1)
+        );
+      }
+    });
+  },
+};
+
+export const TitleWordWiderThanItsSpace: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a searchable table in a 320px box whose title is one word wider than the space left beside its search button and more button: only then is the word broken, and it stays inside the title's box, as the controls stay inside the panel.",
+      },
+    },
+  },
+  args: {
+    filterable: true,
+    label: 'Supercalifragilisticexpialidocious',
+    height: 400,
+  },
+  render: (args) => (
+    <div className='narrow-table-box' style={{ width: 320 }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('.narrow-table-box') as HTMLElement;
+    // narrow, the search is its button until it is used
+    await waitFor(() => expect(box.querySelector('.reqore-table-search-toggle')).toBeTruthy());
+    await expectControlsInside(box, box.querySelector('.reqore-panel-title') as HTMLElement);
+    const label = box.querySelector('.reqore-panel-title-label-box') as HTMLElement;
+    // broken, because it does not fit whole: not cut off at the box's edge
+    await waitFor(() =>
+      expect(wordsBrokenAcrossLines(label)).toEqual(['Supercalifragilisticexpialidocious'])
+    );
+    const heading = label.querySelector('.reqore-heading') as HTMLElement;
+    expect(heading.scrollWidth).toBeLessThanOrEqual(heading.clientWidth + 1);
+  },
+};
+
+export const RowActionsInlineWhenWide: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a table in a 720px box: wide enough, so each row's Add, Edit and Delete are icon buttons side by side, as they always were, each named by its tooltip for a screen reader; there is no menu button.",
+      },
+    },
+  },
+  args: {
+    label: 'Services',
+    height: 400,
+  },
+  render: (args) => (
+    <div className='wide-table-box' style={{ width: 720 }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('.wide-table-box') as HTMLElement;
+    await waitFor(() => {
+      const cells = actionCells(box);
+      expect(cells.length).toBeGreaterThan(0);
+      for (const cell of cells) {
+        expect(
+          Array.from(cell.querySelectorAll('.reqore-button')).map((button) =>
+            button.getAttribute('aria-label')
+          )
+        ).toEqual(['Add', 'Edit', 'Delete']);
+      }
+    });
+    expect(box.querySelector('.reqore-row-actions-menu')).toBeNull();
+  },
+};
+
+export const RowActionsMenuOpen: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a table in a 265px box with the first row's actions menu open: Add, Edit and Delete, each with its icon and its colour.",
+      },
+    },
+  },
+  args: {
+    label: 'Services',
+    height: 400,
+  },
+  render: (args) => (
+    <div className='narrow-table-box' style={{ width: NARROW_TABLE_WIDTH }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('.narrow-table-box') as HTMLElement;
+    await expectRowActionsFolded(box);
+    const [first] = rowActionsMenus(box);
+    await userEvent.click(first);
+    await expectRowActionsMenu();
+    await userEvent.unhover(first);
+  },
+};
+
+/* A wide table draws a cell action's label in its button, as it did before the narrow menu existed
+   (qorus#646 had it as the button's tooltip only, at any width: a labelled action was a blank
+   button). */
+
+const LABELLED_ACTIONS_COLUMNS: IReqoreTableColumn[] = [
+  { dataId: 'name', header: { label: 'Name' }, width: 200, grow: 2 },
+  {
+    dataId: 'actions',
+    header: { label: 'Actions' },
+    width: 220,
+    cell: {
+      padded: 'none',
+      actions: () => [
+        { icon: 'EditLine', label: 'Open', onClick: onEditClick },
+        { icon: 'DeleteBinLine', intent: 'danger', tooltip: 'Delete', onClick: onDeleteClick },
+      ],
+    },
+  },
+];
+
+export const RowActionLabelsWhenWide: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a table in a 720px box whose rows each offer Open, a labelled action, and Delete, an icon-only one. Wide, Open shows its word beside its icon, inside its button, and Delete its icon alone, named by its tooltip for a screen reader; there is no menu button.',
+      },
+    },
+  },
+  args: {
+    label: 'Services',
+    columns: LABELLED_ACTIONS_COLUMNS,
+    data: [{ name: 'Orders' }, { name: 'Invoices' }, { name: 'Shipments' }],
+    height: 300,
+  },
+  render: (args) => (
+    <div className='wide-table-box' style={{ width: 720 }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('.wide-table-box') as HTMLElement;
+    const cells = await waitFor(() => {
+      const found = actionCells(box);
+      expect(found).toHaveLength(3);
+      return found;
+    });
+    for (const cell of cells) {
+      const [open, remove] = Array.from(cell.querySelectorAll<HTMLElement>('.reqore-button'));
+      // the label is drawn, in sight, inside its button
+      const text = open.querySelector<HTMLElement>(
+        '.reqore-button-text-content:not([aria-hidden])'
+      ) as HTMLElement;
+      expect(text).toHaveTextContent('Open');
+      expect(text).toBeVisible();
+      const textBox = text.getBoundingClientRect();
+      const buttonBox = open.getBoundingClientRect();
+      expect(textBox.width).toBeGreaterThan(0);
+      expect(textBox.left).toBeGreaterThanOrEqual(buttonBox.left - 0.5);
+      expect(textBox.right).toBeLessThanOrEqual(buttonBox.right + 0.5);
+      expect(open).not.toHaveAttribute('aria-label');
+      // an icon-only action draws no text and is named by its tooltip
+      expect(remove.textContent).toBe('');
+      expect(remove).toHaveAttribute('aria-label', 'Delete');
+    }
+    expect(box.querySelector('.reqore-row-actions-menu')).toBeNull();
+  },
+};
+
+/* A wide toolbar beside a long one-line description (qorus#646): the narrow bar's rule - the title
+   first, the actions from what it leaves - applied at every width took the description's one-line
+   width as the title's claim, and squeezed the search to its least instead of wrapping the
+   description. */
+
+const LONG_DESCRIPTION =
+  'Every workflow this instance runs, with the order it was started in, ' +
+  'its current status and the service that owns it';
+
+export const WideToolbarBesideALongDescription: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a filterable table in a 900px box whose title has a long one-line description. The search field keeps its width beside it and the description wraps under the title, as on a wide bar it always did; nothing in the toolbar reaches past the panel.',
+      },
+    },
+  },
+  args: {
+    label: 'Workflows',
+    description: LONG_DESCRIPTION,
+    filterable: true,
+    columns: LABELLED_ACTIONS_COLUMNS,
+    data: [{ name: 'Orders' }, { name: 'Invoices' }, { name: 'Shipments' }],
+    height: 300,
+  },
+  render: (args) => (
+    <div className='wide-table-box' style={{ width: 900 }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('.wide-table-box') as HTMLElement;
+    const bar = box.querySelector('.reqore-panel-title') as HTMLElement;
+    const search = await waitFor(() => {
+      const input = openSearch(box);
+      expect(input).toBeTruthy();
+      return input?.closest('.reqore-control-wrapper') as HTMLElement;
+    });
+    await waitFor(() => expect(search.getBoundingClientRect().width).toBeGreaterThan(150));
+    expect(searchToggle(box)).toBeNull();
+    const description = bar.querySelector('.reqore-panel-title-description') as HTMLElement;
+    const range = document.createRange();
+    range.selectNodeContents(description);
+    const lines = new Set(Array.from(range.getClientRects()).map(({ top }) => Math.round(top)));
+    expect(lines.size).toBeGreaterThan(1);
+    await expectControlsInside(box, bar);
+  },
+};
+
+export const RowActionsMenuFromTheKeyboard: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a table in a 265px box, its rows' actions folded into one menu button each. From the keyboard, Tab goes from one row's button to the next and Enter opens the menu; the arrow keys move the focus through the menu's items to Delete, a menu item a screen reader reads, and Enter runs it and closes the menu with the focus back on the button; Space opens it again and Escape puts it away, the focus on the button again. The row itself is never opened.",
+      },
+    },
+  },
+  args: {
+    label: 'Services',
+    height: 400,
+    onRowClick: fn(),
+  },
+  render: (args) => (
+    <div className='narrow-table-box' style={{ width: NARROW_TABLE_WIDTH }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement, args }) => {
+    clearRowActionSpies();
+    const box = canvasElement.querySelector('.narrow-table-box') as HTMLElement;
+    await expectRowActionsFolded(box);
+    const [first, second] = rowActionsMenus(box);
+    expect(second).toHaveAttribute('aria-label', 'Actions');
+
+    first.focus();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(second);
+
+    await userEvent.keyboard('{Enter}');
+    await expectRowActionsMenu();
+    await waitFor(() => expect(second).toHaveAttribute('aria-expanded', 'true'));
+    // the button controls the open menu, and the arrow keys take the focus to its items
+    const menu = document.getElementById(second.getAttribute('aria-controls') as string);
+    expect(menu).toHaveAttribute('role', 'menu');
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(document.activeElement?.textContent).toContain('Delete'));
+    expect(document.activeElement).toHaveAttribute('role', 'menuitem');
+    expect(menu?.contains(document.activeElement)).toBe(true);
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(onDeleteClick).toHaveBeenCalledTimes(1));
+    await expectRowActionsMenuClosed();
+    expect(document.activeElement).toBe(second);
+
+    await userEvent.keyboard(' ');
+    await expectRowActionsMenu();
+    await userEvent.keyboard('{Escape}');
+    await expectRowActionsMenuClosed();
+    await waitFor(() => expect(second).toHaveAttribute('aria-expanded', 'false'));
+    expect(document.activeElement).toBe(second);
+
+    expect(onAddClick).not.toHaveBeenCalled();
+    expect(onEditClick).not.toHaveBeenCalled();
+    expect(args.onRowClick).not.toHaveBeenCalled();
+  },
+};
+
+export const RowActionsMenuOnATouchScreen: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders a table in a card on a phone (390 px). Each row's actions are one menu button; on a touch screen it is a finger's size (44px each way, the rows as tall), a tap opens the menu - its rows a finger's height too - and a tap on Delete runs it and closes the menu without opening the row. Nothing reaches past the screen.",
+      },
+    },
+  },
+  args: {
+    label: 'Services',
+    height: 400,
+    onRowClick: fn(),
+  },
+  render: (args) => (
+    <div style={{ padding: '0 16px', maxWidth: 390, boxSizing: 'border-box' }}>
+      <ReqorePanel label='Running services' padded>
+        <ReqoreTable {...args} />
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement, args }) => {
+    clearRowActionSpies();
+    await withTouchScreen(async (touch) => {
+      const table = canvasElement.querySelector('.reqore-table') as HTMLElement;
+      // a finger's button: only a real touch screen makes the pointer coarse
+      await expectRowActionsFolded(table, touch.real ? TOUCH_TARGET_PX : SIZE_TO_PX.normal);
+      if (touch.real) {
+        await waitFor(() => {
+          for (const button of rowActionsMenus(table)) {
+            const box = button.getBoundingClientRect();
+            expect(box.width).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+            expect(box.height).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+          }
+        });
+      }
+
+      await touch.tap(rowActionsMenus(table)[0]);
+      await expectRowActionsMenu();
+      if (touch.real) {
+        await waitFor(() => {
+          for (const item of openRowActionsMenuItems()) {
+            expect(item.getBoundingClientRect().height).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+          }
+        });
+      }
+      await touch.tap(openRowActionsMenuItems()[2]);
+      await waitFor(() => expect(onDeleteClick).toHaveBeenCalledTimes(1));
+      await expectRowActionsMenuClosed();
+      expect(onAddClick).not.toHaveBeenCalled();
+      expect(onEditClick).not.toHaveBeenCalled();
+      expect(args.onRowClick).not.toHaveBeenCalled();
+
+      if (touch.narrowed) {
+        await waitFor(() =>
+          expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1)
+        );
+      }
+    });
+  },
 };
