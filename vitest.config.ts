@@ -71,6 +71,18 @@ const storyBrowser = (phone = false) => ({
       ? { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }
       : { viewport: { width: 1920, height: 1080 } },
   }),
+  /* Asks for reduced motion (`prefers-reduced-motion: reduce`) or stops asking, in the page the stories run in.
+     Reqore honours it: its springs settle at once and its transitions take no time. The contrast gate asks for it
+     while it measures, so it measures what stays on screen, never a frame of a fade (qorus#646: a clear button
+     measured on its way in); a story tagged `reduced-motion` runs under it (.storybook/vitest.setup.ts). */
+  commands: {
+    emulateReducedMotion: async (
+      { page }: { page: { emulateMedia: (options: { reducedMotion: string }) => Promise<void> } },
+      reduce: boolean
+    ) => {
+      await page.emulateMedia({ reducedMotion: reduce ? 'reduce' : 'no-preference' });
+    },
+  },
   headless: true,
   instances: [{ browser: 'chromium' as const }],
 });
