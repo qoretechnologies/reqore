@@ -149,6 +149,8 @@ Reqore picks its text and icon colors against what they are actually drawn on, t
   the icon's own props (`leftIconProps={{ intent }}`, a panel's `iconProps`): a button's, an input's, a tag's and
   a panel's title icon are picked to stand out at the 70% they are drawn at. A link's intent reads on the
   surface it is drawn on (a tinted table cell, an entity row's gradient).
+- **An active button** (a selected menu item) draws what it holds - its description, its badges, its icons - on
+  its fill, not on the wash it has at rest.
 - **What a caller sets is the caller's:** an explicit hex `color` or `effect.opacity` is drawn as given.
 - Disabled content is exempt (WCAG); the components that are not form controls now say they are disabled with
   `aria-disabled`.

@@ -425,10 +425,12 @@ export const getButtonColors = (
  */
 export const getButtonIconLook = (
   style: TReqoreButtonColorProps,
-  color?: TReqoreEffectColor
+  color?: TReqoreEffectColor,
+  active?: boolean
 ): { color?: TReqoreHexColor; opacity: number } => {
-  const rest = getButtonColors(style, 'rest');
-  const hover = getButtonColors(style, 'hover');
+  // an active button (a selected menu item) is drawn in its fill, hovered or not
+  const rest = getButtonColors(style, active ? 'active' : 'rest');
+  const hover = active ? rest : getButtonColors(style, 'hover');
   const look = getReadableIconLook(
     style.theme,
     [...rest.backgrounds, ...hover.backgrounds],
@@ -743,15 +745,19 @@ export const StyledButton = styled(StyledEffect).withConfig({
 
   .reqore-button-description {
     padding-top: ${({ size }) => PADDING_FROM_SIZE[size] / 2}px;
-    color: ${({ theme, color, minimal, transparent, effect, $surface }) => {
-      const { text, backgrounds } = getButtonColors({
-        theme,
-        color,
-        minimal,
-        transparent,
-        effect,
-        $surface,
-      });
+    /* on the button as it is drawn: at rest, or filled when active (a selected menu item) */
+    color: ${({ theme, color, minimal, transparent, effect, $surface, active }) => {
+      const { text, backgrounds } = getButtonColors(
+        {
+          theme,
+          color,
+          minimal,
+          transparent,
+          effect,
+          $surface,
+        },
+        active ? 'active' : 'rest'
+      );
 
       return getReadableFadedColor(text, backgrounds, 0.7);
     }};
@@ -1054,12 +1060,18 @@ const ReqoreButton = memo(
       const leftIconOwn = leftIconPropsColor || leftIconColor || iconColor;
       const rightIconOwn = rightIconPropsColor || rightIconColor || iconColor;
       const leftIconLook = useMemo(
-        () => getButtonIconLook(colorProps, leftIconOwn),
-        [colorProps, leftIconOwn]
+        () => getButtonIconLook(colorProps, leftIconOwn, active),
+        [colorProps, leftIconOwn, active]
       );
       const rightIconLook = useMemo(
-        () => getButtonIconLook(colorProps, rightIconOwn),
-        [colorProps, rightIconOwn]
+        () => getButtonIconLook(colorProps, rightIconOwn, active),
+        [colorProps, rightIconOwn, active]
+      );
+      /* What the button holds (its badges, a label given as a node) is drawn on the button: at rest, or in its
+         fill when it is active (a selected menu item, whose badges were picked for the resting wash). */
+      const restingBackground = useMemo(
+        () => getButtonColors(colorProps, active ? 'active' : 'rest').backgrounds,
+        [colorProps, active]
       );
       // one object for as long as the opacity holds: an icon is a memo component
       const leftIconEffect = useMemo(
@@ -1070,8 +1082,6 @@ const ReqoreButton = memo(
         () => ({ opacity: rightIconLook.opacity }),
         [rightIconLook.opacity]
       );
-      // What the button holds (its badges, a label given as a node) is drawn on the button.
-      const restingBackground = useMemo(() => getButtonColors(colorProps).backgrounds, [colorProps]);
 
       const indicatorConfig = useMemo(() => {
         if (!indicator) {
