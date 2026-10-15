@@ -121,6 +121,20 @@ The helpers are exported for a consumer's own hover:
   event after them, which reads what was noted once;
 - `watchHoverGate(target, gate)`: notes the pointer events on an element or the document.
 
+## Reduced motion (0.78.5)
+
+Reqore honours a user's request for reduced motion (`prefers-reduced-motion: reduce`, WCAG 2.3.3):
+
+- **Its springs settle at once**, at their end: a fade, a slide, a reveal (react-spring's `skipAnimation`, set by
+  `ReqoreUIProvider` as it renders and whenever the preference changes; an app's own springs on the same
+  react-spring settle with them).
+- **Its CSS transitions take a hair of a time** (0.01ms, not none: a transition of no time sends no
+  `transitionend`, which some components wait for), everywhere inside the provider's layout and its portal.
+- Its keyframe animations (a spinner, a pulse) are as they were.
+
+The story run's contrast gate asks for reduced motion while it measures, so it measures what stays on screen,
+never a frame of a fade; a story tagged `reduced-motion` runs under it, the others with the motion a user sees.
+
 ## Text and icons stand out from what they are drawn on (0.78.5)
 
 Reqore picks its text and icon colors against what they are actually drawn on, to WCAG AA: 4.5:1 for text,
