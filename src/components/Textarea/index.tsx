@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 import { rgba } from 'polished';
-import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { css } from 'styled-components';
 import { ReqoreDropdown, useReqoreTheme } from '../..';
 import {
@@ -34,7 +34,7 @@ import {
 } from '../../types/global';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { StyledEffect } from '../Effect';
-import { getInputClearButtonOpacity, getInputColors, getInputPlaceholderColor } from '../Input';
+import { getInputLook, IReqoreInputLook } from '../Input';
 import ReqoreInputClearButton from '../InputClearButton';
 import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
 import { IPopoverControls } from '../Popover';
@@ -103,9 +103,15 @@ export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
   theme: IReqoreTheme;
   /** What the field is drawn on (`useReqoreSurface`): the theme's surface when not known. */
   $surface?: TReqoreSurface;
+  /** Its colors, worked out once by the component (`getInputLook`); else from the rest. */
+  $look?: IReqoreInputLook;
   hasClearButton?: boolean;
   _size?: TSizes;
 }
+
+/** A field's look: the component's, or worked out from its style props where it has none. */
+const lookOf = ({ $look, theme, minimal, transparent, $surface }: IReqoreTextareaStyle) =>
+  $look ?? getInputLook(theme, minimal, transparent, $surface);
 
 // `width` and `height` size the wrapper through its styles; a `div` has neither attribute.
 export const StyledTextareaWrapper = styled.div.withConfig({
@@ -122,9 +128,9 @@ export const StyledTextareaWrapper = styled.div.withConfig({
   border-radius: ${({ minimal, rounded = true, _size = 'normal' as TSizes, radiusSize }) =>
     minimal || !rounded ? 0 : resolveRadius(_size, radiusSize)}px;
 
-  /* The clear button is drawn in the field's text colour, not the page's. */
-  color: ${({ theme, minimal, $surface }) =>
-    getInputColors(theme, minimal, false, false, $surface).text};
+  /* The clear button is drawn in the field's text colour, not the page's: the field's as it is
+     drawn - minimal or transparent, on what is under it. */
+  color: ${(props) => lookOf(props).text};
 
   &:focus-within {
     .reqore-clear-input-button {
@@ -199,8 +205,7 @@ export const StyledTextarea = styled(StyledEffect).withConfig({
 
   background-color: ${({ theme, minimal, transparent }: IReqoreTextareaStyle) =>
     minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
-  color: ${({ theme, minimal, transparent, $surface }: IReqoreTextareaStyle) =>
-    getInputColors(theme, minimal, transparent, false, $surface).text};
+  color: ${(props) => lookOf(props).text};
 
   &:active,
   &:focus {
@@ -228,14 +233,12 @@ export const StyledTextarea = styled(StyledEffect).withConfig({
       : undefined}
 
   &::placeholder {
-    color: ${({ theme, minimal, transparent, $surface }) =>
-      getInputPlaceholderColor(theme, minimal, transparent, false, $surface)};
+    color: ${(props) => lookOf(props).placeholder};
   }
 
   &:focus {
     &::placeholder {
-      color: ${({ theme, minimal, transparent, $surface }) =>
-        getInputPlaceholderColor(theme, minimal, transparent, true, $surface)};
+      color: ${(props) => lookOf(props).focusedPlaceholder};
     }
   }
 
@@ -288,6 +291,14 @@ function Textarea<T>(
   const [inputRef, setInputRef] = useState<HTMLTextAreaElement>(null);
   const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
   const surface = useReqoreSurface();
+  /* Its colors, once for as long as what decides them holds - its styles, the wrapper's
+     included (the clear button is drawn in it), take them as they are: a controlled field
+     renders on every keystroke. */
+  const { minimal, transparent } = rest;
+  const look = useMemo(
+    () => getInputLook(theme, minimal, transparent, surface),
+    [theme, minimal, transparent, surface]
+  );
   const shortcutHintsEnabled = useReqoreProperty('shortcutHints');
   const showShortcutHint =
     !!focusRules?.shortcut &&
@@ -520,6 +531,7 @@ function Textarea<T>(
         <StyledTextarea
           {...rest}
           $surface={surface}
+          $look={look}
           effect={{
             interactive: !rest?.disabled && !rest.readOnly,
             ...rest?.effect,
@@ -549,12 +561,7 @@ function Textarea<T>(
           enabled={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
           show={_value && _value !== ''}
           onClick={onClearClick}
-          shownOpacity={getInputClearButtonOpacity(
-            theme,
-            rest.minimal,
-            rest.transparent,
-            surface
-          )}
+          shownOpacity={look.clearOpacity}
           size={size}
         />
         {showShortcutHint && (
@@ -581,6 +588,7 @@ function Textarea<T>(
         _size={size}
         theme={theme}
         $surface={surface}
+        $look={look}
         style={wrapperStyle}
         ref={targetRef}
         onItemSelect={handleItemSelect}
@@ -617,6 +625,7 @@ function Textarea<T>(
       rounded={rounded}
       theme={theme}
       $surface={surface}
+      $look={look}
       // the field is the textarea, or an editor that is no form control: the wrapper says it is disabled
       aria-disabled={rest.disabled ? true : undefined}
       style={wrapperStyle}

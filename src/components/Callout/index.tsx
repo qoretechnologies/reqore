@@ -52,6 +52,7 @@ import {
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
+import { getDrawnEffectTextColor, getUnpaintedSurface } from '../Panel/surface';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreCalloutProps
@@ -165,6 +166,8 @@ interface IStyledCalloutProps
   /** One piece of text and nothing else beside the icon — a label alone or a
    *  description alone. See the alignment note. */
   $loneText?: boolean;
+  /** Its text color, read on what it is drawn in: what it holds that sets no color of its own takes it. */
+  $color: TReqoreHexColor;
 }
 
 // Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
@@ -235,6 +238,9 @@ const StyledCallout = styled(StyledEffect).withConfig({
   }};
   background-color: ${({ theme, $transparent }) =>
     $transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
+  /* Its own, not the color of what it is in: its fill is its theme's, so a callout in a light panel on a dark
+     theme is dark, and its label took the panel's dark text (1.6:1). */
+  color: ${({ $color }) => $color};
   border: ${({ theme, flat, intent }) =>
     flat
       ? 0
@@ -395,7 +401,12 @@ export const ReqoreCallout = memo(
       // Exactly one piece of text beside the icon — see `StyledCallout`.
       const loneText = !children && !!label !== !!description;
 
-      const surface = useReqoreSurface();
+      const aroundSurface = useReqoreSurface();
+      // transparent, it is on what is around it: what a component there says, or its customTheme's main
+      const surface = useMemo(
+        () => getUnpaintedSurface(theme, customTheme, aroundSurface, transparent),
+        [theme, customTheme, aroundSurface, transparent]
+      );
       // What the callout is drawn in: its icon, its text and what it holds are read against it.
       const background = useMemo(
         () =>
@@ -407,19 +418,29 @@ export const ReqoreCallout = memo(
               ),
         [transparent, theme, surface]
       );
-      // each color of the callout's gradient, when its effect draws one
+      /* each color of the callout's gradient, when its effect draws one: for as long as its colors hold, not the
+         effect object - one given inline is new on every render, and so was the surface handed down */
+      const gradientKey = JSON.stringify(effect?.gradient ?? null);
       const backgrounds = useMemo(
         () => getEffectBackgrounds(theme, effect, background, getThemeSurface(theme, surface)),
-        [theme, effect, background, surface]
+        [theme, gradientKey, background, surface]
       );
       const text = useMemo(() => getReadableTextOn(theme, backgrounds), [theme, backgrounds]);
-      // softer than the label, as far as it stays readable: one object while it holds, for a memo component
+      /* softer than the label, as far as it stays readable - in the color it is drawn in - unless the caller gives
+         its opacity: one object while it holds, for a memo component */
       const descriptionLook = useMemo(
-        () => ({
-          ...descriptionEffect,
-          opacity: getReadableAlpha(text, backgrounds, descriptionEffect?.opacity ?? 0.78),
-        }),
-        [descriptionEffect, text, backgrounds]
+        () =>
+          descriptionEffect?.opacity !== undefined
+            ? descriptionEffect
+            : {
+                ...descriptionEffect,
+                opacity: getReadableAlpha(
+                  getDrawnEffectTextColor(theme, descriptionEffect?.color, backgrounds) ?? text,
+                  backgrounds,
+                  0.78
+                ),
+              },
+        [descriptionEffect, theme, text, backgrounds]
       );
       // one function for as long as what it calls holds: the close button is a memo component
       const handleCloseClick = useCallback(
@@ -462,10 +483,12 @@ export const ReqoreCallout = memo(
           fluid={fluid}
           fixed={fixed}
           disabled={disabled}
-          aria-disabled={disabled ? true : undefined}
+          // a disabled callout says so; any other keeps what the caller says
+          aria-disabled={disabled ? true : rest['aria-disabled']}
           tooltip={tooltip}
           rounded={rounded}
           $transparent={transparent}
+          $color={text}
           $raised={raised}
           effect={{ interactive: isInteractive, ...effect }}
           interactive={isInteractive}

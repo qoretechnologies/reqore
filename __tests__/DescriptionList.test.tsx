@@ -211,3 +211,22 @@ test('per-row uppercaseLabel overrides the component default', () => {
     document.querySelectorAll('.reqore-description-list-label').length
   ).toBe(2);
 });
+
+test("a label is faded as far as it reads in the list's own text color, not the provider's", () => {
+  const labelOpacity = () =>
+    Number(
+      getComputedStyle(
+        document.querySelector('.reqore-description-list-label .reqore-paragraph') as HTMLElement
+      ).opacity
+    );
+
+  const { unmount } = renderList();
+  const inTheProviders = labelOpacity();
+
+  unmount();
+  // a grey that reads on the dark theme only drawn in full
+  renderList({ customTheme: { text: { color: '#808080' } } });
+
+  expect(inTheProviders).toBeLessThan(1);
+  expect(labelOpacity()).toBeGreaterThan(inTheProviders);
+});

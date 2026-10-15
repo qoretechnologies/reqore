@@ -99,17 +99,10 @@ const ReqoreMessage = memo(
       const [internalTimeout, setInternalTimeout] = useState<NodeJS.Timeout | null>(null);
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
       const surface = useReqoreSurface();
-      // What the message holds is drawn on the message, and picks its colors against that.
-      const background = useMemo(
-        () =>
-          getEffectBackgrounds(
-            theme,
-            rest.effect,
-            getNotificationColors({ theme, intent, minimal, opaque: rest.opaque, $surface: surface })
-              .background,
-            getThemeSurface(theme, surface)
-          ),
-        [theme, intent, minimal, rest.opaque, surface, rest.effect]
+      // the color its own custom theme names, not its intent's: a minimal message is drawn on it
+      const ownMain = useMemo(
+        () => (customTheme?.main ? getColorFromMaybeString(theme, customTheme.main) : undefined),
+        [theme, customTheme?.main]
       );
 
       useMount(() => {
@@ -151,6 +144,24 @@ const ReqoreMessage = memo(
         }),
         [!!onClick, JSON.stringify(rest?.effect)]
       );
+      // What the message holds is drawn on the message, and picks its colors against that.
+      const background = useMemo(
+        () =>
+          getEffectBackgrounds(
+            theme,
+            effect,
+            getNotificationColors({
+              theme,
+              intent,
+              minimal,
+              opaque: rest.opaque,
+              $surface: surface,
+              $main: ownMain,
+            }).background,
+            getThemeSurface(theme, surface)
+          ),
+        [theme, intent, minimal, rest.opaque, surface, ownMain, effect]
+      );
 
       return (
         <ReqoreThemeProvider>
@@ -173,6 +184,7 @@ const ReqoreMessage = memo(
             size={size}
             theme={theme}
             $surface={surface}
+            $main={ownMain}
             effect={effect}
           >
             <ReqoreSurfaceProvider color={background}>

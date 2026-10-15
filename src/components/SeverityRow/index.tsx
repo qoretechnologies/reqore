@@ -394,7 +394,8 @@ const ReqoreSeverityRow = memo(
             $padded={padded}
             $paddingSize={paddingSize ?? size}
             disabled={disabled}
-            aria-disabled={disabled ? true : undefined}
+            // disabled says so; when not, the caller's own (it was spread above) stands
+            aria-disabled={disabled ? true : rest['aria-disabled']}
             effect={effect}
             className={`${className || ''} reqore-severity-row`}
           >

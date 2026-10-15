@@ -1,7 +1,7 @@
-import { forwardRef, memo } from 'react';
+import { forwardRef, memo, useMemo } from 'react';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import styled, { omitStyleProps } from '../../helpers/styled';
-import { getReadableIntentColor } from '../../helpers/colors';
+import { getReadableTextColor } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreSurface } from '../../context/SurfaceContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -48,11 +48,10 @@ export interface IReqoreSpanProps
 export const StyledSpan = styled(StyledTextEffect).withConfig({
   shouldForwardProp: omitStyleProps('_size', 'inline', 'maxWidth'),
 })`
-  /* An intent colours the text in a shade of it that reads on the theme's surface. */
-  color: ${({ theme, intent, $surface }) =>
-    intent
-      ? getReadableIntentColor(theme, intent, undefined, $surface)
-      : theme.text?.color || 'inherit'};
+  /* An intent colours the text in a shade of it that reads on what the span is drawn on
+     ($textColor: worked out once per render by the component). */
+  color: ${({ theme, intent, $surface, $textColor }) =>
+    $textColor ?? getReadableTextColor(theme, intent, $surface)};
   font-size: ${({ _size }) => (isStringSize(_size) ? `${TEXT_FROM_SIZE[_size]}px` : _size)};
   vertical-align: ${({ inline }) => (inline ? 'middle' : undefined)};
   max-width: ${({ maxWidth }) => maxWidth || undefined};
@@ -77,6 +76,10 @@ export const ReqoreSpan = memo(
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
       const surface = useReqoreSurface();
+      const textColor = useMemo(
+        () => getReadableTextColor(theme, intent, surface),
+        [theme, intent, surface]
+      );
 
       return (
         <ReqoreTooltipComponent
@@ -84,6 +87,7 @@ export const ReqoreSpan = memo(
           as='span'
           theme={theme}
           $surface={surface}
+          $textColor={textColor}
           color={theme.text.color}
           intent={intent}
           inline={inline}

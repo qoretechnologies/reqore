@@ -46,6 +46,7 @@ import {
 } from '../Effect';
 import { ReqoreHeading, StyledHeader } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
+import { getDrawnEffectTextColor, getUnpaintedSurface } from '../Panel/surface';
 import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -479,38 +480,60 @@ const ReqoreStatistic = memo(
         [effect, rounded, flat, transparent, opacity, raised]
       );
 
-      /* What the statistic is drawn on and in: its own surface over what is under it when it has one.
-         What it holds is read against that, and its label and prefix and suffix fade only as far as they
-         stay readable there. */
-      const surface = useReqoreSurface();
+      // the opacity its surface is drawn at: none when transparent
+      const drawnOpacity = transparent ? 0 : opacity;
+      /* What the statistic is drawn on and in: its own surface, at the opacity it is drawn at, over what is under
+         it when it has one. What it holds is read against that, and its label and prefix and suffix fade only as
+         far as they stay readable there. Painting nothing, it is on what is around it: what a component there
+         says, or its customTheme's main. */
+      const aroundSurface = useReqoreSurface();
+      const surface = useMemo(
+        () =>
+          getUnpaintedSurface(
+            theme,
+            customTheme,
+            aroundSurface,
+            !hasBackground || drawnOpacity === 0
+          ),
+        [theme, customTheme, aroundSurface, hasBackground, drawnOpacity]
+      );
       const background = useMemo(
         () =>
           hasBackground
             ? getDrawnColor(
-                rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity ?? 1),
+                rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), drawnOpacity ?? 1),
                 getThemeSurface(theme, surface)
               )
             : getThemeSurface(theme, surface),
-        [hasBackground, theme, opacity, surface]
+        [hasBackground, theme, drawnOpacity, surface]
       );
-      // each color of the statistic's gradient, when its effect draws one
+      /* each color of the statistic's gradient, when its effect draws one: for as long as its colors hold, not
+         the effect object - one given inline is new on every render, and so was the surface handed down */
+      const gradientKey = JSON.stringify(effect?.gradient ?? null);
       const backgrounds = useMemo(
         () =>
           hasBackground
             ? getEffectBackgrounds(theme, effect, background, getThemeSurface(theme, surface))
             : [background],
-        [hasBackground, theme, effect, background, surface]
+        [hasBackground, theme, gradientKey, background, surface]
       );
       const text = useMemo(() => getReadableTextOn(theme, backgrounds), [theme, backgrounds]);
-      // fainter than the value, as far as it stays readable: one object while it holds, for a memo component
+      /* fainter than the value, as far as it stays readable in the color it is drawn in, unless the caller gives
+         its opacity: one object while it holds, for a memo component */
       const labelLook = useMemo(
         () => ({
           uppercase: true,
           spaced: 1,
           ...labelEffect,
-          opacity: getReadableAlpha(text, backgrounds, labelEffect?.opacity ?? 0.7),
+          opacity:
+            labelEffect?.opacity ??
+            getReadableAlpha(
+              getDrawnEffectTextColor(theme, labelEffect?.color, backgrounds) ?? text,
+              backgrounds,
+              0.7
+            ),
         }),
-        [labelEffect, text, backgrounds]
+        [labelEffect, theme, text, backgrounds]
       );
       const prefixSuffixEffect: IReqoreEffect = useMemo(
         () => ({ opacity: getReadableAlpha(text, backgrounds, PREFIX_SUFFIX_OPACITY) }),
@@ -561,7 +584,8 @@ const ReqoreStatistic = memo(
           size={size}
           $fluid={fluid}
           disabled={disabled}
-          aria-disabled={disabled ? true : undefined}
+          // a disabled statistic says so; any other keeps what the caller says
+          aria-disabled={disabled ? true : rest['aria-disabled']}
           $hasBackground={hasBackground}
           $background={background}
           $interactive={interactive}
@@ -570,7 +594,7 @@ const ReqoreStatistic = memo(
           radiusSize={radiusSize}
           flat={flat}
           intent={intent}
-          opacity={transparent ? 0 : opacity}
+          opacity={drawnOpacity}
           $raised={raised}
           $padded={padded}
           $paddingSize={paddingSize ?? size}

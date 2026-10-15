@@ -325,7 +325,8 @@ const ReqoreProgress = memo(
           size={size}
           fluid={fluid}
           disabled={disabled}
-          aria-disabled={disabled ? true : undefined}
+          // disabled says so; when not, the caller's own (it was spread above) stands
+          aria-disabled={disabled ? true : rest['aria-disabled']}
           className={`${className || ''} reqore-progress`}
           role='progressbar'
           aria-valuenow={indeterminate ? undefined : Math.round(percentage)}
