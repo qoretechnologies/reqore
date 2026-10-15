@@ -305,13 +305,66 @@ export const getEffectBackgrounds = (
     return [getDrawnColor(getColorFromMaybeString(theme, gradient.surface) || under, under)];
   }
 
-  // a list of gradients is drawn as layers: each over the ones after it
-  const stops = drawGradientLayers(
+  // a list of gradients is drawn as layers: each over the ones after it, and the ring under them all
+  const stops = drawEffectLayers(
+    theme,
     normalizeGradients(effect?.gradient).map((each) => getGradientColorList(theme, each.colors)),
+    gradient.borderColor ? undefined : gradient.colors,
     under
   );
 
   return stops.length ? stops : [flat];
+};
+
+/**
+ * The lighter ring an effect draws under its gradient (border-box): each color of the gradient, `lighten` lighter
+ * (a quarter of it when minimal), as `createEffectGradient` paints it.
+ */
+export const getEffectRingStops = (
+  theme: IReqoreTheme,
+  colors: TReqoreEffectGradientColors,
+  lighten: number = 0.15,
+  minimal?: boolean
+): TReqoreHexColor[] =>
+  getGradientColorList(theme, colors).map(
+    (stop) =>
+      (minimal
+        ? rgba(changeLightness(stop, lighten), 0.25)
+        : changeLightness(stop, lighten)) as TReqoreHexColor
+  );
+
+/**
+ * The colors an effect's fill layers (`layers`, the first on top) are drawn in over the ring of its primary gradient
+ * (`ringColors`; none when the gradient has a border color of its own or only rings a solid fill) over `under`. Where
+ * a fill is translucent the ring shows through it (qorus#646: a translucent blue glow was read without its lighter
+ * ring, and a label faded for it read 3.6:1). One fill layer and its ring share the gradient's geometry, so each stop
+ * is drawn over the ring's same stop; more layers are drawn over every color of the ones under them.
+ */
+export const drawEffectLayers = (
+  theme: IReqoreTheme,
+  layers: TReqoreHexColor[][],
+  ringColors: TReqoreEffectGradientColors | undefined,
+  under: TReqoreHexColor,
+  lighten: number = 0,
+  minimal?: boolean
+): TReqoreHexColor[] => {
+  if (!ringColors) {
+    return drawGradientLayers(layers, under, lighten);
+  }
+
+  // the ring is drawn lighter when the effect is, by twice the fill's step (0.15 at rest, 0.25 pressed)
+  const ring = getEffectRingStops(theme, ringColors, 0.15 + lighten * 2, minimal);
+  const fills = layers.map((layer) =>
+    layer.map((stop) => (lighten ? changeLightness(stop, lighten) : stop))
+  );
+
+  if (fills.length === 1 && fills[0].length === ring.length) {
+    return Array.from(
+      new Set(fills[0].map((stop, index) => getDrawnColor(stop, getDrawnColor(ring[index], under))))
+    );
+  }
+
+  return drawGradientLayers([...fills, ring], under);
 };
 
 /**
@@ -607,8 +660,10 @@ export const StyledEffect = styled.span.withConfig({
       const layers = surfaceColor
         ? [[getColorFromMaybeString(theme, primary.surface!) as TReqoreHexColor]]
         : gradients.map((gradient) => getGradientColorList(theme, gradient.colors));
-      const restStops = drawGradientLayers(layers, under);
-      const activeStops = drawGradientLayers(layers, under, 0.05);
+      // the lighter ring is drawn under the fill when the gradient is the fill, and has no border color of its own
+      const ringColors = surfaceColor || primary.borderColor || isText ? undefined : primary.colors;
+      const restStops = drawEffectLayers(theme, layers, ringColors, under, 0, minimal);
+      const activeStops = drawEffectLayers(theme, layers, ringColors, under, 0.05, minimal);
 
       // as it is drawn now: at rest, or lighter when active; hovered it is lighter, and gets its own
       readableBackgrounds = active ? activeStops : restStops;
