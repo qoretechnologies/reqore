@@ -80,6 +80,7 @@ import {
   TReqoreHexColor,
 } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
+import { splitIconColor } from '../../helpers/iconProps';
 import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
 import { ReqoreHorizontalSpacer, ReqoreSpacer } from '../Spacer';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
@@ -450,23 +451,6 @@ export const getButtonIconLook = (
           )
         ),
       };
-};
-
-/**
- * An icon's own color given in its props (`leftIconProps.intent`, `.color`), split from the rest of them. The icon
- * would make it readable for itself at full opacity while the button draws it at `CONTROL_ICON_OPACITY` (a warning
- * icon was 2.4:1 on a dark theme), so the button picks it, as it does `leftIconColor`.
- */
-const splitIconColor = (
-  props?: IReqoreIconProps
-): [TReqoreEffectColor | undefined, IReqoreIconProps | undefined] => {
-  if (!props || (!props.intent && !props.color)) {
-    return [undefined, props];
-  }
-
-  const { intent, color, ...rest } = props;
-
-  return [intent || color, rest];
 };
 
 export const StyledAnimatedTextWrapper = styled.span`
