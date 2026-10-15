@@ -1210,10 +1210,11 @@ export const ReqoreNavRail = memo(
         const style = {
           theme: activeMarkTheme,
           minimal: false,
-          effect: { interactive: true },
+          effect: { interactive: true, ...(activeItem.effect ?? activeEffect) },
           $surface: railSurface,
         };
-        const look = getButtonIconLook(style);
+        // as the active button draws its icon: on its fill
+        const look = getButtonIconLook(style, undefined, true);
         const active = getButtonColors(style, 'active');
 
         marks.push(
@@ -1237,6 +1238,7 @@ export const ReqoreNavRail = memo(
       railSurface,
       activeItem,
       activeMarkTheme,
+      activeEffect,
       surroundingSurface,
       idleOpacity,
     ]);
