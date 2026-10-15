@@ -394,7 +394,8 @@ export const ReqoreCollapsibleContent = memo(
           effect={effect}
           $fluid={fluid}
           $disabled={disabled}
-          aria-disabled={disabled ? true : undefined}
+          // disabled says so; when not, the caller's own (it was spread above) stands
+          aria-disabled={disabled ? true : rest['aria-disabled']}
           className={`${className || ''} reqore-collapsible-content`.trim()}
         >
           <StyledClip

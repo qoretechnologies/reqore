@@ -43,7 +43,12 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
-import { StyledEffect, TReqoreEffectColor, TReqoreHexColor } from '../Effect';
+import {
+  StyledEffect,
+  TReqoreEffectColor,
+  TReqoreHexColor,
+  TReqoreMultiTypeColor,
+} from '../Effect';
 import { ICON_TILE_SIZE_FROM_SIZE } from '../EntityRow';
 import ReqoreIcon from '../Icon';
 import { ReqoreP } from '../Paragraph';
@@ -104,8 +109,11 @@ export interface IReqoreNotificationProps
   content?: string | React.ReactNode;
   /** Replaces the intent's icon. */
   icon?: IReqoreIconName;
-  /** The icon's colour: drawn in the shade of it that stands out from its tile by 3:1. */
-  iconColor?: TReqoreEffectColor;
+  /**
+   * The icon's colour: drawn in the shade of it that stands out from its tile by 3:1. Any CSS
+   * colour; one the colour helpers cannot read (a CSS variable) is drawn as it is given.
+   */
+  iconColor?: TReqoreEffectColor | TReqoreMultiTypeColor | `var(--${string})`;
   /**
    * Draws the icon on a round, intent-tinted tile. Default `true`; `compact`
    * shows the bare icon unless this is set.
@@ -395,8 +403,11 @@ const StyledNotificationIconTile = styled.div<{
   $tinted: boolean;
   /** A box of this many px instead of the tile size — the pill matches its close button. */
   $boxPx?: number;
+  /** The icon's color: one the icon cannot take as its own (a CSS variable) it inherits from here. */
+  $glyph: string;
 }>`
   position: relative;
+  color: ${({ $glyph }) => $glyph};
   z-index: 1;
   flex: 0 0 auto;
   display: flex;
@@ -421,10 +432,13 @@ const StyledNotificationBody = styled.div<{ $compact?: boolean }>`
   overflow-wrap: anywhere;
 `;
 
-const StyledNotificationText = styled.div<{ $size: TSizes; $opacity: number }>`
+/* A shade softer under a title through its text color (`$color`, translucent), not its opacity: the text in it,
+   whatever it is written as, takes that color, and what has colors of its own (a tag, a link) keeps them -
+   faded as a whole, it was faded off what it is drawn on. */
+const StyledNotificationText = styled.div<{ $size: TSizes; $color?: string }>`
   font-size: ${({ $size }) => TEXT_FROM_SIZE[getOneLessSize($size)]}px;
   line-height: 1.4;
-  opacity: ${({ $opacity }) => $opacity};
+  color: ${({ $color }) => $color};
 `;
 
 const StyledNotificationTrailing = styled.div`
@@ -473,6 +487,10 @@ const sixDigits = (color: string): TReqoreHexColor =>
   (color.length > 7 ? color.slice(0, 7) : color) as TReqoreHexColor;
 
 const BIG_SIZES: TSizes[] = ['big', 'huge', 'massive'];
+
+/** A notification on screen, and on its way in or out. */
+const NOTIFICATION_SHOWN = { opacity: 1, transform: 'scale(1)' };
+const NOTIFICATION_HIDDEN = { opacity: 0, transform: 'scale(0.9)' };
 
 /* ---------------------------------------------------------------------------
  * Component
@@ -524,10 +542,13 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       inheritCustomTheme
     );
 
+    // Where motion is unwelcome it is on screen at once, as it settles, from its first paint.
+    const reducedMotion = usePrefersReducedMotion();
     const transitions = useTransition(true, {
-      from: { opacity: 0, transform: 'scale(0.9)' },
-      enter: { opacity: 1, transform: 'scale(1)' },
-      leave: { opacity: 0, transform: 'scale(0.9)' },
+      from: reducedMotion ? NOTIFICATION_SHOWN : NOTIFICATION_HIDDEN,
+      enter: NOTIFICATION_SHOWN,
+      leave: NOTIFICATION_HIDDEN,
+      immediate: reducedMotion,
       config: SPRING_CONFIG,
     });
 
@@ -630,7 +651,6 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
     }, [pauseOnHover, releaseTimer]);
 
     /* ---- swipe to dismiss ---- */
-    const reducedMotion = usePrefersReducedMotion();
     const mountedRef = useRef(true);
 
     useEffect(
@@ -722,8 +742,12 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
         tiles,
         READABLE_ICON_CONTRAST
       );
-      // an icon colour of the caller's own, in the shade of it that stands out from the tile as well
-      const own = iconColor ? getColorFromMaybeString(theme, iconColor) : undefined;
+      /* an icon colour of the caller's own, in the shade of it that stands out from the tile
+         as well - or as it is given, when the helpers cannot read it (a CSS variable). They
+         take any CSS colour; the cast is where the wider prop meets their narrower type. */
+      const own = iconColor
+        ? getColorFromMaybeString(theme, iconColor as TReqoreEffectColor)
+        : undefined;
 
       return {
         surface,
@@ -732,7 +756,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
         accent,
         glyph: own ? getReadableAccentColorOn(own, tiles, READABLE_ICON_CONTRAST) : glyph,
         // the content under a title is a shade softer, as far as it stays readable
-        contentOpacity: getReadableAlpha(text, drawn, 0.78),
+        content: rgba(text, getReadableAlpha(text, drawn, 0.78)),
         onAccent: getReadableColorFrom(accent, false),
       };
     }, [theme, resolvedIntent, under, minimal, opaque, tinted, iconColor]);
@@ -843,6 +867,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
                 $boxPx={compact ? SIZE_TO_PX[controlSize] : undefined}
                 $color={palette.accent}
                 $tinted={tinted}
+                $glyph={palette.glyph}
                 className='reqore-notification-icon'
               >
                 {iconNode}
@@ -872,13 +897,8 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
                 {content ? (
                   <StyledNotificationText
                     $size={size}
-                    /* text under a title is a shade softer; content of the caller's own (a tag, a
-                       link) keeps its colours - faded as a whole it was faded off what it is drawn on */
-                    $opacity={
-                      title && (typeof content === 'string' || typeof content === 'number')
-                        ? palette.contentOpacity
-                        : 1
-                    }
+                    // text under a title is a shade softer
+                    $color={title ? palette.content : undefined}
                     className='reqore-notification-content'
                   >
                     {content}

@@ -47,7 +47,7 @@ import { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreButton from '../Button';
 import { IReqoreEffect } from '../Effect';
 import ReqoreMenu from '../Menu';
-import ReqoreMenuItem from '../Menu/item';
+import ReqoreMenuItem, { TReqoreMenuItemEventHandler } from '../Menu/item';
 import { ReqorePopover } from '../Popover';
 
 export interface IReqoreSegmentedControlItem {
@@ -521,6 +521,63 @@ const ReqoreSegmentedControl = memo(
         [visibleItems, _value]
       );
 
+      // The overflow "More" button and its menu keep their props while what they show holds: the popover and the
+      // menu items are memo components.
+      const moreButtonProps = useMemo(
+        () => ({
+          icon: 'ArrowDownSLine' as IReqoreIconName,
+          flat: true,
+          transparent: true,
+          size,
+          pill,
+          fluid,
+          active: isSelectedHidden,
+          intent: isSelectedHidden ? activeIntent : undefined,
+          customTheme: isSelectedHidden ? { main: getReadableColorFrom(theme.main) } : customTheme,
+          className: 'reqore-segmented-control-item reqore-segmented-control-more',
+          label: moreLabel,
+        }),
+        [size, pill, fluid, isSelectedHidden, activeIntent, theme.main, customTheme, moreLabel]
+      );
+      const overflowClickHandlers = useMemo(
+        () =>
+          hiddenItems.map(
+            (overflowItem): TReqoreMenuItemEventHandler =>
+              (_event, _itemId, closePopover) => {
+                handleSelect(overflowItem.value);
+                closePopover?.();
+              }
+          ),
+        [hiddenItems, handleSelect]
+      );
+      const moreMenu = useMemo(
+        () => (
+          <ReqoreMenu customTheme={customTheme}>
+            {hiddenItems.map((overflowItem, index) => (
+              <ReqoreMenuItem
+                {...overflowItem.props}
+                key={overflowItem.value}
+                {...omitBy(
+                  { icon: overflowItem.icon, rightIcon: overflowItem.rightIcon },
+                  isUndefined
+                )}
+                disabled={overflowItem.disabled}
+                selected={overflowItem.value === _value}
+                intent={
+                  overflowItem.value === _value
+                    ? overflowItem.activeIntent || activeIntent
+                    : undefined
+                }
+                onClick={overflowClickHandlers[index]}
+              >
+                {overflowItem.label}
+              </ReqoreMenuItem>
+            ))}
+          </ReqoreMenu>
+        ),
+        [customTheme, hiddenItems, _value, activeIntent, overflowClickHandlers]
+      );
+
       if (!items || items.length === 0) {
         return null;
       }
@@ -642,58 +699,20 @@ const ReqoreSegmentedControl = memo(
               theme={theme}
               fluid={fluid}
             >
-              <ReqorePopover
-                component={ReqoreButton}
-                componentProps={{
-                  icon: 'ArrowDownSLine' as IReqoreIconName,
-                  flat: true,
-                  transparent: true,
-                  size,
-                  pill,
-                  fluid,
-                  active: isSelectedHidden,
-                  intent: isSelectedHidden ? activeIntent : undefined,
-                  customTheme: isSelectedHidden
-                    ? { main: getReadableColorFrom(theme.main) }
-                    : customTheme,
-                  className:
-                    'reqore-segmented-control-item reqore-segmented-control-more',
-                  label: moreLabel,
-                }}
-                closeOnOutsideClick
-                isReqoreComponent
-                noWrapper
-                handler='hoverStay'
-                // the hidden segments' only way in: a tap opens it too
-                opensOnTap
-                content={
-                  <ReqoreMenu customTheme={customTheme}>
-                    {hiddenItems.map((overflowItem) => (
-                      <ReqoreMenuItem
-                        {...overflowItem.props}
-                        key={overflowItem.value}
-                        {...omitBy(
-                          { icon: overflowItem.icon, rightIcon: overflowItem.rightIcon },
-                          isUndefined
-                        )}
-                        disabled={overflowItem.disabled}
-                        selected={overflowItem.value === _value}
-                        intent={
-                          overflowItem.value === _value
-                            ? overflowItem.activeIntent || activeIntent
-                            : undefined
-                        }
-                        onClick={(_event, _itemId, closePopover) => {
-                          handleSelect(overflowItem.value);
-                          closePopover?.();
-                        }}
-                      >
-                        {overflowItem.label}
-                      </ReqoreMenuItem>
-                    ))}
-                  </ReqoreMenu>
-                }
-              />
+              {/* drawn on the track, as the items beside it are: it reads against the track */}
+              <ReqoreSurfaceProvider color={trackSurface}>
+                <ReqorePopover
+                  component={ReqoreButton}
+                  componentProps={moreButtonProps}
+                  closeOnOutsideClick
+                  isReqoreComponent
+                  noWrapper
+                  handler='hoverStay'
+                  // the hidden segments' only way in: a tap opens it too
+                  opensOnTap
+                  content={moreMenu}
+                />
+              </ReqoreSurfaceProvider>
             </StyledItemWrapper>
           )}
         </StyledSegmentedControl>

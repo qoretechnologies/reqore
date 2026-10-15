@@ -125,11 +125,13 @@ The helpers are exported for a consumer's own hover:
 
 Reqore honours a user's request for reduced motion (`prefers-reduced-motion: reduce`, WCAG 2.3.3):
 
-- **Its springs settle at once**, at their end: a fade, a slide, a reveal (react-spring's `skipAnimation`, set by
-  `ReqoreUIProvider` as it renders and whenever the preference changes; an app's own springs on the same
-  react-spring settle with them).
+- **Its springs settle at once**, at their end: a fade, a slide, a reveal. Each of Reqore's springs is
+  `immediate` under the preference (a notification, an input's clear button, a drawer and its backdrop);
+  react-spring's global `skipAnimation` is left alone, so an app's own springs animate as the app made them.
 - **Its CSS transitions take a hair of a time** (0.01ms, not none: a transition of no time sends no
-  `transitionend`, which some components wait for), everywhere inside the provider's layout and its portal.
+  `transitionend`, which some components wait for), on Reqore's own elements (a class starting `reqore-`, and
+  their `::before` / `::after`) in the provider's layout and its portal (`REDUCED_MOTION_SELECTORS`); an app's
+  own elements keep their transitions.
 - Its keyframe animations (a spinner, a pulse) are as they were.
 
 The story run's contrast gate asks for reduced motion while it measures, so it measures what stays on screen,
@@ -150,9 +152,9 @@ Reqore picks its text and icon colors against what they are actually drawn on, t
   app that draws its own background (an image, a busy gradient behind glass) tells Reqore what it is.
 - **Fades have a floor.** Secondary text and icons (descriptions, metadata, timestamps, placeholders, control
   icons at 70%, the clear button, a switch's other word, breadcrumb separators) are faded only as far as they
-  still read. An idle `ReqoreNavRail` (`idleReveal`) rests at `idleOpacity` only where its icons still stand
+  still read. An idle `ReqoreNavRail` (`idleReveal`) rests at its default fade only where its icons still stand
   out by 3:1 - the marks' and the active mark's on its fill, faded into the page with the rail - and less
-  faded where they would not.
+  faded where they would not; an `idleOpacity` the caller gives is drawn as given.
 - **Colored text keeps its hue, in a shade that reads:** an `intent` on text or an icon, an intent named as an
   effect color (`'warning'`, `'info:lighten:2'`), text drawn in a gradient, a tag's or a notification's own
   icon color. An icon's color counts whether it is the component's (`leftIconColor`, `iconColor`) or given in
@@ -164,13 +166,57 @@ Reqore picks its text and icon colors against what they are actually drawn on, t
 - **Secondary text is faded, not what it holds.** An entity row writes its description and metadata in a faded
   color, so a tag or a link in them is drawn as it is.
 - **A translucent gradient** is read with the lighter ring the effect draws under it, which shows through.
-- **What a caller sets is the caller's:** an explicit hex `color` or `effect.opacity` is drawn as given.
+- **What a caller sets is the caller's:** an explicit hex `color` or `effect.opacity` is drawn as given. That
+  includes an icon in a button or a tag (`leftIconColor='#ff0000'`, `leftIconProps={{ color: '#000000' }}`),
+  faded at most as far as it still stands out by 3:1, an explicit `descriptionEffect` / `labelEffect` /
+  `metadataEffect` `opacity`, and an `idleOpacity`: the floors apply to the defaults only. Only a theme's
+  color (an intent, `main`, a shade of one) is moved to a readable shade. A text pair passed to
+  `getReadableColor(theme, ifLight, ifDark)` / `getReadableColorFrom(from, dim, ifLight, ifDark)` stays the
+  caller's: when neither reaches 4.5:1, the better of the two is returned (the default pair still gives way to
+  pure black or white).
+- **A color Reqore cannot read is drawn as given, never thrown on:** a CSS variable, `currentColor` or a typo,
+  used as an intent, a theme color, `effect.color`, `descriptionEffect.color`, a gradient stop, an icon color
+  or a surface. The helpers return it as it is, `getContrastRatio` is `NaN` for it, and a surface it names is
+  left out. A wash of it is mixed by the browser: `getColorAtAlpha('var(--brand)', 0.2)` is
+  `color-mix(in srgb, var(--brand) 20%, transparent)`. `isReadableColor(color)` tells whether the helpers can
+  read a color. A notification's `iconColor` given as a CSS variable is drawn as given; one the helpers read is
+  shaded to stand out by 3:1 on its tile.
+- **A short hex is read as CSS reads it**, each digit doubled (`#fdc` = `#ffddcc`, `#f00a` = `#ff0000aa`); it
+  used to be repeated (`#fdcfdc`), so a minimal button in `#ff5500` had lilac text. `getContrastRatio` is
+  unrounded: `#595959` on black is 2.998:1, not 3.
+- **A transparent or minimal element with its own `customTheme`** (an entity row, a callout's content, a
+  minimal message), with no surface handed down from above, reads its text on its `customTheme.main`: an app
+  that paints its own section and themes the element for it gets text for that color. An intent alone is not
+  a surface.
+- **What a control draws on itself is read on its own fill:** `effect.color` on a `ReqoreButton` or
+  `ReqoreTag` (at rest and hovered), a callout's own text, a transparent panel's or testimonial's own text, a
+  field's icons and clear button (on the bare surface when `transparent` or `minimal`; `getInputLook(theme,
+  minimal, transparent, surface)` returns them at once). A soft or text tag reads on every color of a gradient
+  it sits on. A hovered button's text takes the color picked for its hovered fill (with button animations on,
+  that declaration used to be dropped).
+- **Floating layers read on their own fill.** A popover's content and a drawer are drawn on the popover's or
+  drawer's own fill (the layout's surface underneath), never the surface of whatever opened them.
+- **A nav rail's active group** hands its fill to the marks in it: each color of `activeEffect`'s gradient, or
+  the tint of its intent, over the rail. A resting section mark picks its text for the group, not for the rail
+  around it.
+- **Themed and secondary colors:** `theme.breadcrumbs.item.color` reaches the crumb labels (a crumb with its
+  own intent keeps its shade); a description list's labels are faded in its own `customTheme` text color; a
+  rich-text editor's placeholder in its own `customTheme` / `intent`; a stacked bar's segment text is read over
+  the track and the surface the bar is on, with its shadow only under light text; a segmented control's
+  overflow "More" button is drawn and read on the track. Text under a notification's title is softened through
+  its color, so JSX text dims like a string and a tag or a link in it keeps its own colors.
+- **Cost.** Each color helper keeps its last 2000 results. Button, Tag, Span, P, Link, Input, Textarea and table
+  cells work their colors out once per render, an effect's gradient pass is remembered per gradient, theme and
+  state, and `ReqoreTag` is a `memo` component. `ReqoreSurfaceProvider` hands its surface down by its colors: a
+  list rebuilt each render with the same colors (an inline `effect`) stays the same value, so what is below it
+  does not render again.
 - Disabled content is exempt (WCAG); the components that are not form controls now say they are disabled with
-  `aria-disabled`.
+  `aria-disabled` (an accordion item on its header, the control). A component that is not disabled keeps an
+  `aria-disabled` the caller gives it.
 
 The helpers are exported from `helpers/colors`: `getReadableColorOn`, `getReadableAccentColorOn`,
 `getReadableAlpha`, `getReadableIconLook`, `getReadableGroupOpacity`, `getContrastRatio`, `getDrawnColor`,
-`getThemeSurface(s)`. The story run checks every story (`src/stories/utils/contrastGate.ts`).
+`getThemeSurface(s)`, `getColorAtAlpha`, `isReadableColor`. The story run checks every story (`src/stories/utils/contrastGate.ts`).
 
 ## Props and the DOM (0.78.5)
 

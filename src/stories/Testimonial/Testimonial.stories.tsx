@@ -374,7 +374,7 @@ export const WithEffects: Story = {
     },
     quoteEffect: { italic: true },
     authorEffect: { uppercase: true, spaced: 1, weight: 'bold' },
-    roleEffect: { opacity: 0.6 },
+    roleEffect: { opacity: 0.7 },
   },
 };
 

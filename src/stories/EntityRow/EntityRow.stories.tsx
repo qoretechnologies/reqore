@@ -237,7 +237,7 @@ export const WithEffects: Story = {
     intent: 'info',
     labelEffect: { weight: 'bold', uppercase: true, spaced: 1 },
     descriptionEffect: { italic: true, opacity: 0.8 },
-    metadataEffect: { uppercase: true, spaced: 2, opacity: 0.6 },
+    metadataEffect: { uppercase: true, spaced: 2, opacity: 0.7 },
     effect: {
       gradient: {
         colors: { 0: 'info:darken:5', 100: 'transparent' },

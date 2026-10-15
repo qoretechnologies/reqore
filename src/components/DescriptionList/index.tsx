@@ -222,41 +222,48 @@ const StyledLabel = styled.div<IStyledLabelProps>`
 const UPPERCASE_LABEL_OPACITY = 0.55;
 
 /**
- * A row's label: an uppercase one fainter than the content, as far as it stays readable on what the list is
- * drawn on (it is rendered inside the list's panel, whose surface it reads).
+ * A row's label: an uppercase one fainter than the content, as far as it stays readable on what
+ * the list is drawn on (it is rendered inside the list's panel, whose surface it reads), in the
+ * color the list's panel writes it in: its own theme's (`customTheme`), not the provider's.
  */
-const DescriptionListLabel = ({
-  width,
-  uppercase,
-  children,
-}: {
-  width: string;
-  uppercase: boolean;
-  children?: ReactNode;
-}) => {
-  const theme = useReqoreTheme();
-  const surface = getThemeSurface(theme, useReqoreSurface());
-  const opacity = useMemo(
-    () =>
-      getReadableAlpha(
+const DescriptionListLabel = memo(
+  ({
+    width,
+    uppercase,
+    customTheme,
+    inheritCustomTheme,
+    children,
+  }: {
+    width: string;
+    uppercase: boolean;
+    customTheme?: IReqorePanelProps['customTheme'];
+    inheritCustomTheme?: boolean;
+    children?: ReactNode;
+  }) => {
+    const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
+    const around = useReqoreSurface();
+    const opacity = useMemo(() => {
+      const surface = getThemeSurface(theme, around);
+
+      return getReadableAlpha(
         getReadableColor(theme, undefined, undefined, true, surface),
         surface,
         UPPERCASE_LABEL_OPACITY
-      ),
-    [theme, surface]
-  );
+      );
+    }, [theme, around]);
 
-  return (
-    <StyledLabel
-      $width={width}
-      $uppercase={uppercase}
-      $opacity={opacity}
-      className='reqore-description-list-label'
-    >
-      {children}
-    </StyledLabel>
-  );
-};
+    return (
+      <StyledLabel
+        $width={width}
+        $uppercase={uppercase}
+        $opacity={opacity}
+        className='reqore-description-list-label'
+      >
+        {children}
+      </StyledLabel>
+    );
+  }
+);
 
 const StyledContent = styled.div<IStyledContentProps>`
   flex: 1 1 auto;
@@ -390,7 +397,12 @@ export const ReqoreDescriptionList = memo(
                   data-key={row.key}
                 >
                   {row.label !== undefined ? (
-                    <DescriptionListLabel width={labelWidth} uppercase={labelUppercase}>
+                    <DescriptionListLabel
+                      width={labelWidth}
+                      uppercase={labelUppercase}
+                      customTheme={panelRest.customTheme}
+                      inheritCustomTheme={panelRest.inheritCustomTheme}
+                    >
                       {anyRowHasIntent ? (
                         <StyledIconSlot
                           $visible={Boolean(iconName)}

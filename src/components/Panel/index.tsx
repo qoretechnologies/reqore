@@ -34,7 +34,6 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeDarkness,
   changeLightness,
-  getColorFromMaybeString,
   fadeColor,
   getDrawnColor,
   getMainBackgroundColor,
@@ -100,6 +99,7 @@ import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 import { LabelEditor } from './LabelEditor';
 import { ReqorePanelNonResponsiveActions } from './NonResponsiveActions';
+import { getDrawnEffectTextColor, getUnpaintedSurface } from './surface';
 
 const getPaddingSize = (padded: boolean | TSizes, size: TSizes): number =>
   typeof padded === 'string' ? SPECIAL_PADDING_FROM_SIZE[padded] : PADDING_FROM_SIZE[size];
@@ -381,6 +381,9 @@ export interface IStyledPanel extends Omit<IReqorePanelProps, 'accentSize'> {
   /** Always a resolved pixel number — the component maps `TSizes` names before
    *  it reaches the styles, so the css (which interpolates px) never sees a string. */
   $accentSize?: number;
+  /** The panel's text color, read on what it is drawn on, when that is not its own fill (a panel drawn at less
+   *  than full opacity): the theme's readable color when not given. */
+  $color?: string;
   /** True once a sticky header has pinned to its scroll container (detected at
    *  runtime). The header drops its top radius while stuck so it reads as a
    *  full-width bar, and regains it at rest. */
@@ -780,7 +783,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
           0.08
         )}`
       : undefined};
-  color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
+  color: ${({ theme, $color }) => $color ?? getReadableColor(theme, undefined, undefined, true)};
   ${({
     accentPosition,
     $accentSize = ACCENT_SIZE_TO_PX.normal,
@@ -1279,6 +1282,9 @@ export const ReqorePanelSkeleton = memo(
   }
 );
 
+/** A description given no effect: one object, so what is made from it holds from render to render. */
+const NO_DESCRIPTION_EFFECT: IReqoreEffect = {};
+
 export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
   (
     {
@@ -1309,7 +1315,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       contentStyle,
       contentEffect,
       labelEffect = {},
-      descriptionEffect = {},
+      descriptionEffect = NO_DESCRIPTION_EFFECT,
       descriptionIntent,
       labelSize,
       contentSize,
@@ -2012,7 +2018,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     /* What the panel holds is drawn on the panel - its content on the panel's background, its
        title bar and bottom actions on the bar's - and is told so, to pick its text and icons
        against that rather than the page. */
-    const surface = useReqoreSurface();
+    const aroundSurface = useReqoreSurface();
+    // a panel drawn at no opacity is on what is around it: what a component there says, or its customTheme's main
+    const surface = useMemo(
+      () => getUnpaintedSurface(theme, customTheme, aroundSurface, opacity === 0),
+      [theme, customTheme, aroundSurface, opacity]
+    );
     const contentSurface = useMemo(
       () =>
         getDrawnColor(
@@ -2021,7 +2032,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         ),
       [theme, opacity, surface]
     );
-    // each color of the content's gradient, when its effect draws one
+    /* each color of the content's gradient, when its effect draws one: for as long as its colors hold, not the
+       effect object - one given inline is new on every render, and so was every surface the panel hands down */
+    const contentGradientKey = JSON.stringify(transformedContentEffect?.gradient ?? null);
     const contentSurfaces = useMemo(
       () =>
         getEffectBackgrounds(
@@ -2030,7 +2043,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           contentSurface,
           getThemeSurface(theme, surface)
         ),
-      [theme, transformedContentEffect, contentSurface, surface]
+      [theme, contentGradientKey, contentSurface, surface]
     );
     const barSurface = useMemo(
       () =>
@@ -2047,6 +2060,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     );
     // The bar's description and icon fade only as far as they stay readable there.
     const barText = useMemo(() => getReadableTextOn(theme, barSurface), [theme, barSurface]);
+    /* Drawn at less than full opacity, the panel's own text (what it holds that sets no color of its own) is read
+       on what its content is drawn on, as what it holds is - not on the theme's main, which it barely paints. */
+    const panelText = useMemo(
+      () =>
+        opacity !== undefined && opacity < 1 ? getReadableTextOn(theme, contentSurfaces) : undefined,
+      [theme, opacity, contentSurfaces]
+    );
     // the title icon's own color: in its props (which win, as they are spread over the rest), else the panel's
     const [titleIconPropsColor, titleIconRest] = splitIconColor(iconProps);
     const titleIconOwn = titleIconPropsColor || iconColor;
@@ -2180,25 +2200,33 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       [descriptionIsInteractive]
     );
 
+    /* Dimmer than the title, as far as it stays readable on the bar: the color it is drawn in - its effect's
+       (where the theme can resolve it), its intent's, else the bar's text - at 0.7, or as much more as it needs.
+       An opacity the caller gives is the caller's, as given. Worked out only for a description there is. */
+    const descriptionLook = useMemo(() => {
+      if (!description || descriptionEffect.opacity !== undefined) {
+        return descriptionEffect;
+      }
+
+      const drawn = descriptionEffect.color
+        ? getDrawnEffectTextColor(theme, descriptionEffect.color, barSurface)
+        : descriptionIntent
+          ? getReadableIntentColor(theme, descriptionIntent, undefined, barSurface)
+          : undefined;
+
+      return {
+        ...descriptionEffect,
+        opacity: getReadableAlpha(drawn ?? barText, barSurface, 0.7),
+      };
+    }, [description, descriptionEffect, descriptionIntent, theme, barSurface, barText]);
+
     /** Shared by both places the description can render — inline with the title, or on its
      *  own row below — so the two cannot drift apart. */
     const descriptionProps = {
       ref: descriptionRef,
       className: 'reqore-panel-title-description',
       size: panelSize,
-      effect: {
-        ...descriptionEffect,
-        // dimmer than the title, as far as it stays readable on the bar
-        opacity: getReadableAlpha(
-          descriptionEffect?.color
-            ? getColorFromMaybeString(theme, descriptionEffect.color)
-            : descriptionIntent
-              ? getReadableIntentColor(theme, descriptionIntent, undefined, barSurface)
-              : barText,
-          barSurface,
-          descriptionEffect?.opacity ?? 0.7
-        ),
-      },
+      effect: descriptionLook,
       intent: descriptionIntent,
       onClick: handleDescriptionClick,
       ...(descriptionIsInteractive
@@ -2364,7 +2392,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           opacity={opacity}
           fluid={fluid}
           disabled={disabled}
-          aria-disabled={disabled ? true : undefined}
+          // a disabled panel says so; any other keeps what the caller says
+          aria-disabled={disabled ? true : rest['aria-disabled']}
+          $color={panelText}
           Component={StyledPanel}
           ref={(node: any) => {
             handleRef(node);
