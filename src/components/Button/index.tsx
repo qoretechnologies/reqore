@@ -452,6 +452,23 @@ export const getButtonIconLook = (
       };
 };
 
+/**
+ * An icon's own color given in its props (`leftIconProps.intent`, `.color`), split from the rest of them. The icon
+ * would make it readable for itself at full opacity while the button draws it at `CONTROL_ICON_OPACITY` (a warning
+ * icon was 2.4:1 on a dark theme), so the button picks it, as it does `leftIconColor`.
+ */
+const splitIconColor = (
+  props?: IReqoreIconProps
+): [TReqoreEffectColor | undefined, IReqoreIconProps | undefined] => {
+  if (!props || (!props.intent && !props.color)) {
+    return [undefined, props];
+  }
+
+  const { intent, color, ...rest } = props;
+
+  return [intent || color, rest];
+};
+
 export const StyledAnimatedTextWrapper = styled.span`
   min-width: 5px;
   overflow: hidden;
@@ -1063,13 +1080,18 @@ const ReqoreButton = memo(
         }),
         [theme, customColor, minimal, transparent, memoEffect, surface]
       );
+      // an icon's own color: in its props (which win, as they are spread over the rest), else the button's
+      const [leftIconPropsColor, leftIconRest] = splitIconColor(leftIconProps);
+      const [rightIconPropsColor, rightIconRest] = splitIconColor(rightIconProps);
+      const leftIconOwn = leftIconPropsColor || leftIconColor || iconColor;
+      const rightIconOwn = rightIconPropsColor || rightIconColor || iconColor;
       const leftIconLook = useMemo(
-        () => getButtonIconLook(colorProps, leftIconColor || iconColor),
-        [colorProps, leftIconColor, iconColor]
+        () => getButtonIconLook(colorProps, leftIconOwn),
+        [colorProps, leftIconOwn]
       );
       const rightIconLook = useMemo(
-        () => getButtonIconLook(colorProps, rightIconColor || iconColor),
-        [colorProps, rightIconColor, iconColor]
+        () => getButtonIconLook(colorProps, rightIconOwn),
+        [colorProps, rightIconOwn]
       );
       // What the button holds (its badges, a label given as a node) is drawn on the button.
       const restingBackground = useMemo(() => getButtonColors(colorProps).backgrounds, [colorProps]);
@@ -1137,12 +1159,12 @@ const ReqoreButton = memo(
                 <>
                   <ReqoreIcon
                     size={size}
-                    color={leftIconLook.color ?? (leftIconColor || iconColor)}
+                    color={leftIconLook.color ?? leftIconOwn}
                     compact
                     effect={{
                       opacity: leftIconLook.opacity,
                     }}
-                    {...leftIconProps}
+                    {...leftIconRest}
                     style={
                       textAlign !== 'left' || iconsAlign === 'center' || !_children
                         ? {
@@ -1251,11 +1273,11 @@ const ReqoreButton = memo(
                   <ReqoreIcon
                     icon={rightIcon}
                     size={size}
-                    color={rightIconLook.color ?? (rightIconColor || iconColor)}
+                    color={rightIconLook.color ?? rightIconOwn}
                     effect={{
                       opacity: rightIconLook.opacity,
                     }}
-                    {...rightIconProps}
+                    {...rightIconRest}
                     style={
                       textAlign !== 'right' || iconsAlign === 'center'
                         ? {
