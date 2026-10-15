@@ -168,9 +168,8 @@ export default [
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     expandable: true,
     contentEffect: {
-      // dark at both ends, so the item's text reads on all of it
       gradient: {
-        colors: { 0: '#3b065e', 100: '#005f5a' },
+        colors: { 0: '#3b065e', 100: '#00d3c8' },
         direction: 'to right bottom',
       },
       uppercase: true,

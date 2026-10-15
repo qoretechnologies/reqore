@@ -1,4 +1,3 @@
-import { Globals } from '@react-spring/web';
 import { cloneDeep } from 'lodash';
 import type { IReqoreNotificationDefaults } from '../components/Notifications/notification';
 import merge from 'lodash/merge';
@@ -13,7 +12,6 @@ import { IReqoreContext } from '../context/ReqoreContext';
 import { TReqoreDataAttributes } from '../types/global';
 import ThemeContext from '../context/ThemeContext';
 import { buildTheme, getMainBackgroundColor, getReadableColor } from '../helpers/colors';
-import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import ReqoreProvider from './ReqoreProvider';
 import ReqoreThemeProvider from './ThemeProvider';
 
@@ -67,47 +65,7 @@ const GlobalStyle = createGlobalStyle`
   .reqore-blur-z-index {
     z-index: 8999;
   }
-
-  /* Reduced motion (WCAG 2.3.3): what Reqore draws - the layout and the portal its dialogs, popovers and
-     notifications open in - changes at once. A hair of a duration, not none: a transition of no time sends no
-     transitionend, which some components wait for. Its springs settle at once too (see useSpringsHonourReducedMotion). */
-  @media (prefers-reduced-motion: reduce) {
-    .reqore-layout-wrapper,
-    .reqore-layout-wrapper *,
-    .reqore-layout-wrapper *::before,
-    .reqore-layout-wrapper *::after,
-    #reqore-portal,
-    #reqore-portal *,
-    #reqore-portal *::before,
-    #reqore-portal *::after {
-      transition-duration: 0.01ms !important;
-      transition-delay: 0s !important;
-    }
-  }
 `;
-
-/* Whether Reqore turned react-spring's skipAnimation on: it turns off only what it turned on. */
-let springsSkippedForReducedMotion = false;
-
-/**
- * Reqore's springs (a fade, a slide, a reveal, built on react-spring) honour the reduced-motion preference: under
- * it every spring settles at once, at its end. Set while the provider renders, so the springs of its first render
- * already settle, and again whenever the preference changes. It is react-spring's own switch, so an app's springs
- * on the same react-spring settle with Reqore's.
- */
-const useSpringsHonourReducedMotion = (): void => {
-  const reduced = usePrefersReducedMotion();
-
-  useMemo(() => {
-    if (reduced) {
-      springsSkippedForReducedMotion = true;
-      Globals.assign({ skipAnimation: true });
-    } else if (springsSkippedForReducedMotion) {
-      springsSkippedForReducedMotion = false;
-      Globals.assign({ skipAnimation: false });
-    }
-  }, [reduced]);
-};
 
 const StyledPortal = styled.div`
   * {
@@ -142,8 +100,6 @@ const ReqorePortal = memo(
 const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = memo(
   ({ children, theme, options, layoutWrapperProps }) => {
     const [modalPortal, setModalPortal] = useState<any>(false);
-
-    useSpringsHonourReducedMotion();
 
     const _theme: Partial<IReqoreTheme> = useMemo(() => cloneDeep(theme || {}), [theme]);
     const _defaultTheme: IReqoreTheme = useMemo(() => cloneDeep(DEFAULT_THEME), []);

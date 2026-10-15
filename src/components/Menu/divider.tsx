@@ -1,14 +1,11 @@
 import React, { forwardRef } from 'react';
 import { css } from 'styled-components';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
-import { IReqoreTheme } from '../../constants/theme';
-import { useReqoreSurface } from '../../context/SurfaceContext';
-import { getReadableTextOn, getThemeSurfaces } from '../../helpers/colors';
+import { getReadableColor } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize, isStringSize } from '../../helpers/utils';
-import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreEffect, IWithReqoreSize } from '../../types/global';
-import { IReqoreEffect, StyledTextEffect, TReqoreHexColor } from '../Effect';
+import { IReqoreEffect, StyledTextEffect } from '../Effect';
 import { ReqoreVerticalSpacer } from '../Spacer';
 
 export interface IReqoreMenuDividerProps
@@ -50,8 +47,7 @@ export const StyledMenuDivider = styled(StyledTextEffect).withConfig({
         : undefined};
     `}
 
-  color: ${({ theme, $backgrounds }: { theme: IReqoreTheme; $backgrounds?: TReqoreHexColor[] }) =>
-    getReadableTextOn(theme, $backgrounds || [], false)};
+  color: ${({ theme }) => getReadableColor(theme, undefined, undefined)};
 `;
 
 const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
@@ -67,11 +63,8 @@ const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
       ...rest
     }: IReqoreMenuDividerProps,
     ref: any
-  ) => {
-    const theme = useReqoreTheme();
-    const surfaces = getThemeSurfaces(theme, useReqoreSurface());
-
-    return line ? (
+  ) =>
+    line ? (
       <ReqoreVerticalSpacer
         className={`${className || ''} reqore-menu-divider`}
         height={PADDING_FROM_SIZE[size]}
@@ -83,8 +76,6 @@ const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
         {...rest}
         padded={padded}
         size={size}
-        // what the menu is drawn in: the label, or the gradient it is drawn in, reads on it
-        $backgrounds={surfaces}
         className={`${className || ''} reqore-menu-divider`}
         ref={ref}
         effect={
@@ -100,8 +91,7 @@ const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
       >
         {label}
       </StyledMenuDivider>
-    );
-  }
+    )
 );
 
 export default ReqoreMenuDivider;

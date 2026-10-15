@@ -38,7 +38,7 @@ export const Basic: Story = {
           <ReqoreIcon
             icon='SignalTowerFill'
             size='20px'
-            color='#a77bc0'
+            color='#291133'
             effect={{ sepia: true }}
             margin='both'
             tooltip={{ content: 'I have a tooltip', openOnMount: true }}
@@ -46,14 +46,14 @@ export const Basic: Story = {
           <ReqoreIcon
             icon='SignalTowerFill'
             size='20px'
-            color='#1fae84'
+            color='#0c7052'
             effect={{ blur: 1 }}
             margin='both'
           />
           <ReqoreIcon
             icon='SignalTowerFill'
             size='20px'
-            color='#e04aae'
+            color='#700c57'
             effect={{ contrast: 150 }}
             margin='both'
           />
@@ -67,7 +67,7 @@ export const Basic: Story = {
           <ReqoreIcon
             icon='SignalTowerFill'
             size='20px'
-            color='#4a8af0'
+            color='#0f5bd5'
             effect={{ invert: true }}
             margin='both'
           />
@@ -81,7 +81,7 @@ export const Basic: Story = {
           <ReqoreIcon
             icon='SignalTowerFill'
             size='20px'
-            color='#d65a96'
+            color='#8d2a5c'
             rotation={90}
             margin='both'
           />

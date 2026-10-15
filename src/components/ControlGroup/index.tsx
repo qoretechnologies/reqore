@@ -14,11 +14,8 @@ import { css } from 'styled-components';
 import { ReqoreButton, ReqoreDrawer } from '../..';
 import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
-import { getThemeSurfaces } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
-import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   IReqoreIntent,
   IWithReqoreCustomTheme,
@@ -29,7 +26,7 @@ import {
   IWithReqoreSize,
 } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
-import { getEffectBackgrounds, getPrimaryGradient, IReqoreEffect, StyledEffect } from '../Effect';
+import { StyledEffect } from '../Effect';
 import { StyledHeader } from '../Header';
 import { StyledParagraph } from '../Paragraph';
 
@@ -211,33 +208,6 @@ const definedOnly = <T extends Record<string, any>>(props: T): Partial<T> => {
     }
   }
   return rv;
-};
-
-/**
- * What a control group is drawn in, handed to what it holds when its effect paints a gradient: each color of it
- * over what is under it. Its own component, so a change of theme re-renders it, not the group (which measures its
- * children and may fold them).
- */
-const ReqoreGroupSurface = ({
-  effect,
-  children,
-}: {
-  effect?: IReqoreEffect;
-  children?: React.ReactNode;
-}) => {
-  const theme = useReqoreTheme();
-  const parentSurface = useReqoreSurface();
-  const surfaces = useMemo(
-    () =>
-      getPrimaryGradient(effect?.gradient)
-        ? getThemeSurfaces(theme, parentSurface).flatMap((under) =>
-            getEffectBackgrounds(theme, effect, under, under)
-          )
-        : undefined,
-    [theme, parentSurface, effect]
-  );
-
-  return <ReqoreSurfaceProvider color={surfaces}>{children}</ReqoreSurfaceProvider>;
 };
 
 const ReqoreControlGroup = memo(
@@ -760,7 +730,7 @@ const ReqoreControlGroup = memo(
           horizontalAlign={horizontalAlign}
           className={`${className || ''} reqore-control-group`}
         >
-          <ReqoreGroupSurface effect={rest.effect}>{clone(_children)}</ReqoreGroupSurface>
+          {clone(_children)}
         </StyledReqoreControlGroup>
       </>
     );

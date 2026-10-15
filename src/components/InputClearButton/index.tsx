@@ -11,15 +11,10 @@ export interface IReqoreInputClearButtonProps extends IReqoreButtonProps {
   hasRightIcon?: boolean;
   /** Extra room (px) taken at the field's right edge by something else, e.g. a password toggle. */
   rightOffset?: number;
-  /**
-   * The opacity the button is drawn at once shown: 0.5 unless given. The field gives the one at which the button
-   * still stands out from its background by 3:1 (WCAG 1.4.11).
-   */
-  shownOpacity?: number;
 }
 
 export const StyledInputClearButton = styled(ReqoreIcon).withConfig({
-  shouldForwardProp: omitStyleProps('hasRightIcon', 'show', 'rightOffset', 'shownOpacity'),
+  shouldForwardProp: omitStyleProps('hasRightIcon', 'show', 'rightOffset'),
 })<{ hasRightIcon?: boolean; show?: boolean; rightOffset?: number }>`
   position: absolute;
   right: ${({ size, hasRightIcon, rightOffset = 0 }) =>
@@ -39,12 +34,11 @@ const ReqoreInputClearButton = ({
   show,
   enabled,
   size = 'normal',
-  shownOpacity = 0.5,
   ...rest
 }: IReqoreInputClearButtonProps) => {
   const transitions = useTransition(show && enabled, {
     from: { opacity: 0, filter: 'blur(10px)' },
-    enter: { opacity: shownOpacity, filter: 'blur(0px)' },
+    enter: { opacity: 0.5, filter: 'blur(0px)' },
     leave: { opacity: 0, filter: 'blur(10px)' },
     config: SPRING_CONFIG,
   });

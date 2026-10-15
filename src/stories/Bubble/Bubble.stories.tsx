@@ -142,8 +142,7 @@ export const WithGradient: Story = {
   args: {
     align: 'right',
     effect: {
-      // white reads on both ends
-      gradient: { colors: { 0: '#6652e0', 100: '#c008c0' }, direction: 'to right' },
+      gradient: { colors: { 0: '#7b68ee', 100: '#c008c0' }, direction: 'to right' },
       color: '#ffffff',
     },
   },
@@ -346,7 +345,7 @@ export const Group: Story = {
       <ReqoreBubble
         align='right'
         effect={{
-          gradient: { colors: { 0: '#6652e0', 100: '#5a48c4' }, direction: 'to bottom right' },
+          gradient: { colors: { 0: '#7b68ee', 100: '#5a48c4' }, direction: 'to bottom right' },
           color: '#ffffff',
         }}
       >
@@ -355,7 +354,7 @@ export const Group: Story = {
       <ReqoreBubble
         align='right'
         effect={{
-          gradient: { colors: { 0: '#6652e0', 100: '#5a48c4' }, direction: 'to bottom right' },
+          gradient: { colors: { 0: '#7b68ee', 100: '#5a48c4' }, direction: 'to bottom right' },
           color: '#ffffff',
         }}
         timestamp='10:41 AM'

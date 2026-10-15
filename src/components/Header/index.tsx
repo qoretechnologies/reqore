@@ -2,9 +2,7 @@ import { forwardRef, memo, useMemo } from 'react';
 import styled from '../../helpers/styled';
 import { HEADER_LEVEL_TO_PX, HEADER_SIZE_TO_NUMBER, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { getReadableIntentColor } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';
-import { useReqoreSurface } from '../../context/SurfaceContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreEffect, IWithReqoreTooltip } from '../../types/global';
 import { StyledTextEffect } from '../Effect';
@@ -26,9 +24,7 @@ export interface IReqoreHeadingStyle extends IReqoreHeadingProps {
 export const StyledHeader = styled(StyledTextEffect)`
   margin: 0;
   padding: 0;
-  /* An intent colours the heading in a shade of it that reads on the theme's surface. */
-  color: ${({ theme, intent, $surface }) =>
-    intent ? getReadableIntentColor(theme, intent, undefined, $surface) : 'inherit'};
+  color: ${({ theme, intent }) => (intent ? theme.intents[intent] : 'inherit')};
 
   font-size: ${({ _size }) =>
     _size && HEADER_LEVEL_TO_PX[_size] ? `${HEADER_LEVEL_TO_PX[_size]}px` : 'inherit'};
@@ -41,7 +37,6 @@ export const ReqoreHeading = memo(
       ref
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent);
-      const surface = useReqoreSurface();
       const _size: number = isStringSize(size) ? HEADER_SIZE_TO_NUMBER[size] : size;
       const HTMLheaderElement = useMemo(() => {
         return `h${_size}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
@@ -56,7 +51,6 @@ export const ReqoreHeading = memo(
             as: HTMLheaderElement,
             theme,
             intent,
-            $surface: surface,
             ...rest,
             _size,
             className: `${className || ''} reqore-heading`,

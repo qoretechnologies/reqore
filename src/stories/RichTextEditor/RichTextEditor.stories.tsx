@@ -659,7 +659,7 @@ export const WithCustomRenderLeaf: Story = {
         style={{
           fontWeight: leaf.bold ? 900 : undefined,
           fontStyle: leaf.italic ? 'italic' : undefined,
-          color: leaf.bold ? '#ff8585' : leaf.italic ? '#4ecdc4' : undefined,
+          color: leaf.bold ? '#ff6b6b' : leaf.italic ? '#4ecdc4' : undefined,
           letterSpacing: leaf.bold ? '0.05em' : undefined,
         }}
       >

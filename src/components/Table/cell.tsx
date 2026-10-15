@@ -1,17 +1,10 @@
 import { lighten, rgba } from 'polished';
 import { forwardRef, memo, useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { css, useTheme } from 'styled-components';
+import { css } from 'styled-components';
 import { IReqoreTableColumn } from '.';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import {
-  changeLightness,
-  getDrawnColor,
-  getReadableColorFrom,
-  getThemeSurface,
-  TReqoreSurface,
-} from '../../helpers/colors';
-import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
+import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { IWithReqoreTooltip } from '../../types/global';
@@ -35,79 +28,6 @@ export interface IReqoreTableBodyCellProps
   size?: TSizes;
   expandHeightButtonProps?: Partial<IReqoreButtonProps>;
 }
-
-/** What decides a cell's paint. */
-type TReqoreTableCellPaintProps = Pick<
-  IReqoreTableCellStyle,
-  'theme' | 'intent' | 'selected' | 'selectedIntent' | 'striped' | 'even' | 'hovered' | 'pin'
->;
-
-/**
- * A cell's paint: its color (the theme's, or the row's intent), lightened for each of what the row is - an
- * intent's, striped and odd, selected, hovered - and drawn at 30%; `transparent` when it is none of them (an
- * unpinned cell). A pinned cell is opaque: the paint over the theme's main.
- */
-const getTableCellPaint = ({
-  theme,
-  intent,
-  selected,
-  selectedIntent,
-  striped,
-  even,
-  hovered,
-  pin,
-}: TReqoreTableCellPaintProps): {
-  backgroundColor: TReqoreColor;
-  displayedBackgroundColor: TReqoreHexColor;
-} => {
-  const color =
-    intent || (selected && selectedIntent)
-      ? theme.intents[intent || selectedIntent]
-      : theme.main;
-  let opacity = 0;
-  // Is there any intent
-  if (intent || (selected && selectedIntent)) {
-    opacity += 0.02;
-  }
-  // Is the table striped and this row odd
-  if (striped && !even) {
-    opacity += 0.05;
-  }
-  // Is this row selected
-  if (selected) {
-    opacity += 0.02;
-  }
-  // Is this row hovered
-  if (hovered) {
-    opacity += 0.08;
-  }
-
-  // Pinned cells must paint opaque — otherwise non-pinned cells scrolling underneath show through
-  const backgroundColor: TReqoreColor =
-    opacity === 0 ? (pin ? theme.main : 'transparent') : changeLightness(color, opacity);
-
-  return {
-    backgroundColor,
-    displayedBackgroundColor:
-      backgroundColor === 'transparent'
-        ? theme.main
-        : (rgba(backgroundColor, 0.3) as TReqoreHexColor),
-  };
-};
-
-/**
- * A cell as it is drawn: its paint over what the table is drawn on (a pinned one over the theme's main), or
- * what the table is drawn on alone when it paints nothing.
- */
-const getTableCellBackground = (
-  props: TReqoreTableCellPaintProps,
-  surface?: TReqoreSurface
-): TReqoreHexColor => {
-  const { backgroundColor, displayedBackgroundColor } = getTableCellPaint(props);
-  const under = props.pin ? getDrawnColor(props.theme.main) : getThemeSurface(props.theme, surface);
-
-  return backgroundColor === 'transparent' ? under : getDrawnColor(displayedBackgroundColor, under);
-};
 
 export const StyledTableCell = styled.div.withConfig({
   // `wrap` drives the cell's white-space rule and `width` its CSS width; neither is a DOM
@@ -143,18 +63,50 @@ export const StyledTableCell = styled.div.withConfig({
     pinOffset,
     pinEdge,
     maxHeight,
-    $surface,
-  }: IReqoreTableCellStyle & { $surface?: TReqoreSurface }) => {
-    const { backgroundColor, displayedBackgroundColor } = getTableCellPaint({
-      theme,
-      intent,
-      selected,
-      selectedIntent,
-      striped,
-      even,
-      hovered,
-      pin,
-    });
+  }: IReqoreTableCellStyle) => {
+    const getOriginalBackgroundColor = () => {
+      let color = theme.main;
+      // Is there any intent
+      if (intent || (selected && selectedIntent)) {
+        color = theme.intents[intent || selectedIntent];
+      }
+
+      return color;
+    };
+
+    const getBackgroundColor = (): TReqoreColor => {
+      const color = getOriginalBackgroundColor();
+      let opacity = 0;
+      // Is there any intent
+      if (intent || (selected && selectedIntent)) {
+        opacity += 0.02;
+      }
+      // Is the table striped and this row odd
+      if (striped && !even) {
+        opacity += 0.05;
+      }
+      // Is this row selected
+      if (selected) {
+        opacity += 0.02;
+      }
+      // Is this row hovered
+      if (hovered) {
+        opacity += 0.08;
+      }
+
+      // Pinned cells must paint opaque — otherwise non-pinned cells scrolling underneath show through
+      if (opacity === 0) {
+        return pin ? theme.main : 'transparent';
+      }
+
+      return changeLightness(color, opacity);
+    };
+
+    const backgroundColor = getBackgroundColor();
+    const displayedBackgroundColor =
+      backgroundColor === 'transparent'
+        ? theme.main
+        : (rgba(backgroundColor, 0.3) as TReqoreHexColor);
 
     // Pinned cells need an opaque paint so non-pinned cells scrolling underneath don't show
     // through. We layer the semi-transparent displayed color over a solid theme.main base.
@@ -183,15 +135,7 @@ export const StyledTableCell = styled.div.withConfig({
       font-size: ${TEXT_FROM_SIZE[size]}px;
       background: ${pinnedBackground ??
       (backgroundColor === 'transparent' ? 'transparent' : displayedBackgroundColor)};
-      /* Read against the cell as it is drawn - its wash over what the table is drawn on - not
-         against the colour the wash is made from. */
-      color: ${getReadableColorFrom(
-        getTableCellBackground(
-          { theme, intent, selected, selectedIntent, striped, even, hovered, pin },
-          $surface
-        ),
-        !hovered
-      )};
+      color: ${getReadableColorFrom(getOriginalBackgroundColor(), !hovered)};
       border-color: ${changeLightness(displayedBackgroundColor, 0.1)};
       transition: background-color 0.2s ease-out;
       opacity: ${disabled ? 0.2 : 1};
@@ -399,25 +343,15 @@ export const ReqoreTableBodyCell = memo(
 
       const effectiveMaxHeight = expanded ? undefined : maxHeight;
       const showOverlay = !!maxHeight && !expanded && isOverflowing;
-      const surface = useReqoreSurface();
-      // The table's theme, as its cells' styles are given it.
-      const theme = useTheme() as IReqoreTheme;
-      // What the cell holds is drawn on the cell.
-      const cellSurface = theme?.main
-        ? getTableCellBackground({ ...(cellStyleProps as TReqoreTableCellPaintProps), theme }, surface)
-        : surface;
 
       return (
         <ReqoreTooltipComponent
           Component={StyledTableCell}
           {...cellStyleProps}
-          // a disabled row's cells are faded; they say they are disabled too
-          aria-disabled={(cellStyleProps as IReqoreTableCellStyle).disabled ? true : undefined}
-          $surface={surface}
           maxHeight={effectiveMaxHeight}
           ref={setRefs}
         >
-          <ReqoreSurfaceProvider color={cellSurface}>{children}</ReqoreSurfaceProvider>
+          {children}
           {showOverlay && (
             <StyledCellExpandOverlay
               className='reqore-table-cell-expand'

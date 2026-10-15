@@ -130,8 +130,7 @@ export const Content: Story = {
               size='small'
               label='v3.2.0'
               icon='PriceTag3Line'
-              // deep enough at both ends for one text color to read on all of it
-              effect={{ gradient: { colors: { 0: '#a11c58', 100: '#d0207f' } } }}
+              effect={{ gradient: { colors: { 0: '#a11c58', 100: '#ff47a3' } } }}
             />
           }
         />

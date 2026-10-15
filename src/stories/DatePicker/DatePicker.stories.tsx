@@ -292,8 +292,7 @@ export const WithEffect: Story = {
     pickerProps: {
       contentEffect: {
         gradient: {
-          // dark enough for the muted controls' light wash to read on all of it
-          colors: { 0: '#04528f', 100: '#033459' },
+          colors: 'info',
         },
       },
     },

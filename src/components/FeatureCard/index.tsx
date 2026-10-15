@@ -14,14 +14,8 @@ import { IReqoreTheme } from '../../constants/theme';
 import {
   changeDarkness,
   changeLightness,
-  getDrawnColor,
   getMainBackgroundColor,
-  getReadableAccentColor,
-  getReadableAlpha,
   getReadableColor,
-  getThemeSurface,
-  READABLE_ICON_CONTRAST,
-  READABLE_TEXT_CONTRAST,
 } from '../../helpers/colors';
 import {
   getOneLessSize,
@@ -47,8 +41,7 @@ import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import ReqoreControlGroupItem from '../ControlGroup/item';
-import { IReqoreEffect, StyledEffect, TReqoreEffectColor, TReqoreHexColor } from '../Effect';
-import { useReqoreSurface } from '../../context/SurfaceContext';
+import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
@@ -233,60 +226,16 @@ const StyledFeatureCard = styled(StyledEffect).withConfig({
       : undefined}
 `;
 
-/**
- * The marker's color on the card: the intent's, or a muted shade of the card, in a shade of it that stands out
- * from what it is drawn on - a number as text (3:1 once it is large), an icon on its tile at 3:1.
- */
-const getFeatureCardMarkerColor = (
-  theme: IReqoreTheme,
-  marker: TReqoreFeatureCardMarker,
-  size: TSizes,
-  background: TReqoreHexColor,
-  intent?: IReqoreIntent['intent']
-): TReqoreHexColor => {
-  if (marker === 'icon') {
-    const tile = getDrawnColor(
-      rgba(
-        intent ? theme.intents[intent] : changeLightness(getMainBackgroundColor(theme), 0.18),
-        0.18
-      ),
-      background
-    );
-
-    return getReadableAccentColor(
-      getDrawnColor(
-        intent ? theme.intents[intent] : changeLightness(getMainBackgroundColor(theme), 0.6),
-        tile
-      ),
-      tile,
-      READABLE_ICON_CONTRAST
-    );
-  }
-
-  // the number is bold: large from 18.66px on
-  const large = TEXT_FROM_SIZE[size] * 1.4 >= 18.66;
-
-  return getReadableAccentColor(
-    getDrawnColor(
-      intent ? theme.intents[intent] : changeLightness(getMainBackgroundColor(theme), 0.22),
-      background
-    ),
-    background,
-    large ? READABLE_ICON_CONTRAST : READABLE_TEXT_CONTRAST
-  );
-};
-
 const StyledFeatureCardMarker = styled.div<{
   marker: TReqoreFeatureCardMarker;
   size: TSizes;
   theme: IReqoreTheme;
   intent?: IReqoreIntent['intent'];
-  $background: TReqoreHexColor;
 }>`
   display: flex;
   align-items: flex-start;
-  color: ${({ theme, intent, marker, size, $background }) =>
-    getFeatureCardMarkerColor(theme, marker, size, $background, intent)};
+  color: ${({ theme, intent }) =>
+    intent ? theme.intents[intent] : changeLightness(getMainBackgroundColor(theme), 0.22)};
   font-size: ${({ size }) => TEXT_FROM_SIZE[size] * 1.4}px;
   font-weight: 900;
   line-height: 0.9;
@@ -312,7 +261,7 @@ const StyledFeatureCardMarker = styled.div<{
         `
       : undefined}
 
-  ${({ marker, size, theme, intent, $background }) =>
+  ${({ marker, size, theme, intent }) =>
     marker === 'icon'
       ? css`
           align-items: center;
@@ -326,7 +275,9 @@ const StyledFeatureCardMarker = styled.div<{
               : changeLightness(getMainBackgroundColor(theme), 0.18),
             0.18
           )};
-          color: ${getFeatureCardMarkerColor(theme, marker, size, $background, intent)};
+          color: ${intent
+            ? theme.intents[intent]
+            : changeLightness(getMainBackgroundColor(theme), 0.6)};
           box-shadow: inset 0 0 0 1px
             ${rgba(
               intent
@@ -421,31 +372,6 @@ export const ReqoreFeatureCard = memo(
       const marker: TReqoreFeatureCardMarker = markerProp ?? (icon ? 'icon' : 'line');
       const hasActions = !!actions?.length;
       const hasFooter = (footer !== undefined && footer !== null && footer !== false) || hasActions;
-      // What the card is drawn in: its marker and its fainter description are read against it.
-      const surface = useReqoreSurface();
-      const background = useMemo(
-        () =>
-          transparent
-            ? getThemeSurface(theme, surface)
-            : getDrawnColor(
-                changeDarkness(getMainBackgroundColor(theme), 0.03),
-                getThemeSurface(theme, surface)
-              ),
-        [transparent, theme, surface]
-      );
-      // fainter than the label, as far as it stays readable on the card: one object while it holds, for a memo
-      // component
-      const descriptionLook = useMemo(
-        () => ({
-          ...descriptionEffect,
-          opacity: getReadableAlpha(
-            getReadableColor(theme, undefined, undefined, true, background),
-            background,
-            descriptionEffect?.opacity ?? 0.72
-          ),
-        }),
-        [descriptionEffect, theme, background]
-      );
 
       return (
         <ReqoreTooltipComponent
@@ -480,7 +406,6 @@ export const ReqoreFeatureCard = memo(
               size={size}
               theme={theme}
               intent={intent}
-              $background={background}
               className='reqore-feature-card-marker'
             >
               {marker === 'number' && (
@@ -516,7 +441,7 @@ export const ReqoreFeatureCard = memo(
                   as={getReqoreTextElement(description)}
                   size={descriptionSize}
                   customTheme={theme}
-                  effect={descriptionLook}
+                  effect={{ opacity: 0.72, ...descriptionEffect }}
                   className='reqore-feature-card-description'
                 >
                   {description}

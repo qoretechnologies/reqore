@@ -408,7 +408,7 @@ export const IdleReveal: Story = {
     docs: {
       description: {
         story:
-          'Renders the floating rail with `idleReveal`. The play function asserts the full behaviour: it rests dimmed (at `idleOpacity`, 0.34, or as little more as its icons need to still stand out by 3:1), fades fully in when the gutter is hovered, and dims again when the mouse leaves.',
+          'Renders the floating rail with `idleReveal`. The play function asserts the full behaviour: it rests dimmed (opacity 0.34), fades fully in when the gutter is hovered, and dims again when the mouse leaves.',
       },
     },
   },
@@ -419,16 +419,14 @@ export const IdleReveal: Story = {
   ),
   play: async ({ canvasElement }) => {
     const nav = canvasElement.querySelector('.reqore-nav-rail') as HTMLElement;
-    // Rests dimmed (no fainter than `idleOpacity`, and only as much more as its icons need to read)…
-    const resting = getComputedStyle(nav).opacity;
-    await expect(Number(resting)).toBeGreaterThanOrEqual(0.34);
-    await expect(Number(resting)).toBeLessThan(1);
+    // Rests dimmed…
+    await expect(getComputedStyle(nav).opacity).toBe('0.34');
     // …fades fully in when approached…
     await userEvent.hover(nav);
     await waitFor(() => expect(getComputedStyle(nav).opacity).toBe('1'));
     // …and dims again once the mouse leaves.
     await userEvent.unhover(nav);
-    await waitFor(() => expect(getComputedStyle(nav).opacity).toBe(resting));
+    await waitFor(() => expect(getComputedStyle(nav).opacity).toBe('0.34'));
   },
 };
 
@@ -447,7 +445,7 @@ export const IdleResting: Story = {
     docs: {
       description: {
         story:
-          'Renders the floating `idleReveal` rail with NO interaction, capturing its resting dimmed state (at `idleOpacity`, 0.34, or as little more as its icons need to still stand out by 3:1) — the play only asserts the dim, it never hovers.',
+          'Renders the floating `idleReveal` rail with NO interaction, capturing its resting dimmed state (opacity 0.34) — the play only asserts the dim, it never hovers.',
       },
     },
   },
@@ -458,9 +456,7 @@ export const IdleResting: Story = {
   ),
   play: async ({ canvasElement }) => {
     const nav = canvasElement.querySelector('.reqore-nav-rail') as HTMLElement;
-    const resting = Number(getComputedStyle(nav).opacity);
-    await expect(resting).toBeGreaterThanOrEqual(0.34);
-    await expect(resting).toBeLessThan(1);
+    await expect(getComputedStyle(nav).opacity).toBe('0.34');
   },
 };
 

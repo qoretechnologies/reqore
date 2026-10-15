@@ -1,5 +1,5 @@
 import { rgba } from 'polished';
-import { forwardRef, memo, useCallback, useMemo, useState } from 'react';
+import { forwardRef, memo, useCallback, useState } from 'react';
 import { css } from 'styled-components';
 import {
   GAP_FROM_SIZE,
@@ -10,17 +10,7 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import {
-  changeLightness,
-  getDrawnColor,
-  getReadableAccentColor,
-  getReadableColor,
-  getReadableFadedColor,
-  getReadableIconLook,
-  getThemeSurface,
-  READABLE_ICON_CONTRAST,
-} from '../../helpers/colors';
-import { useReqoreSurface } from '../../context/SurfaceContext';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -37,7 +27,7 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import { TReqoreBadge } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
-import { IReqoreEffect, TReqoreEffectColor, TReqoreHexColor } from '../Effect';
+import { IReqoreEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
@@ -351,7 +341,8 @@ const StyledTimelineMarker = styled.div.withConfig({
   width: ${({ size }) => MARKER_SIZE_FROM_SIZE[size]}px;
   height: ${({ size }) => MARKER_SIZE_FROM_SIZE[size]}px;
   border-radius: 50%;
-  background-color: ${({ theme, hasIntent }) => getTimelineMarkerFill(theme, !!hasIntent)};
+  background-color: ${({ theme, hasIntent }) =>
+    hasIntent ? rgba(theme.main, 0.2) : rgba(changeLightness(theme.main, 0.1), 0.2)};
   border: ${({ size }) => LINE_WIDTH_FROM_SIZE[size]}px solid
     ${({ theme, hasIntent }) =>
       hasIntent ? theme.main : rgba(changeLightness(theme.main, 0.2), 0.6)};
@@ -374,36 +365,6 @@ const StyledTimelineMarker = styled.div.withConfig({
     }
   }
 `;
-
-/** A marker's fill: a wash of the item's intent, or of the theme a step lighter. */
-const getTimelineMarkerFill = (theme: IReqoreTheme, hasIntent: boolean): string =>
-  hasIntent ? rgba(theme.main, 0.2) : rgba(changeLightness(theme.main, 0.1), 0.2);
-
-/**
- * The color a marker's icon is drawn in: its own (`color`), the item's intent, or a muted shade of the theme -
- * each in the shade that stands out by 3:1 from the marker, as it is drawn over `surface`.
- */
-const getTimelineMarkerIcon = (
-  theme: IReqoreTheme,
-  hasIntent: boolean,
-  surface: TReqoreHexColor,
-  color?: TReqoreEffectColor
-): TReqoreHexColor => {
-  const marker = getDrawnColor(getTimelineMarkerFill(theme, hasIntent), surface);
-
-  if (color) {
-    return (
-      getReadableIconLook(theme, [marker], getReadableColor(theme, undefined, undefined, false, marker), 1, color)
-        .color ?? marker
-    );
-  }
-
-  return getReadableAccentColor(
-    hasIntent ? getDrawnColor(theme.main, surface) : changeLightness(theme.main, 0.2),
-    marker,
-    READABLE_ICON_CONTRAST
-  );
-};
 
 const StyledTimelineDot = styled.div<IReqoreTimelineItemStyle>`
   width: ${({ size }) => Math.max(4, ICON_FROM_SIZE[size] / 4)}px;
@@ -571,31 +532,7 @@ const TimelineItemRenderer = memo(
     const itemTheme = useReqoreTheme('main', customTheme, item.intent || intent);
     const isClickable = !!item.onClick && !item.disabled;
     const hasIntent = !!(item.intent || intent);
-    /* What the item is drawn on, and its marker over it: its text, its secondary text and the
-       marker's icon are picked against them. */
-    const surface = getThemeSurface(baseTheme, useReqoreSurface());
-    const text = getReadableColor(baseTheme, undefined, undefined, false, surface);
-    // with neither a color nor an intent, the icon is drawn in the text color it inherits
-    const markerIcon =
-      item.iconColor || hasIntent
-        ? getTimelineMarkerIcon(itemTheme, hasIntent, surface, item.iconColor)
-        : undefined;
     const isHorizontal = direction === 'horizontal';
-    // one object while what it holds holds: the timestamp and the content are memo components
-    const timestampStyle = useMemo<React.CSSProperties>(
-      () => ({
-        // fainter than the title, as far as it stays readable
-        color: getReadableFadedColor(text, surface, 0.5),
-        display: 'block',
-        marginTop: `${GAP_FROM_SIZE[size]}px`,
-        textAlign: isHorizontal ? 'center' : undefined,
-      }),
-      [text, surface, size, isHorizontal]
-    );
-    const contentStyle = useMemo<React.CSSProperties>(
-      () => ({ color: getReadableFadedColor(text, surface, 0.7), lineHeight: 1.5 }),
-      [text, surface]
-    );
     // Horizontal mode is intentionally minimal: no expanding/collapsing and no content body.
     const showCollapsible = !isHorizontal && item.collapsible;
     const showContent = !isHorizontal && item.content;
@@ -633,14 +570,14 @@ const TimelineItemRenderer = memo(
                 icon='LoaderLine'
                 animation='spin'
                 size={getOneLessSize(getOneLessSize(size))}
-                color={markerIcon}
+                color={item.iconColor || (hasIntent ? itemTheme.main : undefined)}
                 className='reqore-timeline-pending-icon'
               />
             ) : item.icon ? (
               <ReqoreIcon
                 icon={item.icon}
                 size={getOneLessSize(getOneLessSize(size))}
-                color={markerIcon}
+                color={item.iconColor || (hasIntent ? itemTheme.main : undefined)}
                 {...item.iconProps}
               />
             ) : (
@@ -671,7 +608,7 @@ const TimelineItemRenderer = memo(
                 <ReqoreIcon
                   icon='ArrowDownSLine'
                   size={getOneLessSize(size)}
-                  color={text}
+                  color={getReadableColor(baseTheme, undefined, undefined)}
                   rotation={isCollapsed ? -90 : 0}
                   className='reqore-timeline-collapse'
                   style={{ flexShrink: 0 }}
@@ -694,7 +631,12 @@ const TimelineItemRenderer = memo(
             <ReqoreSpan
               size={getOneLessSize(getOneLessSize(size))}
               className='reqore-timeline-timestamp'
-              style={timestampStyle}
+              style={{
+                color: rgba(getReadableColor(baseTheme, undefined, undefined), 0.5),
+                display: 'block',
+                marginTop: `${GAP_FROM_SIZE[size]}px`,
+                textAlign: isHorizontal ? 'center' : undefined,
+              }}
             >
               {item.relativeTime ? <TimeAgo time={item.timestamp} /> : item.timestamp}
             </ReqoreSpan>
@@ -707,7 +649,10 @@ const TimelineItemRenderer = memo(
                     size={getOneLessSize(size)}
                     effect={item.contentEffect}
                     className='reqore-timeline-content'
-                    style={contentStyle}
+                    style={{
+                      color: rgba(getReadableColor(baseTheme, undefined, undefined), 0.7),
+                      lineHeight: 1.5,
+                    }}
                   >
                     {item.content}
                   </ReqoreP>
@@ -754,13 +699,8 @@ const CollapsedRunRenderer = memo(
     const n = range.collapsedItems.length;
     // Hex for the icon (ReqoreIcon `color` wants a TReqoreEffectColor); rgba for
     // the label's plain CSS colour. Both muted to read as "skipped".
-    const surface = getThemeSurface(baseTheme, useReqoreSurface());
-    const mutedIconColor = getTimelineMarkerIcon(baseTheme, false, surface);
-    const mutedTextColor = getReadableFadedColor(
-      getReadableColor(baseTheme, undefined, undefined, false, surface),
-      surface,
-      0.55
-    );
+    const mutedIconColor = changeLightness(baseTheme.main, 0.2);
+    const mutedTextColor = rgba(getReadableColor(baseTheme, undefined, undefined), 0.55);
     const label = expanded
       ? (range.expandedLabel ?? 'Hide')
       : (range.label ?? `${n} hidden`);

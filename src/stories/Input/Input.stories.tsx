@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { ReqoreButton, ReqoreControlGroup } from '../../index';
-import { REDUCED_MOTION_QUERY } from '../../hooks/usePrefersReducedMotion';
 import { StoryMeta } from '../utils';
 import { StoryForm, storyFormText } from '../utils/formPreview';
 import { ALL_SIZES, FlatArg, IconArg, MinimalArg, RadiusSizeArg, SizeArg } from '../utils/args';
@@ -610,46 +609,5 @@ export const PasswordToggleMobile: Story = {
 
     const field = input.closest('.reqore-control-wrapper') as HTMLElement;
     expect(field.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth);
-  },
-};
-
-export const TransitionsUnderReducedMotion: Story = {
-  // the story run asks for reduced motion for it (.storybook/vitest.setup.ts)
-  tags: ['reduced-motion'],
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Renders an input holding a value, with its clear button. Under prefers-reduced-motion (the story run asks for it for this story) Reqore's transitions take no time, so its clear button stands at rest at once; without it, they ease as before.",
-      },
-    },
-  },
-  render: (args) => {
-    const [value, setValue] = useState('Input value');
-
-    return (
-      <ReqoreInput
-        {...args}
-        value={value}
-        onChange={(event: React.ChangeEvent<HTMLInputElement>) => setValue(event.target.value)}
-        onClearClick={() => setValue('')}
-      />
-    );
-  },
-  play: async ({ canvasElement }) => {
-    const clear = await waitFor(() => {
-      const button = canvasElement.querySelector('.reqore-clear-input-button') as HTMLElement;
-      expect(button).toBeTruthy();
-      return button;
-    });
-    // the clear button eases its opacity in 0.1s, which reduced motion takes to a hair: 0.01ms (not none, which
-    // would send no transitionend - and not what a capture tool that switches transitions off would leave)
-    const duration = parseFloat(getComputedStyle(clear).transitionDuration);
-
-    if (window.matchMedia(REDUCED_MOTION_QUERY).matches) {
-      expect(duration).toBeCloseTo(0.00001, 8);
-    } else {
-      expect(duration).toBe(0.1);
-    }
   },
 };

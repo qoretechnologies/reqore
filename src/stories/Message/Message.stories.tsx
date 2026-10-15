@@ -245,9 +245,8 @@ export const Effect: Story = {
   args: {
     effect: {
       gradient: {
-        // dark enough at both ends for light text to read on all of it
         colors: {
-          0: '#c40b75',
+          0: '#eb0e8c',
           100: 'danger:darken:2',
         },
       },

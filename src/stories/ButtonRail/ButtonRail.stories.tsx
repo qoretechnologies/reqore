@@ -83,8 +83,7 @@ const editorButtons = ({
 );
 
 /** A busy, colourful backdrop — a frosted surface only reads as frosted when
- *  there is something behind it to blur. Its colours are dark enough for the theme's
- *  text and icons to read on them, as a transparent rail puts them straight on it. */
+ *  there is something behind it to blur. */
 const Backdrop = ({ children, height = 180 }: { children: ReactNode; height?: number }) => (
   <div
     style={{
@@ -97,16 +96,13 @@ const Backdrop = ({ children, height = 180 }: { children: ReactNode; height?: nu
       borderRadius: 12,
       background:
         'radial-gradient(circle at 20% 30%, #803a8a 0, transparent 45%), ' +
-        'radial-gradient(circle at 80% 70%, #44631a 0, transparent 45%), ' +
+        'radial-gradient(circle at 80% 70%, #8db844 0, transparent 45%), ' +
         'repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0 12px, transparent 12px 24px)',
     }}
   >
-    {/* Decoration: something busy for the frost to blur, not text to read. */}
     <ReqoreP
       style={{ position: 'absolute', inset: 16, opacity: 0.8, pointerEvents: 'none' }}
       effect={{ weight: 'bold' }}
-      aria-hidden
-      data-decorative
     >
       Automation Intelligence captures every run as a business-tagged event. Ask the AI a question
       and act on the answer. Automation Intelligence captures every run as a business-tagged event.
@@ -431,7 +427,7 @@ export const Working: Story = {
   render: (args) => (
     <div style={{ padding: 40 }}>
       <ReqoreButtonRail aria-label='Working' data-testid='working' {...args} effect={WORKING_EFFECT as never}>
-        <ReqoreButton icon='StopCircleLine' minimal effect={{ color: '#c792d0', weight: 'thick' }} description='Changing the pricing page…'>
+        <ReqoreButton icon='StopCircleLine' minimal effect={{ color: '#a45fae', weight: 'thick' }} description='Changing the pricing page…'>
           Qorus is building your request
         </ReqoreButton>
       </ReqoreButtonRail>

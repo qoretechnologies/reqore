@@ -3,8 +3,7 @@ import { css } from 'styled-components';
 import styled from '../../helpers/styled';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { getDrawnColor, getMainBackgroundColor, getThemeSurface } from '../../helpers/colors';
-import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
+import { getMainBackgroundColor } from '../../helpers/colors';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement } from '../../styles';
@@ -338,12 +337,6 @@ export const ReqoreCollapsibleContent = memo(
               : getMainBackgroundColor(theme),
         [theme, intent, customTheme?.main]
       );
-      const surface = useReqoreSurface();
-      // the fade runs from what is under the block to its color: the button may be drawn on either
-      const fadeSurface = useMemo(
-        () => [getThemeSurface(theme, surface), getDrawnColor(fade, getThemeSurface(theme, surface))],
-        [fade, theme, surface]
-      );
       // Fade height scales with `size` so a tiny picker doesn't get a hero-sized gradient and a
       // huge one doesn't look weak. Still bounded by the clip height so the fade never overruns
       // it. Multipliers tuned to keep the button vertically centred in the gradient.
@@ -394,7 +387,6 @@ export const ReqoreCollapsibleContent = memo(
           effect={effect}
           $fluid={fluid}
           $disabled={disabled}
-          aria-disabled={disabled ? true : undefined}
           className={`${className || ''} reqore-collapsible-content`.trim()}
         >
           <StyledClip
@@ -432,26 +424,23 @@ export const ReqoreCollapsibleContent = memo(
                 $animated={animationsEnabled}
                 className='reqore-collapsible-content-fade'
               >
-                {/* The button is drawn where the fade has landed on its color. */}
-                <ReqoreSurfaceProvider color={fadeSurface}>
-                  <ReqoreButton
-                    size={size}
-                    intent={intent}
-                    customTheme={customTheme}
-                    icon={showMoreIcon}
-                    label={showMoreLabel}
-                    minimal
-                    flat={false}
-                    fluid={buttonFluid}
-                    disabled={disabled}
-                    {...buttonProps}
-                    effect={mergedButtonEffect}
-                    onClick={handleExpand}
-                    className={`reqore-collapsible-content-reveal ${
-                      buttonProps?.className || ''
-                    }`.trim()}
-                  />
-                </ReqoreSurfaceProvider>
+                <ReqoreButton
+                  size={size}
+                  intent={intent}
+                  customTheme={customTheme}
+                  icon={showMoreIcon}
+                  label={showMoreLabel}
+                  minimal
+                  flat={false}
+                  fluid={buttonFluid}
+                  disabled={disabled}
+                  {...buttonProps}
+                  effect={mergedButtonEffect}
+                  onClick={handleExpand}
+                  className={`reqore-collapsible-content-reveal ${
+                    buttonProps?.className || ''
+                  }`.trim()}
+                />
               </StyledFadeOverlay>
             )}
           </StyledClip>

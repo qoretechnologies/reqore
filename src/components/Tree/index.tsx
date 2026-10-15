@@ -350,10 +350,9 @@ export const ReqoreTree = ({
               ) : (
                 <ReqoreP
                   className='reqore-tree-toggle'
-                  // the info intent, in the shade of it that reads where the tree is drawn
-                  intent='info'
                   effect={{
                     weight: 'normal',
+                    color: 'info:lighten:5',
                   }}
                   tooltip={getItemTooltip?.([...path, key], 'key', _pathWithoutArrayKeys)}
                 >
@@ -411,7 +410,7 @@ export const ReqoreTree = ({
               ) : (
                 <ReqoreP
                   {...{
-                    intent: 'info',
+                    customTheme: { text: { color: 'info:lighten:5' } },
                     style: { flexShrink: 0 },
                     size: zoomSize,
                   }}
@@ -427,16 +426,17 @@ export const ReqoreTree = ({
                   flat
                   onClick={() => onItemClick?.(_data[key], [...path, key])}
                   className='reqore-tree-label'
-                  // a value's kind by its color, each in the shade of it that reads where the tree is drawn
-                  intent={
-                    isBoolean(_data[key])
-                      ? _data[key]
-                        ? 'success'
-                        : 'danger'
-                      : isNumber(_data[key])
-                      ? 'info'
-                      : undefined
-                  }
+                  customTheme={{
+                    text: {
+                      color: isBoolean(_data[key])
+                        ? _data[key]
+                          ? 'success:lighten:5'
+                          : 'danger:lighten:10'
+                        : isNumber(_data[key])
+                        ? 'info:lighten:10'
+                        : undefined,
+                    },
+                  }}
                   size={zoomSize}
                   tooltip={getItemTooltip?.([...path, key], 'value', _pathWithoutArrayKeys)}
                 >

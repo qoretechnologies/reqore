@@ -71,7 +71,6 @@
     "@vitejs/plugin-react": "^6.0.2",
     "@vitest/browser": "^4.1.8",
     "@vitest/browser-playwright": "^4.1.8",
-    "axe-core": "4.10.2",
     "chromatic": "^6.20.0",
     "docusaurus-plugin-typedoc": "^1.0.4",
     "eslint": "^8.46.0",

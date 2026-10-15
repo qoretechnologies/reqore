@@ -394,7 +394,6 @@ const ReqoreSeverityRow = memo(
             $padded={padded}
             $paddingSize={paddingSize ?? size}
             disabled={disabled}
-            aria-disabled={disabled ? true : undefined}
             effect={effect}
             className={`${className || ''} reqore-severity-row`}
           >

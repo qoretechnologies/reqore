@@ -11,8 +11,7 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, TReqoreSurface } from '../../helpers/colors';
-import { useReqoreSurface } from '../../context/SurfaceContext';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
 import styled, {
   listReqoreStyleProps,
   omitStyleProps,
@@ -34,7 +33,7 @@ import {
 } from '../../types/global';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { StyledEffect } from '../Effect';
-import { getInputClearButtonOpacity, getInputColors, getInputPlaceholderColor } from '../Input';
+import { IReqoreInputStyle } from '../Input';
 import ReqoreInputClearButton from '../InputClearButton';
 import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
 import { IPopoverControls } from '../Popover';
@@ -101,8 +100,6 @@ export interface IReqoreTextareaProps
 
 export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
   theme: IReqoreTheme;
-  /** What the field is drawn on (`useReqoreSurface`): the theme's surface when not known. */
-  $surface?: TReqoreSurface;
   hasClearButton?: boolean;
   _size?: TSizes;
 }
@@ -121,10 +118,6 @@ export const StyledTextareaWrapper = styled.div.withConfig({
   overflow: hidden;
   border-radius: ${({ minimal, rounded = true, _size = 'normal' as TSizes, radiusSize }) =>
     minimal || !rounded ? 0 : resolveRadius(_size, radiusSize)}px;
-
-  /* The clear button is drawn in the field's text colour, not the page's. */
-  color: ${({ theme, minimal, $surface }) =>
-    getInputColors(theme, minimal, false, false, $surface).text};
 
   &:focus-within {
     .reqore-clear-input-button {
@@ -199,8 +192,8 @@ export const StyledTextarea = styled(StyledEffect).withConfig({
 
   background-color: ${({ theme, minimal, transparent }: IReqoreTextareaStyle) =>
     minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
-  color: ${({ theme, minimal, transparent, $surface }: IReqoreTextareaStyle) =>
-    getInputColors(theme, minimal, transparent, false, $surface).text};
+  color: ${({ theme }: IReqoreInputStyle) =>
+    getReadableColor(theme, undefined, undefined, true, theme.originalMain)};
 
   &:active,
   &:focus {
@@ -228,14 +221,14 @@ export const StyledTextarea = styled(StyledEffect).withConfig({
       : undefined}
 
   &::placeholder {
-    color: ${({ theme, minimal, transparent, $surface }) =>
-      getInputPlaceholderColor(theme, minimal, transparent, false, $surface)};
+    color: ${({ theme }) =>
+      rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.3)};
   }
 
   &:focus {
     &::placeholder {
-      color: ${({ theme, minimal, transparent, $surface }) =>
-        getInputPlaceholderColor(theme, minimal, transparent, true, $surface)};
+      color: ${({ theme }) =>
+        rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.5)};
     }
   }
 
@@ -287,7 +280,6 @@ function Textarea<T>(
   const { targetRef }: any = useCombinedRefs(ref);
   const [inputRef, setInputRef] = useState<HTMLTextAreaElement>(null);
   const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
-  const surface = useReqoreSurface();
   const shortcutHintsEnabled = useReqoreProperty('shortcutHints');
   const showShortcutHint =
     !!focusRules?.shortcut &&
@@ -519,7 +511,6 @@ function Textarea<T>(
       <>
         <StyledTextarea
           {...rest}
-          $surface={surface}
           effect={{
             interactive: !rest?.disabled && !rest.readOnly,
             ...rest?.effect,
@@ -549,12 +540,6 @@ function Textarea<T>(
           enabled={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
           show={_value && _value !== ''}
           onClick={onClearClick}
-          shownOpacity={getInputClearButtonOpacity(
-            theme,
-            rest.minimal,
-            rest.transparent,
-            surface
-          )}
           size={size}
         />
         {showShortcutHint && (
@@ -580,7 +565,6 @@ function Textarea<T>(
         fixed={fixed}
         _size={size}
         theme={theme}
-        $surface={surface}
         style={wrapperStyle}
         ref={targetRef}
         onItemSelect={handleItemSelect}
@@ -616,9 +600,6 @@ function Textarea<T>(
       radiusSize={radiusSize}
       rounded={rounded}
       theme={theme}
-      $surface={surface}
-      // the field is the textarea, or an editor that is no form control: the wrapper says it is disabled
-      aria-disabled={rest.disabled ? true : undefined}
       style={wrapperStyle}
       ref={targetRef}
     >

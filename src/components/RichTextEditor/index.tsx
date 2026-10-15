@@ -27,17 +27,13 @@ import {
   RenderLeafProps,
 } from 'slate-react/dist/components/editable';
 import { ReqoreButton, ReqoreControlGroup, ReqorePanel, ReqoreTextarea } from '../..';
-import { useReqoreSurface } from '../../context/SurfaceContext';
-import { getReadableAlpha } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
-import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItemProps } from '../Dropdown/item';
 import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
 import { ReqoreP } from '../Paragraph';
 import { IReqoreSpanProps, ReqoreSpan } from '../Span';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
-import { getInputColors } from '../Input';
 import { IReqoreTextareaProps } from '../Textarea';
 
 type CustomElement = {
@@ -275,60 +271,28 @@ const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
   );
 };
 
-/**
- * How faint the placeholder is: as a field's (30%), as far as it stays readable on the field, which it is drawn
- * in (a 10% wash of the theme over what the field is drawn on).
- */
-const usePlaceholderOpacity = (): number => {
-  const theme = useReqoreTheme();
-  const surface = useReqoreSurface();
-
-  return useMemo(() => {
-    const { background, text } = getInputColors(theme, false, false, false, surface);
-
-    return getReadableAlpha(text, background, 0.3);
-  }, [theme, surface]);
-};
-
-const PLACEHOLDER_STYLE: React.CSSProperties = {
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  right: 0,
-  pointerEvents: 'none',
-  userSelect: 'none',
-};
-
-const PARAGRAPH_STYLE: React.CSSProperties = { position: 'relative' };
-
-const Placeholder = ({
-  placeholder,
-  placeholderProps,
-}: {
-  placeholder: string;
-  placeholderProps?: IReqoreSpanProps;
-}) => {
-  const opacity = usePlaceholderOpacity();
-  // one object for as long as what it holds holds: the span is a memo component
-  const effect = useMemo(() => ({ opacity }), [opacity]);
-  const ownStyle = placeholderProps?.style;
-  const style = useMemo(
-    () => (ownStyle ? { ...PLACEHOLDER_STYLE, ...ownStyle } : PLACEHOLDER_STYLE),
-    [ownStyle]
-  );
-  return (
-    <ReqoreSpan inline effect={effect} {...placeholderProps} contentEditable={false} style={style}>
-      {placeholder}
-    </ReqoreSpan>
-  );
-};
-
 export const DefaultElement = (
   props: RenderElementProps & { placeholder?: string; placeholderProps?: IReqoreSpanProps }
 ) => (
-  <ReqoreP {...props.attributes} style={PARAGRAPH_STYLE}>
+  <ReqoreP {...props.attributes} style={{ position: 'relative' }}>
     {props.placeholder && (
-      <Placeholder placeholder={props.placeholder} placeholderProps={props.placeholderProps} />
+      <ReqoreSpan
+        inline
+        effect={{ opacity: 0.3 }}
+        {...props.placeholderProps}
+        contentEditable={false}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          pointerEvents: 'none',
+          userSelect: 'none',
+          ...props.placeholderProps?.style,
+        }}
+      >
+        {props.placeholder}
+      </ReqoreSpan>
     )}
     {props.children}
   </ReqoreP>

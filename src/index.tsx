@@ -205,8 +205,6 @@ export { default as ReqoreNotifications, modalStore } from './containers/ReqoreP
 export { default as ReqoreUIProvider } from './containers/UIProvider';
 export { default as ReqoreContext } from './context/ReqoreContext';
 export { default as ReqoreThemeContext } from './context/ThemeContext';
-export { ReqoreSurfaceProvider, useReqoreSurface } from './context/SurfaceContext';
-export type { TReqoreSurface } from './helpers/colors';
 export { useCloneThroughFragments } from './hooks/useCloneThroughFragments';
 export { default as useLatestZIndex } from './hooks/useLatestZIndex';
 export { useReqorePaging } from './hooks/usePaging';
