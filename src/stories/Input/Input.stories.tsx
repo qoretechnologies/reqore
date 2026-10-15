@@ -70,7 +70,7 @@ const Template: StoryFn<typeof ReqoreInput> = (args: IReqoreInputProps) => {
           onClearClick={handleValueClear}
           onChange={handleValueChange}
           rightIcon='EraserFill'
-          rightIconColor='#8727b7'
+          rightIconColor='#b57edc'
           focusRules={{ type: 'keypress', shortcut: '.', doNotInsertShortcut: true }}
         />
         <ReqoreInput {...args} placeholder='Disabled Input' disabled onChange={handleValueChange} />
@@ -105,7 +105,7 @@ const Template: StoryFn<typeof ReqoreInput> = (args: IReqoreInputProps) => {
           tooltip="I'm a tooltip"
           onChange={handleValueChange}
           rightIcon='DragMoveLine'
-          rightIconColor='#eb0e8c'
+          rightIconColor='#ff7ac0'
           value={value}
         />
         <ReqoreInput
