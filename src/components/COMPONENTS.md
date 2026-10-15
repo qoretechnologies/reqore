@@ -161,6 +161,8 @@ Reqore picks its text and icon colors against what they are actually drawn on, t
   surface it is drawn on (a tinted table cell, an entity row's gradient).
 - **An active button** (a selected menu item) draws what it holds - its description, its badges, its icons - on
   its fill, not on the wash it has at rest.
+- **Secondary text is faded, not what it holds.** An entity row writes its description and metadata in a faded
+  color, so a tag or a link in them is drawn as it is.
 - **What a caller sets is the caller's:** an explicit hex `color` or `effect.opacity` is drawn as given.
 - Disabled content is exempt (WCAG); the components that are not form controls now say they are disabled with
   `aria-disabled`.

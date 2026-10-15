@@ -9,6 +9,7 @@ import {
   getDrawnColor,
   getMainBackgroundColor,
   getReadableAlpha,
+  getReadableFadedColor,
   getReadableColor,
   getReadableIconLook,
   getReadableIntentColor,
@@ -403,6 +404,31 @@ const StyledTextSlot = styled.div<{ $wrap: boolean }>`
     `}
 `;
 
+/**
+ * How an entity row writes its description or its metadata: fainter than its label, as far as it stays readable
+ * on the row (`opacity`, or the caller's `effect.opacity`, is the floor of how faint). Its text is written in the
+ * faded color - not the slot faded as a whole - so what it holds with a color of its own (a tag, a link, readable on
+ * the row) is drawn as it is: faded twice, a warning tag read 4.0:1 (qorus#646). A color a caller gives is the
+ * caller's, faded as before.
+ */
+const getSecondaryTextEffect = (
+  effect: IReqoreEffect | undefined,
+  opacity: number,
+  text: TReqoreHexColor,
+  backgrounds: TReqoreHexColor[]
+): IReqoreEffect =>
+  effect?.color
+    ? { ...effect, opacity: getReadableAlpha(text, backgrounds, effect.opacity ?? opacity) }
+    : {
+        ...effect,
+        opacity: undefined,
+        color: getReadableFadedColor(
+          text,
+          backgrounds,
+          effect?.opacity ?? opacity
+        ) as TReqoreHexColor,
+      };
+
 const ReqoreEntityRow = memo(
   forwardRef<HTMLDivElement, IReqoreEntityRowProps>(
     (
@@ -488,19 +514,14 @@ const ReqoreEntityRow = memo(
         [theme, effect, background, surface]
       );
       const text = useMemo(() => getReadableTextOn(theme, backgrounds), [theme, backgrounds]);
-      // fainter than the label, as far as each stays readable: one object while it holds, for memo components
+      /* The description and the metadata are fainter than the label, as far as they stay readable (see
+         getSecondaryTextEffect): one object while it holds, for memo components. */
       const descriptionLook = useMemo(
-        () => ({
-          ...descriptionEffect,
-          opacity: getReadableAlpha(text, backgrounds, descriptionEffect?.opacity ?? 0.7),
-        }),
+        () => getSecondaryTextEffect(descriptionEffect, 0.7, text, backgrounds),
         [descriptionEffect, text, backgrounds]
       );
       const metadataLook = useMemo(
-        () => ({
-          ...metadataEffect,
-          opacity: getReadableAlpha(text, backgrounds, metadataEffect?.opacity ?? 0.5),
-        }),
+        () => getSecondaryTextEffect(metadataEffect, 0.5, text, backgrounds),
         [metadataEffect, text, backgrounds]
       );
       const iconBackgrounds = useMemo(
