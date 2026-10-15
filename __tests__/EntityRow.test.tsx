@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import {
   ReqoreContent,
   ReqoreEntityRow,
@@ -624,7 +624,7 @@ test('Folds two or more actions into one menu button in a narrow container', () 
     const row = document.querySelector('.reqore-entity-row')!;
     expect(row.getAttribute('data-actions')).toBe('menu');
     expect(menuButtons()).toHaveLength(1);
-    expect(menuButtons()[0].getAttribute('aria-label')).toBe('Actions');
+    expect(menuButtons()[0].getAttribute('aria-label')).toBe('Actions: Process Incoming Order');
     expect(row.querySelectorAll('.reqore-entity-row-actions .reqore-button')).toHaveLength(1);
   });
 });
@@ -637,8 +637,50 @@ test('Names the menu button with actionsMenuLabel', () => {
       actions: [{ label: 'Run' }, { label: 'Stop' }],
     });
 
-    expect(menuButtons()[0].getAttribute('aria-label')).toBe('Akce');
+    expect(menuButtons()[0].getAttribute('aria-label')).toBe('Akce: Process Incoming Order');
   });
+});
+
+test('Names the menu button for a row whose label is words, and "Actions" for one that is not', () => {
+  withResizeObserver(NarrowResizeObserver, () => {
+    NarrowResizeObserver.width = 400;
+    renderRowWithActions({
+      label: <b>Process Incoming Order</b>,
+      actions: [{ label: 'Run' }, { label: 'Stop' }],
+    });
+
+    expect(menuButtons()[0].getAttribute('aria-label')).toBe('Actions');
+  });
+});
+
+test('Folded, each action keeps its own accessible name', () => {
+  vi.useFakeTimers();
+  try {
+    withResizeObserver(NarrowResizeObserver, () => {
+      NarrowResizeObserver.width = 400;
+      renderRowWithActions({
+        actions: [
+          { label: 'Run', 'aria-label': 'Run Process Incoming Order' },
+          {
+            icon: 'DeleteBinLine',
+            tooltip: 'Remove',
+            'aria-label': 'Remove Process Incoming Order',
+          },
+        ],
+      });
+    });
+    fireEvent.click(menuButtons()[0]);
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+
+    const items = Array.from(
+      document.querySelectorAll('.reqore-popover-content [role="menuitem"]')
+    ).map((item) => item.getAttribute('aria-label'));
+    expect(items).toEqual(['Run Process Incoming Order', 'Remove Process Incoming Order']);
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test('Keeps the actions in sight, stacked, with narrowActions="stack"', () => {

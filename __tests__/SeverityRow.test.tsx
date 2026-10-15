@@ -512,7 +512,7 @@ test('Folds two or more actions into one menu button below 640px of its containe
   const buttons = row.querySelectorAll('.reqore-severity-row-actions .reqore-button');
   expect(buttons).toHaveLength(1);
   expect(buttons[0].classList.contains('reqore-row-actions-menu-button')).toBe(true);
-  expect(buttons[0].getAttribute('aria-label')).toBe('Actions');
+  expect(buttons[0].getAttribute('aria-label')).toBe('Actions: Issue');
 });
 
 test('Keeps a callout\'s actions in sight, stacked, by default and with narrowActions="stack"', () => {

@@ -55,6 +55,7 @@ import { ReqoreSpan } from '../Span';
 import ReqoreRowActionsMenu, {
   getRowActionLabel,
   hasRowActionLabel,
+  rowLabelText,
   TReqoreNarrowRowActions,
 } from '../RowActionsMenu';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
@@ -624,6 +625,7 @@ const ReqoreEntityRow = memo(
                 size={size}
                 intent={intent}
                 label={actionsMenuLabel}
+                rowLabel={rowLabelText(label)}
               />
             )}
             {!actionsAsMenu && actions && actions.length > 0 && (

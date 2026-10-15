@@ -73,6 +73,12 @@ export const getRowActionLabel = (action: {
   return tooltipText(action.tooltip) ?? (action['aria-label']?.trim() || undefined);
 };
 
+/** A row's label in words, where it is text: what its actions menu is named for (`rowLabel`). */
+export const rowLabelText = (label: React.ReactNode): string | undefined =>
+  typeof label === 'number' || (typeof label === 'string' && label.trim())
+    ? String(label).trim()
+    : undefined;
+
 /** A row of a menu, to assistive technology; reached with the arrow keys, not Tab. */
 const MENU_ITEM_PROPS = { role: 'menuitem', tabIndex: -1 } as const;
 
@@ -90,8 +96,13 @@ const toMenuItem = (action: IReqoreRowMenuAction, touch: boolean): IReqoreDropdo
   const custom = action.props;
   const onClick = action.onClick ?? custom?.onClick;
 
+  // The action's own accessible name ("Show analytics for Short copy") is the item's too: its words are
+  // what a sighted reader sees, its name what a screen reader says, and folding must not lose it.
+  const ownName = (action['aria-label'] ?? custom?.['aria-label'])?.trim() || undefined;
+
   return {
     label: getRowActionLabel(action) ?? (custom ? getRowActionLabel(custom) : undefined),
+    ...(ownName ? { 'aria-label': ownName } : {}),
     icon: action.icon ?? custom?.icon,
     intent: action.intent ?? custom?.intent,
     // a finger's height, where the pointer is one
@@ -139,6 +150,11 @@ export interface IReqoreRowActionsMenuProps {
   size?: TSizes;
   /** What the menu button is called (its accessible name and tooltip). Defaults to "Actions". */
   label?: string;
+  /**
+   * The row the actions belong to, in words. The button is then called `"<label>: <rowLabel>"`
+   * ("Actions: Short copy"), so a list of rows is not a list of buttons all called "Actions".
+   */
+  rowLabel?: string;
   /** Take the whole box it is drawn in - a table cell - as the inline actions there do. */
   fill?: boolean;
   intent?: IReqoreButtonProps['intent'];
@@ -161,10 +177,13 @@ export const ReqoreRowActionsMenu = memo(
     actions,
     size,
     label = DEFAULT_ACTIONS_MENU_LABEL,
+    rowLabel,
     fill,
     intent,
     className,
   }: IReqoreRowActionsMenuProps) => {
+    // what the button and its menu are called: for the row they are in, where it has words
+    const name = rowLabel?.trim() ? `${label}: ${rowLabel.trim()}` : label;
     const [open, setOpen] = useState(false);
     const touch = useReqoreProperty('isHoverCapable') === false;
     const items = useMemo(
@@ -226,8 +245,8 @@ export const ReqoreRowActionsMenu = memo(
     }, [open, menuId, focusButton]);
 
     const wrapperProps = useMemo(
-      () => ({ id: menuId, role: 'menu', 'aria-label': label }),
-      [menuId, label]
+      () => ({ id: menuId, role: 'menu', 'aria-label': name }),
+      [menuId, name]
     );
 
     const menu = (
@@ -241,8 +260,8 @@ export const ReqoreRowActionsMenu = memo(
         fixed={!fill}
         fluid={fill}
         rounded={fill ? false : undefined}
-        tooltip={label}
-        aria-label={label}
+        tooltip={name}
+        aria-label={name}
         aria-haspopup='menu'
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
