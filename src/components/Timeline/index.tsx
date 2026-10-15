@@ -1,5 +1,5 @@
 import { rgba } from 'polished';
-import { forwardRef, memo, useCallback, useState } from 'react';
+import { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import { css } from 'styled-components';
 import {
   GAP_FROM_SIZE,
@@ -581,6 +581,21 @@ const TimelineItemRenderer = memo(
         ? getTimelineMarkerIcon(itemTheme, hasIntent, surface, item.iconColor)
         : undefined;
     const isHorizontal = direction === 'horizontal';
+    // one object while what it holds holds: the timestamp and the content are memo components
+    const timestampStyle = useMemo<React.CSSProperties>(
+      () => ({
+        // fainter than the title, as far as it stays readable
+        color: getReadableFadedColor(text, surface, 0.5),
+        display: 'block',
+        marginTop: `${GAP_FROM_SIZE[size]}px`,
+        textAlign: isHorizontal ? 'center' : undefined,
+      }),
+      [text, surface, size, isHorizontal]
+    );
+    const contentStyle = useMemo<React.CSSProperties>(
+      () => ({ color: getReadableFadedColor(text, surface, 0.7), lineHeight: 1.5 }),
+      [text, surface]
+    );
     // Horizontal mode is intentionally minimal: no expanding/collapsing and no content body.
     const showCollapsible = !isHorizontal && item.collapsible;
     const showContent = !isHorizontal && item.content;
@@ -679,13 +694,7 @@ const TimelineItemRenderer = memo(
             <ReqoreSpan
               size={getOneLessSize(getOneLessSize(size))}
               className='reqore-timeline-timestamp'
-              style={{
-                // fainter than the title, as far as it stays readable
-                color: getReadableFadedColor(text, surface, 0.5),
-                display: 'block',
-                marginTop: `${GAP_FROM_SIZE[size]}px`,
-                textAlign: isHorizontal ? 'center' : undefined,
-              }}
+              style={timestampStyle}
             >
               {item.relativeTime ? <TimeAgo time={item.timestamp} /> : item.timestamp}
             </ReqoreSpan>
@@ -698,10 +707,7 @@ const TimelineItemRenderer = memo(
                     size={getOneLessSize(size)}
                     effect={item.contentEffect}
                     className='reqore-timeline-content'
-                    style={{
-                      color: getReadableFadedColor(text, surface, 0.7),
-                      lineHeight: 1.5,
-                    }}
+                    style={contentStyle}
                   >
                     {item.content}
                   </ReqoreP>

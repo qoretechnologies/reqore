@@ -2180,13 +2180,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         ...descriptionEffect,
         // dimmer than the title, as far as it stays readable on the bar
         opacity: getReadableAlpha(
-          descriptionEffect.color
+          descriptionEffect?.color
             ? getColorFromMaybeString(theme, descriptionEffect.color)
             : descriptionIntent
               ? getReadableIntentColor(theme, descriptionIntent, undefined, barSurface)
               : barText,
           barSurface,
-          descriptionEffect.opacity ?? 0.7
+          descriptionEffect?.opacity ?? 0.7
         ),
       },
       intent: descriptionIntent,

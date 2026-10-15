@@ -1,6 +1,14 @@
 import { omit } from 'lodash';
 import { rgba } from 'polished';
-import React, { forwardRef, useCallback, useId, useLayoutEffect, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
@@ -429,6 +437,15 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       CONTROL_ICON_OPACITY,
       rightIconColor
     );
+    // one object for as long as the opacity holds: an icon is a memo component
+    const leftIconEffect = useMemo(
+      () => ({ opacity: leftIconLook.opacity }),
+      [leftIconLook.opacity]
+    );
+    const rightIconEffect = useMemo(
+      () => ({ opacity: rightIconLook.opacity }),
+      [rightIconLook.opacity]
+    );
 
     const hasPasswordToggle = rest.type === 'password' && !!passwordToggle;
     const passwordToggleConfig: IReqoreInputPasswordToggle =
@@ -490,7 +507,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
             <ReqoreIcon
               size={size}
               color={leftIconLook.color ?? iconColor}
-              effect={{ opacity: leftIconLook.opacity }}
+              effect={leftIconEffect}
               {...leftIconProps}
               icon={leftIcon}
               animation={loading ? 'spin' : leftIconProps?.animation}
@@ -540,7 +557,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
               size={size}
               icon={rightIcon}
               color={rightIconLook.color ?? rightIconColor}
-              effect={{ opacity: rightIconLook.opacity }}
+              effect={rightIconEffect}
               {...rightIconProps}
             />
           </StyledIconWrapper>
