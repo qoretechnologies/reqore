@@ -5,6 +5,7 @@ import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 import ReqoreRowActionsMenu, {
   getRowActionLabel,
   hasRowActionLabel,
+  rowLabelText,
 } from '../src/components/RowActionsMenu';
 
 /*
@@ -210,4 +211,105 @@ test('A panel action drawn as its own component is named, and clicked, by its pr
   } finally {
     vi.useRealTimers();
   }
+});
+
+/*
+ * Folded, an action keeps its own accessible name, and the menu is named for its row (qorus#646): a list of
+ * versions in a narrow card read as many buttons called "Actions" whose items had lost the names their
+ * buttons carried ("Show analytics for Short copy").
+ */
+
+const openMenu = () => {
+  fireEvent.click(document.querySelector('.reqore-row-actions-menu-button') as HTMLElement);
+  act(() => {
+    vi.advanceTimersByTime(1);
+  });
+  return Array.from(
+    document.querySelectorAll<HTMLElement>('.reqore-popover-content [role="menuitem"]')
+  );
+};
+
+const renderNamedMenu = (props: Partial<React.ComponentProps<typeof ReqoreRowActionsMenu>>) =>
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreRowActionsMenu
+              actions={[
+                {
+                  icon: 'BarChartBoxLine',
+                  label: 'Show analytics',
+                  'aria-label': 'Show analytics for Short copy',
+                },
+                { icon: 'TrophyLine', label: 'Accept' },
+                {
+                  icon: 'DeleteBinLine',
+                  'aria-label': 'Remove version Short copy',
+                  tooltip: 'Remove',
+                },
+              ]}
+              {...props}
+            />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+
+test('Each item keeps the accessible name its action has, and an action without one is named by its words', () => {
+  vi.useFakeTimers();
+  try {
+    renderNamedMenu({});
+    const items = openMenu();
+
+    expect(items).toHaveLength(3);
+    expect(items[0].getAttribute('aria-label')).toBe('Show analytics for Short copy');
+    expect(items[0].textContent).toContain('Show analytics');
+    expect(items[1].hasAttribute('aria-label')).toBe(false);
+    expect(items[1].textContent).toContain('Accept');
+    expect(items[2].getAttribute('aria-label')).toBe('Remove version Short copy');
+    expect(items[2].textContent).toContain('Remove');
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('The button and its menu are named for the row they belong to', () => {
+  vi.useFakeTimers();
+  try {
+    renderNamedMenu({ rowLabel: 'Short copy' });
+    const button = document.querySelector('.reqore-row-actions-menu-button') as HTMLElement;
+    expect(button.getAttribute('aria-label')).toBe('Actions: Short copy');
+
+    openMenu();
+    expect(document.querySelector('[role="menu"]')?.getAttribute('aria-label')).toBe(
+      'Actions: Short copy'
+    );
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('A host word for the button is named for the row too, and a row without words leaves it as it is', () => {
+  renderNamedMenu({ label: 'Akce', rowLabel: 'Short copy' });
+  expect(
+    document.querySelector('.reqore-row-actions-menu-button')?.getAttribute('aria-label')
+  ).toBe('Akce: Short copy');
+});
+
+test('A row label that is blank names nothing', () => {
+  renderNamedMenu({ rowLabel: '  ' });
+  expect(
+    document.querySelector('.reqore-row-actions-menu-button')?.getAttribute('aria-label')
+  ).toBe('Actions');
+});
+
+test('rowLabelText takes a row label that is words, and nothing else', () => {
+  expect(rowLabelText('Short copy')).toBe('Short copy');
+  expect(rowLabelText('  Short copy ')).toBe('Short copy');
+  expect(rowLabelText(3)).toBe('3');
+  expect(rowLabelText('')).toBeUndefined();
+  expect(rowLabelText(<b>Short copy</b>)).toBeUndefined();
+  expect(rowLabelText(undefined)).toBeUndefined();
 });

@@ -620,7 +620,11 @@ export const NarrowContainerActionsMenu: Story = {
 
     await expectEntityActionsFolded(narrow);
     const [button] = rowActionsMenuButtons(narrow);
-    expect(button).toHaveAttribute('aria-label', 'Actions');
+    // named for its row, so a list of rows is not a list of buttons all called "Actions"
+    expect(button).toHaveAttribute(
+      'aria-label',
+      'Actions: Process Incoming Order · order-intake-workflow'
+    );
 
     // the keyboard: Enter opens it, Escape puts it away, the focus stays on the button
     button.focus();
