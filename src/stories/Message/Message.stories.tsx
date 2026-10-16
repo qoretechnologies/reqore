@@ -1,7 +1,9 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
+import { expect, waitFor } from 'storybook/test';
 import ReqoreMessage, { IReqoreMessageProps } from '../../components/Message';
 import { StoryMeta } from '../utils';
+import { lowContrastTextIn } from '../utils/contrastGate';
 import { FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMessageProps>();
@@ -177,6 +179,35 @@ export const Muted: Story = {
   args: {
     opaque: true,
     intent: 'muted',
+  },
+};
+
+export const MutedRefusalOnThePage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A muted message as the Qorus IDE draws a refusal: the default muted fill, an icon and a title, on the dark page. Its title and text read on the fill as it is drawn — the translucent muted grey over the page — not on the opaque muted color the fill is made from, which is near-white and used to pick near-black text (about 1.7:1).',
+      },
+    },
+  },
+  render: Template,
+  args: {
+    intent: 'muted',
+    icon: 'LockLine',
+    title: 'Not allowed',
+    children: 'You do not have a role with permission to view this interface.',
+  },
+  play: async ({ canvasElement }) => {
+    const message = await waitFor(() => {
+      const el = canvasElement.querySelector('.reqore-message');
+      if (!el) {
+        throw new Error('the message is not rendered');
+      }
+      return el;
+    });
+    // every text in it reads on the fill as drawn (axe color-contrast, against the composited background)
+    await expect(await lowContrastTextIn(message)).toEqual([]);
   },
 };
 
