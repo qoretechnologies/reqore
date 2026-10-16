@@ -17,6 +17,7 @@ import { expectEqualBoxesEqualRows, expectRowsFillTheirBoxes, StoryRowBox } from
 import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import { withViewport } from '../utils/viewport';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const meta = {
   title: 'Display/Severity Row',
   component: ReqoreSeverityRow,
@@ -947,4 +948,25 @@ export const NarrowContainerActionsStackOnTouch: Story = {
       expect(onSeeSubscription).not.toHaveBeenCalled();
     });
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a neutral and a critical severity row on the default and on the themed surface: the neutral row takes the hairline, the critical row keeps its intent.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreSeverityRow label='Order Management' description='Healthy · 4.8k events' />
+      <ReqoreSeverityRow
+        label='Payment Processing'
+        description='Avg duration 4.7s exceeded 3.5s'
+        intent='danger'
+      />
+    </ThemedSurfaceComparison>
+  ),
 };

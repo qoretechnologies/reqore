@@ -27,15 +27,17 @@ import {
   PADDING_FROM_SIZE,
   resolveRadius,
   SPECIAL_PADDING_FROM_SIZE,
-  TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
-  changeDarkness,
   changeLightness,
   getMainBackgroundColor,
+  getPanelBackgroundColor,
+  getPanelHairlineColor,
   getReadableColor,
+  getThemePanelSurface,
 } from '../../helpers/colors';
 import styled, {
   listReqoreStyleProps,
@@ -650,6 +652,40 @@ const getPanelBorderBaseColor = (
   { intent, accentPosition }: Pick<IStyledPanel, 'intent' | 'accentPosition'>
 ) => (intent && !accentPosition ? theme.intents[intent] : getMainBackgroundColor(theme));
 
+/** The title bar: a band a step lighter than the page — or, with `theme.panel` named, the
+ *  panel's own surface, set apart from the body by the hairline under it alone. */
+const getPanelHeaderColor = (theme: IReqoreTheme, hovered?: boolean) => {
+  const themed = getThemePanelSurface(theme);
+
+  if (themed?.main) {
+    return hovered ? changeLightness(themed.main, 0.02) : themed.main;
+  }
+
+  return changeLightness(getMainBackgroundColor(theme), hovered ? 0.05 : 0.03);
+};
+
+/** The resting border: the intent's colour when the intent tints the edge, else the hairline
+ *  (`theme.panel.border` when the theme names one). */
+const getPanelBorderColor = (
+  theme: IReqoreTheme,
+  { intent, accentPosition }: Pick<IStyledPanel, 'intent' | 'accentPosition'>
+) =>
+  intent && !accentPosition
+    ? changeLightness(getPanelBorderBaseColor(theme, { intent, accentPosition }), 0.08)
+    : getPanelHairlineColor(theme);
+
+/** The border while the panel is hovered — a step brighter than at rest. */
+const getPanelHoverBorderColor = (
+  theme: IReqoreTheme,
+  { intent, accentPosition }: Pick<IStyledPanel, 'intent' | 'accentPosition'>
+) => {
+  const themed = !(intent && !accentPosition) ? getThemePanelSurface(theme) : undefined;
+
+  return themed?.border
+    ? changeLightness(themed.border, 0.12)
+    : changeLightness(getPanelBorderBaseColor(theme, { intent, accentPosition }), 0.25);
+};
+
 /**
  * Every panel prop that only styles or configures the panel. None of them reaches the rendered
  * element — the `div`, re-resizable's `Resizable` (which spreads every prop it does not know onto
@@ -756,15 +792,12 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
   ),
 })<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
+    rgba(getPanelBackgroundColor(theme), opacity)};
   border-radius: ${({ rounded, radiusSize }) =>
     rounded ? resolveRadius('normal', radiusSize) : 0}px;
   border: ${({ theme, flat, intent, accentPosition }) =>
     hasPanelBorder({ flat, intent, accentPosition })
-      ? `1px solid ${changeLightness(
-          getPanelBorderBaseColor(theme, { intent, accentPosition }),
-          0.08
-        )}`
+      ? `1px solid ${getPanelBorderColor(theme, { intent, accentPosition })}`
       : undefined};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   ${({
@@ -886,7 +919,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
                 : rgba(
                     darken(
                       0.025,
-                      rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)
+                      rgba(getPanelBackgroundColor(theme), opacity)
                     ),
                     opacity
                   )
@@ -894,7 +927,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
 
             border-color: ${
               hasPanelBorder({ flat, intent, accentPosition })
-                ? changeLightness(getPanelBorderBaseColor(theme, { intent, accentPosition }), 0.25)
+                ? getPanelHoverBorderColor(theme, { intent, accentPosition })
                 : undefined
             };
 
@@ -907,7 +940,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
                     ${rgba(
                       darken(
                         0.025,
-                        rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)
+                        rgba(getPanelBackgroundColor(theme), opacity)
                       ),
                       opacity
                     )}
@@ -948,12 +981,12 @@ export const StyledPanelTitle = styled.div.withConfig({
   ${({ $descriptionFontPx }) =>
     !!$descriptionFontPx &&
     css`
-      /* The description is a fixed px from \`TEXT_FROM_SIZE\` and knows nothing about the title
-         having shrunk, so a fitted title crosses under it: at the 12px floor the support text
-         renders at 15px and outranks the heading it supports. Scaling it by the SAME factor the
-         title took keeps the two in their original proportion instead of giving the description
-         a fit of its own — which would size it against its own box and let the pair drift apart
-         again, in the other direction. */
+      /* The description is a fixed px from the type scale (\`getTextSize\`) and knows nothing
+         about the title having shrunk, so a fitted title crosses under it: at the 12px floor
+         the support text renders at 15px and outranks the heading it supports. Scaling it by
+         the SAME factor the title took keeps the two in their original proportion instead of
+         giving the description a fit of its own — which would size it against its own box and
+         let the pair drift apart again, in the other direction. */
       .reqore-panel-title-description {
         font-size: ${$descriptionFontPx}px;
       }
@@ -988,7 +1021,7 @@ export const StyledPanelTitle = styled.div.withConfig({
     `}
 
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
+    rgba(getPanelHeaderColor(theme), opacity)};
   justify-content: space-between;
 
   padding: ${({ noHorizontalPadding, size, padded, opacity, flat, intent }: IStyledPanel) =>
@@ -999,7 +1032,7 @@ export const StyledPanelTitle = styled.div.withConfig({
   align-items: center;
   border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
     !isCollapsed && !flat && opacity
-      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.08), opacity)}`
+      ? `1px solid ${rgba(getPanelHairlineColor(theme), opacity)}`
       : null};
   transition: background-color 0.2s ease-out;
   overflow: hidden;
@@ -1020,7 +1053,7 @@ export const StyledPanelTitle = styled.div.withConfig({
         }
 
         background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-          rgba(changeLightness(getMainBackgroundColor(theme), 0.05), opacity)};
+          rgba(getPanelHeaderColor(theme, true), opacity)};
       }
     `}
 `;
@@ -1099,7 +1132,7 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
           )}px`
       : undefined};
   background: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
+    rgba(getPanelHeaderColor(theme), opacity)};
   // When the header is sticky AND the panel is minimal / transparent (opacity === 0), the
   // header has no surface of its own — scrolling content slides straight under it and the
   // label / actions become illegible. Apply a backdrop blur so the underlying content stays
@@ -1130,7 +1163,7 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
     !flat
-      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.08), opacity)}`
+      ? `1px solid ${rgba(getPanelHairlineColor(theme), opacity)}`
       : null};
 `;
 
@@ -1150,7 +1183,7 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
   min-height: 0;
   overflow: auto;
   overflow-wrap: anywhere;
-  font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getTextSize(theme, size)}px;
 `;
 
 /** The media frame. Its outer corners take the panel's inner curve, so the media is clipped to
@@ -1222,7 +1255,7 @@ export const StyledFloatingActions = styled.div<{
   z-index: 999999;
   display: flex;
   padding: ${({ size }) => PADDING_FROM_SIZE[size]}px;
-  background-color: ${({ theme }) => rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), 1)};
+  background-color: ${({ theme }) => rgba(getPanelBackgroundColor(theme), 1)};
   border: ${({ theme, flat, intent }) =>
     flat && !intent
       ? undefined
@@ -2166,7 +2199,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       fitLabel && !descriptionEffect?.textSize && labelFitPx < labelNaturalPx
         ? Math.max(
             FIT_TEXT_FLOOR_PX,
-            Math.round((TEXT_FROM_SIZE[panelSize] ?? TEXT_FROM_SIZE.normal) * (labelFitPx / labelNaturalPx))
+            Math.round(
+              (getTextSize(theme, panelSize) ?? getTextSize(theme, 'normal')) *
+                (labelFitPx / labelNaturalPx)
+            )
           )
         : 0;
 

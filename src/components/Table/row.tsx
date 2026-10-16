@@ -358,6 +358,7 @@ const ReqoreTableRow = memo(
               fluid
               style={{ height: '100%' }}
               rounded={false}
+              className='reqore-table-cell-actions'
             >
               {(actions ?? cell.actions(data)).map(({ label, ...action }, index) => {
                 /* An action's label is drawn in its button, as a button's is. Only where the

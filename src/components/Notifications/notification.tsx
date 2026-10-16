@@ -4,13 +4,8 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } 
 import { css, keyframes } from 'styled-components';
 import styled from '../../helpers/styled';
 import { SPRING_CONFIG } from '../../constants/animations';
-import {
-  PADDING_FROM_SIZE,
-  RADIUS_FROM_SIZE,
-  SIZE_TO_PX,
-  TEXT_FROM_SIZE,
-  TSizes,
-} from '../../constants/sizes';
+import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, SIZE_TO_PX, TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import {
@@ -414,7 +409,7 @@ const StyledNotificationBody = styled.div<{ $compact?: boolean }>`
 `;
 
 const StyledNotificationText = styled.div<{ $size: TSizes; $dim: boolean }>`
-  font-size: ${({ $size }) => TEXT_FROM_SIZE[getOneLessSize($size)]}px;
+  font-size: ${({ $size, theme }) => getTextSize(theme, getOneLessSize($size))}px;
   line-height: 1.4;
   opacity: ${({ $dim }) => ($dim ? 0.78 : 1)};
 `;

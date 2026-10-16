@@ -2,13 +2,8 @@ import { rgba } from 'polished';
 import React, { forwardRef, memo, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { useMeasure } from 'react-use';
 import { css } from 'styled-components';
-import {
-  CONTROL_TEXT_FROM_SIZE,
-  PADDING_FROM_SIZE,
-  SIZE_TO_PX,
-  SWITCH_SIZE_TO_PX,
-  TSizes,
-} from '../../constants/sizes';
+import { PADDING_FROM_SIZE, SIZE_TO_PX, SWITCH_SIZE_TO_PX, TSizes } from '../../constants/sizes';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
@@ -245,7 +240,7 @@ const StyledCheckbox = styled.div.withConfig({
   transition: all 0.2s ease-out;
 
   height: ${({ size }) => SIZE_TO_PX[size]}px;
-  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getControlTextSize(theme, size)}px;
 
   max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 auto' : '0 0 auto')};

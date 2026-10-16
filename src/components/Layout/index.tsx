@@ -53,6 +53,13 @@ const StyledReqoreLayoutWrapper = styled.div<{
     css`
       font-family: ${getFontFamily(theme.fontFamily)};
     `}
+
+  /* Only when the theme's type scale names one: without it, the browser's \`normal\`. */
+  ${({ theme }) =>
+    theme.typeScale?.lineHeight &&
+    css`
+      line-height: ${theme.typeScale.lineHeight};
+    `}
 `;
 
 const ReqoreLayoutWrapper = ({

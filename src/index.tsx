@@ -200,6 +200,10 @@ export { Colors as ReqoreColors } from './constants/colors';
 export { FONT_FAMILY_SHORTHANDS as ReqoreFonts } from './constants/fonts';
 export { ReqoreSizes } from './constants/sizes';
 export { ReqoreIntents } from './constants/theme';
+export type { IReqoreTypeScale } from './constants/theme';
+/* The px a size renders its text at, as the theme's `typeScale` decides it — for a consumer's own
+   element that has to sit at the same size as the Reqore text beside it. */
+export { getControlTextSize, getTagTextSize, getTextSize } from './helpers/typeScale';
 export { ReqorePaginationContainer } from './containers/Paging';
 export { default as ReqoreNotifications, modalStore } from './containers/ReqoreProvider';
 export { default as ReqoreUIProvider } from './containers/UIProvider';

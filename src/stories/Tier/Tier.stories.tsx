@@ -4,6 +4,7 @@ import { ReqoreColumns, ReqoreControlGroup, ReqoreTier } from '../..';
 import { StoryMeta } from '../utils';
 import { expectModernRow, modernTiers, PRO, STARTER, THREE_PLANS } from './plans';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const meta = {
   title: 'Other/Tier',
   component: ReqoreTier,
@@ -433,4 +434,27 @@ export const ModernSizes: Story = {
       '48px',
     ]);
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a pricing tier on the default and on the themed surface: with `theme.panel` set the tier sits on the panel surface.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreTier
+        name='Basic'
+        nameDetail='For individuals'
+        price={3.99}
+        currency='$'
+        priceDetail='per month'
+        description='A basic tier with limited features.'
+      />
+    </ThemedSurfaceComparison>
+  ),
 };

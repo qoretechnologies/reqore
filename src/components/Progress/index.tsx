@@ -2,12 +2,8 @@ import { darken, rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import { css, keyframes } from 'styled-components';
 import styled from '../../helpers/styled';
-import {
-  CONTROL_TEXT_FROM_SIZE,
-  PROGRESS_HEIGHT_FROM_SIZE,
-  RADIUS_FROM_SIZE,
-  TSizes,
-} from '../../constants/sizes';
+import { PROGRESS_HEIGHT_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
 import { getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -124,7 +120,7 @@ const StyledProgressLabels = styled.div<{ size: TSizes; theme: IReqoreTheme }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getControlTextSize(theme, size)}px;
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined)};
   gap: 8px;
 `;
