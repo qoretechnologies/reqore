@@ -5,7 +5,7 @@ import { IReqoreColumnsProps } from '../../components/Columns';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import items, { bigCollection, collectionWithGroups } from '../../mock/collectionData';
 
-import { expect, fireEvent } from 'storybook/test';
+import { expect, fireEvent, userEvent } from 'storybook/test';
 import { waitFor } from '@testing-library/react';
 import { noop } from 'lodash';
 import { sleep } from '../../helpers/utils';
@@ -140,6 +140,43 @@ export const FilterArrivingOrder: Story = {
   args: { ...FilterRelevance.args, filterRanking: undefined },
   play: async ({ canvasElement }) => {
     await waitFor(() => expect(renderedCardLabels(canvasElement)[0]).toBe('Alerts to Telegram'));
+  },
+};
+
+export const SearchKeepsEveryTypedCharacter: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A filterable collection whose search box asks to be auto-focused (`inputProps.focusRules`). Typing filters a hundred items on every keystroke — a heavy re-render — and each typed character has to survive it. useAutoFocus re-applied its focus and moved the caret to the end on that re-render, which dropped a character: typing "ca" left "c". The search box now keeps exactly what was typed, and the caret stays where the person is typing.',
+      },
+    },
+  },
+  args: {
+    items: bigCollection,
+    filterable: true,
+    inputProps: { focusRules: { type: 'auto' } },
+  },
+  play: async ({ canvasElement }) => {
+    const search = await waitFor(() => {
+      const el = canvasElement.querySelector<HTMLInputElement>('.reqore-input');
+      if (!el) {
+        throw new Error('the search box is not rendered');
+      }
+      return el;
+    });
+    // the search box auto-focuses when it opens
+    await waitFor(() => expect(document.activeElement).toBe(search));
+
+    await userEvent.type(search, 'cat');
+    await waitFor(() => expect(search.value).toBe('cat'));
+
+    // typing in the MIDDLE: the caret must stay where the person is typing, not be forced to the end on each
+    // re-render. useAutoFocus used to re-apply its "jump to end" selection, so the next character landed at
+    // the end (this is what dropped a character while typing "ca"). "XY" inserted at index 1 must read "cXYat".
+    search.setSelectionRange(1, 1);
+    await userEvent.type(search, 'XY', { skipClick: true });
+    await waitFor(() => expect(search.value).toBe('cXYat'));
   },
 };
 
