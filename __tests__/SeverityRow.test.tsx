@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
 import {
   ReqoreContent,
   ReqoreLayoutContent,
@@ -464,4 +464,85 @@ test('Renders <SeverityRow /> with custom paddingSize', () => {
   );
 
   expect(document.querySelectorAll('.reqore-severity-row').length).toBe(1);
+});
+
+/*
+ * Narrow (below 640px of its own container), two or more actions are one menu button (qorus#646).
+ */
+
+class RowResizeObserver {
+  static width = 400;
+  readonly disconnect = vi.fn();
+  constructor(readonly callback: ResizeObserverCallback) {}
+  observe(target: Element) {
+    this.callback(
+      [{ target, contentRect: { width: RowResizeObserver.width } } as ResizeObserverEntry],
+      this as unknown as ResizeObserver
+    );
+  }
+}
+
+const renderMeasured = (width: number, props: Record<string, unknown>) => {
+  const original = globalThis.ResizeObserver;
+  RowResizeObserver.width = width;
+  (globalThis as Record<string, unknown>).ResizeObserver = RowResizeObserver;
+  try {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreSeverityRow label='Issue' {...props} />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  } finally {
+    globalThis.ResizeObserver = original;
+  }
+};
+
+const TWO_ACTIONS = [{ label: 'Investigate' }, { icon: 'CloseLine', tooltip: 'Dismiss' }];
+
+test('Folds two or more actions into one menu button below 640px of its container, with narrowActions="menu"', () => {
+  renderMeasured(600, { actions: TWO_ACTIONS, narrowActions: 'menu' });
+
+  const row = document.querySelector('.reqore-severity-row')!;
+  expect(row.getAttribute('data-narrow')).toBe('true');
+  expect(row.getAttribute('data-actions')).toBe('menu');
+  const buttons = row.querySelectorAll('.reqore-severity-row-actions .reqore-button');
+  expect(buttons).toHaveLength(1);
+  expect(buttons[0].classList.contains('reqore-row-actions-menu-button')).toBe(true);
+  expect(buttons[0].getAttribute('aria-label')).toBe('Actions');
+});
+
+test('Keeps a callout\'s actions in sight, stacked, by default and with narrowActions="stack"', () => {
+  for (const props of [{}, { narrowActions: 'stack' as const }]) {
+    renderMeasured(600, { actions: TWO_ACTIONS, ...props });
+
+    const row = document.querySelector('.reqore-severity-row')!;
+    expect(row.getAttribute('data-actions')).toBeNull();
+    expect(document.querySelectorAll('.reqore-row-actions-menu-button')).toHaveLength(0);
+    expect(row.querySelectorAll('.reqore-severity-row-actions .reqore-button')).toHaveLength(2);
+    cleanup();
+  }
+});
+
+test('Keeps every action inline in a wide container, and a single one a button when narrow', () => {
+  renderMeasured(800, { actions: TWO_ACTIONS });
+  expect(document.querySelectorAll('.reqore-row-actions-menu-button')).toHaveLength(0);
+  expect(document.querySelectorAll('.reqore-severity-row-actions .reqore-button')).toHaveLength(2);
+  cleanup();
+
+  renderMeasured(400, { actions: [{ label: 'Investigate' }] });
+  expect(document.querySelectorAll('.reqore-row-actions-menu-button')).toHaveLength(0);
+});
+
+test('Stacked, labels an action whose label is empty with its tooltip', () => {
+  renderMeasured(400, {
+    actions: [{ label: 'Investigate' }, { label: '', icon: 'CloseLine', tooltip: 'Dismiss' }],
+  });
+
+  const buttons = document.querySelectorAll('.reqore-severity-row-actions .reqore-button');
+  expect(buttons).toHaveLength(2);
+  expect(buttons[1].textContent).toContain('Dismiss');
 });

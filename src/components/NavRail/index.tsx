@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import {
   GAP_FROM_SIZE,
   HALF_PADDING_FROM_SIZE,
@@ -25,7 +25,8 @@ import {
   getMainBackgroundColor,
   getThemePanelSurface,
 } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import { createHoverGate, watchHoverGate } from '../../helpers/hoveringPointer';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useScrollFade } from '../../hooks/useScrollFade';
@@ -977,7 +978,15 @@ export const ReqoreNavRail = memo(
       const el = railRef.current;
       if (!el) return undefined;
       let dwell: ReturnType<typeof setTimeout> | undefined;
+      /* Approached by a pointer that hovers: a finger's tap - and the `mouseenter` a browser emulates after it -
+         is no approach (see `createHoverGate`), and on a touch laptop it revealed the rail, and dwelled its
+         labels open, until the next tap elsewhere. */
+      const gate = createHoverGate();
+      const stopGate = watchHoverGate(el, gate);
       const enter = () => {
+        if (!gate.isHover()) {
+          return;
+        }
         hoveredRef.current = true;
         if (idleReveal) setHovered(true);
         if (hoverLabels) {
@@ -998,6 +1007,7 @@ export const ReqoreNavRail = memo(
       el.addEventListener('mouseleave', leave);
       return () => {
         clearTimeout(dwell);
+        stopGate();
         el.removeEventListener('mouseenter', enter);
         el.removeEventListener('mouseleave', leave);
       };

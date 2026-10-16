@@ -11,7 +11,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import { useContext } from 'use-context-selector';
 import { GAP_FROM_SIZE, RADIUS_FROM_RADIUS_SIZE, TSizes } from '../../constants/sizes';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';

@@ -1,8 +1,7 @@
 import { forwardRef, memo } from 'react';
-import styled from 'styled-components';
 import { TSizes } from '../../constants/sizes';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { getTextSize } from '../../helpers/typeScale';
-import { omitStyleProps } from '../../helpers/styled';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {

@@ -108,6 +108,13 @@ export type { TReqoreKeyboardShortcut } from './helpers/shortcuts';
    so a consumer's gesture can feel the same under the finger. */
 export { getSwipeStep, SWIPE } from './helpers/gestures';
 export type { ISwipeThresholds } from './helpers/gestures';
+export {
+  createHoverGate,
+  isHoveringPointer,
+  useHoverGate,
+  watchHoverGate,
+} from './helpers/hoveringPointer';
+export type { IReqoreHoverGate, IReqoreHoveringPointerEvent } from './helpers/hoveringPointer';
 export { ReqoreKeyValueTable } from './components/KeyValueTable';
 export * from './components/Label';
 export { default as ReqoreLayoutContent } from './components/Layout/content';
@@ -147,6 +154,8 @@ export { default as ReqoreRadioGroup } from './components/RadioGroup';
 export { default as ReqoreRating } from './components/Rating';
 export { default as ReqoreSegmentedControl } from './components/SegmentedControl';
 export { default as ReqoreSeverityRow } from './components/SeverityRow';
+// How a narrow `ReqoreEntityRow` / `ReqoreSeverityRow` shows its actions (`narrowActions`).
+export type { TReqoreNarrowRowActions } from './components/RowActionsMenu';
 export { ReqoreRichTextEditor } from './components/RichTextEditor';
 export type {
   IReqoreRichTextEditorProps,
@@ -161,6 +170,7 @@ export { ReqoreSpinner } from './components/Spinner';
 export { default as ReqoreStackedBar } from './components/StackedBar';
 export { default as ReqoreStatistic } from './components/Statistic';
 export { default as ReqoreTable } from './components/Table';
+export type { TReqoreTableCellAction } from './components/Table';
 export { ReqoreTableBodyCell } from './components/Table/cell';
 export { ReqoreTableHeaderCell } from './components/Table/headerCell';
 export { default as ReqoreTableRow } from './components/Table/row';

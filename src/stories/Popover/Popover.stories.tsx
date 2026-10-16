@@ -18,6 +18,8 @@ import {
 } from '../../index';
 import { IReqoreTooltip } from '../../types/global';
 import { StoryMeta } from '../utils';
+import { withMouse } from '../utils/mouse';
+import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import { FlatArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqorePopoverProps>();
@@ -987,6 +989,176 @@ export const ClampedToViewport: Story = {
       // Never wider than the viewport it is rendered into.
       await expect(popover.getBoundingClientRect().width).toBeLessThanOrEqual(window.innerWidth);
     });
+  },
+};
+
+/** Each popover surface the document is given, as its text, from when this was called until `stop`. */
+const watchPopoversShown = () => {
+  const shown: string[] = [];
+  const observer = new MutationObserver((records) =>
+    records.forEach((record) =>
+      record.addedNodes.forEach((node) => {
+        if (node instanceof HTMLElement) {
+          [node, ...Array.from(node.querySelectorAll<HTMLElement>('.reqore-popover-content'))]
+            .filter((element) => element.matches('.reqore-popover-content'))
+            .forEach((popover) => shown.push(popover.textContent?.trim() ?? ''));
+        }
+      })
+    )
+  );
+  observer.observe(document.body, { childList: true, subtree: true });
+  return { shown, stop: () => observer.disconnect() };
+};
+
+/** A tooltip that stays once a hover opened it: a click does not close it, as it does a plain hover's. */
+const STAYING_TOOLTIP: IReqoreTooltip = { content: 'What this one does', handler: 'hoverStay' };
+
+/** Two buttons with a hover's tooltip, a plain one and one that stays, that count their presses. */
+const TooltipButtonsThatCount = () => {
+  const [presses, setPresses] = useState(0);
+  return (
+    <ReqoreControlGroup vertical>
+      <ReqoreButton
+        className='button-with-a-hover-tooltip'
+        tooltip='What this button does'
+        onClick={() => setPresses((count) => count + 1)}
+      >
+        Press me
+      </ReqoreButton>
+      <ReqoreButton
+        className='button-with-a-staying-tooltip'
+        tooltip={STAYING_TOOLTIP}
+        onClick={() => setPresses((count) => count + 1)}
+      >
+        Press me too
+      </ReqoreButton>
+      <ReqoreMessage flat size='small' className='presses'>
+        {`Pressed ${presses} times`}
+      </ReqoreMessage>
+    </ReqoreControlGroup>
+  );
+};
+
+let popoversShown: ReturnType<typeof watchPopoversShown> | undefined;
+
+export const TapOpensNoHoverTooltip: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders two buttons with a hover's tooltip on a phone (390 px) - a plain one, and one that stays once opened (`hoverStay`) - and taps each with a finger: each is pressed, and no tooltip opens. A finger cannot hover, and the mouseenter a browser emulates after a tap is not one: it opened the plain tooltip until the tap's click closed it (on a touch laptop, whose mouse makes its tooltips a hover's), and the one that stays stayed open over what the finger had pressed.",
+      },
+    },
+  },
+  render: () => <TooltipButtonsThatCount />,
+  // watched from before the taps: the tooltip a tap opened was closed again by its click
+  beforeEach: () => {
+    popoversShown = watchPopoversShown();
+    return () => {
+      popoversShown?.stop();
+      popoversShown = undefined;
+    };
+  },
+  play: async ({ canvasElement }) => {
+    const button = canvasElement.querySelector('.button-with-a-hover-tooltip') as HTMLElement;
+    const staying = canvasElement.querySelector('.button-with-a-staying-tooltip') as HTMLElement;
+    await withTouchScreen(async (touch) => {
+      await touch.tap(button);
+      // the press is the tap's last event: the mouseenter before it has been heard by then
+      await waitFor(() =>
+        expect(canvasElement.querySelector('.presses')).toHaveTextContent('Pressed 1 times')
+      );
+      await touch.tap(staying);
+      await waitFor(() =>
+        expect(canvasElement.querySelector('.presses')).toHaveTextContent('Pressed 2 times')
+      );
+    });
+    await expect(popoversShown?.shown).toEqual([]);
+  },
+};
+
+export const HoverTooltipOpensForAMouse: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a button with a hover's tooltip and rests the browser's own mouse on it: the tooltip opens, as a hover's does. The mouse is moved off the page when the play ends, so it hovers nothing in the stories after it.",
+      },
+    },
+  },
+  render: () => <TooltipButtonsThatCount />,
+  play: async ({ canvasElement }) => {
+    const button = canvasElement.querySelector('.button-with-a-hover-tooltip') as HTMLElement;
+    await withMouse(async (mouse) => {
+      await mouse.restOn(button);
+      await waitFor(() => {
+        const tooltip = document.querySelector('.reqore-popover-content');
+        expect(tooltip).toHaveTextContent('What this button does');
+      });
+    });
+  },
+};
+
+const TARGET_RESIZES_FRAME_STYLE = { width: 600 };
+// a block as wide as its container, whose own content does not change as it narrows: nothing inside it
+// mutates, which the popover would see
+const TARGET_RESIZES_WRAPPER_STYLE = { display: 'block', padding: 10, border: '1px dashed #666' };
+
+/** Resolves after `count` frames: the popover stops polling its target after 3 frames in which it held still. */
+const afterFrames = async (count: number) => {
+  for (let frame = 0; frame < count; frame += 1) {
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+  }
+};
+
+export const FollowsATargetThatResizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Opens a popover below its target's right end, then narrows the target - its container does, with no scroll, no window resize and nothing changing inside the target - and the popover follows the target's right end. Popper places it again on a scroll and a window resize, and the popover on its own size and on changes inside its target, so a target that grew or shrank by itself, once the popover's first half second was over, left it where the target's edge had been.",
+      },
+    },
+  },
+  render: () => (
+    <div className='popover-target-resizes-frame' style={TARGET_RESIZES_FRAME_STYLE}>
+      <ReqorePopover
+        component='div'
+        wrapperTag='div'
+        wrapperStyle={TARGET_RESIZES_WRAPPER_STYLE}
+        content="Placed by its target's right edge"
+        placement='bottom-end'
+        openOnMount
+      >
+        A target as wide as its container
+      </ReqorePopover>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const frame = canvasElement.querySelector('.popover-target-resizes-frame') as HTMLElement;
+    const target = frame.querySelector('.reqore-popover-wrapper') as HTMLElement;
+    const popover = () => document.querySelector('.reqore-popover-content') as HTMLElement | null;
+    const rightEndGap = () =>
+      popover()!.getBoundingClientRect().right - target.getBoundingClientRect().right;
+
+    await waitFor(() => expect(popover()).toBeInTheDocument(), { timeout: 10000 });
+    // placed, and past the frames in which it watches its target move
+    let gap = Number.NaN;
+    await waitFor(async () => {
+      const before = rightEndGap();
+      await afterFrames(10);
+      gap = rightEndGap();
+      expect(Math.abs(gap - before)).toBeLessThanOrEqual(0.5);
+    });
+    await expect(Math.abs(gap)).toBeLessThanOrEqual(2);
+
+    // the target narrows, by its container
+    frame.style.width = '360px';
+    await waitFor(() => expect(target.getBoundingClientRect().width).toBeLessThanOrEqual(360));
+    await waitFor(() => expect(Math.abs(rightEndGap() - gap)).toBeLessThanOrEqual(1));
   },
 };
 

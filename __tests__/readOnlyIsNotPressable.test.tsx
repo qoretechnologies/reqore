@@ -50,6 +50,21 @@ describe('a read-only tag', () => {
     expect(tag.getAttribute('tabindex')).toBe('0');
     expect(getComputedStyle(tag).cursor).toBe('pointer');
   });
+
+  /* As a button does: a tag inside a control that is itself the tab stop is
+     reached with that control's own keys. Read-only still wins - no tab stop. */
+  it('keeps the tabIndex it is given while pressable, and only then', () => {
+    const { container } = wrap(
+      <>
+        <ReqoreTag className='skipped' label='Skipped' tabIndex={-1} onClick={() => undefined} />
+        <ReqoreTag className='refused' label='Refused' tabIndex={0} readOnly onClick={() => undefined} />
+        <ReqoreTag className='plain' label='Not pressable' tabIndex={0} />
+      </>
+    );
+    expect(container.querySelector('.skipped')?.getAttribute('tabindex')).toBe('-1');
+    expect(container.querySelector('.refused')?.getAttribute('tabindex')).toBeNull();
+    expect(container.querySelector('.plain')?.getAttribute('tabindex')).toBeNull();
+  });
 });
 
 describe("a template chip in an editor that cannot be typed into", () => {
@@ -97,7 +112,9 @@ describe("a template chip in an editor that cannot be typed into", () => {
     );
     const chip = chipOf(container);
 
-    expect(chip.getAttribute('tabindex')).toBe('0');
+    // pressable, but not a tab stop of its own: the editor is the tab stop, and
+    // the chip is reached with the caret (richTextEditor.test.tsx)
+    expect(chip.getAttribute('tabindex')).toBe('-1');
     expect(getComputedStyle(chip).cursor).toBe('pointer');
   });
 });

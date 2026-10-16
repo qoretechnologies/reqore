@@ -1,8 +1,7 @@
 import { forwardRef, memo } from 'react';
-import styled from 'styled-components';
 import { TSizes } from '../../constants/sizes';
+import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { getTextSize } from '../../helpers/typeScale';
-import { omitStyleProps } from '../../helpers/styled';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
@@ -33,9 +32,11 @@ export interface IReqoreParagraphProps
   as?: React.ElementType;
 }
 
-// `fill` is handed down by a containing `ReqoreControlGroup`; a `p` would keep it.
+// `_size` is the paragraph's text size, for its styles; the layout flags a containing
+// `ReqoreControlGroup` hands it are for the group. A `p` would keep `fill` (an SVG attribute), and
+// a component the paragraph is rendered `as` would receive them all.
 export const StyledParagraph = styled(StyledTextEffect).withConfig({
-  shouldForwardProp: omitStyleProps('fill'),
+  shouldForwardProp: omitStyleProps('_size', ...REQORE_CONTROL_GROUP_CHILD_PROPS),
 })`
   padding: 0;
   margin: 0;
@@ -44,6 +45,14 @@ export const StyledParagraph = styled(StyledTextEffect).withConfig({
   font-size: ${({ _size, theme }) =>
     isStringSize(_size) ? `${getTextSize(theme, _size as TSizes)}px` : _size};
 `;
+
+/**
+ * The element a text slot that may hold blocks is drawn as: a `p` for text (a string or a number),
+ * so plain text is exactly the paragraph it always was — consumer CSS aimed at `p` still matches —
+ * and a `div` for anything else, which may be a block a `p` cannot hold.
+ */
+export const getReqoreTextElement = (content: React.ReactNode): 'p' | 'div' =>
+  typeof content === 'string' || typeof content === 'number' ? 'p' : 'div';
 
 export const ReqoreP = memo(
   forwardRef(

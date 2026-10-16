@@ -1,11 +1,10 @@
 import { animated } from '@react-spring/web';
 import { rgba } from 'polished';
 import { memo, useCallback, useMemo } from 'react';
-import styled from 'styled-components';
 import { IReqoreDrawerStyle } from '.';
 import { useReqoreProperty } from '../..';
 import { getMainBackgroundColor } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 
 export interface IReqoreBackdropProps extends React.HTMLAttributes<HTMLDivElement> {
   zIndex?: number;

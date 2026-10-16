@@ -10,11 +10,11 @@ import React, {
   useState,
 } from 'react';
 import { useMount, useUnmount } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { ReqoreButton, ReqoreDrawer } from '../..';
 import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import {
   IReqoreIntent,
@@ -543,17 +543,21 @@ const ReqoreControlGroup = memo(
       return undefined;
     };
 
+    /* A child keeps its own key: React.Children.map already keys each child by it (or by its
+       place when it has none). A key set here is joined to that one, so the child's place used to
+       become part of its key, and an element added before a keyed child remounted it, losing its
+       state and focus. Only an explicit `reactKey` replaces the key. */
     const { clone } = useCloneThroughFragments(
       (props, _index, index, childType) => {
         const isIntrinsicElement = typeof childType === 'string';
         let newProps: any = isIntrinsicElement
           ? {
               ...props,
-              key: props?.reactKey || _index,
+              key: props?.reactKey,
             }
           : {
               ...props,
-              key: props?.reactKey || _index,
+              key: props?.reactKey,
               // Keep in step with `REQORE_CONTROL_GROUP_CHILD_PROPS`, which the children use to
               // keep these off the DOM.
               ...definedOnly({

@@ -2,9 +2,10 @@
 import type { IReqoreEffect } from '../Effect';
 import { TReqoreFilterRanking } from '../../helpers/search';
 import { size as count, isArray } from 'lodash';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import {
   ReqoreControlGroup,
   ReqoreMessage,
@@ -15,9 +16,10 @@ import {
   useReqoreTheme,
 } from '../..';
 import { TReqorePaginationType, getPagingObjectFromType } from '../../constants/paging';
-import { RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { RADIUS_FROM_SIZE, TABLE_SIZE_TO_PX, TOUCH_TARGET_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { useDragToScroll } from '../../hooks/useDragToScroll';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
 import { IReqoreIntent, IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -25,8 +27,10 @@ import { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreExportModalProps, ReqoreExportModal } from '../ExportModal';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
+import { NARROW_CONTAINER_BREAKPOINT_PX } from '../../hooks/useNarrowContainer';
 import { TReqoreKeyValueTableExportMapper } from '../KeyValueTable';
 import { IReqorePanelAction, IReqorePanelProps, IReqorePanelSubAction } from '../Panel';
+import { DEFAULT_ACTIONS_MENU_LABEL } from '../RowActionsMenu';
 import ReqoreTableBody from './body';
 import ReqoreTableHeader, { IReqoreCustomHeaderCellComponent } from './header';
 import { IReqoreTableHeaderCellProps } from './headerCell';
@@ -34,6 +38,8 @@ import {
   clampZoom,
   fixSort,
   flipSortDirection,
+  foldActionsColumns,
+  getActionsMenuColumnIds,
   getColumnsCount,
   getExportActions,
   getOnlyShownColumns,
@@ -116,9 +122,25 @@ export interface IReqoreTableColumn extends IReqoreIntent {
      * usual hook-order rule. Swap the row's data, not the function.
      */
     content?: TReqoreTableColumnContent;
-    actions?: (
-      data: IReqoreTableRowData
-    ) => Omit<IReqoreButtonProps, 'children' | 'label' | 'rightIcon'>[];
+    /**
+     * The row's actions, drawn as buttons in the cell.
+     *
+     * An action's `label` is drawn in its button, as a button's is. Where a narrow table folds the
+     * actions into one menu (see `actionsMenuBelowWidth`), it is the action's name in that menu -
+     * its text, or a number; otherwise its string `tooltip`, or its `aria-label` - and a row with
+     * only one action keeps it as a button the menu's width, its icon alone, its label then its
+     * tooltip (unless it has one) and its accessible name. A button that draws no label is named
+     * by its tooltip's text.
+     */
+    actions?: (data: IReqoreTableRowData) => TReqoreTableCellAction[];
+    /**
+     * The table width, in pixels, at or below which a cell with two or more actions shows them as one
+     * menu button instead of side by side: the button opens a menu naming each action, and the
+     * column narrows to the button, so the row's content gets the room the buttons took. Measured on
+     * the table itself, not the window, so a table in a narrow drawer folds on a wide screen.
+     * Defaults to `NARROW_CONTAINER_BREAKPOINT_PX` (480, Reqore's phone width); `0` never folds.
+     */
+    actionsMenuBelowWidth?: number;
     intent?: TReqoreIntent;
     padded?: 'both' | 'horizontal' | 'vertical' | 'none';
     /**
@@ -135,6 +157,17 @@ export interface IReqoreTableColumn extends IReqoreIntent {
     maxHeight?: number;
   };
 }
+
+/**
+ * An action in a table cell: a button, with its `label` drawn in it. Any content, as a button's
+ * label is, so the actions a page gives a panel, a button group or a row (`IReqorePanelAction`,
+ * `IReqoreButtonProps`, `IReqoreEntityRowAction`, `IReqoreSeverityRowAction`) serve its table's
+ * cells too. In the menu a narrow table folds the actions into, only text or a number names the
+ * action; anything else gives way to its string `tooltip`.
+ */
+export type TReqoreTableCellAction = Omit<IReqoreButtonProps, 'children' | 'label' | 'rightIcon'> & {
+  label?: React.ReactNode;
+};
 
 export interface IReqoreTableRowData {
   [key: string]: any;
@@ -281,6 +314,17 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * `` (n) => `Search in ${n} items...` ``.
    */
   filterPlaceholder?: string | ((matchedRows: number) => string);
+  /**
+   * The table width, in pixels, at or below which the built-in search is a button with its icon until it
+   * is used: a tap, a click, or Enter or Space on it opens the search field across the table's toolbar,
+   * focused, and Escape (or leaving it) closes it again while it is empty. A search that holds text stays
+   * open. Measured on the table itself, not the window. In a card on a phone the field took the toolbar
+   * from the title, which was squeezed to a letter. Defaults to `NARROW_CONTAINER_BREAKPOINT_PX` (480);
+   * `0` never folds it.
+   */
+  searchFoldsBelowWidth?: number;
+  /** The folded search button's name (its accessible name and tooltip). Defaults to `'Search'`. */
+  searchToggleLabel?: string;
   /** Tooltip on the "scroll to top" action. Defaults to `'Scroll to top'`. */
   scrollToTopTooltip?: string;
   /** Label of the "Reset all" more-menu action. Defaults to `'Reset all'`. */
@@ -318,6 +362,11 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * Defaults to `'Other'`.
    */
   otherActionsLabel?: string;
+  /**
+   * What the button a narrow table folds a row's actions into is called: its accessible name and
+   * tooltip (see `cell.actionsMenuBelowWidth`). Defaults to `'Actions'`.
+   */
+  rowActionsMenuLabel?: string;
   /**
    * Fallback placeholder for the per-column filter input inside the header
    * dropdown, used when a column doesn't set `filterPlaceholder` of its own.
@@ -448,6 +497,18 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    */
   getRowProps?: IReqoreTableRowOptions['getRowProps'];
 
+  /**
+   * Press and pull the table sideways with the mouse or a pen to scroll it, on its
+   * body and on its header alike - for a table wider than its frame, where a plain
+   * wheel mouse has no sideways axis. A press that does not move is still a click
+   * (a header's sort and options keep working), the click that ends a real drag is
+   * not delivered, and a press on a text field is the field's. Off by default.
+   *
+   * A finger swipes the table either way: the body pans natively, and the header,
+   * which is not a scroller of its own, scrolls the body under a sideways swipe.
+   */
+  dragToScroll?: boolean;
+
   exportMapper?:
     | TReqoreKeyValueTableExportMapper
     | ((data: unknown[]) => IReqoreExportModalProps['data']);
@@ -491,6 +552,16 @@ const StyledTableWrapper = styled.div`
   width: 100%;
   flex: 1;
   overflow: hidden;
+
+  /* dragToScroll: the body says it can be pulled, and while a pull is on, nothing under
+     it is selected. Only a body that overflows sideways can be pulled. */
+  &.reqore-table-wrapper-draggable .reqore-table-body {
+    cursor: grab;
+  }
+  .reqore-table-dragging {
+    cursor: grabbing;
+    user-select: none;
+  }
 
   ${({ rounded, size = 'normal' }) => css`
     border-radius: ${rounded === false ? 0 : RADIUS_FROM_SIZE[size]}px;
@@ -585,6 +656,8 @@ const ReqoreTable = ({
   estimatedExpandedRowHeight = 200,
   columnsToggleLabel = 'Show / hide columns',
   filterPlaceholder,
+  searchFoldsBelowWidth = NARROW_CONTAINER_BREAKPOINT_PX,
+  searchToggleLabel = 'Search',
   scrollToTopTooltip = 'Scroll to top',
   resetAllLabel = 'Reset all',
   helpLabel = 'Help',
@@ -597,11 +670,30 @@ const ReqoreTable = ({
   hideColumnLabel = 'Hide column',
   resetSizeLabel = 'Reset size',
   otherActionsLabel = 'Other',
+  rowActionsMenuLabel = DEFAULT_ACTIONS_MENU_LABEL,
   columnFilterPlaceholder = 'Filter by this column...',
+  dragToScroll = false,
   ...rest
 }: IReqoreTableProps) => {
   const mainTableRef = useRef<HTMLDivElement>(null);
   const mainHeaderRef = useRef<HTMLDivElement>(null);
+
+  // The body is the table's sideways scroller. The header is scrolled WITH it (the body
+  // syncs it) but is not a scroller itself, so a gesture on the header has to scroll
+  // the body: a finger always (the browser cannot pan an element that does not
+  // overflow-scroll), the mouse when `dragToScroll` asks for it.
+  useDragToScroll({
+    scrollRef: mainTableRef,
+    mouse: dragToScroll,
+    draggingClass: 'reqore-table-dragging',
+  });
+  useDragToScroll({
+    scrollRef: mainTableRef,
+    handleRef: mainHeaderRef,
+    mouse: dragToScroll,
+    touch: true,
+    draggingClass: 'reqore-table-dragging',
+  });
 
   const hasColumnWrap = useMemo(() => {
     const walk = (cols: IReqoreTableColumn[]): boolean =>
@@ -924,6 +1016,23 @@ const ReqoreTable = ({
     [activeSelected, selectableData, selectedQuant, updateSelected]
   );
 
+  /* A narrow table folds each row's actions into one menu button (see
+     `cell.actionsMenuBelowWidth`), and the column narrows to the button. Which columns fold
+     changes only when the table crosses a threshold: the list is kept by its contents - its JSON,
+     which no column id can make ambiguous - so a resize does not rebuild the columns on every
+     pixel. Read from the caller's columns: the select box and the expander are the table's own,
+     hold one action each, and never fold. */
+  const actionsMenuColumnIdsKey = useMemo(
+    () => JSON.stringify(getActionsMenuColumnIds(_internalColumns, sizes.width)),
+    [_internalColumns, sizes.width]
+  );
+  const actionsMenuColumnIds = useMemo<string[]>(
+    () => JSON.parse(actionsMenuColumnIdsKey),
+    [actionsMenuColumnIdsKey]
+  );
+  // A finger needs a bigger button than a mouse: the column, and the rows, make room for one.
+  const touch = useReqoreProperty('isHoverCapable') === false;
+
   const finalColumns = useMemo(() => {
     const fullColumns = [..._internalColumns];
 
@@ -1030,11 +1139,18 @@ const ReqoreTable = ({
       }
     }
 
-    return prepareColumns(fullColumns, columnModifiers, zoomSize);
+    return foldActionsColumns(
+      prepareColumns(fullColumns, columnModifiers, zoomSize),
+      actionsMenuColumnIds,
+      zoomSize,
+      touch
+    );
   }, [
     _internalColumns,
     columnModifiers,
     zoomSize,
+    actionsMenuColumnIds,
+    touch,
     selectable,
     selectedIcon,
     box,
@@ -1088,9 +1204,68 @@ const ReqoreTable = ({
     []
   );
 
-  const handlePreQueryChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setPreQuery(event.target.value);
+  /* A narrow table's search is a button until it is used (see `searchFoldsBelowWidth`). Open, the field
+     takes the toolbar's whole line; empty, Escape or leaving it closes it and gives the button the focus
+     back, and a search that holds text stays open, so what filters the rows is always in sight. */
+  const searchToggleId = useId();
+  // Marks the field, so the table can give it the focus back (see `focusSearchField`).
+  const searchFieldId = useId();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const focusSearchToggle = useRef(false);
+  const focusSearchField = useRef(false);
+  const searchFolds =
+    !!filterable && sizes.width > 0 && sizes.width <= searchFoldsBelowWidth;
+  const searchShown = !searchFolds || searchOpen || preQuery !== '';
+  const searchOpenFolded = searchFolds && searchShown;
+
+  /* Emptied while it is typed in, a folded search stays open. A field shown only for its text -
+     the table narrowed with a search in it - went away with the last character, and took the
+     focus with it to the page. Open, it closes as any open search does: Escape, or leaving it
+     empty. */
+  const handlePreQueryChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setPreQuery(event.target.value);
+
+      if (searchFolds && !event.target.value && event.target === document.activeElement) {
+        setSearchOpen(true);
+      }
+    },
+    [searchFolds, setPreQuery]
+  );
+  /* The clear button empties a folded search and leaves it open, with the focus in the field:
+     the button goes away with the text, and the focus that was on it with it. */
+  const handleSearchClear = useCallback(() => {
+    setQuery('');
+    setPreQuery('');
+
+    if (searchFolds) {
+      focusSearchField.current = true;
+      setSearchOpen(true);
+    }
+  }, [searchFolds, setQuery, setPreQuery]);
+  const handleSearchKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape' && !event.currentTarget.value) {
+      event.stopPropagation();
+      focusSearchToggle.current = true;
+      setSearchOpen(false);
+    }
   }, []);
+  const handleSearchBlur = useCallback((event: React.FocusEvent<HTMLInputElement>) => {
+    if (!event.currentTarget.value) {
+      setSearchOpen(false);
+    }
+  }, []);
+  useEffect(() => {
+    if (!searchShown && focusSearchToggle.current) {
+      focusSearchToggle.current = false;
+      document.getElementById(searchToggleId)?.focus();
+    }
+
+    if (searchShown && focusSearchField.current) {
+      focusSearchField.current = false;
+      document.querySelector<HTMLElement>(`[data-reqore-table-search="${searchFieldId}"]`)?.focus();
+    }
+  }, [searchShown, searchToggleId, searchFieldId, preQuery]);
 
   const columnsList = useMemo(() => {
     const _columnsList: IReqorePanelSubAction[] = [];
@@ -1169,24 +1344,54 @@ const ReqoreTable = ({
           ? filterPlaceholder(count(transformedData))
           : filterPlaceholder ?? `Search in ${count(transformedData)} items...`;
 
-      finalActions.push({
-        as: ReqoreInput,
-        props: {
-          key: 'search',
-          fixed: false,
-          placeholder: resolvedFilterPlaceholder,
-          onClearClick: () => {
-            setQuery('');
-            setPreQuery('');
+      if (searchShown) {
+        const searchProps = filterProps?.(transformedData);
+
+        finalActions.push({
+          as: ReqoreInput,
+          props: {
+            key: 'search',
+            fixed: false,
+            placeholder: resolvedFilterPlaceholder,
+            onClearClick: handleSearchClear,
+            onChange: handlePreQueryChange,
+            value: preQuery,
+            icon: 'Search2Line',
+            disabled: !query && !count(transformedData),
+            minimal: false,
+            // folded and opened: across the toolbar, the typing in it, closed again when left empty
+            ...(searchOpenFolded ? { fluid: true, autoFocus: searchOpen } : {}),
+            ...searchProps,
+            /* After the caller's `filterProps`, calling theirs too: spread over these, a
+               caller's own `onKeyDown` or `onBlur` took away Escape and the close on leaving
+               it empty. */
+            ...(searchOpenFolded ?
+              {
+                className: `reqore-table-search-open ${searchProps?.className || ''}`.trim(),
+                onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => {
+                  handleSearchKeyDown(event);
+                  searchProps?.onKeyDown?.(event);
+                },
+                onBlur: (event: React.FocusEvent<HTMLInputElement>) => {
+                  handleSearchBlur(event);
+                  searchProps?.onBlur?.(event);
+                },
+              }
+            : {}),
+            'data-reqore-table-search': searchFieldId,
           },
-          onChange: handlePreQueryChange,
-          value: preQuery,
+        });
+      } else {
+        finalActions.push({
+          id: searchToggleId,
           icon: 'Search2Line',
+          className: 'reqore-table-search-toggle',
+          tooltip: searchToggleLabel,
+          'aria-label': searchToggleLabel,
           disabled: !query && !count(transformedData),
-          minimal: false,
-          ...filterProps?.(transformedData),
-        },
-      });
+          onClick: () => setSearchOpen(true),
+        });
+      }
     }
 
     if (isScrolled) {
@@ -1306,6 +1511,15 @@ const ReqoreTable = ({
     helpLabel,
     helpModalLabel,
     helpContent,
+    searchShown,
+    searchOpen,
+    searchOpenFolded,
+    searchToggleId,
+    searchToggleLabel,
+    handleSearchKeyDown,
+    handleSearchBlur,
+    handleSearchClear,
+    searchFieldId,
   ]);
 
   const badge = useMemo(() => {
@@ -1322,6 +1536,18 @@ const ReqoreTable = ({
     return badgeList;
   }, [rest.badge, rest.label, transformedData]);
 
+  /* Under a coarse pointer, a row with its actions folded into a menu button is at least a finger
+     tall, so the button is a finger's size both ways. The row's border is the 1px the body adds to a
+     table that is not flat. */
+  const bodyRowHeight = useMemo(() => {
+    if (!touch || !actionsMenuColumnIds.length) {
+      return rowHeight;
+    }
+    const border = rest.flat ? 0 : 1;
+
+    return Math.max(rowHeight ?? TABLE_SIZE_TO_PX[zoomSize] + border, TOUCH_TARGET_PX + border);
+  }, [touch, actionsMenuColumnIds, rowHeight, zoomSize, rest.flat]);
+
   const renderTable = (items: IReqoreTableRowData[]) => {
     if (count(finalColumns) === 0 || count(data) === 0) {
       return null;
@@ -1332,7 +1558,7 @@ const ReqoreTable = ({
         ref={wrapperRef}
         className={`reqore-table-wrapper${
           actionsRevealOn === 'hover' ? ' reqore-table-actions-reveal-hover' : ''
-        }`}
+        }${dragToScroll ? ' reqore-table-wrapper-draggable' : ''}`}
         rounded={rest.rounded !== false && rest.flat !== false}
         size={rest.flat === false ? wrapperSize : zoomSize}
       >
@@ -1382,8 +1608,9 @@ const ReqoreTable = ({
             wrap={wrap}
             maxCellHeight={maxCellHeight}
             expandHeightButtonProps={expandHeightButtonProps}
-            rowHeight={rowHeight}
+            rowHeight={bodyRowHeight}
             overscanRowCount={overscanRowCount}
+            rowActionsMenuLabel={rowActionsMenuLabel}
             virtualized={shouldVirtualize}
             rowComponent={rowComponent}
             cellComponent={bodyCellComponent}
@@ -1431,6 +1658,8 @@ const ReqoreTable = ({
         contentStyle={{ display: 'flex', flexFlow: 'column', overflow: 'hidden' }}
         responsiveActions={false}
         {...rest}
+        // the open search takes the toolbar's line; the title is back when it closes
+        {...(searchOpenFolded ? { label: undefined, icon: undefined } : {})}
         size={wrapperSize}
         actions={tableActions}
         fill={fill}

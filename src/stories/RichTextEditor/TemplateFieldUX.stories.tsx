@@ -78,6 +78,14 @@ const focusEditor = async (doc: Document, editor: HTMLElement) => {
 
 /** Typing into an empty field puts the text in. The floor of the matrix. */
 export const TypeIntoAnEmptyField: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an empty reference field. When it is clicked and typed into, the text appears in it.',
+      },
+    },
+  },
   args: { value: [{ type: 'paragraph', children: [{ text: '' }] }], onChange: fn() },
   play: async ({ canvasElement }) => {
     const doc = canvasElement.ownerDocument;
@@ -90,6 +98,14 @@ export const TypeIntoAnEmptyField: Story = {
 
 /** Typing when a chip is already there. */
 export const TypeWithAChipPresent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a reference field holding a template chip. When it is clicked and typed into, the text appears beside the chip.',
+      },
+    },
+  },
   args: { value: WITH_CHIP, onChange: fn() },
   play: async ({ canvasElement }) => {
     const doc = canvasElement.ownerDocument;
@@ -114,6 +130,14 @@ const listIsOpen = (doc: Document) => !!doc.querySelector('.reqore-popover-conte
 
 /** Clicking in offers the list. That is what the field is for. */
 export const ClickingInOffersTheList: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an empty reference field that offers templates. When it is clicked, the template list opens.',
+      },
+    },
+  },
   args: { value: [{ type: 'paragraph', children: [{ text: '' }] }], tags: TAGS, onChange: fn() },
   play: async ({ canvasElement }) => {
     const doc = canvasElement.ownerDocument;
@@ -138,6 +162,14 @@ export const ClickingInOffersTheList: Story = {
  * Asked*.
  */
 export const TypingDismissesTheList: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an empty reference field with templates and its undo and redo buttons. When it is clicked, the template list opens; when text is typed, the list closes and every key typed is in the field.',
+      },
+    },
+  },
   args: {
     value: [{ type: 'paragraph', children: [{ text: '' }] }],
     tags: TAGS,
@@ -159,6 +191,40 @@ export const TypingDismissesTheList: Story = {
 };
 
 /**
+ * ...even when the text comes straight after the click that opened the list.
+ *
+ * The list's controls answered for the moment they were handed to the field, which got a fresh copy only
+ * a render later: a key typed in that gap found the list "closed", did not put it away, and the list
+ * opened over the text (qorus#646: a field chosen into a value, clicked back into and " Stk." typed after
+ * it). No wait between the click and the keys: that gap is the case.
+ */
+export const TypingStraightAfterTheClickDismissesTheList: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a reference field holding a chip, with templates. When text is typed straight after the click into the field, the template list stays closed and the text is in the field.',
+      },
+    },
+  },
+  args: {
+    value: WITH_CHIP,
+    tags: TAGS,
+    actions: { redo: true, undo: true, styling: false },
+    onChange: fn(),
+  },
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await editorIn(doc);
+    await userEvent.click(editor);
+    await userEvent.keyboard(' Stk.');
+    await sleep(500);
+    await expect(listIsOpen(doc)).toBe(false);
+    await waitFor(() => expect(editor.innerText.replace(/[\s\uFEFF]/g, '')).toContain('Stk.'));
+  },
+};
+
+/**
  * The list can be told to stay put while typing.
  *
  * Dismissing is the default because a list that stays open covers the text
@@ -168,6 +234,14 @@ export const TypingDismissesTheList: Story = {
  * `keepTemplatesOpenWhileTyping` opts out of the dismissal.
  */
 export const TypingKeepsTheListWhenAsked: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an empty reference field with templates and `keepTemplatesOpenWhileTyping`. When it is clicked and text is typed, the text is in the field and the template list stays open.',
+      },
+    },
+  },
   args: {
     value: [{ type: 'paragraph', children: [{ text: '' }] }],
     tags: TAGS,
@@ -198,6 +272,14 @@ export const TypingKeepsTheListWhenAsked: Story = {
  * ever have produced.
  */
 export const TypingBesideAChipDoesNotExtendIt: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a reference field holding the chip `$.result`. When a letter is typed beside it, the letter is text of its own and the chip's reference stays `$.result`.",
+      },
+    },
+  },
   args: { value: WITH_CHIP, onChange: fn() },
   play: async ({ canvasElement }) => {
     const doc = canvasElement.ownerDocument;
@@ -262,6 +344,14 @@ export const TypingBesideAChipDoesNotExtendIt: Story = {
  * of a screen down, so the room below is far less than the list needs.
  */
 export const TheListOpensBelowAFieldNearTheBottom: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a reference field most of a screen down a scrolling page. When it is clicked, the template list opens below the field, on screen, the page scrolled to make room.',
+      },
+    },
+  },
   args: { value: [{ type: 'paragraph', children: [{ text: '' }] }], tags: TAGS, onChange: fn() },
   decorators: [
     (Story: any) => (
@@ -319,6 +409,14 @@ export const TheListOpensBelowAFieldNearTheBottom: Story = {
  * to be found and none to be made.
  */
 export const TheListFlipsRatherThanVanishWithNoRoomBelow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a reference field pinned to the foot of the screen with nothing to scroll. When it is clicked, the template list opens above the field rather than below it with no height.',
+      },
+    },
+  },
   args: { value: [{ type: 'paragraph', children: [{ text: '' }] }], tags: TAGS, onChange: fn() },
   decorators: [
     (Story: any) => (
@@ -350,5 +448,107 @@ export const TheListFlipsRatherThanVanishWithNoRoomBelow: Story = {
       // Still on screen.
       await expect(rect.bottom).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
     });
+  },
+};
+
+/**
+ * The layout of `TheListOpensBelowAFieldNearTheBottom`: a scroll container with the field most of a
+ * screen down.
+ */
+const nearTheBottom = (Story: any) => (
+  <div style={{ height: '100vh', overflowY: 'auto' }} className='story-scroller'>
+    <div style={{ height: '85vh' }} />
+    <Story />
+    <div style={{ height: '85vh' }} />
+  </div>
+);
+
+/**
+ * Two frames: whatever a click put in motion - a list opening, the page scrolled to make room for
+ * it - has been drawn.
+ */
+const afterTwoFrames = (win: Window) =>
+  new Promise<void>((resolve) =>
+    win.requestAnimationFrame(() => win.requestAnimationFrame(() => resolve()))
+  );
+
+/** Click a field's chip, and wait for the chip to hand the cursor back to the editor. */
+const clickChip = async (doc: Document, editor: HTMLElement) => {
+  await userEvent.click(editor.querySelector<HTMLElement>('.reqore-tag')!);
+  await waitFor(() => expect(doc.activeElement).toBe(editor));
+  await afterTwoFrames(doc.defaultView!);
+};
+
+/**
+ * A click on a chip puts the cursor after it, and that is all: it does not list the templates, and
+ * the page stays where it is.
+ *
+ * Reported from the Qorus IDE: with the cursor already in a reference field low on the page, a
+ * click on a chip scrolled the page about 137px and showed nothing. The chip takes the focus from
+ * the editor for the moment of the press; that move was taken for the author coming into the field
+ * from the keyboard, the list opened, its keep-below rule scrolled the page by its height, and the
+ * chip, handing the focus back to the editor, closed it again.
+ */
+export const ClickingAChipNeitherListsNorScrolls: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a reference field holding a chip, low on a scrolling page, with the cursor in it and the template list closed. When the chip is clicked, the cursor goes after it, no list opens and the page does not move.',
+      },
+    },
+  },
+  args: { value: WITH_CHIP, tags: TAGS, onChange: fn() },
+  decorators: [nearTheBottom],
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await editorIn(doc);
+    const scroller = doc.querySelector<HTMLElement>('.story-scroller')!;
+
+    // The cursor in the field, and the list a click offers put away.
+    await focusEditor(doc, editor);
+    await waitFor(() => expect(listIsOpen(doc)).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(listIsOpen(doc)).toBe(false));
+    await afterTwoFrames(doc.defaultView!);
+    const scrollTop = scroller.scrollTop;
+
+    await clickChip(doc, editor);
+
+    await expect(listIsOpen(doc)).toBe(false);
+    await expect(scroller.scrollTop).toBe(scrollTop);
+  },
+};
+
+/**
+ * ...and a click on a chip leaves an open list as it is: moving the focus to the chip and back
+ * stays inside the field, and a press inside the field does not put the list away. The page does
+ * not move either.
+ */
+export const ClickingAChipLeavesAnOpenListOpen: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a reference field holding a chip, low on a scrolling page, with the template list open. When the chip is clicked, the list stays open and the page does not move.',
+      },
+    },
+  },
+  args: { value: WITH_CHIP, tags: TAGS, onChange: fn() },
+  decorators: [nearTheBottom],
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await editorIn(doc);
+    const scroller = doc.querySelector<HTMLElement>('.story-scroller')!;
+
+    await focusEditor(doc, editor);
+    await waitFor(() => expect(listIsOpen(doc)).toBe(true));
+    await afterTwoFrames(doc.defaultView!);
+    const scrollTop = scroller.scrollTop;
+
+    await clickChip(doc, editor);
+
+    await expect(listIsOpen(doc)).toBe(true);
+    await expect(scroller.scrollTop).toBe(scrollTop);
   },
 };

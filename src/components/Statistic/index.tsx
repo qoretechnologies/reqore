@@ -1,6 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo, useRef } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import { HEADER_SIZE_TO_NUMBER, resolveRadius, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
@@ -225,13 +226,17 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
      (KPI strips, dashboards). Without bounding the tile intrinsic
      width to its column, the widest unbreakable token in the value,
      trend or label can push past the column edge and bleed into the
-     neighbouring tile. min-width 0 lets flex-shrink do its job,
-     max-width 100% caps the box at the column it lives in, and
-     overflow hidden clips any child that refuses to honour the cap.
-     With a div root these all behave as documented. */
+     neighbouring tile. min-width 0 lets a flex or grid row narrow the
+     tile to its share - without it a tile is never narrower than the
+     longest word of its label, and four tiles in a 320px row reached
+     past it - max-width 100% caps the box at the column it lives in,
+     and overflow clip clips any child that refuses to honour the cap.
+     A tile with room keeps its label's words whole: they break only
+     where one alone is wider than the tile (the label rule below). */
   min-width: 0;
   max-width: 100%;
-  overflow: hidden;
+  overflow: clip;
+  & .reqore-statistic-content,
   & .reqore-statistic-label,
   & .reqore-statistic-value-row,
   & .reqore-statistic-trend {
@@ -248,10 +253,24 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
     flex-wrap: wrap;
   }
   /* Wrap rather than ellipsis — KPI tiles benefit from the operator
-     seeing the whole sub-line rather than a clipped fragment.
-     overflow-wrap anywhere covers identifiers, URLs and long codes
+     seeing the whole sub-line rather than a clipped fragment. A label
+     is words: it wraps between them, and a word breaks only when it
+     alone is wider than the tile (break-word; anywhere, or
+     word-break: break-all, broke words that had room - "DEPEND / ENCI /
+     ES" on a 120px tile). */
+  /* A label that wraps is aligned as its tile is (centred by default): its box is centred by
+     align-items, but its lines were left-aligned inside it, so a broken label sat to the left of
+     its value and of the tiles beside it whose labels fit on one line. */
+  & .reqore-statistic-label {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+    max-width: 100%;
+    text-align: ${({ $align }) =>
+      $align === 'center' ? 'center' : $align === 'flex-end' ? 'right' : 'left'};
+  }
+  /* overflow-wrap anywhere covers identifiers, URLs and long codes
      with no natural break point. */
-  & .reqore-statistic-label,
   & .reqore-statistic-value,
   & .reqore-statistic-prefix,
   & .reqore-statistic-suffix {

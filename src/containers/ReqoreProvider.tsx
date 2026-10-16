@@ -1,7 +1,7 @@
 import { useMarqueeOnHover } from '../hooks/useMarqueeOnHover';
 import { last, size } from 'lodash';
 import { nanoid } from 'nanoid';
-import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useReqoreMedia } from '../hooks/useReqoreMedia';
 import { useContext } from 'use-context-selector';
 import { create } from 'zustand';
@@ -168,37 +168,54 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
     setEscClosableModals((cur) => [...cur, id]);
   }, []);
 
+  /* The Escape stack as it was last committed: every modal that hears one Escape asks it, so they agree on which
+     is on top, and only that one closes - taking itself off first would make the one under it the top for the
+     next listener. */
+  const committedEscClosableModals = useRef<string[]>([]);
+  useLayoutEffect(() => {
+    committedEscClosableModals.current = escClosableModals;
+  }, [escClosableModals]);
+
+  /**
+   * Takes a modal off the Escape stack. With `onRemove` it is Escape asking the modal to close: only the top-most
+   * one answers, and it is closed - after the confirmation, when it asks for one - by calling `onRemove` from the
+   * key or the confirmation, never from a state updater. An updater runs while React renders this provider, so
+   * the host's own state was set during another component's render (React warned, qorus#646). Without it the modal
+   * is going: it leaves the stack wherever it is in it, where only the top-most used to.
+   */
   const removeEscClosableModal = useCallback(
     (
       id: string,
       onRemove?: () => void,
       confirmOnClose?: boolean | IReqoreConfirmationModal
     ): void => {
-      const onConfirm = (cur) => {
-        onRemove?.();
+      const takeOff = () => setEscClosableModals((cur) => cur.filter((modalId) => modalId !== id));
 
-        return [...cur].filter((modalId) => modalId !== id);
+      if (!onRemove) {
+        takeOff();
+
+        return;
+      }
+
+      if (last(committedEscClosableModals.current) !== id) {
+        return;
+      }
+
+      const close = () => {
+        takeOff();
+        onRemove();
       };
 
       if (confirmOnClose) {
         confirmAction({
           ...(typeof confirmOnClose === 'object' ? confirmOnClose : {}),
-          onConfirm: () => {
-            setEscClosableModals((cur) => onConfirm(cur));
-          },
+          onConfirm: close,
         });
 
         return;
       }
 
-      setEscClosableModals((cur) => {
-        // Check if the modal is still in the array and it's the last one
-        if (last(cur) === id) {
-          return onConfirm(cur);
-        }
-
-        return cur;
-      });
+      close();
     },
     [confirmAction]
   );

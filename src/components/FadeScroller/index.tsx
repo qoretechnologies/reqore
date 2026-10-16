@@ -1,10 +1,12 @@
 import { forwardRef, memo, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
-import styled, { css, keyframes } from 'styled-components';
+import { css, keyframes } from 'styled-components';
+import styled from '../../helpers/styled';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { TReqoreHexColor } from '../Effect';
 import { getMainBackgroundColor } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { DRAG_TO_SCROLL_THRESHOLD, NON_DRAGGABLE } from '../../hooks/useDragToScroll';
 import { usePointerDrag } from '../../hooks/usePointerDrag';
 import { IReqoreScrollFadeMeasurement, useScrollFade } from '../../hooks/useScrollFade';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -108,29 +110,9 @@ export interface IReqoreFadeScrollerProps
   marqueePauseOnHover?: boolean;
 }
 
-/**
- * How far the pointer must travel before a press becomes a drag.
- *
- * Zero would make every click a one-pixel drag and swallow it; too large and the
- * row feels stuck before it moves. Four pixels is the usual hysteresis for
- * distinguishing a click from a drag.
- */
-const DRAG_THRESHOLD = 4;
-
-/**
- * Elements a drag must never start on.
- *
- * Deliberately NOT "anything interactive". The rows this is built for are made
- * OF interactive things — a rail of clickable KPI tiles is the motivating case —
- * so excluding buttons would leave nowhere to grab and the feature would do
- * nothing. Their clicks are protected instead by suppressing the click that
- * follows a real drag, which is what makes press-and-release still activate a
- * tile while press-and-pull scrolls past it.
- *
- * What IS excluded is text entry, where a press-and-move already means
- * "select within this value" and there is no other way to ask for it.
- */
-const NON_DRAGGABLE = 'input, textarea, select, [contenteditable=""], [contenteditable="true"]';
+/* How far a press moves before it is a drag, and what a drag never starts on (text entry, and
+   anything marked `reqore-no-drag-scroll`, a consumer's own grab handle): the same for this row and
+   a table, from `useDragToScroll`. */
 
 interface IStyledFadeScrollerProps {
   $fadeColor: string;
@@ -469,7 +451,7 @@ export const ReqoreFadeScroller = memo(
       const { handlers: dragHandlers } = usePointerDrag({
         enabled: canDrag,
         axis: 'x',
-        slop: DRAG_THRESHOLD,
+        slop: DRAG_TO_SCROLL_THRESHOLD,
         trackDragging: false,
         canStart: (event) =>
           // Touch already pans natively and long-press already selects; taking the gesture

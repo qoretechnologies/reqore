@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { createHoverGate, watchHoverGate } from '../helpers/hoveringPointer';
 
 /*
  * Truncated text scrolls into view while the pointer rests on it.
@@ -325,7 +326,16 @@ export const useMarqueeOnHover = (enabled: boolean, options?: IReqoreMarqueeOpti
       active = null;
     };
 
+    /* A hover scrolls a box: a mouse's, not a finger's tap - after which the browser emulates a `mouseover`
+       of its own, and the tapped box scrolled until the next tap elsewhere (on a touch laptop: `enabled` asks
+       about the device's primary pointer, this about the pointer that came). See `createHoverGate`. */
+    const gate = createHoverGate();
+    const stopGate = watchHoverGate(document, gate);
+
     const onOver = (event: MouseEvent) => {
+      if (!gate.isHover()) {
+        return;
+      }
       const boxes = findMarqueeTargets(event.target);
 
       if (!boxes.length) {
@@ -378,6 +388,7 @@ export const useMarqueeOnHover = (enabled: boolean, options?: IReqoreMarqueeOpti
 
     return () => {
       stopActive();
+      stopGate();
       document.removeEventListener('mouseover', onOver, true);
       document.removeEventListener('mouseout', onOut, true);
     };

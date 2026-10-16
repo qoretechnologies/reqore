@@ -1,6 +1,8 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
-import { expect, fireEvent, waitFor } from 'storybook/test';
+import { useEffect, useState } from 'react';
+import { expect, fireEvent, userEvent, waitFor } from 'storybook/test';
+import ReqoreButton from '../../components/Button';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
@@ -1061,6 +1063,92 @@ export const FloatingActionsInScrollableContainer: Story = {
 
   args: {
     size: 'small',
+  },
+};
+
+/** What the story's widening action listens for: it widens its own label, and nothing of its panel changes. */
+const WIDEN_FLOATING_ACTION_EVENT = 'reqore-story-widen-floating-action';
+
+/** A floating action whose content widens by itself, as one does when its label, an icon or a font loads. */
+const ActionThatWidensItself = ({ className, customTheme, fixed }: Partial<IReqorePanelAction>) => {
+  const [wide, setWide] = useState(false);
+
+  useEffect(() => {
+    const widen = () => setWide(true);
+    window.addEventListener(WIDEN_FLOATING_ACTION_EVENT, widen);
+    return () => window.removeEventListener(WIDEN_FLOATING_ACTION_EVENT, widen);
+  }, []);
+
+  return (
+    <ReqoreButton className={className} customTheme={customTheme} fixed={fixed} icon='EditLine'>
+      {wide ? 'Edit this panel and everything in it' : 'Edit'}
+    </ReqoreButton>
+  );
+};
+
+const FOLLOWING_PANEL_ACTIONS: IReqorePanelAction[] = [
+  { label: 'Always visible' },
+  { as: ActionThatWidensItself, show: 'hover' },
+  { label: 'Delete', icon: 'DeleteBinLine', show: 'hover', intent: 'danger' },
+];
+
+const FOLLOWING_PANEL_FRAME_STYLE = { width: 640, marginTop: 60 };
+
+export const FloatingActionsFollowTheirPanel: Story = {
+  render: () => (
+    <div className='floating-actions-follow-frame' style={FOLLOWING_PANEL_FRAME_STYLE}>
+      <ReqorePanel
+        fluid
+        size='small'
+        label='Panel whose actions follow it'
+        floatingActions
+        actions={FOLLOWING_PANEL_ACTIONS}
+      >
+        Its actions float above its top-right corner, and stay there as it narrows and as they
+        widen.
+      </ReqorePanel>
+    </div>
+  ),
+
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Hovers a panel with floating actions, then narrows it and widens one of its actions, neither of which re-renders the panel: the actions follow its top-right corner each time, their right edge on the panel's. They are fixed to the screen, and were placed only as they were shown, when the actions changed and on a scroll, so a panel that resized or a window that did left them where the panel had been, and actions that widened reached past its edge.",
+      },
+    },
+  },
+
+  play: async ({ canvasElement }) => {
+    const frame = canvasElement.querySelector('.floating-actions-follow-frame') as HTMLElement;
+    const panel = frame.querySelector('.reqore-panel') as HTMLElement;
+    // portalled to the document's body, out of the canvas
+    const floatingActions = () =>
+      canvasElement.ownerDocument.querySelector(
+        '.reqore-panel-floating-actions'
+      ) as HTMLElement | null;
+    const onThePanelsCorner = () => {
+      const actions = floatingActions();
+      expect(actions).not.toBeNull();
+      expect(actions!.style.display).toBe('flex');
+      const actionsRect = actions!.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      expect(Math.abs(actionsRect.right - panelRect.right)).toBeLessThanOrEqual(1);
+      expect(Math.abs(actionsRect.bottom - (panelRect.top + 1))).toBeLessThanOrEqual(1);
+    };
+
+    await userEvent.hover(panel);
+    await waitFor(onThePanelsCorner);
+
+    // the panel narrows: its container does, and nothing of the panel re-renders
+    frame.style.width = '420px';
+    await waitFor(() => expect(panel.getBoundingClientRect().width).toBeLessThanOrEqual(420));
+    await waitFor(onThePanelsCorner);
+
+    // an action widens by itself
+    window.dispatchEvent(new Event(WIDEN_FLOATING_ACTION_EVENT));
+    await waitFor(() => expect(floatingActions()!.textContent).toContain('everything in it'));
+    await waitFor(onThePanelsCorner);
   },
 };
 

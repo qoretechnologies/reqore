@@ -253,6 +253,52 @@ test('The timer line shows with a duration and holds while hovered', async () =>
   expect(finishFn).toHaveBeenCalledWith('test');
 });
 
+test("A finger's tap holds no timer: the mouseenter emulated after it is no hover", async () => {
+  const finishFn = vi.fn();
+
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <AddButton id='test' duration={3000} onFinish={finishFn} />
+      </ReqoreUIProvider>
+    );
+  });
+
+  fireEvent.click(screen.getByText('Add Notification'));
+  const notification = document.querySelector('.reqore-notification') as HTMLElement;
+  fireEvent.pointerEnter(notification, { pointerType: 'touch', buttons: 1 });
+  fireEvent.pointerDown(notification, { pointerType: 'touch', buttons: 1 });
+  fireEvent.pointerUp(notification, { pointerType: 'touch', buttons: 0 });
+  fireEvent.mouseEnter(notification);
+
+  act(() => vi.advanceTimersByTime(3500));
+
+  expect(finishFn).toHaveBeenCalledWith('test');
+});
+
+test('A leave no hover came before restarts no timer', async () => {
+  const finishFn = vi.fn();
+
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <AddButton id='test' duration={3000} onFinish={finishFn} />
+      </ReqoreUIProvider>
+    );
+  });
+
+  fireEvent.click(screen.getByText('Add Notification'));
+  act(() => vi.advanceTimersByTime(1000));
+  // a tap elsewhere: the mouseleave a browser emulates for the tap before it
+  fireEvent.mouseLeave(document.querySelector('.reqore-notification') as HTMLElement);
+  act(() => vi.advanceTimersByTime(1500));
+
+  // 2.5s of its 3s: still up, not cut to the beat a hover's leave leaves
+  expect(finishFn).not.toHaveBeenCalled();
+  act(() => vi.advanceTimersByTime(1000));
+  expect(finishFn).toHaveBeenCalledWith('test');
+});
+
 test('pauseOnHover false keeps the timer running while hovered', async () => {
   const finishFn = vi.fn();
 

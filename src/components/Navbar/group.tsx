@@ -1,7 +1,7 @@
 import React, { forwardRef } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 
 export interface IReqoreNavbarGroupProps extends React.HTMLAttributes<HTMLDivElement> {
   position?: 'right' | 'left';

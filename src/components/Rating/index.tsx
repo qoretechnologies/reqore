@@ -1,6 +1,8 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useCallback, useMemo, useState } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import { useHoverGate } from '../../helpers/hoveringPointer';
+import styled from '../../helpers/styled';
 import { RADIUS_FROM_SIZE, RATING_GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getColorFromMaybeString, getReadableColor } from '../../helpers/colors';
@@ -166,9 +168,18 @@ const ReqoreRating = memo(
         return rgba(changeLightness(theme.main, 0.15), 0.4);
       }, [emptyColor, theme]);
 
+      /* The stars a mouse rests on are previewed; a finger's tap previews nothing. The `mousemove` a browser
+         emulates after a tap left the tapped value previewed until a tap elsewhere - over a value the tap had
+         just cleared (`allowClear`), which then read as still set. See `createHoverGate`. */
+      const hoverGate = useHoverGate();
+      const notePointer = useCallback(
+        (event: React.PointerEvent<HTMLSpanElement>) => hoverGate.notePointer(event),
+        [hoverGate]
+      );
+
       const handleMouseMove = useCallback(
         (index: number, event: React.MouseEvent<HTMLSpanElement>) => {
-          if (!isInteractive) return;
+          if (!isInteractive || !hoverGate.isHover()) return;
           if (allowHalf) {
             const rect = event.currentTarget.getBoundingClientRect();
             const isLeftHalf = event.clientX - rect.left < rect.width / 2;
@@ -177,7 +188,7 @@ const ReqoreRating = memo(
             setHoverValue(index + 1);
           }
         },
-        [isInteractive, allowHalf]
+        [isInteractive, allowHalf, hoverGate]
       );
 
       const handleMouseLeave = useCallback(() => {
@@ -294,6 +305,10 @@ const ReqoreRating = memo(
                 <StyledRatingItem
                   key={index}
                   className='reqore-rating-item'
+                  onPointerOver={notePointer}
+                  onPointerDown={notePointer}
+                  onPointerMove={notePointer}
+                  onPointerUp={notePointer}
                   onMouseMove={(e) => handleMouseMove(index, e)}
                   onClick={(e) => handleClick(index, e)}
                   isInteractive={isInteractive}

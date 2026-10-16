@@ -1,5 +1,6 @@
 import { forwardRef, memo, useMemo, MouseEvent } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import { PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { getTextSize } from '../../helpers/typeScale';
 import { changeLightness } from '../../helpers/colors';

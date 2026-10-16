@@ -1,4 +1,5 @@
-import styled, { css, keyframes } from 'styled-components';
+import { css, keyframes } from 'styled-components';
+import styled from '../../helpers/styled';
 import { RADIUS_FROM_SIZE, SIZE_TO_PX } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { IWithReqoreSize } from '../../types/global';

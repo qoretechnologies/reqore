@@ -6,6 +6,8 @@ import { TSizes } from '../../constants/sizes';
 import { ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 import { ALL_SIZES } from '../utils/args';
+import { expectControlsInside, wordsBrokenAcrossLines } from '../utils/controlsInside';
+import { PHONE_STORY } from '../utils/touchScreen';
 
 const meta = {
   title: 'Display/Statistic',
@@ -848,6 +850,157 @@ export const CountUpWhenInView: Story = {
     box.scrollTop = box.scrollHeight;
 
     await finishedCounting(canvasElement, ['12,345']);
+  },
+};
+
+/* A label's words stay whole (qorus#646): "DEPENDENCIES" on a 120px KPI tile broke mid-word
+   ("DEPEND / ENCI / ES"). A label wraps between its words, and a word breaks only when it alone is
+   wider than its tile. A tile narrows to the share its row gives it (min-width 0), so a row that
+   sizes its tiles by their content keeps every word whole where it has the room. */
+
+const KPI_TILES = [
+  { label: 'Runs', value: 128 },
+  { label: 'Dependencies', value: 14 },
+  { label: 'Open errors', value: 3 },
+];
+
+const tileLabels = (root: HTMLElement) =>
+  Array.from(root.querySelectorAll<HTMLElement>('.reqore-statistic-label'));
+
+export const LabelWordsStayWhole: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders a row of three KPI tiles on a phone (390 px) that share 316px by their content - Runs, Dependencies and Open errors. Each label keeps its words whole: the Dependencies tile is wider than "DEPENDENCIES", the others give it the room, and no tile reaches past the row.',
+      },
+    },
+  },
+  render: () => (
+    <div className='kpi-row' style={{ display: 'flex', gap: 8, width: 316 }}>
+      {/* the tiles are the row's flex items, each starting from its content's width */}
+      {KPI_TILES.map((tile) => (
+        <ReqoreStatistic
+          key={tile.label}
+          label={tile.label}
+          value={tile.value}
+          style={{ flex: '1 1 auto' }}
+        />
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const row = canvasElement.querySelector('.kpi-row') as HTMLElement;
+    await waitFor(() => {
+      expect(tileLabels(row)).toHaveLength(KPI_TILES.length);
+      for (const label of tileLabels(row)) {
+        expect(wordsBrokenAcrossLines(label)).toEqual([]);
+      }
+    });
+    await expectControlsInside(row);
+    const rowBox = row.getBoundingClientRect();
+    for (const tile of Array.from(row.querySelectorAll<HTMLElement>('.reqore-statistic'))) {
+      expect(tile.getBoundingClientRect().right).toBeLessThanOrEqual(rowBox.right + 0.5);
+    }
+  },
+};
+
+export const LabelWordWiderThanItsTile: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a KPI tile in a 100px box whose label is one word wider than any tile: only then is the word broken, and the label stays inside the tile, the tile inside the box.',
+      },
+    },
+  },
+  render: () => (
+    <div className='narrow-tile-box' style={{ width: 100 }}>
+      <ReqoreStatistic label='Supercalifragilisticexpialidocious' value={7} fluid />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('.narrow-tile-box') as HTMLElement;
+    const label = await waitFor(() => {
+      const [found] = tileLabels(box);
+      expect(found).toBeTruthy();
+      return found;
+    });
+    await waitFor(() =>
+      expect(wordsBrokenAcrossLines(label)).toEqual(['Supercalifragilisticexpialidocious'])
+    );
+    expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
+    const tile = box.querySelector('.reqore-statistic') as HTMLElement;
+    expect(tile.getBoundingClientRect().right).toBeLessThanOrEqual(box.getBoundingClientRect().right + 0.5);
+  },
+};
+
+/* Four tiles in a 320px grid of four equal columns (qorus#646): a tile is as narrow as its column,
+   not as wide as the longest word of its label. Kept at that word's width, "Dependencies" and
+   "Connections" pushed the row past its box and the tiles over each other; a word now breaks only
+   when it cannot fit its tile, which here is every long one. */
+
+const GRID_TILES = ['Dependencies', 'Connections', 'Workflows', 'Services'];
+const GRID_WIDTH = 320;
+const GRID_GAP = 8;
+
+export const NarrowGridTilesStayInTheirCells: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders four KPI tiles - Dependencies, Connections, Workflows and Services - in a 320px grid of four equal columns, about 74px each. Each tile is as wide as its column and no wider, the row does not overflow its box, and a label too long for its tile breaks inside its word rather than reaching into the next tile. A label that breaks is centred, line by line, as the ones that fit on one line are.',
+      },
+    },
+  },
+  render: () => (
+    <div
+      className='kpi-grid'
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: GRID_GAP,
+        width: GRID_WIDTH,
+      }}
+    >
+      {GRID_TILES.map((label, index) => (
+        <ReqoreStatistic key={label} label={label} value={index * 7 + 3} />
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const grid = canvasElement.querySelector('.kpi-grid') as HTMLElement;
+    const tiles = await waitFor(() => {
+      const found = Array.from(grid.querySelectorAll<HTMLElement>('.reqore-statistic'));
+      expect(found).toHaveLength(GRID_TILES.length);
+      return found;
+    });
+    const gridBox = grid.getBoundingClientRect();
+    const column = (GRID_WIDTH - GRID_GAP * (GRID_TILES.length - 1)) / GRID_TILES.length;
+
+    // the row stays in its box
+    expect(grid.scrollWidth).toBeLessThanOrEqual(grid.clientWidth);
+    tiles.forEach((tile, index) => {
+      const box = tile.getBoundingClientRect();
+      const cellLeft = gridBox.left + index * (column + GRID_GAP);
+      // each tile in its own cell: no wider than its column, from the cell's left edge
+      expect(box.width).toBeLessThanOrEqual(column + 0.5);
+      expect(box.left).toBeGreaterThanOrEqual(cellLeft - 0.5);
+      expect(box.right).toBeLessThanOrEqual(cellLeft + column + 0.5);
+      // and its label inside it
+      const label = tile.querySelector('.reqore-statistic-label') as HTMLElement;
+      expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
+      // centred line by line, a broken label as a whole one is (Foxhoundn's review of #708)
+      expect(getComputedStyle(label).textAlign).toBe('center');
+      const text = document.createRange();
+      text.selectNodeContents(label);
+      const middle = box.left + box.width / 2;
+      Array.from(text.getClientRects()).forEach((line) => {
+        expect(Math.abs(line.left + line.width / 2 - middle)).toBeLessThanOrEqual(2);
+      });
+    });
   },
 };
 

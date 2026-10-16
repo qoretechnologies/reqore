@@ -1,7 +1,7 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { expect, fireEvent, waitFor } from 'storybook/test';
 import { noop } from 'lodash';
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreDrawerProps, ReqoreDrawer, TPosition } from '../../components/Drawer';
 import { IReqoreInputProps } from '../../components/Input';
@@ -20,6 +20,7 @@ import {
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
 import { IDragPointerOptions, dragPointer } from '../utils/pointer';
+import { PHONE_STORY } from '../utils/touchScreen';
 
 import { ThemedSurface } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreDrawerProps>();
@@ -838,6 +839,88 @@ export const SheetSwipeInProgress: Story = {
       const { clientHeight } = document.documentElement;
       expect(Math.abs(box.getBoundingClientRect().bottom - clientHeight - height * 0.3)).toBeLessThan(2);
     });
+  },
+};
+
+/** The drawer's box at each of the first frames after it mounts: what `FloatingSheetOnAPhone` checks. */
+interface ISheetFrame {
+  width: number;
+  left: number;
+  right: number;
+  sheet: boolean;
+}
+
+const SHEET_FRAMES_SAMPLED = 30;
+const sheetFrames: ISheetFrame[] = [];
+
+/**
+ * Measures the drawer's box as it is first laid out - in a layout effect of the commit that mounts
+ * it, before anything is painted - and at each of the next frames, while it slides in.
+ */
+const SheetFrameProbe = () => {
+  useLayoutEffect(() => {
+    let frame = 0;
+    let request = 0;
+    const sample = () => {
+      const box = document.querySelector('.reqore-drawer-resizable');
+
+      if (box) {
+        const rect = box.getBoundingClientRect();
+        sheetFrames.push({
+          width: rect.width,
+          left: rect.left,
+          right: document.documentElement.clientWidth - rect.right,
+          sheet: box.classList.contains('reqore-drawer-sheet'),
+        });
+      }
+
+      frame += 1;
+
+      if (frame < SHEET_FRAMES_SAMPLED) {
+        request = requestAnimationFrame(sample);
+      }
+    };
+
+    sheetFrames.length = 0;
+    sample();
+
+    return () => cancelAnimationFrame(request);
+  }, []);
+
+  return null;
+};
+
+export const FloatingSheetOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  args: { ...SHEET_ARGS, floating: true },
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'A `floating` right-hand drawer with `responsiveLayout`, opened on a phone (390 px): it is a bottom sheet exactly the width of the screen from its first frame - not the floating side panel for a frame, and not a sheet 10 px short of the right edge, the offset a floating panel keeps from it.',
+      },
+    },
+  },
+  render: (args) => (
+    <>
+      <Template {...args} />
+      <SheetFrameProbe />
+    </>
+  ),
+  play: async () => {
+    await waitFor(() => expect(sheetFrames).toHaveLength(SHEET_FRAMES_SAMPLED));
+
+    const { clientWidth } = document.documentElement;
+
+    sheetFrames.forEach((frame) => {
+      expect(frame.sheet).toBe(true);
+      expect(Math.round(frame.width)).toBe(clientWidth);
+      expect(Math.round(frame.left)).toBe(0);
+      expect(Math.round(frame.right)).toBe(0);
+    });
+    await expectSheet({ heightRatio: 0.9, edge: 'bottom' });
   },
 };
 

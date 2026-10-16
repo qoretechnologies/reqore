@@ -601,7 +601,11 @@ export const WithSlowTab: Story = {
         <ReqoreTabsContent tabId='tab1'>
           <ReqoreH3>I am Tab 1</ReqoreH3>
         </ReqoreTabsContent>
-        <ReqoreTabsContent tabId='slowtab'>{Array(10).fill(<SlowComponent />)}</ReqoreTabsContent>
+        <ReqoreTabsContent tabId='slowtab'>
+          {Array.from({ length: 10 }, (_, index) => (
+            <SlowComponent key={index} />
+          ))}
+        </ReqoreTabsContent>
         <ReqoreTabsContent tabId='tab2'>
           <ReqoreH3>Tab 2</ReqoreH3>
         </ReqoreTabsContent>

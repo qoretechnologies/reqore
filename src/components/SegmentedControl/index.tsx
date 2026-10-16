@@ -9,7 +9,8 @@ import React, {
   useState,
 } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import {
   CONTROL_HORIZONTAL_PADDING_FROM_SIZE,
   ICON_FROM_SIZE,
@@ -635,6 +636,8 @@ const ReqoreSegmentedControl = memo(
                 isReqoreComponent
                 noWrapper
                 handler='hoverStay'
+                // the hidden segments' only way in: a tap opens it too
+                opensOnTap
                 content={
                   <ReqoreMenu customTheme={customTheme}>
                     {hiddenItems.map((overflowItem) => (

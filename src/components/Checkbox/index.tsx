@@ -1,7 +1,7 @@
 import { rgba } from 'polished';
 import React, { forwardRef, memo, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { useMeasure } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { PADDING_FROM_SIZE, SIZE_TO_PX, SWITCH_SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
@@ -11,7 +11,7 @@ import {
   getReadableColor,
   getReadableColorFrom,
 } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { useReqoreTheme } from '../../hooks/useTheme';

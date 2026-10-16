@@ -1,5 +1,5 @@
 import React from "react";
-import styled from "styled-components";
+import styled from "../../helpers/styled";
 
 export interface IReqoreLayoutContentProps
   extends React.HTMLAttributes<HTMLDivElement> {

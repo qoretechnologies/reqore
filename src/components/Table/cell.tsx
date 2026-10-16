@@ -1,6 +1,6 @@
 import { lighten, rgba } from 'polished';
 import { forwardRef, memo, useCallback, useLayoutEffect, useRef, useState } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { IReqoreTableColumn } from '.';
 import { TSizes } from '../../constants/sizes';
 import { getTextSize } from '../../helpers/typeScale';
@@ -11,7 +11,7 @@ import {
   getReadableColorFrom,
   getThemePanelSurface,
 } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { IWithReqoreTooltip } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';

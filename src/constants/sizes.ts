@@ -144,6 +144,12 @@ export const TABS_SIZE_TO_PX = {
 
 export const TABLE_SIZE_TO_PX = SIZE_TO_PX;
 
+/**
+ * A finger's target: the smallest a control a finger has to hit may be, in CSS pixels, under a coarse
+ * pointer (WCAG 2.5.5, Apple's 44pt).
+ */
+export const TOUCH_TARGET_PX = 44;
+
 export const TABS_PADDING_TO_PX = {
   micro: 5,
   tiny: 5,

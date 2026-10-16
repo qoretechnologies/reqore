@@ -1,11 +1,21 @@
 import { StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import { expect, fireEvent, waitFor } from 'storybook/test';
+import { expect, fireEvent, fn, userEvent, waitFor } from 'storybook/test';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import ReqoreEntityRow, { IReqoreEntityRowProps } from '../../components/EntityRow';
 import { ReqoreP } from '../../components/Paragraph';
-import { TSizes } from '../../constants/sizes';
+import { TOUCH_TARGET_PX, TSizes } from '../../constants/sizes';
 import { StoryMeta } from '../utils';
+import { expectControlsInside } from '../utils/controlsInside';
+import {
+  expectRowActionsMenuClosed,
+  expectRowActionsMenuItems,
+  openRowActionsMenuItems,
+  rowActionsMenuButtons,
+} from '../utils/rowActionsMenu';
+import { expectEqualBoxesEqualRows, expectRowsFillTheirBoxes, StoryRowBox } from '../utils/rowBoxes';
+import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
+import { withViewport } from '../utils/viewport';
 
 import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const meta = {
@@ -504,75 +514,130 @@ export const WithOverflowMenu: Story = {
   },
 };
 
-/* The same row twice, at 720px and 400px. Below 480px the actions leave the
-   right-hand column and take their own row under the label. */
-const WrapDemoRow = () => (
+/* A narrow row's actions (qorus#646), as ReqoreSeverityRow's and a narrow table's. The row measures its
+   OWN container - not the viewport, because the case this exists for is a narrow drawer / sidebar / split
+   panel on a wide screen - and below 480px of it, two or more actions are one menu button at the end of
+   the label's line: the label keeps the row's width, and a list of rows does not grow by a line per
+   action. An action that is itself a menu becomes a submenu there. */
+
+const onRun = fn();
+const onShowInChat = fn();
+const onEntityRowClick = fn();
+
+const ORDER_ACTIONS: IReqoreEntityRowProps['actions'] = [
+  { label: 'Run', icon: 'PlayLine', compact: true, size: 'small', onClick: onRun },
+  {
+    icon: 'More2Line',
+    tooltip: 'More actions',
+    minimal: true,
+    flat: true,
+    compact: true,
+    size: 'small',
+    actions: [
+      { label: 'Show in chat', icon: 'Chat1Line', onClick: onShowInChat },
+      { label: 'Copy name', icon: 'FileCopyLine' },
+    ],
+  },
+];
+
+const OrderRow = ({ clickable }: { clickable?: boolean }) => (
   <ReqoreEntityRow
     label='Process Incoming Order · order-intake-workflow'
     description='Last run 4m ago · 1,204 executions today'
     metadata='workflow'
     icon='GitBranchLine'
     fluid
-    actions={[
-      { label: 'Run', icon: 'PlayLine', compact: true, size: 'small' },
-      {
-        icon: 'More2Line',
-        tooltip: 'More',
-        minimal: true,
-        flat: true,
-        compact: true,
-        size: 'small',
-      },
-    ]}
+    onClick={clickable ? onEntityRowClick : undefined}
+    actions={ORDER_ACTIONS}
   />
 );
 
-export const NarrowContainerActionsWrap: Story = {
+/** The row in `root`, once its own observer has found it narrow. */
+const narrowEntityRow = async (root: ParentNode) =>
+  (await waitFor(() => {
+    const row = root.querySelector('.reqore-entity-row') as HTMLElement;
+    expect(row?.getAttribute('data-narrow')).toBe('true');
+    return row;
+  })) as HTMLElement;
+
+/** One menu button at the end of the label's line, inside the row, where the actions were. */
+const expectEntityActionsFolded = async (row: HTMLElement) => {
+  await waitFor(() => expect(row.getAttribute('data-actions')).toBe('menu'));
+  await waitFor(() => {
+    expect(row.querySelectorAll('.reqore-entity-row-actions .reqore-button')).toHaveLength(1);
+    const [button] = rowActionsMenuButtons(row);
+    const label = (row.querySelector('.reqore-entity-row-label') as HTMLElement).getBoundingClientRect();
+    const box = button.getBoundingClientRect();
+    // on the label's line, after it
+    expect(box.top).toBeLessThan(label.bottom);
+    expect(box.left).toBeGreaterThanOrEqual(label.right - 0.5);
+  });
+  await expectControlsInside(row);
+};
+
+export const NarrowContainerActionsMenu: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'Renders the same row in a 720px container (actions sit to the right of the label, as they always have) and a 400px one (actions wrap onto their own row under the label). The row measures its OWN container with a `ResizeObserver` and stamps `data-narrow` on itself — not a media query, because the case this exists for is a narrow drawer / sidebar / split panel on a wide screen, where the viewport is the wrong box to ask. The threshold is 480px, the Reqore mobile width, rather than the 640px `ReqoreSeverityRow` uses: that row fits a severity strip, a leading tag, a label and a description in before its actions, so it is out of room sooner. Wrapping should mean there was no room, not that the container was under some number.',
+          "Renders the same row in two framed containers of different widths, each named above it: in the 720px one Run and the More actions menu sit side by side as always; in the 400px one they are one menu button at the end of the label's line. Each row fills its frame exactly. Clicked, the menu names Run and More actions with their icons, More actions holding Show in chat and Copy name; Escape puts it away with the focus on the button, and Run chosen runs and closes it without opening the row.",
       },
     },
   },
   render: () => (
     <ReqoreControlGroup vertical gapSize='big'>
-      <div style={{ width: 720, maxWidth: '100%' }}>
-        <WrapDemoRow />
-      </div>
-      <div style={{ width: 400, maxWidth: '100%' }}>
-        <WrapDemoRow />
-      </div>
+      <StoryRowBox
+        className='wide-row-box'
+        width={720}
+        caption='A 720px container: the actions side by side'
+      >
+        <OrderRow />
+      </StoryRowBox>
+      <StoryRowBox
+        className='narrow-row-box'
+        width={400}
+        caption='A 400px container: the actions in one menu'
+      >
+        <OrderRow clickable />
+      </StoryRowBox>
     </ReqoreControlGroup>
   ),
   play: async ({ canvasElement }) => {
-    /* Queried inside waitFor throughout: the attribute is stamped by a
-       ResizeObserver, which the browser runs AFTER layout, so nothing here can
-       be read synchronously. Settling on `data-narrow` first means every
-       assertion below describes a layout that has finished happening. */
-    const rows = await waitFor(() => {
-      const found = canvasElement.querySelectorAll('.reqore-entity-row');
-      expect(found.length).toBe(2);
-      return Array.from(found) as HTMLElement[];
-    });
-    const [wide, narrow] = rows;
+    [onRun, onShowInChat, onEntityRowClick].forEach((spy) => spy.mockClear());
+    const wide = (await waitFor(() => {
+      const row = canvasElement.querySelector('.wide-row-box .reqore-entity-row') as HTMLElement;
+      expect(row).toBeTruthy();
+      return row;
+    })) as HTMLElement;
+    const narrow = await narrowEntityRow(canvasElement.querySelector('.narrow-row-box')!);
+    // the two rows differ in width because their containers do, and each says which it is
+    expect(canvasElement.querySelectorAll('.story-row-box-caption')).toHaveLength(2);
+    expectRowsFillTheirBoxes(canvasElement, '.reqore-entity-row');
 
-    await waitFor(() => expect(narrow.getAttribute('data-narrow')).toBe('true'));
-    await expect(wide.getAttribute('data-narrow')).toBeNull();
+    // wide: the actions as they always were
+    expect(wide.getAttribute('data-narrow')).toBeNull();
+    expect(wide.querySelectorAll('.reqore-entity-row-actions > .reqore-button')).toHaveLength(2);
+    expect(rowActionsMenuButtons(wide)).toHaveLength(0);
 
-    // Wide keeps its actions column; narrow drops it and gives them a row.
-    await waitFor(() =>
-      expect(getComputedStyle(wide).gridTemplateColumns.split(/\s+/).length).toBe(3)
-    );
-    await waitFor(() =>
-      expect(getComputedStyle(narrow).gridTemplateColumns.split(/\s+/).length).toBe(2)
-    );
-    await waitFor(() => {
-      const narrowActions = narrow.querySelector('.reqore-entity-row-actions') as HTMLElement;
-      expect(narrowActions).toBeTruthy();
-      expect(getComputedStyle(narrowActions).gridRowStart).toBe('2');
-    });
+    await expectEntityActionsFolded(narrow);
+    const [button] = rowActionsMenuButtons(narrow);
+    expect(button).toHaveAttribute('aria-label', 'Actions');
+
+    // the keyboard: Enter opens it, Escape puts it away, the focus stays on the button
+    button.focus();
+    await userEvent.keyboard('{Enter}');
+    await expectRowActionsMenuItems(['Run', 'More actions']);
+    await userEvent.keyboard('{Escape}');
+    await expectRowActionsMenuClosed();
+    expect(document.activeElement).toBe(button);
+
+    await userEvent.click(button);
+    await expectRowActionsMenuItems(['Run', 'More actions']);
+    await userEvent.click(openRowActionsMenuItems()[0]);
+    await waitFor(() => expect(onRun).toHaveBeenCalledTimes(1));
+    await expectRowActionsMenuClosed();
+    expect(onEntityRowClick).not.toHaveBeenCalled();
+    await userEvent.unhover(button);
   },
 };
 
@@ -642,6 +707,268 @@ export const ActionDoesNotFireTheRow: Story = {
     // broken clicking altogether.
     fireEvent.click(await find<HTMLElement>('.reqore-entity-row-label'));
     await waitFor(() => expect(counts()).toEqual({ row: '1', action: '1' }));
+  },
+};
+
+/* A connection row in a card on a phone: three actions, the last an icon whose tooltip is its name. By
+   default they are one menu button; a row whose actions are what it is there for keeps them in sight with
+   `narrowActions='stack'` - under the label, one to a line, each the row's width with its label whole
+   (kept on one line that does not wrap, they reached past the row). */
+
+const onTestConnection = fn();
+const onOpenSettings = fn();
+const onRemove = fn();
+
+// One array for every render: the row is memoized.
+const NARROW_CONNECTION_ACTIONS: IReqoreEntityRowProps['actions'] = [
+  { label: 'Test the connection', intent: 'info', icon: 'PulseLine', onClick: onTestConnection },
+  { label: 'Open its settings', icon: 'Settings3Line', onClick: onOpenSettings },
+  {
+    icon: 'DeleteBinLine',
+    tooltip: 'Remove',
+    intent: 'danger',
+    minimal: true,
+    onClick: onRemove,
+  },
+];
+
+const NarrowConnectionRow = ({ narrowActions }: Pick<IReqoreEntityRowProps, 'narrowActions'>) => (
+  <div style={{ width: 320, maxWidth: '100%' }}>
+    <ReqoreEntityRow
+      label='orders-db · PostgreSQL'
+      description='Last checked 2 minutes ago · 14 ms'
+      fluid
+      narrowActions={narrowActions}
+      onClick={onEntityRowClick}
+      actions={NARROW_CONNECTION_ACTIONS}
+    />
+  </div>
+);
+
+const clearConnectionSpies = () =>
+  [onTestConnection, onOpenSettings, onRemove, onEntityRowClick].forEach((spy) => spy.mockClear());
+
+/** The rows of a narrow list, each different: as many actions as a menu takes, one action, stacked, none, a long name. */
+const EQUAL_BOX_ENTITY_ROWS: Array<Pick<IReqoreEntityRowProps, 'label' | 'actions' | 'narrowActions'>> = [
+  { label: 'Process Incoming Order · order-intake-workflow', actions: ORDER_ACTIONS },
+  { label: 'Sync Inventory', actions: ORDER_ACTIONS.slice(0, 1) },
+  { label: 'Export Ledger', actions: ORDER_ACTIONS, narrowActions: 'stack' },
+  { label: 'Nightly Cleanup' },
+  { label: 'process-incoming-order-order-intake-workflow-production-eu-west-1', actions: ORDER_ACTIONS },
+];
+
+const EqualBoxEntityRows = () => (
+  <ReqoreControlGroup vertical gapSize='big'>
+    {EQUAL_BOX_ENTITY_ROWS.map((row, index) => (
+      <StoryRowBox key={index} width={400} caption='A 400px container'>
+        <ReqoreEntityRow
+          description='Last run 4m ago · 1,204 executions today'
+          metadata='workflow'
+          icon='GitBranchLine'
+          {...row}
+        />
+      </StoryRowBox>
+    ))}
+  </ReqoreControlGroup>
+);
+
+export const NarrowRowsInEqualContainersAreEqual: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders five narrow rows, each in its own framed 400px container: two actions (one menu), one action, actions stacked, no actions, and a long unbroken name. Each row fills its frame, so all five are the same width; at a phone\'s width (390px) the frames narrow together and the rows stay equal.',
+      },
+    },
+  },
+  render: () => <EqualBoxEntityRows />,
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelectorAll('.reqore-entity-row[data-narrow="true"]')).toHaveLength(
+        EQUAL_BOX_ENTITY_ROWS.length
+      )
+    );
+    expectRowsFillTheirBoxes(canvasElement, '.reqore-entity-row');
+    expectEqualBoxesEqualRows(canvasElement, '.reqore-entity-row');
+    await withViewport(390, 844, async (narrowed) => {
+      if (narrowed) {
+        await waitFor(() => {
+          expectRowsFillTheirBoxes(canvasElement, '.reqore-entity-row');
+          expectEqualBoxesEqualRows(canvasElement, '.reqore-entity-row');
+        });
+      }
+    });
+  },
+};
+
+export const NarrowContainerActionsMenuOnATouchScreen: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders a connection row with three actions in a 320px card on a phone (390 px): they are one menu button at the end of the label's line. On a touch screen the button is a finger's size (44px each way); a tap opens the menu - Test the connection, Open its settings and Remove (the icon's tooltip), each with its icon and a finger's height - and a tap on Remove runs it and closes the menu without opening the row.",
+      },
+    },
+  },
+  render: () => <NarrowConnectionRow />,
+  play: async ({ canvasElement }) => {
+    clearConnectionSpies();
+    await withTouchScreen(async (touch) => {
+      const row = await narrowEntityRow(canvasElement);
+      await expectEntityActionsFolded(row);
+      const [button] = rowActionsMenuButtons(row);
+      if (touch.real) {
+        await waitFor(() => {
+          const box = button.getBoundingClientRect();
+          expect(box.width).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+          expect(box.height).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+        });
+      }
+
+      await touch.tap(button);
+      await expectRowActionsMenuItems(['Test the connection', 'Open its settings', 'Remove']);
+      if (touch.real) {
+        await waitFor(() => {
+          for (const item of openRowActionsMenuItems()) {
+            expect(item.getBoundingClientRect().height).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+          }
+        });
+      }
+      await touch.tap(openRowActionsMenuItems()[2]);
+      await waitFor(() => expect(onRemove).toHaveBeenCalledTimes(1));
+      await expectRowActionsMenuClosed();
+      expect(onTestConnection).not.toHaveBeenCalled();
+      expect(onOpenSettings).not.toHaveBeenCalled();
+      expect(onEntityRowClick).not.toHaveBeenCalled();
+
+      if (touch.narrowed) {
+        await waitFor(() =>
+          expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1)
+        );
+      }
+    });
+  },
+};
+
+const stackedEntityActions = (row: HTMLElement) =>
+  Array.from(row.querySelectorAll<HTMLElement>('.reqore-entity-row-actions > .reqore-button'));
+
+const expectEntityActionsStacked = async (canvasElement: HTMLElement) => {
+  const row = await narrowEntityRow(canvasElement);
+  expect(row.getAttribute('data-actions')).toBeNull();
+  expect(rowActionsMenuButtons(row)).toHaveLength(0);
+  await expectControlsInside(row);
+  await waitFor(() => {
+    const boxes = stackedEntityActions(row).map((button) => button.getBoundingClientRect());
+    expect(boxes).toHaveLength(3);
+    // one to a line, each the row's width
+    boxes.slice(1).forEach((box, index) => {
+      expect(box.top).toBeGreaterThanOrEqual(boxes[index].bottom - 0.5);
+      expect(Math.abs(box.width - boxes[0].width)).toBeLessThan(1);
+    });
+  });
+  // the icon-only Remove reads its tooltip as its label
+  expect(row.querySelector('.reqore-entity-row-actions')?.textContent).toContain('Remove');
+  return row;
+};
+
+export const NarrowContainerActionsStack: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a row with three actions kept in sight (`narrowActions='stack'`) in a 320px container, as a card on a phone: they stack under the label, one to a line, each the row's width, the labels whole and the Remove icon labelled with its tooltip; none reaches past the row.",
+      },
+    },
+  },
+  render: () => <NarrowConnectionRow narrowActions='stack' />,
+  play: async ({ canvasElement }) => {
+    await expectEntityActionsStacked(canvasElement);
+  },
+};
+
+/** An Export Ledger row whose actions stay in sight: Run, and More actions, which is a menu of its own. */
+const StackedOrderRow = () => (
+  <StoryRowBox width={320} caption='A 320px container: the actions stacked'>
+    <ReqoreEntityRow
+      label='Export Ledger'
+      description='Last run 2h ago'
+      fluid
+      narrowActions='stack'
+      actions={ORDER_ACTIONS}
+    />
+  </StoryRowBox>
+);
+
+/** Run and the More actions menu, stacked: each says what it is and is as wide as the other. */
+const expectStackedMenuLabelled = async (canvasElement: HTMLElement) => {
+  await waitFor(() => {
+    const actions = canvasElement.querySelector('.reqore-entity-row-actions') as HTMLElement;
+    const [run, more] = Array.from(actions.children) as HTMLElement[];
+    expect(run.textContent).toContain('Run');
+    // the icon-only menu reads its tooltip as its label
+    expect(more.textContent).toContain('More actions');
+    // one to a line, each the row's width
+    expect(more.getBoundingClientRect().top).toBeGreaterThanOrEqual(run.getBoundingClientRect().bottom - 0.5);
+    expect(Math.abs(more.getBoundingClientRect().width - run.getBoundingClientRect().width)).toBeLessThan(1);
+  });
+};
+
+export const NarrowStackedMenuActionIsLabelled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders an Export Ledger row whose actions stay in sight (`narrowActions='stack'`) in a 320px container: Run, and More actions, an icon-only action that opens a menu. Stacked, More actions is labelled with its tooltip and is as wide as Run, one to a line; clicked, it opens Show in chat and Copy name. The same holds at a phone's width.",
+      },
+    },
+  },
+  render: () => <StackedOrderRow />,
+  play: async ({ canvasElement }) => {
+    await expectStackedMenuLabelled(canvasElement);
+    await withViewport(390, 844, async (narrowed) => {
+      if (narrowed) {
+        await expectStackedMenuLabelled(canvasElement);
+      }
+    });
+    const more = (canvasElement.querySelector('.reqore-entity-row-actions') as HTMLElement)
+      .children[1] as HTMLElement;
+    await userEvent.click(more);
+    await waitFor(() => expect(document.body).toHaveTextContent('Show in chat'));
+  },
+};
+
+export const NarrowContainerActionsStackOnTouch: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "The same stacked row on a phone with a finger (390 px): on a touch screen each action is a finger's height (44px), and a tap on Open its settings runs it without opening the row.",
+      },
+    },
+  },
+  render: () => <NarrowConnectionRow narrowActions='stack' />,
+  play: async ({ canvasElement }) => {
+    clearConnectionSpies();
+    await withTouchScreen(async (touch) => {
+      const row = await expectEntityActionsStacked(canvasElement);
+      if (touch.real) {
+        await waitFor(() => {
+          for (const button of stackedEntityActions(row)) {
+            expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+          }
+        });
+      }
+      await touch.tap(stackedEntityActions(row)[1]);
+      await waitFor(() => expect(onOpenSettings).toHaveBeenCalledTimes(1));
+      expect(onEntityRowClick).not.toHaveBeenCalled();
+    });
   },
 };
 

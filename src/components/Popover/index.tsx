@@ -1,7 +1,8 @@
 import { Placement } from '@popperjs/core';
 import React, { forwardRef, memo, MutableRefObject, useCallback, useEffect, useRef } from 'react';
 import { useUnmount, useUpdateEffect } from 'react-use';
-import styled from 'styled-components';
+import { isHoveringPointer, useHoverGate, watchHoverGate } from '../../helpers/hoveringPointer';
+import styled from '../../helpers/styled';
 import { useReqoreProperty } from '../..';
 import type { IReqoreOptions } from '../../containers/UIProvider';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -53,6 +54,14 @@ export interface IPopover
   closeOnTargetClick?: boolean;
   delay?: number;
   keepOpenOnHover?: boolean;
+  /**
+   * A hover popover that is a way in - a menu, such as a tab bar's or a segmented control's More
+   * menu - opens at a finger's tap, on the tap's click, as it would at a hover. A plain hover
+   * tooltip, `hoverStay` or not, opens at no tap: it describes what the finger is pressing.
+   * `keepOpenOnHover` popovers open at a tap either way: what they hold is meant to be reached.
+   * `ReqoreDropdown` sets it.
+   */
+  opensOnTap?: boolean;
   offsetX?: number;
   offsetY?: number;
   blur?: boolean;
@@ -174,6 +183,7 @@ export const ReqorePopover = memo(
         placement,
         openOnMount,
         keepOpenOnHover,
+        opensOnTap: opensOnTapProp,
         interactive,
         transparent,
         maxWidth,
@@ -215,7 +225,21 @@ export const ReqorePopover = memo(
       const [componentRef, setComponentRef] = React.useState(null);
       const popperRef = useRef(null);
 
-      const [isOpen, setIsOpen] = React.useState(false);
+      const [isOpen, setIsOpenState] = React.useState(false);
+      /* Whether it is open NOW, set the moment it opens or closes. The controls handed out through
+         `passPopoverData` read this: a closure over `isOpen` answered for the render that handed it out,
+         and the holder got a fresh copy only after an effect and a render of its own - so a field asked
+         about its template list in that gap (a key typed straight after the click that opened it) was
+         told it was closed, and typing did not put it away. */
+      const isOpenNow = useRef(false);
+      const setIsOpen = useCallback((open: boolean) => {
+        isOpenNow.current = open;
+        setIsOpenState(open);
+      }, []);
+      /* The trigger whose focus was checked when its listener was attached. The listener effect re-runs
+         whenever the list opens or closes (it depends on `open`, which depends on `isOpen`); a check on
+         every re-run reopened a list Escape had just closed while the field kept the focus. */
+      const focusCheckedFor = useRef<HTMLElement | null>(null);
       const timeoutRef = useRef<number | null>(null);
       const isTargetHovered = useRef(false);
       const isPopoverHovered = useRef(false);
@@ -225,6 +249,26 @@ export const ReqorePopover = memo(
 
       const startEvent = startEvents[handler];
       const endEvent = endEvents[handler];
+      /* A hover's popover opens for a pointer that hovers, not at a tap: the `mouseenter` a browser emulates
+         after a finger's tap is its own, and opened a tooltip until the click closed it - on a touch laptop,
+         where its mouse is the primary pointer and a tooltip is a hover's. See `createHoverGate`. */
+      const opensOnHover = !!keepOpenOnHover || handler === 'hover' || handler === 'hoverStay';
+      /* The handler's own start event is a hover's (`mouseenter`), which the gate decides; a click
+         or a focus is not one, and is never asked about. */
+      const startsOnHover = startEvent === 'mouseenter';
+      /* A popover meant to be reached opens at a tap, on the tap's click: a hover popover that is a
+         way in (`opensOnTap` - a tab bar's, a segmented control's or a breadcrumb trail's More menu)
+         and one held open while hovered (`keepOpenOnHover`). The gate turns the tap's `mouseenter`
+         away, and nothing else opened them, so on a phone what they hold could not be reached. A
+         plain hover tooltip, `hoverStay` or not, still opens for nothing at a tap; a click popover
+         opens on its own click. */
+      const opensOnTap =
+        handler !== 'click' &&
+        (!!keepOpenOnHover || (!!opensOnTapProp && (handler === 'hover' || handler === 'hoverStay')));
+      const hoverGate = useHoverGate();
+      /* Whether the press of the click that comes next was one that cannot hover: a finger's, or a
+         pen's on the screen. Noted at `pointerdown`, read (and forgotten) at the click. */
+      const pressedWithoutHover = useRef(false);
 
       /**
        * A popover takes the pointer only if the pointer can get to it.
@@ -285,13 +329,15 @@ export const ReqorePopover = memo(
         [keepOpenOnHover, onBeforeClose, content]
       );
 
+      /* Answers whether it closed: `false` when `onBeforeClose` refused, and the popover is still
+         up. Escape asks, because a key the popover did not use is not its to keep. */
       const close = useCallback(
-        (e?: MouseEvent | KeyboardEvent) => {
+        (e?: MouseEvent | KeyboardEvent): boolean => {
           if (onBeforeClose) {
             const shouldClose = onBeforeClose({ content }, e);
 
             if (!shouldClose) {
-              return;
+              return false;
             }
           }
 
@@ -299,12 +345,16 @@ export const ReqorePopover = memo(
           isTargetHovered.current = false;
           isPopoverHovered.current = false;
           setIsOpen(false);
+
+          return true;
         },
         [cancelTimeout, onBeforeClose, content]
       );
 
+      /* `atOnce` skips the delay: a hover's delay waits to see that the pointer stays, and a tap
+         has already said what it wants. */
       const open = useCallback(
-        (e?: MouseEvent | KeyboardEvent) => {
+        (e?: MouseEvent | KeyboardEvent, atOnce?: boolean) => {
           if (onBeforeOpen) {
             const shouldOpen = onBeforeOpen({ content }, e);
 
@@ -324,6 +374,11 @@ export const ReqorePopover = memo(
           // Cancel any pending close timeout when opening
           cancelTimeout();
 
+          /* The render's `isOpen`, not `isOpenNow`: the popover as it was when this event began. A
+             click on the trigger is heard twice - first by the document's capture listener
+             (`handleClick`), which closes the popover when `closeOnTargetClick` asks it to, then
+             here - and read as it is now, the popover that click had just closed was opened again
+             at once (a dropdown's trigger could not close its list). */
           if (isOpen) {
             if (handler !== 'hoverStay' && handler !== 'focus') {
               if (closeOnInsideClick) {
@@ -331,8 +386,11 @@ export const ReqorePopover = memo(
               }
             }
           } else {
-            const globalDelay =
-              handler === 'hover' || handler === 'hoverStay' ? delay ?? tooltips.delay : delay;
+            const globalDelay = atOnce
+              ? 0
+              : handler === 'hover' || handler === 'hoverStay'
+              ? delay ?? tooltips.delay
+              : delay;
 
             if (globalDelay) {
               timeoutRef.current = window.setTimeout(() => {
@@ -532,13 +590,34 @@ export const ReqorePopover = memo(
         ]
       );
 
+      /* Escape puts away the popover that is open. Heard in the CAPTURE phase: on the document's
+         bubble phase it came after every handler in the page, so an editor around the field (a form
+         row, where Escape discards the edit) heard it first, and one Escape meant for a list also
+         closed the editor and threw away what had been typed. With nothing open it is left alone.
+
+         The key goes no further only when it was this popover's: pressed in its trigger or on its
+         own surface, and used - the popover closed. Every tooltip is a popover, so one showing
+         anywhere on the page kept every Escape from the page while it was up: a modal with a
+         tooltip showing in it did not close, and a row editor or a table's search never heard the
+         key. A popover the key was not pressed in still closes, and the key goes on; so does one
+         whose `onBeforeClose` refused, since it stays up and used nothing. */
       const handleKeyDown = useCallback(
         (event: KeyboardEvent) => {
-          if (event.key === 'Escape') {
-            close();
+          if (event.key !== 'Escape' || !isOpenNow.current) {
+            return;
+          }
+
+          const { target } = event;
+          // a key dispatched on the window has no node to be inside
+          const pressedHere =
+            target instanceof Node &&
+            (!!componentRef?.contains(target) || !!popperRef.current?.contains(target));
+
+          if (close() && pressedHere) {
+            event.stopPropagation();
           }
         },
-        [close]
+        [close, componentRef]
       );
 
       useUpdateEffect(() => {
@@ -549,11 +628,28 @@ export const ReqorePopover = memo(
         onUpdate?.({ content });
       }, [content]);
 
+      /* The functions handed out through `passPopoverData` keep their identity and call the
+         popover's open and close as they are now. The controls are handed out again only when it
+         opens or closes, and a copy of `open` or `close` taken then kept the `onBeforeOpen`,
+         `onBeforeClose` and `content` of that render. Handing them out on every change instead
+         would set the holder's state with each new `content`: a field that keeps them in state
+         renders its list again, with a new `content`. */
+      const latestControls = useRef({ open, close });
+      latestControls.current = { open, close };
+      const openNow = useCallback((e?: MouseEvent | KeyboardEvent) => {
+        latestControls.current.open(e);
+      }, []);
+      const closeNow = useCallback(
+        (e?: MouseEvent | KeyboardEvent) => latestControls.current.close(e),
+        []
+      );
+      const isOpenNowControl = useCallback(() => isOpenNow.current, []);
+
       useEffect(() => {
         passPopoverData?.({
-          close,
-          open,
-          isOpen: () => isOpen,
+          close: closeNow,
+          open: openNow,
+          isOpen: isOpenNowControl,
         });
       }, [isOpen]);
 
@@ -580,11 +676,53 @@ export const ReqorePopover = memo(
 
       const handleTargetMouseEnter = useCallback(
         (e: MouseEvent) => {
+          if (!hoverGate.isHover()) {
+            return;
+          }
           isTargetHovered.current = true;
           cancelTimeout();
           open(e);
         },
-        [open, cancelTimeout]
+        [open, cancelTimeout, hoverGate]
+      );
+
+      /* What starts this popover: `open` itself, or, for a hover, `open` for a pointer that hovers.
+
+         Held open while hovered (`keepOpenOnHover`), a click or focus popover listens to its own
+         event as well as to the hover: without it a tap, whose hover the gate turns away, opened
+         nothing. A click on the trigger the pointer rests on closes nothing the hover opened, as
+         before. */
+      const handleStart = useCallback(
+        (e: MouseEvent) => {
+          if (startsOnHover && !hoverGate.isHover()) {
+            return;
+          }
+          if (keepOpenOnHover && isOpen && isTargetHovered.current) {
+            return;
+          }
+          open(e);
+        },
+        [open, startsOnHover, hoverGate, keepOpenOnHover, isOpen]
+      );
+
+      const handlePress = useCallback((e: PointerEvent) => {
+        pressedWithoutHover.current = !isHoveringPointer(e);
+      }, []);
+
+      /* A tap opens what a hover would have (see `opensOnTap`), at once, on its click; and closes
+         it as a click popover's is closed - a click outside, or on the trigger with
+         `closeOnTargetClick`. A mouse's click is left alone: its hover has opened the popover, or
+         is about to. */
+      const handleTapClick = useCallback(
+        (e: MouseEvent) => {
+          const tapped = pressedWithoutHover.current;
+          pressedWithoutHover.current = false;
+
+          if (tapped && !isOpen) {
+            open(e, true);
+          }
+        },
+        [open, isOpen]
       );
 
       const handleTargetMouseLeave = useCallback(
@@ -606,20 +744,22 @@ export const ReqorePopover = memo(
       }, [attemptClose]);
 
       useEffect(() => {
+        let stopHoverGate: (() => void) | undefined;
+        const bindsStart = !keepOpenOnHover || !startsOnHover;
         if (componentRef && content) {
           // Use capture phase for click detection
           document.addEventListener('click', handleClick, true);
 
           if (closePopoversOnEscPress) {
-            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keydown', handleKeyDown, true);
           }
+
+          stopHoverGate = opensOnHover ? watchHoverGate(componentRef, hoverGate) : undefined;
 
           if (keepOpenOnHover) {
             componentRef.addEventListener('mouseenter', handleTargetMouseEnter);
             componentRef.addEventListener('mouseleave', handleTargetMouseLeave);
           } else {
-            componentRef.addEventListener(startEvent, open);
-
             if (endEvent) {
               componentRef.addEventListener(endEvent, close);
             }
@@ -628,20 +768,43 @@ export const ReqorePopover = memo(
               componentRef.addEventListener('mouseleave', cancelTimeout);
             }
           }
+
+          // `keepOpenOnHover`'s own `mouseenter` stands in for a hover's start event, not a click's
+          if (bindsStart) {
+            componentRef.addEventListener(startEvent, handleStart);
+          }
+
+          // capture: a child that stops the press or the click does not keep it from the popover
+          if (opensOnTap) {
+            componentRef.addEventListener('pointerdown', handlePress, true);
+            componentRef.addEventListener('click', handleTapClick, true);
+          }
+
+          /* A popover opened by focus is opened by the user being in the field, however they got
+             there. A field focused as it mounts (an editor that opens with the cursor in its field)
+             was focused before this listener was attached: no `focusin` came, and its list stayed
+             closed until the user left the field and came back. Checked once per trigger, as it is
+             attached. */
+          if (handler === 'focus' && focusCheckedFor.current !== componentRef) {
+            focusCheckedFor.current = componentRef;
+            if (componentRef.contains(document.activeElement)) {
+              open();
+            }
+          }
         }
 
         return () => {
           cancelTimeout();
 
           document.removeEventListener('click', handleClick, true);
-          document.removeEventListener('keydown', handleKeyDown);
+          document.removeEventListener('keydown', handleKeyDown, true);
+
+          stopHoverGate?.();
 
           if (keepOpenOnHover) {
             componentRef?.removeEventListener('mouseenter', handleTargetMouseEnter);
             componentRef?.removeEventListener('mouseleave', handleTargetMouseLeave);
           } else {
-            componentRef?.removeEventListener(startEvent, open);
-
             if (endEvent) {
               componentRef?.removeEventListener(endEvent, close);
             }
@@ -649,6 +812,15 @@ export const ReqorePopover = memo(
             if (handler === 'hoverStay') {
               componentRef?.removeEventListener('mouseleave', cancelTimeout);
             }
+          }
+
+          if (bindsStart) {
+            componentRef?.removeEventListener(startEvent, handleStart);
+          }
+
+          if (opensOnTap) {
+            componentRef?.removeEventListener('pointerdown', handlePress, true);
+            componentRef?.removeEventListener('click', handleTapClick, true);
           }
         };
       }, [
@@ -664,6 +836,13 @@ export const ReqorePopover = memo(
         handleTargetMouseEnter,
         handleTargetMouseLeave,
         closePopoversOnEscPress,
+        handleStart,
+        opensOnHover,
+        startsOnHover,
+        opensOnTap,
+        handlePress,
+        handleTapClick,
+        hoverGate,
       ]);
 
       const handleRef = useCallback((r) => {

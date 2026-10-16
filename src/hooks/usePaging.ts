@@ -1,7 +1,6 @@
-import { size } from 'lodash';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { range, size } from 'lodash';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
-import usePagination, { usePaginationReturn } from 'react-use-pagination-hook';
 
 export interface IReqorePageChangeData {
   isFirst?: boolean;
@@ -18,8 +17,11 @@ export interface IReqorePagingOptions<T> {
   onPageChange?: (page: number, info: IReqorePageChangeData) => void;
 }
 
-export interface IReqorePagingResult<T>
-  extends Pick<usePaginationReturn, 'setPage' | 'currentPage'> {
+export interface IReqorePagingResult<T> {
+  /** Opens a page: one outside the list opens the nearest page in it. */
+  setPage: (page: number) => void;
+  /** The open page: always one of the list's (1 when it has none). */
+  currentPage: number;
   pages: number[];
   allPages: number[];
   applyPaging: (items: T[]) => T[];
@@ -28,8 +30,10 @@ export interface IReqorePagingResult<T>
   itemsLeft: number;
   isLastPage: boolean;
   isFirstPage: boolean;
-  next: usePaginationReturn['goNext'];
-  back: usePaginationReturn['goBefore'];
+  /** The next page, or the last one: each call a step, the steps one render takes too. */
+  next: () => void;
+  /** The page before, or the first one. */
+  back: () => void;
   first: () => void;
   last: () => void;
   pageCount: number;
@@ -69,11 +73,23 @@ export const useReqorePaging = <T>(
     ) as IReqorePagingOptions<T>),
   };
   const allPageCount = useMemo(() => Math.ceil(size(items) / itemsPerPage), [items, itemsPerPage]);
-  const { pagelist, currentPage, setPage, setTotalPage, goNext, goBefore } = usePagination({
-    numOfPage: allPageCount,
-    totalPage: allPageCount,
-  });
+  // a list without rows still has its one, empty, page
+  const pagelist = useMemo(() => range(1, Math.max(1, allPageCount) + 1), [allPageCount]);
+  /* The page is ours, kept within the list on every change. It was a pagination hook's window index, which two
+     steps from one render (two auto-load observers, say) took past the last page: the page read as undefined,
+     no rows were shown and "Load more" stayed. A step reads the page it is taken from (a functional update),
+     not the one the render saw, and stops at either end. */
+  const lastPage = useRef(Math.max(1, allPageCount));
+  lastPage.current = Math.max(1, allPageCount);
+  const toPage = (page: number): number => Math.min(Math.max(1, page), lastPage.current);
+  const [openPage, setOpenPage] = useState<number>(1);
+  // the page as shown: within the list as it is now, also before the effects below have caught up with it
+  const currentPage = toPage(openPage);
+  const setPage = useCallback((page: number) => setOpenPage(toPage(page)), []);
+  const goNext = useCallback(() => setOpenPage((page) => toPage(page + 1)), []);
+  const goBefore = useCallback(() => setOpenPage((page) => toPage(page - 1)), []);
 
+  // the start page is opened as any other, so `onPageChange` hears of it
   useEffect(() => {
     setPage(startPage || 1);
   }, [startPage]);
@@ -85,36 +101,17 @@ export const useReqorePaging = <T>(
     });
   }, [currentPage]);
 
-  /* The pagination hook derives `currentPage` from a window of pages; while the
-     total is shrinking that window is briefly out of range and the page reads as
-     undefined, which is exactly when the clamp below has to know where the reader
-     was. */
-  const lastKnownPage = useRef(1);
-  if (currentPage) {
-    lastKnownPage.current = currentPage;
-  }
-
   useUpdateEffect(() => {
-    const pageCount = Math.max(1, Math.ceil(size(items) / itemsPerPage));
     /* An INFINITE list keeps the reader where they are. Its pages are cumulative
        — page 3 shows the first thirty rows — so a row arriving at the top or
        fifty older rows loading at the bottom changes what the window holds, not
        where the reader is; snapping to page 1 on every count change collapsed a
        list someone had scrolled down three times the moment anything arrived.
-       Only a list that shrank below the current page pulls the page back. A
-       paged table is different: its page is a slice, and a new data set (a
-       filter, a reload) should open on its first page as it always has. */
-    if (infinite) {
-      const page = currentPage ?? lastKnownPage.current;
-      if (!currentPage || page > pageCount) {
-        setPage(Math.min(page, pageCount));
-      }
-    } else {
-      setPage(1);
-    }
-    // After the page: the pagination hook validates a page against the total it
-    // holds, so shrinking the total first would reject the page it should land on.
-    setTotalPage(pageCount);
+       Only a list that shrank below the current page pulls the page back (and
+       keeps it there when it grows again). A paged table is different: its page
+       is a slice, and a new data set (a filter, a reload) should open on its
+       first page as it always has. */
+    setOpenPage((page) => (infinite ? toPage(page) : 1));
   }, [size(items)]);
 
   const slicedItems: T[] = useMemo(() => {

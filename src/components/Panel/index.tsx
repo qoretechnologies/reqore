@@ -16,7 +16,7 @@ import {
 import { createPortal } from 'react-dom';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import { panelIsSmall } from './responsive';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
   ACCENT_SIZE_TO_PX,
@@ -39,8 +39,14 @@ import {
   getReadableColor,
   getThemePanelSurface,
 } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, {
+  listReqoreStyleProps,
+  omitStyleProps,
+  REQORE_CONTROL_GROUP_CHILD_PROPS,
+  TReqoreStylePropKeys,
+} from '../../helpers/styled';
 import { getOneHigherSize, isActionShown, resolveAccentSize } from '../../helpers/utils';
+import { useHoverGate } from '../../helpers/hoveringPointer';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { FIT_TEXT_FLOOR_PX, useFitTextSize } from '../../hooks/useFitTextSize';
@@ -453,6 +459,44 @@ const StyledPanelTitleLabelBox = styled.div<{ $clampLines: number }>`
     `}
 `;
 
+/**
+ * How much more than the title a group of actions that do not collapse takes of the room left over: so much
+ * that the title's box widens only once the group is at its own width (a flex item takes its grow factor's
+ * share of the free space, and the title's is 1).
+ */
+const ACTIONS_GROW_BEFORE_TITLE = 1000;
+
+/**
+ * The flex of the group of actions that do not collapse, beside a title in a NARROW bar
+ * (qorus#646): sized from what the title leaves, between what its controls cannot do without and
+ * its own width. See where it is used. A wide bar leaves the group at its own width (`0 0 auto`),
+ * as it always was.
+ */
+const NARROW_ACTIONS_BESIDE_TITLE: React.CSSProperties = {
+  flex: `${ACTIONS_GROW_BEFORE_TITLE} 1 0%`,
+  maxWidth: 'max-content',
+};
+
+/** The class of the bar's group of actions that do not collapse, which the title's fit measures. */
+const NON_RESPONSIVE_ACTIONS_CLASS = 'reqore-panel-non-responsive-actions';
+
+/**
+ * How much wider `element` is than the least it can be: its width less its min-content width, read
+ * with its flex and width set aside for the measurement and put back before anything is drawn.
+ */
+const getWidthAboveMinimum = (element: HTMLElement): number => {
+  const width = element.getBoundingClientRect().width;
+  const { flex, width: styleWidth } = element.style;
+
+  element.style.flex = '0 0 auto';
+  element.style.width = 'min-content';
+  const minimum = element.getBoundingClientRect().width;
+  element.style.flex = flex;
+  element.style.width = styleWidth;
+
+  return Math.max(0, width - minimum);
+};
+
 export const StyledPanelTitleHeader = styled.div`
 
   display: flex;
@@ -642,24 +686,109 @@ const getPanelHoverBorderColor = (
     : changeLightness(getPanelBorderBaseColor(theme, { intent, accentPosition }), 0.25);
 };
 
+/**
+ * Every panel prop that only styles or configures the panel. None of them reaches the rendered
+ * element — the `div`, re-resizable's `Resizable` (which spreads every prop it does not know onto
+ * its wrapper div), or a component given as `as`. The compiler checks the record against
+ * `IStyledPanel`, so a new prop that is not added here fails the build instead of leaking.
+ *
+ * re-resizable's own props (`size`, `enable`, `minWidth`, handles, ...) are not in it: they are
+ * the `Resizable`'s to receive. `opacity` is the surface's background opacity, an SVG attribute
+ * a `div` would keep.
+ */
+export const REQORE_PANEL_STYLE_PROPS = listReqoreStyleProps<
+  TReqoreStylePropKeys<IStyledPanel, React.HTMLAttributes<HTMLDivElement> & ResizableProps>
+>({
+  accentPosition: true,
+  actions: true,
+  badge: true,
+  blur: true,
+  bottomActions: true,
+  breadcrumbs: true,
+  closeButtonProps: true,
+  closePopover: true,
+  closeTooltip: true,
+  collapseButtonProps: true,
+  collapseTooltip: true,
+  collapsible: true,
+  compactTitle: true,
+  contentEffect: true,
+  contentSize: true,
+  contentStyle: true,
+  customLabelTooltip: true,
+  customTheme: true,
+  description: true,
+  descriptionEffect: true,
+  descriptionIntent: true,
+  descriptionMaxLines: true,
+  descriptionPosition: true,
+  disabled: true,
+  errorBoundaryOptions: true,
+  expandTooltip: true,
+  fill: true,
+  fitLabel: true,
+  flat: true,
+  floatingActions: true,
+  fluid: true,
+  getContentRef: true,
+  icon: true,
+  iconColor: true,
+  iconImage: true,
+  iconProps: true,
+  iconVerticalAlign: true,
+  iconWithLabel: true,
+  inheritCustomTheme: true,
+  intent: true,
+  isCollapsed: true,
+  isStuck: true,
+  label: true,
+  labelEffect: true,
+  labelMaxLines: true,
+  labelMinTextSize: true,
+  labelProps: true,
+  labelSize: true,
+  loading: true,
+  loadingIconType: true,
+  media: true,
+  mediaAlt: true,
+  mediaAspectRatio: true,
+  mediaPosition: true,
+  mediaProps: true,
+  minimal: true,
+  noHorizontalPadding: true,
+  onClose: true,
+  onCollapseChange: true,
+  onLabelEdit: true,
+  opacity: true,
+  padded: true,
+  radiusSize: true,
+  raised: true,
+  resizable: true,
+  responsiveActions: true,
+  responsiveActionsWrapperProps: true,
+  responsiveTitle: true,
+  rounded: true,
+  showActionsWhenCollapsed: true,
+  showLabelTooltip: true,
+  skeleton: true,
+  stickyHeader: true,
+  stickyHeaderInset: true,
+  stickyHeaderOffset: true,
+  theme: true,
+  tooltip: true,
+  transparent: true,
+  unMountContentOnCollapse: true,
+  wrapperPadding: true,
+});
+
 export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
-  // `fill` controls panel layout and must not become a boolean DOM attribute. Neither must
-  // `accentPosition`: when the panel renders as a `Resizable` (a COMPONENT target) the rule
-  // below forwards everything, and re-resizable spreads the leftovers onto its wrapper div.
-  // Filtering here still leaves the styled-component's own interpolations reading the prop.
-  // Everything else follows styled-components' own rule, so re-resizable still receives its
-  // `enable` / size / handle config — those are component props, not HTML attributes.
-  // `opacity` is the surface's background opacity, an SVG attribute a `div` would keep; the
-  // remaining flags only style the surface, and re-resizable would write them onto its div.
+  // Its own props, `interactive` (set by the panel for its hover styles) and the layout flags a
+  // containing ControlGroup hands it — except `size`, which a panel never forwards but a
+  // `Resizable` reads as its own.
   shouldForwardProp: omitStyleProps(
-    'accentPosition',
-    'fill',
-    'flat',
-    'fluid',
-    'interactive',
-    'isCollapsed',
-    'opacity',
-    'rounded'
+    ...REQORE_PANEL_STYLE_PROPS,
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS.filter((prop) => prop !== 'size'),
+    'interactive'
   ),
 })<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
@@ -1237,7 +1366,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       loadingIconType,
       skeleton,
       errorBoundaryOptions,
-      floatingActions,
+      floatingActions: floatingActionsProp,
       collapseTooltip = 'Collapse',
       expandTooltip = 'Expand',
       closeTooltip = 'Close',
@@ -1280,6 +1409,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     }, []);
 
     const isMobile = useReqoreProperty('isMobile');
+    /* Floating actions are a hover's. Where the device cannot hover (a phone, a tablet), nothing
+       would ever float them, so its hover actions stay in the panel's own bar, shown (see the
+       hover gate on StyledPanel). */
+    const isHoverCapable = useReqoreProperty('isHoverCapable');
+    const floatingActions = !!floatingActionsProp && isHoverCapable !== false;
     const { targetRef } = useCombinedRefs(ref);
     const [measureRef, { width }] = useMeasure();
     const [_isHovered, setIsHovered] = useState(false);
@@ -1400,26 +1534,72 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       floatingActionsRef.current.style.left = `${panelRect.right - floatingRect.width}px`;
     }, [flat]);
 
+    const showsFloatingActions = _isHovered && !!floatingActions && size(floatingActionsList) > 0;
+
+    // placed as they are shown, and again whenever the actions change
     useEffect(() => {
-      if (!_isHovered || !floatingActions || !size(floatingActionsList)) return undefined;
+      if (showsFloatingActions) updateFloatingActionsPosition();
+    }, [showsFloatingActions, floatingActionsList, updateFloatingActionsPosition]);
 
-      updateFloatingActionsPosition();
+    /* ...and again whenever what they are placed by moves: the actions are fixed to the screen, placed
+     * by the panel's corner and their own size, so nothing follows on its own. A page that scrolls, a
+     * screen or window that resizes, a panel that grows or shrinks, and actions whose content changes
+     * width (a label, an icon or a font that loads) each moved the panel's corner or the actions' size
+     * without placing them again: they were left where the panel had been - mid-screen once the window
+     * widened - or reached past the panel's edge once they widened. One placement per frame, however
+     * many of these come in; none once they are hidden or the panel is gone. */
+    useEffect(() => {
+      if (!showsFloatingActions) return undefined;
 
-      const onScroll = () => updateFloatingActionsPosition();
+      let frame = 0;
+      const schedule = () => {
+        if (!frame) {
+          frame = requestAnimationFrame(() => {
+            frame = 0;
+            updateFloatingActionsPosition();
+          });
+        }
+      };
 
-      window.addEventListener('scroll', onScroll, true);
-      return () => window.removeEventListener('scroll', onScroll, true);
-    }, [_isHovered, floatingActions, floatingActionsList, updateFloatingActionsPosition]);
+      window.addEventListener('scroll', schedule, true);
+      window.addEventListener('resize', schedule, { passive: true });
+      const observer =
+        typeof ResizeObserver !== 'undefined' ? new ResizeObserver(schedule) : undefined;
+      if (observer) {
+        if (panelRef.current) observer.observe(panelRef.current);
+        if (floatingActionsRef.current) observer.observe(floatingActionsRef.current);
+      }
+
+      return () => {
+        window.removeEventListener('scroll', schedule, true);
+        window.removeEventListener('resize', schedule);
+        observer?.disconnect();
+        if (frame) cancelAnimationFrame(frame);
+      };
+    }, [showsFloatingActions, updateFloatingActionsPosition]);
+
+    /* The floating actions are a hover's: a finger's tap - and the `mouseenter` a browser emulates after it -
+       shows none (see `createHoverGate`). Where a finger is the primary pointer (`isHoverCapable` false) the
+       actions are in the panel's own bar instead (`floatingActions` is off, above), and on a touch laptop its
+       tap left them floating until the next. */
+    const hoverGate = useHoverGate();
+    const handlePointerEnter = useCallback(
+      (e: React.PointerEvent<HTMLDivElement>) => {
+        hoverGate.notePointer(e);
+        rest.onPointerEnter?.(e);
+      },
+      [hoverGate, rest.onPointerEnter]
+    );
 
     const handleMouseEnter = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
-        if (floatingActions) {
+        if (floatingActions && hoverGate.isHover()) {
           if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
           hoverTimerRef.current = setTimeout(() => setIsHovered(true), 150);
         }
         rest.onMouseEnter?.(e);
       },
-      [floatingActions, rest.onMouseEnter]
+      [floatingActions, rest.onMouseEnter, hoverGate]
     );
 
     const cancelHover = useCallback(() => {
@@ -1429,6 +1609,60 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       }
       setIsHovered(false);
     }, []);
+
+    /* The way from the panel to its floating actions.
+     *
+     * The actions float above the panel's top-right corner, so a pointer heading for
+     * them from inside the panel leaves the panel through its top edge - usually to the
+     * LEFT of the actions, on a diagonal - and passes over what lies above the panel
+     * before it reaches them. Ending the hover the moment the pointer left the panel
+     * hid the actions on that way, and the click meant for them landed on what they had
+     * been covering (in reqraft's expression editor: the Visual / Text switch, so
+     * "Remove" switched the view instead).
+     *
+     * So while the pointer is in the strip between the panel's top edge and the top of
+     * the actions, across the panel's width, the hover stays; it ends when the pointer
+     * leaves that strip for anything that is neither the panel nor the actions. Decided
+     * by where the pointer IS, on each move - no timer to guess the time a person needs. */
+    const corridorUntrackRef = useRef<(() => void) | null>(null);
+    const stopCorridor = useCallback(() => {
+      corridorUntrackRef.current?.();
+      corridorUntrackRef.current = null;
+    }, []);
+    const inCorridor = useCallback((x: number, y: number): boolean => {
+      if (!panelRef.current || !floatingActionsRef.current) return false;
+      if (floatingActionsRef.current.style.display === 'none') return false;
+      const panelRect = panelRef.current.getBoundingClientRect();
+      const actionsRect = floatingActionsRef.current.getBoundingClientRect();
+      return (
+        x >= Math.min(panelRect.left, actionsRect.left) &&
+        x <= Math.max(panelRect.right, actionsRect.right) &&
+        y >= actionsRect.top &&
+        y <= panelRect.top + 1
+      );
+    }, []);
+    const followCorridor = useCallback(() => {
+      stopCorridor();
+      const onMove = (event: PointerEvent | MouseEvent) => {
+        const target = event.target instanceof Node ? event.target : null;
+        // reached the actions or came back into the panel: their own handlers take over
+        if (
+          target &&
+          (floatingActionsRef.current?.contains(target) || panelRef.current?.contains(target))
+        ) {
+          stopCorridor();
+          return;
+        }
+        if (!inCorridor(event.clientX, event.clientY)) {
+          stopCorridor();
+          cancelHover();
+        }
+      };
+      document.addEventListener('mousemove', onMove, true);
+      corridorUntrackRef.current = () => document.removeEventListener('mousemove', onMove, true);
+    }, [cancelHover, inCorridor, stopCorridor]);
+    // a corridor followed when the panel goes is followed no more
+    useEffect(() => stopCorridor, [stopCorridor]);
 
     const handleMouseLeave = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
@@ -1443,11 +1677,15 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             return;
           }
 
-          cancelHover();
+          if (_isHovered && inCorridor(e.clientX, e.clientY)) {
+            followCorridor();
+          } else {
+            cancelHover();
+          }
         }
         rest.onMouseLeave?.(e);
       },
-      [floatingActions, rest.onMouseLeave, cancelHover]
+      [floatingActions, rest.onMouseLeave, cancelHover, _isHovered, inCorridor, followCorridor]
     );
 
     const handleFloatingActionsMouseLeave = useCallback(
@@ -1462,9 +1700,15 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           return;
         }
 
+        // back towards the panel through the strip between them
+        if (inCorridor(e.clientX, e.clientY)) {
+          followCorridor();
+          return;
+        }
+
         cancelHover();
       },
-      [cancelHover]
+      [cancelHover, inCorridor, followCorridor]
     );
 
     /* The panel renders as re-resizable's `Resizable` when it is resizable — unless the caller
@@ -2014,10 +2258,36 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         0
       );
       const gaps = gap * Math.max(0, parent.children.length - 1);
-      const next = Math.max(0, Math.round(parent.clientWidth - padding - siblings - gaps));
+      /* What the title could still gain, which the box measured above does not show: the box is
+         only as wide as the title at its present size, so a title shrunk on a narrow bar measured
+         that small box when the bar widened again, and stayed shrunk however wide the bar became
+         (qorus#646). The room is the title box's own beyond what it holds (it grows; what it holds
+         does not), and on a narrow bar the actions group's beyond its least (it gives way to the
+         title, down to what its controls cannot do without). Neither moves when the title's font
+         does: the sum is the title's whole claim on the bar. */
+      const header = node.closest<HTMLElement>('.reqore-panel-title-header');
+      const headerRoom = header
+        ? header.clientWidth -
+          Array.from(header.children).reduce(
+            (total, child) => total + child.getBoundingClientRect().width,
+            0
+          )
+        : 0;
+      const narrowActions = isNarrow
+        ? node
+            .closest('.reqore-panel-title')
+            ?.querySelector<HTMLElement>(`:scope > .${NON_RESPONSIVE_ACTIONS_CLASS}`)
+        : undefined;
+      const actionsRoom = narrowActions ? getWidthAboveMinimum(narrowActions) : 0;
+      const next = Math.max(
+        0,
+        Math.round(
+          parent.clientWidth - padding - siblings - gaps + Math.max(0, headerRoom) + actionsRoom
+        )
+      );
 
       setLabelAvailable((current) => (current === next ? current : next));
-    }, [fitLabel, label, width, badge, actions, panelSize, description, clampLines]);
+    }, [fitLabel, label, width, badge, actions, panelSize, description, clampLines, isNarrow]);
 
     const iconTooltip = useMemo(
       () => ({
@@ -2066,6 +2336,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             handleRef(node);
             panelRef.current = node;
           }}
+          onPointerEnter={handlePointerEnter}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
@@ -2394,6 +2665,23 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 expandTooltip={expandTooltip}
                 closeTooltip={closeTooltip}
                 fluid={!hasTitleHeader}
+                className={NON_RESPONSIVE_ACTIONS_CLASS}
+                // Beside a title in a NARROW bar the title comes first (qorus#646). The group is
+                // `0 0 auto`, so a narrow bar - a table in a card on a phone - squeezed the title
+                // to nothing and still pushed its last button past the panel's edge. Narrow, the
+                // title takes its whole width first and the group what is left, at least what its
+                // controls cannot do without (a search field narrows, a button never does) and at
+                // most its own width. A basis of 0 is what gives the title the first claim: the
+                // group is sized from the leftover, so the title shrinks only once the controls
+                // are at their smallest - and its words break only when one is wider than the
+                // space left beside them. Shrinking the two against each other instead, by any
+                // factor, took a fraction of a pixel off the title, and that broke "Services" into
+                // "Servic / es". Room the title does not need goes to the group first (a grow no
+                // title's comes near), so a search field widens before the title's box does. A
+                // wide bar keeps the group at its own width: there the title's claim was its
+                // one-line width, a description beside it included, and a long description
+                // squeezed a table's search to its least instead of wrapping.
+                style={hasTitleHeader && isNarrow ? NARROW_ACTIONS_BESIDE_TITLE : undefined}
               >
                 {nonFloatingActions.map(renderNonResponsiveActions())}
               </ReqorePanelNonResponsiveActions>

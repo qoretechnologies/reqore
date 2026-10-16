@@ -1,7 +1,7 @@
 import { isArray, isObject } from 'lodash';
 import React, { useCallback, useMemo } from 'react';
 import { useMeasure } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { IReqoreTabsListItem, IReqoreTabsProps } from '.';
 import { ReqorePopover } from '../..';
 import {
@@ -18,7 +18,7 @@ import {
   getMainBackgroundColor,
   getNthGradientColor,
 } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { getControlTextSize } from '../../helpers/typeScale';
 import { calculateStringSizeInPixels, getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -433,6 +433,8 @@ const ReqoreTabsList = ({
                 isReqoreComponent
                 noWrapper
                 handler='hoverStay'
+                // the hidden tabs' only way in: a tap opens it too
+                opensOnTap
                 {...overflowPopoverProps}
                 content={
                   <ReqoreMenu

@@ -1,8 +1,8 @@
 import React, { forwardRef } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { getReadableColor } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize, isStringSize } from '../../helpers/utils';
 import { IWithReqoreEffect, IWithReqoreSize } from '../../types/global';
 import { IReqoreEffect, StyledTextEffect } from '../Effect';

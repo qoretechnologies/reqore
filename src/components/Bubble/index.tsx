@@ -11,7 +11,8 @@ import {
   type ReactNode,
 } from 'react';
 import { rgba } from 'polished';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import {
   BUBBLE_AVATAR_RADIUS_FROM_SIZE,
   BUBBLE_RADIUS_FROM_RADIUS_SIZE,

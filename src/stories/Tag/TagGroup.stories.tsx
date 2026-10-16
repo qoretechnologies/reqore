@@ -10,24 +10,10 @@ const { createArg } = argManager<IReqoreTagGroup>();
 const meta = {
   title: 'Form/Tag Group',
   component: ReqoreTagGroup,
+  // the group's own props only: a tag's (onRemoveClick, rightIcon, actions) reached the group's div, and React
+  // warned of the unknown event handler (qorus#646: the story run's warning gate). The tags carry their own.
   args: {
     onClick: noop,
-    onRemoveClick: noop,
-    rightIcon: 'EBike2Line',
-    actions: [
-      {
-        icon: '24HoursFill',
-        onClick: noop,
-        disabled: true,
-        intent: 'info',
-        tooltip: { content: 'I am a tooltip' },
-      },
-      {
-        icon: 'SpyFill',
-        onClick: noop,
-        intent: 'success',
-      },
-    ],
   },
   argTypes: {
     ...SizeArg,

@@ -1,7 +1,8 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
-import styled, { css } from 'styled-components';
-import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { css } from 'styled-components';
+import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
+import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TOUCH_TARGET_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
@@ -34,8 +35,13 @@ import {
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, StyledEffect } from '../Effect';
-import { ReqoreP } from '../Paragraph';
+import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
+import ReqoreRowActionsMenu, {
+  getRowActionLabel,
+  hasRowActionLabel,
+  TReqoreNarrowRowActions,
+} from '../RowActionsMenu';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreSeverityRowAction extends Omit<IReqoreButtonProps, 'children'> {
@@ -55,7 +61,13 @@ export interface IReqoreSeverityRowProps
     IWithReqoreTooltip {
   /** Primary line — e.g. "Payment Processing · stripe-webhook-receiver". */
   label: React.ReactNode;
-  /** Secondary line — e.g. "Avg duration 4.7s exceeded 3.5s threshold · just now". */
+  /**
+   * Secondary line — e.g. "Avg duration 4.7s exceeded 3.5s threshold · just now".
+   *
+   * Text, inline content or blocks (a `ReqoreP`, a list, a `ReqoreControlGroup`): it is drawn in
+   * a block container with the description's typography, not in a paragraph, which could not
+   * hold a block.
+   */
   description?: React.ReactNode;
   /** Optional inline content rendered before the label (e.g. severity Tag). */
   leading?: React.ReactNode;
@@ -63,6 +75,17 @@ export interface IReqoreSeverityRowProps
   badge?: TReqoreBadge | TReqoreBadge[];
   /** Right-side action buttons (Investigate / Dismiss). */
   actions?: IReqoreSeverityRowAction[];
+  /**
+   * How two or more actions are shown when the row is narrow (below 640px of its container):
+   * `'stack'` (default) puts them under the label, one to a line, each the row's width - a severity
+   * row is a callout, and its actions (Investigate, Try again) are the response it asks for, so they
+   * stay in sight; `'menu'` folds them into one menu button at the end of the label's line, for a
+   * list of rows that should not grow by a line per action. See `TReqoreNarrowRowActions`. A single
+   * action is a button under the label either way.
+   */
+  narrowActions?: TReqoreNarrowRowActions;
+  /** What the menu button of `narrowActions='menu'` is called (its accessible name and tooltip). */
+  actionsMenuLabel?: string;
   /** Hide the intent-tinted background. Mirrors `transparent` on other components. */
   transparent?: boolean;
   /** Show the colored severity strip on the left edge. Default `true`. */
@@ -150,7 +173,17 @@ const StyledContainer = styled.div<{ $fluid: boolean }>`
  *  identical. */
 const STRIP_WIDTH_PX = 4;
 
-const StyledRow = styled(StyledEffect)<IStyledRowProps>`
+// Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
+// its element's (nor a component it is rendered `as`). `disabled` still reaches an element that
+// has it, when the component is rendered `as` one (see `omitStyleProps`).
+const StyledRow = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps(
+    'disabled',
+    'inheritCustomTheme',
+    'radiusSize',
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS
+  ),
+})<IStyledRowProps>`
   display: grid;
   grid-template-columns: ${STRIP_WIDTH_PX}px 1fr auto;
   gap: ${({ size }) => PADDING_FROM_SIZE[size] * 2}px;
@@ -197,6 +230,29 @@ const StyledRow = styled(StyledEffect)<IStyledRowProps>`
     grid-row: 2;
     max-width: 100%;
     justify-content: flex-start;
+  }
+
+  /* Narrow, the actions stack under the label, one to a line, each the row's width, with its label
+     whole (qorus#646): kept on one line that does not wrap, two labelled actions reached past the row on
+     a phone. An icon's tooltip is its label there, and a finger gets a target it can hit. */
+  @media (pointer: coarse) {
+    &[data-narrow='true'] > .reqore-severity-row-actions > .reqore-button {
+      min-height: ${TOUCH_TARGET_PX}px;
+    }
+  }
+
+  /* Narrow, two or more actions are one menu button at the end of the label's line (qorus#646), not
+     a line each under it: the label keeps its width, and a list of rows does not grow by a line per
+     action. */
+  &[data-narrow='true'][data-actions='menu'] {
+    grid-template-columns: ${STRIP_WIDTH_PX}px 1fr auto;
+  }
+  /* The last column, named: an item placed in a row with its column left to the grid is placed before
+     the items around it, in the first column. */
+  &[data-narrow='true'][data-actions='menu'] > .reqore-severity-row-actions {
+    grid-column: -2 / -1;
+    grid-row: 1;
+    align-self: start;
   }
 
   ${({ $clickable, theme, $intent, $transparent }) =>
@@ -273,6 +329,8 @@ const ReqoreSeverityRow = memo(
         leading,
         badge,
         actions,
+        narrowActions = 'stack',
+        actionsMenuLabel,
         intent,
         transparent = false,
         showStrip = true,
@@ -311,6 +369,8 @@ const ReqoreSeverityRow = memo(
       const [containerRef, isNarrow] = useNarrowContainer<HTMLDivElement>(
         SEVERITY_ROW_NARROW_BREAKPOINT_PX
       );
+      // Narrow, two or more actions are one menu button, unless the caller wants them stacked.
+      const actionsAsMenu = isNarrow && narrowActions === 'menu' && (actions?.length ?? 0) > 1;
 
       return (
         <StyledContainer
@@ -319,7 +379,10 @@ const ReqoreSeverityRow = memo(
           className='reqore-severity-row-container'
         >
           <ReqoreTooltipComponent
+            // A div, not the effect's span: the row holds blocks, which a span may not.
+            as='div'
             data-narrow={isNarrow || undefined}
+            data-actions={actionsAsMenu ? 'menu' : undefined}
             {...rest}
             Component={StyledRow}
             tooltip={tooltip}
@@ -368,6 +431,7 @@ const ReqoreSeverityRow = memo(
               {description && (
                 <StyledTextSlot $wrap={wrap}>
                   <ReqoreP
+                    as={getReqoreTextElement(description)}
                     size={secondarySize}
                     effect={{ opacity: 0.6, ...descriptionEffect }}
                     className='reqore-severity-row-description'
@@ -377,14 +441,30 @@ const ReqoreSeverityRow = memo(
                 </StyledTextSlot>
               )}
             </StyledBody>
-            {actions && actions.length > 0 && (
-              <ReqoreControlGroup gapSize='small' className='reqore-severity-row-actions'>
+            {actionsAsMenu && (
+              <ReqoreRowActionsMenu
+                className='reqore-severity-row-actions'
+                actions={actions}
+                size={size}
+                intent={intent}
+                label={actionsMenuLabel}
+              />
+            )}
+            {!actionsAsMenu && actions && actions.length > 0 && (
+              <ReqoreControlGroup
+                gapSize='small'
+                className='reqore-severity-row-actions'
+                // narrow: one to a line, each the row's width (see the narrow rules above)
+                vertical={isNarrow}
+                fluid={isNarrow}
+              >
                 {actions.map((action, idx) => (
                   <ReqoreButton
                     key={idx}
                     size={size}
                     intent={action.intent ?? intent}
                     {...action}
+                    {...(isNarrow ? { fluid: true, wrap: true } : {})}
                     // After the spread: `action` carries the consumer's raw
                     // handler and this has to be the one that wins. Applied
                     // even when the action has no handler of its own — an
@@ -394,7 +474,13 @@ const ReqoreSeverityRow = memo(
                     // toggles what the row toggles cancels itself out.
                     onClick={withStoppedPropagation<HTMLButtonElement>(action.onClick)}
                   >
-                    {action.label}
+                    {/* Stacked, an action with only an icon is a button the row's width: its tooltip is
+                        its label, as a finger gets no tooltip to read. */}
+                    {hasRowActionLabel(action.label)
+                      ? action.label
+                      : isNarrow
+                        ? getRowActionLabel({ tooltip: action.tooltip })
+                        : undefined}
                   </ReqoreButton>
                 ))}
               </ReqoreControlGroup>

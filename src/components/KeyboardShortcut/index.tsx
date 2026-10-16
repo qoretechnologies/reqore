@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import { rgba } from 'polished';
-import styled from 'styled-components';
+import styled from '../../helpers/styled';
 import {
   BADGE_RADIUS_FROM_SIZE,
   BADGE_SIZE_TO_PX,

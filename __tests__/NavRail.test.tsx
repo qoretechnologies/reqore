@@ -433,6 +433,34 @@ describe("showLabels='hover'", () => {
     expect(dashboard().textContent).toBe('');
   });
 
+  test("a finger's tap dwells no labels open: the mouseenter emulated after it is no hover", () => {
+    renderRail(<ReqoreNavRail items={ITEMS} defaultActiveId='dashboard' showLabels='hover' />);
+    const nav = screen.getByRole('navigation');
+
+    fireEvent.pointerEnter(nav, { pointerType: 'touch', buttons: 1 });
+    fireEvent.pointerDown(nav, { pointerType: 'touch', buttons: 1 });
+    fireEvent.pointerUp(nav, { pointerType: 'touch', buttons: 0 });
+    fireEvent.mouseEnter(nav);
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+
+    expect(dashboard().textContent).toBe('');
+  });
+
+  test('a mouse dwells them open, its pointer event before its mouseenter', () => {
+    renderRail(<ReqoreNavRail items={ITEMS} defaultActiveId='dashboard' showLabels='hover' />);
+    const nav = screen.getByRole('navigation');
+
+    fireEvent.pointerEnter(nav, { pointerType: 'mouse', buttons: 0 });
+    fireEvent.mouseEnter(nav);
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+
+    expect(dashboard()).toHaveTextContent('Dashboard');
+  });
+
   test('showLabelsDelay sets the dwell', () => {
     renderRail(
       <ReqoreNavRail
