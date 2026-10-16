@@ -875,6 +875,18 @@ const ReqoreButton = memo(
       );
       const _flat = minimal ? flat : flat === true;
       const _children = useMemo(() => label || children, [label, children]);
+      /* An icon alone names nothing: a button with no label of its own and no `aria-label` was read as
+         "button", and a test that finds buttons by name found nothing to test (qorus#646). Its tooltip, when
+         that is a string, is the words it would say, so it names it. A tooltip that is a node or an object is
+         left to the caller, and a button that has a label, or is named already, is not named twice. */
+      const tooltipName =
+        !_children &&
+        !rest['aria-label'] &&
+        !rest['aria-labelledby'] &&
+        typeof tooltip === 'string' &&
+        tooltip.trim()
+          ? tooltip
+          : undefined;
       const _compact = compact ?? theme.buttons?.compact ?? !children;
       const hasLeftIcon = icon || leftIconProps?.image;
       const hasRightIcon = rightIcon || rightIconProps?.image;
@@ -924,6 +936,7 @@ const ReqoreButton = memo(
         <ReqoreTooltipComponent
           {...{
             ...rest,
+            ...(tooltipName ? { 'aria-label': tooltipName } : {}),
             effect: memoEffect,
             // The caller's tab stop wins — a grid or a diagram keeps one of its
             // buttons in the tab order and moves it — except that a disabled
