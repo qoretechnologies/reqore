@@ -152,8 +152,11 @@ export const StyledTableCell = styled.div.withConfig({
         overflow: hidden;
       `}
 
-      padding: ${!padded || padded === 'both' || padded === 'vertical' ? (wrap ? '6px' : 0) : undefined}
-        ${!padded || padded === 'both' || padded === 'horizontal' ? '10px' : undefined};
+      /* Each side is a length, never \`undefined\`: \`padding: undefined 10px\` drops to
+         \`padding: 10px\`, so a \`padded: 'horizontal'\` cell got 10px top and bottom too and
+         clipped its text once the line was taller than the 12px left between them. */
+      padding: ${!padded || padded === 'both' || padded === 'vertical' ? (wrap ? '6px' : '0') : '0'}
+        ${!padded || padded === 'both' || padded === 'horizontal' ? '10px' : '0'};
       font-size: ${getTextSize(theme, size)}px;
       background: ${pinnedBackground ??
       (backgroundColor === 'transparent' ? 'transparent' : displayedBackgroundColor)};

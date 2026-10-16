@@ -1799,3 +1799,24 @@ describe('calm list props', () => {
     expect(document.querySelectorAll('.reqore-table-header-resize').length).toBeGreaterThan(0);
   });
 });
+
+test('<Table /> a padded: horizontal cell pads only its sides', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable
+          {...tableData}
+          columns={[
+            { dataId: 'id', header: { label: 'ID' }, width: 60, cell: { padded: 'horizontal' } },
+            { dataId: 'firstName', header: { label: 'First' }, width: 150, cell: { padded: 'vertical' } },
+          ]}
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+  const horizontal = document.querySelector<HTMLElement>('.reqore-table-cell[data-reqore-table-column-id="id"]')!;
+  const vertical = document.querySelector<HTMLElement>('.reqore-table-cell[data-reqore-table-column-id="firstName"]')!;
+  expect(getComputedStyle(horizontal).paddingTop).toBe('0px');
+  expect(getComputedStyle(horizontal).paddingLeft).toBe('10px');
+  expect(getComputedStyle(vertical).paddingLeft).toBe('0px');
+});
