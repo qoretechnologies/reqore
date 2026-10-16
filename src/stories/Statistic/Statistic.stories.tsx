@@ -49,6 +49,49 @@ export const WithLabel: Story = {
   ),
 };
 
+/** The figure first, then the label, then the description — a dashboard strip's order. */
+export const LabelBelow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`labelPosition='below'` leads with the figure and names it underneath, then the description — the order a KPI strip reads in, where the number is what the eye lands on. The default (`'above'`) is unchanged.",
+      },
+    },
+  },
+  render: (args) => (
+    <ReqoreControlGroup gapSize='huge'>
+      <ReqoreStatistic
+        {...args}
+        align='left'
+        labelPosition='below'
+        value='89.1'
+        suffix='%'
+        label='Success rate'
+        labelEffect={{ uppercase: false, spaced: 0, opacity: 1 }}
+        description='41 of 46 finished · target 95%'
+      />
+      <ReqoreStatistic
+        {...args}
+        align='left'
+        labelPosition='below'
+        value={3}
+        label='Need attention'
+        labelEffect={{ uppercase: false, spaced: 0, opacity: 1 }}
+        description='Errored or waiting to retry'
+      />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const tile = canvasElement.querySelector('.reqore-statistic-content')!;
+    const parts = Array.from(tile.children).map((child) => child.className);
+    const valueAt = parts.findIndex((name) => name.includes('reqore-statistic-value-row'));
+    const labelAt = parts.findIndex((name) => name.includes('reqore-statistic-label'));
+    await waitFor(() => expect(valueAt).toBeGreaterThanOrEqual(0));
+    expect(labelAt).toBeGreaterThan(valueAt);
+  },
+};
+
 export const WithIcon: Story = {
   parameters: {
     docs: {
