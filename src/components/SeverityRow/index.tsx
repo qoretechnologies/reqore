@@ -76,9 +76,10 @@ export interface IReqoreSeverityRowProps
    * How two or more actions are shown when the row is narrow (below 640px of its container):
    * `'stack'` (default) puts them under the label, one to a line - each the row's width on a phone, as wide
    * as its label on a wider screen - a severity row is a callout, and its actions (Investigate, Try again)
-   * are the response it asks for, so they stay in sight; `'menu'` folds them into one menu button at the
-   * end of the label's line, for a list of rows that should not grow by a line per action. See
-   * `TReqoreNarrowRowActions`. A single action is a button under the label either way.
+   * are the response it asks for, so they stay in sight; `'row'` keeps them under the label as a row of
+   * buttons; `'menu'`, opted into, folds them into one menu button at the end of the label's line, for a
+   * list of rows that should not grow by a line per action. See `TReqoreNarrowRowActions`. A single action
+   * is a button under the label either way.
    */
   narrowActions?: TReqoreNarrowRowActions;
   /** What the menu button of `narrowActions='menu'` is called (its accessible name and tooltip). */
@@ -366,13 +367,15 @@ const ReqoreSeverityRow = memo(
       const [containerRef, isNarrow] = useNarrowContainer<HTMLDivElement>(
         SEVERITY_ROW_NARROW_BREAKPOINT_PX
       );
-      // Narrow, two or more actions are one menu button, unless the caller wants them stacked.
+      // Narrow, two or more actions are one menu button only where the caller asks for it.
       const actionsAsMenu = isNarrow && narrowActions === 'menu' && (actions?.length ?? 0) > 1;
+      // Narrow and stacked (the default): one to a line. With `'row'`, a row of buttons under the label.
+      const actionsStacked = isNarrow && narrowActions !== 'row';
       /* Stacked, each action is the row's width only on a phone, where a full-width row is a finger's target;
          in a narrow container on a wider screen (a drawer, a side panel) it is as wide as its label, as a control
          is on any screen wider than a phone's (David's width rule, qorus#646). */
       const isPhone = useReqoreProperty('isMobile');
-      const actionsSpanRow = isNarrow && !!isPhone;
+      const actionsSpanRow = actionsStacked && !!isPhone;
 
       return (
         <StyledContainer
@@ -384,7 +387,12 @@ const ReqoreSeverityRow = memo(
             // A div, not the effect's span: the row holds blocks, which a span may not.
             as='div'
             data-narrow={isNarrow || undefined}
-            data-actions={actionsAsMenu ? 'menu' : undefined}
+            data-actions={
+              !isNarrow || !actions?.length ? undefined
+              : actionsAsMenu ? 'menu'
+              : actionsStacked ? 'stack'
+              : 'row'
+            }
             {...rest}
             Component={StyledRow}
             tooltip={tooltip}
@@ -459,9 +467,11 @@ const ReqoreSeverityRow = memo(
               <ReqoreControlGroup
                 gapSize='small'
                 className='reqore-severity-row-actions'
-                // narrow: one to a line, each the row's width on a phone and as wide as its label elsewhere
-                vertical={isNarrow}
+                /* narrow and stacked: one to a line, each the row's width on a phone and as wide as its label
+                   elsewhere; narrow in a row: as wide as they are, onto another line where they do not fit */
+                vertical={actionsStacked}
                 fluid={actionsSpanRow}
+                wrap={isNarrow && !actionsStacked}
               >
                 {actions.map((action, idx) => (
                   <ReqoreButton
@@ -469,7 +479,7 @@ const ReqoreSeverityRow = memo(
                     size={size}
                     intent={action.intent ?? intent}
                     {...action}
-                    {...(isNarrow ? { fluid: actionsSpanRow, wrap: true } : {})}
+                    {...(actionsStacked ? { fluid: actionsSpanRow, wrap: true } : {})}
                     // After the spread: `action` carries the consumer's raw
                     // handler and this has to be the one that wins. Applied
                     // even when the action has no handler of its own — an
@@ -483,7 +493,7 @@ const ReqoreSeverityRow = memo(
                         its label, as a finger gets no tooltip to read. */}
                     {hasRowActionLabel(action.label)
                       ? action.label
-                      : isNarrow
+                      : actionsStacked
                         ? getRowActionLabel({ tooltip: action.tooltip })
                         : undefined}
                   </ReqoreButton>

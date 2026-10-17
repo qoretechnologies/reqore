@@ -520,7 +520,7 @@ test('Keeps a callout\'s actions in sight, stacked, by default and with narrowAc
     renderMeasured(600, { actions: TWO_ACTIONS, ...props });
 
     const row = document.querySelector('.reqore-severity-row')!;
-    expect(row.getAttribute('data-actions')).toBeNull();
+    expect(row.getAttribute('data-actions')).toBe('stack');
     expect(document.querySelectorAll('.reqore-row-actions-menu-button')).toHaveLength(0);
     expect(row.querySelectorAll('.reqore-severity-row-actions .reqore-button')).toHaveLength(2);
     cleanup();

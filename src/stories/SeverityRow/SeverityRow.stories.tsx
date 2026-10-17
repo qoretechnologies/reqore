@@ -888,7 +888,7 @@ const stackedActions = (row: HTMLElement) =>
  *  wide as its label on a wider screen (a control spans its row only on a phone). */
 const expectActionsStacked = async (canvasElement: HTMLElement) => {
   const row = await narrowRow(canvasElement);
-  expect(row.getAttribute('data-actions')).toBeNull();
+  expect(row.getAttribute('data-actions')).toBe('stack');
   expect(rowActionsMenuButtons(row)).toHaveLength(0);
   await expectControlsInside(row);
   // Reqore's phone width (`isMobile`)

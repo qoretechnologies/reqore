@@ -15,13 +15,16 @@ export const DEFAULT_ACTIONS_MENU_LABEL = 'Actions';
 
 /**
  * How a row shows two or more actions where it is narrow.
- * - `'menu'`: one menu button, at the end of the label's line, opening a menu that names each action.
- *   The content keeps its width, and a list of rows does not grow by a line per action.
+ * - `'row'`: under the label, a row of buttons each as wide as what it says, onto another line where they do
+ *   not fit. Every action stays in sight as it is at full width.
  * - `'stack'`: under the label, one to a line, its label whole: each the row's width on a phone, and as wide
  *   as its label on a wider screen (a control spans its row only on a phone). For a callout whose actions
  *   are what it is there for ("Try again"), which a menu would hide.
+ * - `'menu'`: one menu button, at the end of the label's line, opening a menu that names each action.
+ *   The content keeps its width, and a list of rows does not grow by a line per action. Opted into, never a
+ *   row's default: it hides what a row offers behind a button (qorus#646, Foxhoundn).
  */
-export type TReqoreNarrowRowActions = 'menu' | 'stack';
+export type TReqoreNarrowRowActions = 'row' | 'stack' | 'menu';
 
 /** An action a row offers: a button's props, a label, and - for a menu of its own - sub-actions. */
 export interface IReqoreRowMenuAction
