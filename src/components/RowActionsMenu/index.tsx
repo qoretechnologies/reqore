@@ -17,8 +17,9 @@ export const DEFAULT_ACTIONS_MENU_LABEL = 'Actions';
  * How a row shows two or more actions where it is narrow.
  * - `'menu'`: one menu button, at the end of the label's line, opening a menu that names each action.
  *   The content keeps its width, and a list of rows does not grow by a line per action.
- * - `'stack'`: under the label, one to a line, each the row's width with its label whole. For a
- *   callout whose actions are what it is there for ("Try again"), which a menu would hide.
+ * - `'stack'`: under the label, one to a line, its label whole: each the row's width on a phone, and as wide
+ *   as its label on a wider screen (a control spans its row only on a phone). For a callout whose actions
+ *   are what it is there for ("Try again"), which a menu would hide.
  */
 export type TReqoreNarrowRowActions = 'menu' | 'stack';
 

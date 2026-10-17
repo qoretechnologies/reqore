@@ -500,7 +500,7 @@ export const CustomPaddingSize: Story = {
 
 /* A narrow row's actions (qorus#646). A row measures its OWN container - a severity row in a 320px drawer
    on a 1920px screen is as narrow as one on a phone - and below 640px of it, its actions stack under the
-   label, one to a line, each the row's width: a severity row is a callout, and its buttons are the response
+   label, one to a line (each the row's width on a phone): a severity row is a callout, and its buttons are the response
    it asks for, so they stay in sight. A list of rows that should not grow by a line per action folds them
    into one menu button at the end of the label's line with `narrowActions='menu'`, as a narrow table does. */
 
@@ -852,7 +852,7 @@ export const NarrowSidebarList: Story = {
 /* A callout's actions (qorus#646): on a phone, a row in a card is narrower than the screen, and its
    actions stayed on one line that does not wrap - "See your subscription" and "Try again" reached past
    the card. Those two are what the row is there for, so a menu would hide its point: with
-   `narrowActions='stack'` they stack under the label, one to a line, each the row's width with its label
+   `narrowActions='stack'` they stack under the label, one to a line (each the row's width on a phone), its label
    whole, and a finger gets a target it can hit. */
 
 const onSeeSubscription = fn();
@@ -884,18 +884,29 @@ const AllowanceRow = () => (
 const stackedActions = (row: HTMLElement) =>
   Array.from(row.querySelectorAll<HTMLElement>('.reqore-severity-row-actions > .reqore-button'));
 
-/** The row's actions, stacked one to a line, each the width of the others and inside the row, labels whole. */
+/** The row's actions, stacked one to a line inside the row, labels whole: each the row's width on a phone, and as
+ *  wide as its label on a wider screen (a control spans its row only on a phone). */
 const expectActionsStacked = async (canvasElement: HTMLElement) => {
   const row = await narrowRow(canvasElement);
   expect(row.getAttribute('data-actions')).toBeNull();
   expect(rowActionsMenuButtons(row)).toHaveLength(0);
   await expectControlsInside(row);
+  // Reqore's phone width (`isMobile`)
+  const onAPhone = window.matchMedia('(max-width: 480px)').matches;
   await waitFor(() => {
+    const column = row.querySelector('.reqore-severity-row-actions')!.getBoundingClientRect();
     const [first, second] = stackedActions(row).map((button) => button.getBoundingClientRect());
     // one to a line
     expect(second.top).toBeGreaterThanOrEqual(first.bottom - 0.5);
-    // each the row's width
-    expect(Math.abs(first.width - second.width)).toBeLessThan(1);
+    for (const button of [first, second]) {
+      if (onAPhone) {
+        // the row's width: a finger's target
+        expect(Math.abs(button.width - column.width)).toBeLessThan(1);
+      } else {
+        // as wide as its label, not the row
+        expect(button.width).toBeLessThan(column.width - 1);
+      }
+    }
   });
   // each label whole, not cut
   for (const label of Array.from(
@@ -911,7 +922,7 @@ export const NarrowContainerActionsStack: Story = {
     docs: {
       description: {
         story:
-          "Renders a callout row whose two labelled actions are what it is there for, in a 320px container, as a card on a phone, with no `narrowActions` set: by default its actions stack under the label, one to a line, each the row's width with its label whole, and none reaches past the row.",
+          "Renders a callout row whose two labelled actions are what it is there for, in a 320px container on a wide screen, with no `narrowActions` set: by default its actions stack under the label, one to a line, each as wide as its label (on a phone, the row's width), and none reaches past the row.",
       },
     },
   },
@@ -929,7 +940,7 @@ export const NarrowContainerActionsStackOnTouch: Story = {
     docs: {
       description: {
         story:
-          "The same callout on a phone with a finger (390 px): the stacked actions are a finger's height (44px) on a touch screen, and a tap on Try again runs it.",
+          "Renders the same callout on a phone with a finger (390 px): the stacked actions are each the row's width and a finger's height (44px), and a tap on Try again runs it.",
       },
     },
   },
