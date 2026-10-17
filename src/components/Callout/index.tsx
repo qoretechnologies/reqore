@@ -1,4 +1,3 @@
-import { rgba } from 'polished';
 import { forwardRef, memo, useCallback, useMemo } from 'react';
 import { css } from 'styled-components';
 import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
@@ -8,7 +7,7 @@ import {
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
-import { IReqoreTheme } from '../../constants/theme';
+import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeDarkness,
   changeLightness,
@@ -47,7 +46,7 @@ import {
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
-import { getCardMarkColor, getDrawnEffectTextColor } from '../../helpers/surface';
+import { getCardHoverFill, getCardMarkColor, getDrawnEffectTextColor } from '../../helpers/surface';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreCalloutProps
@@ -168,6 +167,15 @@ interface IStyledCalloutProps
 // Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
 // its element's (nor a component it is rendered `as`). `disabled` still reaches an element that
 // has it, when the component is rendered `as` one (see `omitStyleProps`).
+/** The callout's fill while hovered, when it is clickable: its rule paints it, and what it holds is read on it. */
+const getCalloutHoverFill = (theme: IReqoreTheme, intent?: TReqoreIntent, transparent?: boolean) =>
+  getCardHoverFill(
+    theme,
+    intent,
+    transparent,
+    changeLightness(getMainBackgroundColor(theme), -0.32)
+  );
+
 const StyledCallout = styled(StyledEffect).withConfig({
   shouldForwardProp: omitStyleProps(
     'accentPosition',
@@ -283,11 +291,7 @@ const StyledCallout = styled(StyledEffect).withConfig({
 
           &:hover {
             transform: translateY(-1px);
-            background-color: ${intent
-              ? rgba(theme.intents[intent], $transparent ? 0.04 : 0.1)
-              : $transparent
-              ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
-              : changeLightness(getMainBackgroundColor(theme), -0.32)};
+            background-color: ${getCalloutHoverFill(theme, intent, $transparent)};
           }
         `
       : undefined}
@@ -403,6 +407,8 @@ export const ReqoreCallout = memo(
         transparent,
         fill: changeDarkness(getMainBackgroundColor(theme), 0.03),
         effect,
+        // clickable, it is hovered too: what it holds is read on its hover fill as well
+        hoverFill: isInteractive ? getCalloutHoverFill(theme, intent, transparent) : undefined,
       });
       /* softer than the label, as far as it stays readable - in the color it is drawn in - unless the caller gives
          its opacity: one object while it holds, for a memo component */

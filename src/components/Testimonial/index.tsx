@@ -19,7 +19,7 @@ import {
 } from '../../helpers/colors';
 import { ReqoreSurfaceProvider } from '../../context/SurfaceContext';
 import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
-import { getCardMarkColor } from '../../helpers/surface';
+import { getCardHoverFill, getCardMarkColor } from '../../helpers/surface';
 import { useReqoreDrawnSurface } from '../../hooks/useDrawnSurface';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
@@ -166,6 +166,19 @@ const tintedBgFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
 // Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
 // its element's (nor a component it is rendered `as`). `disabled` still reaches an element that
 // has it, when the component is rendered `as` one (see `omitStyleProps`).
+/** The card's fill while hovered, when it is clickable: its rule paints it, and what it holds is read on it. */
+const getTestimonialHoverFill = (
+  theme: IReqoreTheme,
+  intent?: TReqoreIntent,
+  transparent?: boolean
+) =>
+  getCardHoverFill(
+    theme,
+    intent,
+    transparent,
+    changeLightness(getMainBackgroundColor(theme), 0.04)
+  );
+
 const StyledTestimonial = styled(StyledEffect).withConfig({
   shouldForwardProp: omitStyleProps(
     'disabled',
@@ -217,11 +230,7 @@ const StyledTestimonial = styled(StyledEffect).withConfig({
 
       &:hover {
         transform: translateY(-1px);
-        background-color: ${$intent
-          ? rgba(theme.intents[$intent], $transparent ? 0.04 : 0.1)
-          : $transparent
-          ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
-          : changeLightness(getMainBackgroundColor(theme), 0.04)};
+        background-color: ${getTestimonialHoverFill(theme, $intent, $transparent)};
       }
     `}
 `;
@@ -321,6 +330,8 @@ const ReqoreTestimonial = memo(
         transparent,
         fill: tintedBgFor(theme, intent),
         effect,
+        // clickable, it is hovered too: what it holds is read on its hover fill as well
+        hoverFill: isInteractive ? getTestimonialHoverFill(theme, intent, transparent) : undefined,
       });
       const resolvedAvatarColor: TReqoreEffectColor = useMemo(
         () => getCardMarkColor(theme, backgrounds, text, avatarColor, intent),

@@ -1,7 +1,10 @@
+import { rgba } from 'polished';
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../constants/theme';
 import {
+  changeLightness,
   getColorFromMaybeString,
   getDrawnColor,
+  getMainBackgroundColor,
   getReadableIconLook,
   getReadableIntentColor,
   getThemeSurface,
@@ -98,3 +101,21 @@ export const getCardMarkColor = (
   }
   return text as TReqoreEffectColor;
 };
+
+/**
+ * The fill a clickable card paints while it is hovered: a wash of its intent (4% when it paints nothing at rest,
+ * else 10%), or else of the theme a step lighter (8% when it paints nothing at rest), or `opaque`, the card's own.
+ * What its styled rule paints, and what what it holds is read on as well as on its resting fill: a card's text and
+ * its fainter text were read on the resting fill only, and a hovered row's metadata fell to 4.2:1 (qorus#646).
+ */
+export const getCardHoverFill = (
+  theme: IReqoreTheme,
+  intent: TReqoreIntent | undefined,
+  transparent: boolean | undefined,
+  opaque: string
+): string =>
+  intent
+    ? rgba(theme.intents[intent] as string, transparent ? 0.04 : 0.1)
+    : transparent
+      ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
+      : opaque;
