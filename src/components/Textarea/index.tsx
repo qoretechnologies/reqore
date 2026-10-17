@@ -1,6 +1,5 @@
 import { nanoid } from 'nanoid';
-import { rgba } from 'polished';
-import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { css } from 'styled-components';
 import { ReqoreDropdown, useReqoreTheme } from '../..';
 import {
@@ -11,7 +10,8 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { changeLightness, TReqoreSurface } from '../../helpers/colors';
+import { useReqoreSurface } from '../../context/SurfaceContext';
 import styled, {
   listReqoreStyleProps,
   omitStyleProps,
@@ -33,7 +33,7 @@ import {
 } from '../../types/global';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { StyledEffect } from '../Effect';
-import { IReqoreInputStyle } from '../Input';
+import { getInputFill, getInputLook, IReqoreInputLook, lookOfField } from '../Input';
 import ReqoreInputClearButton from '../InputClearButton';
 import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
 import { IPopoverControls } from '../Popover';
@@ -100,9 +100,16 @@ export interface IReqoreTextareaProps
 
 export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
   theme: IReqoreTheme;
+  /** What the field is drawn on (`useReqoreSurface`): the theme's surface when not known. */
+  $surface?: TReqoreSurface;
+  /** Its colors, worked out once by the component (`getInputLook`); else from the rest. */
+  $look?: IReqoreInputLook;
   hasClearButton?: boolean;
   _size?: TSizes;
 }
+
+/** A field's look: the component's, or worked out from its style props where it has none (Input's). */
+const lookOf = lookOfField;
 
 // `width` and `height` size the wrapper through its styles; a `div` has neither attribute.
 export const StyledTextareaWrapper = styled.div.withConfig({
@@ -118,6 +125,10 @@ export const StyledTextareaWrapper = styled.div.withConfig({
   overflow: hidden;
   border-radius: ${({ minimal, rounded = true, _size = 'normal' as TSizes, radiusSize }) =>
     minimal || !rounded ? 0 : resolveRadius(_size, radiusSize)}px;
+
+  /* The clear button is drawn in the field's text colour, not the page's: the field's as it is
+     drawn - minimal or transparent, on what is under it. */
+  color: ${(props) => lookOf(props).text};
 
   &:focus-within {
     .reqore-clear-input-button {
@@ -191,15 +202,14 @@ export const StyledTextarea = styled(StyledEffect).withConfig({
   resize: vertical;
 
   background-color: ${({ theme, minimal, transparent }: IReqoreTextareaStyle) =>
-    minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
-  color: ${({ theme }: IReqoreInputStyle) =>
-    getReadableColor(theme, undefined, undefined, true, theme.originalMain)};
+    minimal || transparent ? 'transparent' : getInputFill(theme)};
+  color: ${(props) => lookOf(props).text};
 
   &:active,
   &:focus {
     outline: none;
     background-color: ${({ theme, minimal, transparent }: IReqoreTextareaStyle) =>
-      minimal || transparent ? 'transparent' : rgba(theme.main, 0.15)};
+      minimal || transparent ? 'transparent' : getInputFill(theme, true)};
   }
 
   border-radius: inherit;
@@ -221,14 +231,12 @@ export const StyledTextarea = styled(StyledEffect).withConfig({
       : undefined}
 
   &::placeholder {
-    color: ${({ theme }) =>
-      rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.3)};
+    color: ${(props) => lookOf(props).placeholder};
   }
 
   &:focus {
     &::placeholder {
-      color: ${({ theme }) =>
-        rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.5)};
+      color: ${(props) => lookOf(props).focusedPlaceholder};
     }
   }
 
@@ -277,9 +285,18 @@ function Textarea<T>(
   }: T & IReqoreTextareaProps,
   ref
 ) {
-  const { targetRef }: any = useCombinedRefs(ref);
+  const { setRef }: any = useCombinedRefs(ref);
   const [inputRef, setInputRef] = useState<HTMLTextAreaElement>(null);
   const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+  const surface = useReqoreSurface();
+  /* Its colors, once for as long as what decides them holds - its styles, the wrapper's
+     included (the clear button is drawn in it), take them as they are: a controlled field
+     renders on every keystroke. */
+  const { minimal, transparent } = rest;
+  const look = useMemo(
+    () => getInputLook(theme, minimal, transparent, surface),
+    [theme, minimal, transparent, surface]
+  );
   const shortcutHintsEnabled = useReqoreProperty('shortcutHints');
   const showShortcutHint =
     !!focusRules?.shortcut &&
@@ -511,6 +528,8 @@ function Textarea<T>(
       <>
         <StyledTextarea
           {...rest}
+          $surface={surface}
+          $look={look}
           effect={{
             interactive: !rest?.disabled && !rest.readOnly,
             ...rest?.effect,
@@ -540,6 +559,7 @@ function Textarea<T>(
           enabled={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
           show={_value && _value !== ''}
           onClick={onClearClick}
+          shownOpacity={look.clearOpacity}
           size={size}
         />
         {showShortcutHint && (
@@ -565,8 +585,10 @@ function Textarea<T>(
         fixed={fixed}
         _size={size}
         theme={theme}
+        $surface={surface}
+        $look={look}
         style={wrapperStyle}
-        ref={targetRef}
+        ref={setRef}
         onItemSelect={handleItemSelect}
         closeOnTargetClick={false}
         /* A template list belongs UNDER the field it writes into. Flipped, it
@@ -600,8 +622,12 @@ function Textarea<T>(
       radiusSize={radiusSize}
       rounded={rounded}
       theme={theme}
+      $surface={surface}
+      $look={look}
+      // the field is the textarea, or an editor that is no form control: the wrapper says it is disabled
+      aria-disabled={rest.disabled ? true : undefined}
       style={wrapperStyle}
-      ref={targetRef}
+      ref={setRef}
     >
       {renderChildren()}
     </ReqoreTooltipComponent>

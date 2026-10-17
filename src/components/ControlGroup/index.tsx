@@ -14,8 +14,11 @@ import { css } from 'styled-components';
 import { ReqoreButton, ReqoreDrawer } from '../..';
 import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
+import { getThemeSurfaces } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   IReqoreIntent,
   IWithReqoreCustomTheme,
@@ -26,7 +29,7 @@ import {
   IWithReqoreSize,
 } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
-import { StyledEffect } from '../Effect';
+import { getEffectBackgrounds, getPrimaryGradient, IReqoreEffect, StyledEffect } from '../Effect';
 import { StyledHeader } from '../Header';
 import { StyledParagraph } from '../Paragraph';
 
@@ -210,6 +213,33 @@ const definedOnly = <T extends Record<string, any>>(props: T): Partial<T> => {
   return rv;
 };
 
+/**
+ * What a control group is drawn in, handed to what it holds when its effect paints a gradient: each color of it
+ * over what is under it. Its own component, so a change of theme re-renders it, not the group (which measures its
+ * children and may fold them).
+ */
+const ReqoreGroupSurface = ({
+  effect,
+  children,
+}: {
+  effect?: IReqoreEffect;
+  children?: React.ReactNode;
+}) => {
+  const theme = useReqoreTheme();
+  const parentSurface = useReqoreSurface();
+  const surfaces = useMemo(
+    () =>
+      getPrimaryGradient(effect?.gradient)
+        ? getThemeSurfaces(theme, parentSurface).flatMap((under) =>
+            getEffectBackgrounds(theme, effect, under, under)
+          )
+        : undefined,
+    [theme, parentSurface, effect]
+  );
+
+  return <ReqoreSurfaceProvider color={surfaces}>{children}</ReqoreSurfaceProvider>;
+};
+
 const ReqoreControlGroup = memo(
   forwardRef<HTMLDivElement, IReqoreControlGroupProps>(({
     children,
@@ -267,6 +297,17 @@ const ReqoreControlGroup = memo(
       },
       [externalRef]
     );
+
+    /**
+     * What the fold takes from: the children as React renders them - nested arrays flattened, and the
+     * holes a caller leaves (`null`, `false`, `undefined`: an action it decided not to render) left out.
+     *
+     * The row, the overflow menu and the count all read this one list. The row used to slice the raw
+     * `children` array while the menu took from `React.Children.toArray(children)`, so a hole put a child
+     * in both the row and the menu, a group with one child (not an array) threw at its first fold
+     * (`children.slice` is not a function), and nothing said when there was nothing left to fold.
+     */
+    const foldable = useMemo(() => React.Children.toArray(children), [children]);
 
     const realChildCount = useMemo((): number => {
       let count = 0;
@@ -395,15 +436,16 @@ const ReqoreControlGroup = memo(
     useEffect(() => {
       // Is the control group still overflowing?
       //
-      // This counts up one child at a time and stops when the row fits, or when
-      // there is nothing left in it but the overflow button — which is 40px
-      // wide, and `checkIfOverflowing` ignores a group that narrow. It is NOT
-      // bounded by the number of children: the fold slices the `children` array
-      // while the count walks the rendered elements, and an array with holes in
-      // it (a panel whose actions include ones it decided not to render) has
-      // more slots than elements, so a bound taken from the count would stop
-      // the fold one short and leave the last action clipped.
-      if ((overflowingChildren || overflowingChildren === 0) && checkIfOverflowing()) {
+      // This counts up one child at a time and stops when the row fits, or when there is nothing left in
+      // the row to fold: every child is in the menu. A group that still does not fit then - the overflow
+      // button alone is wider than the room it has (a labelled or large button, a narrow container) - has
+      // nothing more a fold could take, and counting on rendered the same row again and measured it again,
+      // forever: a render loop that froze a page under `act` (qorus#646).
+      if (
+        (overflowingChildren || overflowingChildren === 0) &&
+        overflowingChildren < foldable.length &&
+        checkIfOverflowing()
+      ) {
         setOverflowingChildren(overflowingChildren + 1);
       }
 
@@ -411,7 +453,7 @@ const ReqoreControlGroup = memo(
       if (overflowingChildren === 0) {
         setIsOverflownDialogOpen(false);
       }
-    }, [overflowingChildren, lastReSize, checkIfOverflowing]);
+    }, [overflowingChildren, lastReSize, checkIfOverflowing, foldable.length]);
 
     const getIsFirst = (index: number): boolean => {
       return !isInsideStackGroup || childrenCount === 1
@@ -652,9 +694,8 @@ const ReqoreControlGroup = memo(
 
     // Get the overflown children
     const overflownChildren = useMemo(
-      () =>
-        overflowingChildren ? React.Children.toArray(children).slice(0, overflowingChildren) : [],
-      [children, overflowingChildren]
+      () => (overflowingChildren ? foldable.slice(0, overflowingChildren) : []),
+      [foldable, overflowingChildren]
     );
 
     // Remove the overflowing children count from the start of the children array
@@ -662,7 +703,7 @@ const ReqoreControlGroup = memo(
       () =>
         overflowingChildren && responsive
           ? [
-              children.slice(overflowingChildren),
+              foldable.slice(overflowingChildren),
               <ReqoreButton
                 key='control-group-menu'
                 icon='MenuLine'
@@ -684,6 +725,7 @@ const ReqoreControlGroup = memo(
           : children,
       [
         children,
+        foldable,
         overflowingChildren,
         responsive,
         overflownChildren,
@@ -730,7 +772,7 @@ const ReqoreControlGroup = memo(
           horizontalAlign={horizontalAlign}
           className={`${className || ''} reqore-control-group`}
         >
-          {clone(_children)}
+          <ReqoreGroupSurface effect={rest.effect}>{clone(_children)}</ReqoreGroupSurface>
         </StyledReqoreControlGroup>
       </>
     );

@@ -97,7 +97,7 @@ export const Content: Story = {
     docs: {
       description: {
         story:
-          'What goes inside: a title alone, a body alone, both, a long body that wraps, a React node as the body, a custom icon, a custom icon colour, no icon at all, the icon without its tile — and the compact pill with a bold lead-in, with a body only, with a tiled icon, and with no icon (the text takes the room the icon would have).',
+          'Renders notifications with a title alone, a body alone, both, a long body that wraps, a React node as the body, a custom icon, a custom icon color, no icon at all and the icon without its tile; and the compact pill with a bold lead-in, with a body only, with a tiled icon, and with no icon (the text takes the room the icon would have).',
       },
     },
   },
@@ -130,7 +130,8 @@ export const Content: Story = {
               size='small'
               label='v3.2.0'
               icon='PriceTag3Line'
-              effect={{ gradient: { colors: { 0: '#a11c58', 100: '#ff47a3' } } }}
+              // deep enough at both ends for one text color to read on all of it
+              effect={{ gradient: { colors: { 0: '#a11c58', 100: '#d0207f' } } }}
             />
           }
         />

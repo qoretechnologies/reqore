@@ -1,7 +1,9 @@
 import { animated, useTransition } from '@react-spring/web';
+import { memo, useMemo } from 'react';
 import { SPRING_CONFIG } from '../../constants/animations';
 import { SIZE_TO_PX } from '../../constants/sizes';
 import styled, { omitStyleProps } from '../../helpers/styled';
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
 import { IReqoreButtonProps } from '../Button';
 import ReqoreIcon from '../Icon';
 
@@ -11,6 +13,11 @@ export interface IReqoreInputClearButtonProps extends IReqoreButtonProps {
   hasRightIcon?: boolean;
   /** Extra room (px) taken at the field's right edge by something else, e.g. a password toggle. */
   rightOffset?: number;
+  /**
+   * The opacity the button is drawn at once shown: 0.5 unless given. The field gives the one at which the button
+   * still stands out from its background by 3:1 (WCAG 1.4.11).
+   */
+  shownOpacity?: number;
 }
 
 export const StyledInputClearButton = styled(ReqoreIcon).withConfig({
@@ -30,16 +37,23 @@ export const StyledInputClearButton = styled(ReqoreIcon).withConfig({
   }
 `;
 
+const HIDDEN = { opacity: 0, filter: 'blur(10px)' };
+
 const ReqoreInputClearButton = ({
   show,
   enabled,
   size = 'normal',
+  shownOpacity = 0.5,
   ...rest
 }: IReqoreInputClearButtonProps) => {
+  // Where motion is unwelcome it is shown and hidden at once, at its settled opacity from its first paint.
+  const reducedMotion = usePrefersReducedMotion();
+  const shown = useMemo(() => ({ opacity: shownOpacity, filter: 'blur(0px)' }), [shownOpacity]);
   const transitions = useTransition(show && enabled, {
-    from: { opacity: 0, filter: 'blur(10px)' },
-    enter: { opacity: 0.5, filter: 'blur(0px)' },
-    leave: { opacity: 0, filter: 'blur(10px)' },
+    from: reducedMotion ? shown : HIDDEN,
+    enter: shown,
+    leave: HIDDEN,
+    immediate: reducedMotion,
     config: SPRING_CONFIG,
   });
 
@@ -61,4 +75,4 @@ const ReqoreInputClearButton = ({
   );
 };
 
-export default ReqoreInputClearButton;
+export default memo(ReqoreInputClearButton);

@@ -1,11 +1,18 @@
 import { Resizable, ResizableProps } from 're-resizable';
-import React, { forwardRef, memo, useMemo } from 'react';
+import React, { forwardRef, memo, useCallback, useMemo } from 'react';
 import { css } from 'styled-components';
 import { ReqoreErrorBoundary } from '../..';
 import { HALF_PADDING_FROM_SIZE, RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeDarkness, changeLightness, getMainBackgroundColor } from '../../helpers/colors';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
+import {
+  changeDarkness,
+  changeLightness,
+  getDrawnColor,
+  getMainBackgroundColor,
+  getThemeSurfaces,
+} from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -19,7 +26,7 @@ import {
   IWithReqoreTransparent,
 } from '../../types/global';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
-import { StyledEffect } from '../Effect';
+import { getEffectBackgrounds, getPrimaryGradient, StyledEffect } from '../Effect';
 import { ReqoreSkeleton } from '../Skeleton';
 
 export interface IReqoreMenuProps
@@ -50,6 +57,9 @@ export interface IReqoreMenuProps
 export interface IReqoreMenuStyle extends IReqoreMenuProps {
   theme: IReqoreTheme;
 }
+
+/** A menu's fill: what its styled rule paints and what it hands its items as their surface. */
+const getMenuFill = (theme: IReqoreTheme) => changeDarkness(getMainBackgroundColor(theme), 0.03);
 
 /* Rendered as re-resizable's `Resizable` when the menu is resizable, which writes every prop it
    does not know onto its `div`: the menu's styling flags stop here. Resizable's own props
@@ -88,7 +98,7 @@ const StyledReqoreMenu = styled(StyledEffect).withConfig({
   flex-flow: column nowrap;
 
   background-color: ${({ theme, transparent }) =>
-    transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
+    transparent ? 'transparent' : getMenuFill(theme)};
   border-radius: ${({ rounded, _size }) => (rounded ? `${RADIUS_FROM_SIZE[_size]}px` : `0`)};
 
   ${({ theme, position, _size, padded, isResizableLeft, showResizableBorder }) =>
@@ -132,7 +142,14 @@ const ReqoreMenu = memo(
       ref
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent);
-      const { targetRef } = useCombinedRefs(ref);
+      const { setRef } = useCombinedRefs(ref);
+      // one callback for the menu's life: the element a resizable menu is drawn in is the one handed on
+      const handleMenuRef = useCallback(
+        (curRef) => {
+          setRef(curRef?.resizable ?? curRef);
+        },
+        [setRef]
+      );
       // The menu's props go to the components in it (items, dividers, sections, groups), never to a plain
       // DOM element: a div takes none of them, and React warns about each one that reaches the DOM.
       const { clone } = useCloneThroughFragments((props, _reactIndex, _realIndex, childType) =>
@@ -149,6 +166,22 @@ const ReqoreMenu = memo(
       );
 
       const style = useMemo(() => ({ minHeight: '0', flex: '1 1 auto' }), []);
+      const parentSurface = useReqoreSurface();
+      // what the items are drawn on: the menu's color (none when transparent), its effect's gradient over it
+      const menuSurfaces = useMemo(
+        () =>
+          rest.transparent && !getPrimaryGradient(rest.effect?.gradient)
+            ? undefined
+            : getThemeSurfaces(theme, parentSurface).flatMap((under) =>
+                getEffectBackgrounds(
+                  theme,
+                  rest.effect,
+                  rest.transparent ? under : getDrawnColor(getMenuFill(theme), under),
+                  under
+                )
+              ),
+        [theme, parentSurface, rest.transparent, rest.effect]
+      );
 
       return (
         <ReqoreErrorBoundary {...errorBoundaryOptions}>
@@ -164,23 +197,17 @@ const ReqoreMenu = memo(
               _size={size}
               className={`${rest.className || ''} reqore-menu`}
               theme={theme}
-              ref={(curRef) => {
-                let _ref = curRef;
-
-                if (curRef?.resizable) {
-                  _ref = curRef.resizable;
-                }
-
-                targetRef.current = _ref;
-              }}
+              ref={handleMenuRef}
             >
-              <ReqoreControlGroup vertical gapSize={itemGap} fluid style={style}>
-                {skeleton
-                  ? React.Children.map(children, (_child, index) => (
-                      <ReqoreSkeleton key={index} size={size} width='100%' />
-                    ))
-                  : clone(children)}
-              </ReqoreControlGroup>
+              <ReqoreSurfaceProvider color={menuSurfaces}>
+                <ReqoreControlGroup vertical gapSize={itemGap} fluid style={style}>
+                  {skeleton
+                    ? React.Children.map(children, (_child, index) => (
+                        <ReqoreSkeleton key={index} size={size} width='100%' />
+                      ))
+                    : clone(children)}
+                </ReqoreControlGroup>
+              </ReqoreSurfaceProvider>
             </StyledReqoreMenu>
           </ReqoreThemeProvider>
         </ReqoreErrorBoundary>

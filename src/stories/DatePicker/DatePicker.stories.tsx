@@ -292,7 +292,8 @@ export const WithEffect: Story = {
     pickerProps: {
       contentEffect: {
         gradient: {
-          colors: 'info',
+          // the theme's info, dark enough for the muted controls' light wash to read on all of it
+          colors: { 0: 'info:darken:4', 100: 'info:darken:7' },
         },
       },
     },

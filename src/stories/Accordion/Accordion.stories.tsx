@@ -277,6 +277,22 @@ export const Minimal: Story = {
   },
 };
 
+export const MinimalOnALightGradient: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a minimal Accordion whose effect paints a light gradient, on the dark theme. Its headers are drawn on the gradient, so their titles and icons are dark: they read on the gradient, not on the page around it.',
+      },
+    },
+  },
+  args: {
+    items: basicItems.map((item, i) => ({ ...item, isOpen: i === 0 })),
+    minimal: true,
+    effect: { gradient: { colors: { 0: '#ffffff', 100: '#e8e8e8' } } },
+  },
+};
+
 export const MinimalWithIntents: Story = {
   parameters: {
     docs: {

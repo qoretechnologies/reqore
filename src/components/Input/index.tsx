@@ -1,6 +1,14 @@
 import { omit } from 'lodash';
 import { rgba } from 'polished';
-import React, { forwardRef, useCallback, useId, useLayoutEffect, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
@@ -12,7 +20,19 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getDrawnColor,
+  getReadableAlpha,
+  getReadableColor,
+  getReadableFadedColor,
+  getReadableIconLook,
+  getThemeSurface,
+  READABLE_ICON_CONTRAST,
+  TReqoreSurface,
+} from '../../helpers/colors';
+import { useReqoreSurface } from '../../context/SurfaceContext';
+import { splitIconColor } from '../../helpers/iconProps';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -30,7 +50,7 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
-import { StyledEffect, TReqoreEffectColor } from '../Effect';
+import { StyledEffect, TReqoreEffectColor, TReqoreHexColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import ReqoreInputClearButton from '../InputClearButton';
 import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
@@ -109,12 +129,111 @@ export interface IReqoreInputPasswordToggle {
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
   theme: IReqoreTheme;
+  /** What the input is drawn on (`useReqoreSurface`): the theme's surface when not known. */
+  $surface?: TReqoreSurface;
+  /** Its colors, worked out once by the component (`getInputLook`); else from the rest. */
+  $look?: IReqoreInputLook;
   _size?: TSizes;
   clearable?: boolean;
   hasIcon?: boolean;
   hasShortcutHint?: boolean;
   hasPasswordToggle?: boolean;
 }
+
+/**
+ * An input's (or a text area's) fill when it paints one: a 10% wash of the theme's main, 15% while focused. What
+ * the styled rules paint and what the field's text is read on.
+ */
+export const getInputFill = (theme: IReqoreTheme, focused: boolean = false): string =>
+  rgba(theme.main, focused ? 0.15 : 0.1);
+
+/**
+ * What an input (or a text area) is drawn on and in: its background as drawn over the theme it sits on (a 10% wash
+ * of the theme's main, or nothing when minimal or transparent; focused, 15%), and the text that reads there.
+ */
+export const getInputColors = (
+  theme: IReqoreTheme,
+  minimal?: boolean,
+  transparent?: boolean,
+  focused: boolean = false,
+  surface?: TReqoreSurface
+): { background: TReqoreHexColor; text: TReqoreHexColor } => {
+  const under = getThemeSurface(theme, surface);
+  const background =
+    minimal || transparent
+      ? getDrawnColor(under)
+      : getDrawnColor(getInputFill(theme, focused), under);
+
+  return { background, text: getReadableColor(theme, undefined, undefined, true, background) };
+};
+
+/** The clear button's opacity when shown: 50%, or as much more as it needs to stand out by 3:1 (`getInputLook`). */
+export const getInputClearButtonOpacity = (
+  theme: IReqoreTheme,
+  minimal?: boolean,
+  transparent?: boolean,
+  surface?: TReqoreSurface
+): number => getInputLook(theme, minimal, transparent, surface).clearOpacity;
+
+/** How faint a field's placeholder is at the least: 30% of its text, 50% while the field is focused. */
+export const INPUT_PLACEHOLDER_ALPHA = 0.3;
+const INPUT_FOCUSED_PLACEHOLDER_ALPHA = 0.5;
+
+/** Everything an input (or a text area) is drawn in, worked out at once (see `getInputLook`). */
+export interface IReqoreInputLook {
+  /** Its background as drawn, at rest. */
+  background: TReqoreHexColor;
+  /** Its text, and the icons and the clear button beside it. */
+  text: TReqoreHexColor;
+  /** The placeholder, fainter than a value (30%, 50% focused) but never too faint to read. */
+  placeholder: string;
+  focusedPlaceholder: string;
+  /** The clear button's opacity when shown (`getInputClearButtonOpacity`). */
+  clearOpacity: number;
+}
+
+/**
+ * An input's colors - its text, its placeholder at rest and focused, its clear button's
+ * opacity - from the two states it is drawn in, at once: a component works them out on what
+ * decides them (`useMemo`) and hands its styles plain values. Asked for one by one, a
+ * controlled input worked them out seven times on every keystroke.
+ */
+export const getInputLook = (
+  theme: IReqoreTheme,
+  minimal?: boolean,
+  transparent?: boolean,
+  surface?: TReqoreSurface
+): IReqoreInputLook => {
+  const resting = getInputColors(theme, minimal, transparent, false, surface);
+  const focused = getInputColors(theme, minimal, transparent, true, surface);
+
+  return {
+    background: resting.background,
+    text: resting.text,
+    placeholder: getReadableFadedColor(resting.text, resting.background, INPUT_PLACEHOLDER_ALPHA),
+    focusedPlaceholder: getReadableFadedColor(
+      focused.text,
+      focused.background,
+      INPUT_FOCUSED_PLACEHOLDER_ALPHA
+    ),
+    clearOpacity: Math.max(
+      getReadableAlpha(resting.text, resting.background, 0.5, READABLE_ICON_CONTRAST),
+      getReadableAlpha(focused.text, focused.background, 0.5, READABLE_ICON_CONTRAST)
+    ),
+  };
+};
+
+/** A field's look (an input's, a text area's): the component's, or worked out from its style props where it has none. */
+export const lookOfField = ({
+  $look,
+  theme,
+  minimal,
+  transparent,
+  $surface,
+}: Pick<IReqoreInputStyle, '$look' | 'theme' | 'minimal' | 'transparent' | '$surface'>) =>
+  $look ?? getInputLook(theme, minimal, transparent, $surface);
+
+const lookOf = lookOfField;
 
 // `width` is the field's CSS width; on a `div` it is not an attribute.
 export const StyledInputWrapper = styled.div.withConfig({
@@ -133,6 +252,10 @@ export const StyledInputWrapper = styled.div.withConfig({
     minimal || rounded === false
       ? 0
       : resolveRadius(_size, radiusSize) * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
+
+  /* The icons beside the text (and the clear button) are drawn in its colour, not in
+     whatever the page around the input is written in. */
+  color: ${(props) => lookOf(props).text};
 
   ${InactiveIconScale}
 
@@ -245,9 +368,8 @@ export const StyledInput = styled(StyledEffect).withConfig({
       : undefined}
 
   background-color: ${({ theme, minimal, transparent }: IReqoreInputStyle) =>
-    minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
-  color: ${({ theme }: IReqoreInputStyle) =>
-    getReadableColor(theme, undefined, undefined, true, theme.originalMain)};
+    minimal || transparent ? 'transparent' : getInputFill(theme)};
+  color: ${(props) => lookOf(props).text};
 
   transition: all 0.2s ease-out;
 
@@ -255,19 +377,17 @@ export const StyledInput = styled(StyledEffect).withConfig({
   &:focus {
     outline: none;
     background-color: ${({ theme, minimal, transparent }: IReqoreInputStyle) =>
-      minimal || transparent ? 'transparent' : rgba(theme.main, 0.15)};
+      minimal || transparent ? 'transparent' : getInputFill(theme, true)};
   }
 
   &::placeholder {
     transition: all 0.2s ease-out;
-    color: ${({ theme }) =>
-      rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.3)};
+    color: ${(props) => lookOf(props).placeholder};
   }
 
   &:focus {
     &::placeholder {
-      color: ${({ theme }) =>
-        rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.5)};
+      color: ${(props) => lookOf(props).focusedPlaceholder};
     }
   }
 
@@ -297,7 +417,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       minimal,
       readOnly,
       customTheme,
-        inheritCustomTheme,
+      inheritCustomTheme,
       intent,
       wrapperStyle,
       focusRules,
@@ -312,7 +432,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
     }: IReqoreInputProps,
     ref
   ) => {
-    const { targetRef } = useCombinedRefs(ref);
+    const { setRef } = useCombinedRefs(ref);
     const [inputRef, setInputRef] = useState<HTMLInputElement>(null);
     const [passwordVisible, setPasswordVisible] = useState(false);
     const generatedId = useId();
@@ -338,6 +458,52 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
     const leftIcon: IReqoreIconName = loading
       ? `Loader${loadingIconType || ''}Line`
       : icon || leftIconProps?.icon;
+
+    /* Its colors, once for as long as what decides them holds - its styles take them as they
+       are: a controlled input renders on every keystroke. The icons stand out from the input's
+       background, as its text does. */
+    const surface = useReqoreSurface();
+    const transparent = rest.transparent;
+    const look = useMemo(
+      () => getInputLook(theme, minimal, transparent, surface),
+      [theme, minimal, transparent, surface]
+    );
+    // an icon's own color: in its props (which win, as they are spread over the rest), else the input's
+    const [leftIconPropsColor, leftIconRest] = splitIconColor(leftIconProps);
+    const [rightIconPropsColor, rightIconRest] = splitIconColor(rightIconProps);
+    const leftIconOwn = leftIconPropsColor || iconColor;
+    const rightIconOwn = rightIconPropsColor || rightIconColor;
+    const leftIconLook = useMemo(
+      () =>
+        getReadableIconLook(
+          theme,
+          [look.background],
+          look.text,
+          CONTROL_ICON_OPACITY,
+          leftIconOwn
+        ),
+      [theme, look, leftIconOwn]
+    );
+    const rightIconLook = useMemo(
+      () =>
+        getReadableIconLook(
+          theme,
+          [look.background],
+          look.text,
+          CONTROL_ICON_OPACITY,
+          rightIconOwn
+        ),
+      [theme, look, rightIconOwn]
+    );
+    // one object for as long as the opacity holds: an icon is a memo component
+    const leftIconEffect = useMemo(
+      () => ({ opacity: leftIconLook.opacity }),
+      [leftIconLook.opacity]
+    );
+    const rightIconEffect = useMemo(
+      () => ({ opacity: rightIconLook.opacity }),
+      [rightIconLook.opacity]
+    );
 
     const hasPasswordToggle = rest.type === 'password' && !!passwordToggle;
     const passwordToggleConfig: IReqoreInputPasswordToggle =
@@ -377,6 +543,8 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       <ReqoreTooltipComponent
         Component={StyledInputWrapper}
         className='reqore-control-wrapper'
+        $surface={surface}
+        $look={look}
         fluid={fluid}
         fixed={fixed}
         width={width}
@@ -386,7 +554,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         radiusSize={radiusSize}
         minimal={minimal}
         _size={size}
-        ref={targetRef}
+        ref={setRef}
         readOnly={readOnly || loading}
         disabled={rest.disabled}
         style={wrapperStyle}
@@ -397,9 +565,9 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           <StyledIconWrapper _size={size}>
             <ReqoreIcon
               size={size}
-              color={iconColor}
-              effect={{ opacity: CONTROL_ICON_OPACITY }}
-              {...leftIconProps}
+              color={leftIconLook.color ?? leftIconOwn}
+              effect={leftIconEffect}
+              {...leftIconRest}
               icon={leftIcon}
               animation={loading ? 'spin' : leftIconProps?.animation}
             />
@@ -408,6 +576,8 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         <StyledInput
           as='input'
           {...omit(rest, ['children'])}
+          $surface={surface}
+          $look={look}
           id={inputId}
           type={hasPasswordToggle && passwordVisible ? 'text' : rest.type}
           effect={{
@@ -437,6 +607,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           onClick={onClearClick}
           hasRightIcon={!!rightIcon}
           rightOffset={passwordToggleWidth}
+          shownOpacity={look.clearOpacity}
           size={size}
           show={rest?.value && rest.value !== '' ? true : false}
         />
@@ -445,9 +616,9 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
             <ReqoreIcon
               size={size}
               icon={rightIcon}
-              color={rightIconColor}
-              effect={{ opacity: CONTROL_ICON_OPACITY }}
-              {...rightIconProps}
+              color={rightIconLook.color ?? rightIconOwn}
+              effect={rightIconEffect}
+              {...rightIconRest}
             />
           </StyledIconWrapper>
         )}

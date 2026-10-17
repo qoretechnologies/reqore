@@ -20,6 +20,9 @@ export const useAutoFocus = (
 ) => {
   const isInViewport = useRef<boolean>(false);
   const observer = useRef<IntersectionObserver>(null);
+  /** The element auto-focus has already settled on, so a changing reference to the SAME node is not taken
+   *  for a new one — see the effect below. */
+  const settledElement = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
   const focus = useCallback(() => {
     if (!rules.viewportOnly || isInViewport.current) {
@@ -63,7 +66,14 @@ export const useAutoFocus = (
   );
 
   useUpdateEffect(() => {
-    if (element && rules) {
+    // Only when a genuinely new element appears — the field opening, or a different element taking its
+    // place. Not every time the element reference changes: a controlled input hands React a new ref callback
+    // on each render, so the SAME node arrives under a changing identity on every keystroke. Re-running this
+    // re-applied focus and moved the selection to the end mid-edit, which dropped a character being typed
+    // (qorus#646). React reconciles the same node, so once settled its identity here is stable across those
+    // re-renders.
+    if (element && rules && settledElement.current !== element) {
+      settledElement.current = element;
       if (rules.viewportOnly) {
         observer.current = new IntersectionObserver(
           (entries: IntersectionObserverEntry[]) => {

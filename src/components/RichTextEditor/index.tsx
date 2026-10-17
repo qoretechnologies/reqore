@@ -1,9 +1,11 @@
 import isPropValid from '@emotion/is-prop-valid';
 import { map, size } from 'lodash';
 import {
+  createContext,
   forwardRef,
   memo,
   useCallback,
+  useContext,
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
@@ -27,13 +29,17 @@ import {
   RenderLeafProps,
 } from 'slate-react/dist/components/editable';
 import { ReqoreButton, ReqoreControlGroup, ReqorePanel, ReqoreTextarea } from '../..';
+import { useReqoreSurface } from '../../context/SurfaceContext';
+import { getReadableAlpha } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItemProps } from '../Dropdown/item';
 import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
 import { ReqoreP } from '../Paragraph';
 import { IReqoreSpanProps, ReqoreSpan } from '../Span';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
+import { getInputColors, INPUT_PLACEHOLDER_ALPHA } from '../Input';
 import { IReqoreTextareaProps } from '../Textarea';
 
 type CustomElement = {
@@ -271,28 +277,77 @@ const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
   );
 };
 
+/** The editor's own props that decide how its field is drawn: its placeholder reads on it. */
+type TRichTextField = Pick<
+  IReqoreTextareaProps,
+  'customTheme' | 'inheritCustomTheme' | 'intent' | 'minimal' | 'transparent'
+>;
+
+/**
+ * The field the placeholder is in, as the editor that renders it is drawn (`TRichTextField`).
+ * Slate renders it, through `renderElement`, as an element of the document: a context reaches it
+ * there without making `renderElement`, which Slate compares by identity, change with the look.
+ */
+const RichTextFieldContext = createContext<TRichTextField>({});
+
+/**
+ * How faint the placeholder is: as a field's (`INPUT_PLACEHOLDER_ALPHA`), as far as it stays readable on the field,
+ * which it is drawn in - the editor's own theme (its `customTheme`, its `intent`), a 10% wash of
+ * it over what the field is drawn on, or nothing when it is minimal or transparent. Read in the
+ * provider's theme, it was faded for another field.
+ */
+const usePlaceholderOpacity = (): number => {
+  const { customTheme, inheritCustomTheme, intent, minimal, transparent } =
+    useContext(RichTextFieldContext);
+  const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+  const surface = useReqoreSurface();
+
+  return useMemo(() => {
+    const { background, text } = getInputColors(theme, minimal, transparent, false, surface);
+
+    return getReadableAlpha(text, background, INPUT_PLACEHOLDER_ALPHA);
+  }, [theme, minimal, transparent, surface]);
+};
+
+const PLACEHOLDER_STYLE: React.CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  pointerEvents: 'none',
+  userSelect: 'none',
+};
+
+const PARAGRAPH_STYLE: React.CSSProperties = { position: 'relative' };
+
+const Placeholder = ({
+  placeholder,
+  placeholderProps,
+}: {
+  placeholder: string;
+  placeholderProps?: IReqoreSpanProps;
+}) => {
+  const opacity = usePlaceholderOpacity();
+  // one object for as long as what it holds holds: the span is a memo component
+  const effect = useMemo(() => ({ opacity }), [opacity]);
+  const ownStyle = placeholderProps?.style;
+  const style = useMemo(
+    () => (ownStyle ? { ...PLACEHOLDER_STYLE, ...ownStyle } : PLACEHOLDER_STYLE),
+    [ownStyle]
+  );
+  return (
+    <ReqoreSpan inline effect={effect} {...placeholderProps} contentEditable={false} style={style}>
+      {placeholder}
+    </ReqoreSpan>
+  );
+};
+
 export const DefaultElement = (
   props: RenderElementProps & { placeholder?: string; placeholderProps?: IReqoreSpanProps }
 ) => (
-  <ReqoreP {...props.attributes} style={{ position: 'relative' }}>
+  <ReqoreP {...props.attributes} style={PARAGRAPH_STYLE}>
     {props.placeholder && (
-      <ReqoreSpan
-        inline
-        effect={{ opacity: 0.3 }}
-        {...props.placeholderProps}
-        contentEditable={false}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          pointerEvents: 'none',
-          userSelect: 'none',
-          ...props.placeholderProps?.style,
-        }}
-      >
-        {props.placeholder}
-      </ReqoreSpan>
+      <Placeholder placeholder={props.placeholder} placeholderProps={props.placeholderProps} />
     )}
     {props.children}
   </ReqoreP>
@@ -582,6 +637,13 @@ export const ReqoreRichTextEditor = forwardRef<
       // back; pass stable refs (`useCallback` / `useMemo`) for best
       // performance.
       [isEmpty, placeholder, placeholderProps, composeTagProps]
+    );
+
+    // how its field is drawn, for its placeholder (see `RichTextFieldContext`)
+    const { customTheme, inheritCustomTheme, intent, minimal, transparent } = rest;
+    const field = useMemo<TRichTextField>(
+      () => ({ customTheme, inheritCustomTheme, intent, minimal, transparent }),
+      [customTheme, inheritCustomTheme, intent, minimal, transparent]
     );
 
     const handleFocus = useCallback(
@@ -883,97 +945,99 @@ export const ReqoreRichTextEditor = forwardRef<
             onChange?.(data as CustomElement[]);
           }}
         >
-          <ReqoreTextarea<Pick<EditableProps, 'renderElement' | 'renderLeaf' | 'decorate'>>
-            {...rest}
-            renderElement={renderElement}
-            renderLeaf={renderLeaf}
-            decorate={decorate}
-            onFocusCapture={handleFocus}
-            onMouseUp={repairCaretBesideVoid}
-            as={RefSafeSlateEditable}
-            style={{
-              lineHeight: 1.5,
-              outline: 'none',
-            }}
-            onClearClick={
-              isEmpty
-                ? undefined
-                : () => {
-                    Transforms.delete(editor, {
-                      at: {
-                        anchor: Editor.start(editor, []),
-                        focus: Editor.end(editor, []),
-                      },
-                    });
-                    // Focus the editor
+          <RichTextFieldContext.Provider value={field}>
+            <ReqoreTextarea<Pick<EditableProps, 'renderElement' | 'renderLeaf' | 'decorate'>>
+              {...rest}
+              renderElement={renderElement}
+              renderLeaf={renderLeaf}
+              decorate={decorate}
+              onFocusCapture={handleFocus}
+              onMouseUp={repairCaretBesideVoid}
+              as={RefSafeSlateEditable}
+              style={{
+                lineHeight: 1.5,
+                outline: 'none',
+              }}
+              onClearClick={
+                isEmpty
+                  ? undefined
+                  : () => {
+                      Transforms.delete(editor, {
+                        at: {
+                          anchor: Editor.start(editor, []),
+                          focus: Editor.end(editor, []),
+                        },
+                      });
+                      // Focus the editor
+                      try {
+                        ReactEditor.focus(editor);
+                      } catch (error) {
+                        // Editor may not be mounted
+                      }
+                    }
+              }
+              value={JSON.stringify(value || [])}
+              onChange={useCallback(() => {}, [])}
+              templates={{
+                customElements: size(panelActions)
+                  ? [
+                      <ReqoreControlGroup spaceBetween size='small' key={0} fixed>
+                        {panelActions.map((action, index) => {
+                          if (action.group) {
+                            return (
+                              <ReqoreControlGroup stack key={index}>
+                                {action.group?.map((action, index) => (
+                                  <ReqoreButton
+                                    key={index}
+                                    customTheme={tagsListProps?.listCustomTheme}
+                                    intent={tagsListProps?.listIntent}
+                                    {...action}
+                                  />
+                                ))}
+                              </ReqoreControlGroup>
+                            );
+                          }
+
+                          return (
+                            <ReqoreButton
+                              key={index}
+                              customTheme={tagsListProps?.listCustomTheme}
+                              intent={tagsListProps?.listIntent}
+                              {...action}
+                            />
+                          );
+                        })}
+                      </ReqoreControlGroup>,
+                    ]
+                  : undefined,
+                ...tagsListProps,
+                items,
+                onBeforeOpen: handleTemplatesBeforeOpen,
+                closeOnInsideClick: false,
+                onItemSelect: (item) => {
+                  if (item.value) {
                     try {
+                      // Use current selection or fallback to end of document
+                      const selection = editor.selection || {
+                        anchor: Editor.end(editor, []),
+                        focus: Editor.end(editor, []),
+                      };
+                      Transforms.select(editor, selection);
+                      insertTag(editor, item.value, item.label, item.metadata);
                       ReactEditor.focus(editor);
                     } catch (error) {
-                      // Editor may not be mounted
+                      // Fallback: just insert at current position
+                      try {
+                        insertTag(editor, item.value, item.label, item.metadata);
+                      } catch (e) {
+                        console.warn('Failed to insert tag:', e);
+                      }
                     }
                   }
-            }
-            value={JSON.stringify(value || [])}
-            onChange={useCallback(() => {}, [])}
-            templates={{
-              customElements: size(panelActions)
-                ? [
-                    <ReqoreControlGroup spaceBetween size='small' key={0} fixed>
-                      {panelActions.map((action, index) => {
-                        if (action.group) {
-                          return (
-                            <ReqoreControlGroup stack key={index}>
-                              {action.group?.map((action, index) => (
-                                <ReqoreButton
-                                  key={index}
-                                  customTheme={tagsListProps?.listCustomTheme}
-                                  intent={tagsListProps?.listIntent}
-                                  {...action}
-                                />
-                              ))}
-                            </ReqoreControlGroup>
-                          );
-                        }
-
-                        return (
-                          <ReqoreButton
-                            key={index}
-                            customTheme={tagsListProps?.listCustomTheme}
-                            intent={tagsListProps?.listIntent}
-                            {...action}
-                          />
-                        );
-                      })}
-                    </ReqoreControlGroup>,
-                  ]
-                : undefined,
-              ...tagsListProps,
-              items,
-              onBeforeOpen: handleTemplatesBeforeOpen,
-              closeOnInsideClick: false,
-              onItemSelect: (item) => {
-                if (item.value) {
-                  try {
-                    // Use current selection or fallback to end of document
-                    const selection = editor.selection || {
-                      anchor: Editor.end(editor, []),
-                      focus: Editor.end(editor, []),
-                    };
-                    Transforms.select(editor, selection);
-                    insertTag(editor, item.value, item.label, item.metadata);
-                    ReactEditor.focus(editor);
-                  } catch (error) {
-                    // Fallback: just insert at current position
-                    try {
-                      insertTag(editor, item.value, item.label, item.metadata);
-                    } catch (e) {
-                      console.warn('Failed to insert tag:', e);
-                    }
-                  }
-                }
-              },
-            }}
-          />
+                },
+              }}
+            />
+          </RichTextFieldContext.Provider>
         </Slate>
       </ReqorePanel>
     );

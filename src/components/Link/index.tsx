@@ -2,8 +2,9 @@ import { forwardRef, memo, useMemo, MouseEvent } from 'react';
 import { css } from 'styled-components';
 import styled from '../../helpers/styled';
 import { PADDING_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
-import { changeLightness } from '../../helpers/colors';
+import { changeLightness, getReadableTextColor } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';
+import { useReqoreSurface } from '../../context/SurfaceContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   IReqoreIntent,
@@ -248,6 +249,13 @@ export const ReqoreLink = memo(
       ref
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+      /* An intent is written in a shade of it that reads on what the link is drawn on - a tinted table cell, an
+         entity row's gradient - as a span's is, not on the theme's page (qorus#646: 3.5:1 on a warning cell). */
+      const surface = useReqoreSurface();
+      const textColor = useMemo(
+        () => getReadableTextColor(theme, intent, surface),
+        [theme, intent, surface]
+      );
 
       // An icon needs the inline-flex row so it stays centered with the text.
       const renderInline = icon ? false : inline;
@@ -292,6 +300,8 @@ export const ReqoreLink = memo(
           theme={theme}
           color={theme.text.color}
           intent={intent}
+          $surface={surface}
+          $textColor={textColor}
           Component={StyledLink}
           ref={ref}
           tooltip={tooltip}

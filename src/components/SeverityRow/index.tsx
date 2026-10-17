@@ -15,6 +15,7 @@ import {
   SEVERITY_ROW_NARROW_BREAKPOINT_PX,
   useNarrowContainer,
 } from '../../hooks/useNarrowContainer';
+import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -35,6 +36,7 @@ import { ReqoreSpan } from '../Span';
 import ReqoreRowActionsMenu, {
   getRowActionLabel,
   hasRowActionLabel,
+  rowLabelText,
   TReqoreNarrowRowActions,
 } from '../RowActionsMenu';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
@@ -72,11 +74,12 @@ export interface IReqoreSeverityRowProps
   actions?: IReqoreSeverityRowAction[];
   /**
    * How two or more actions are shown when the row is narrow (below 640px of its container):
-   * `'stack'` (default) puts them under the label, one to a line, each the row's width - a severity
-   * row is a callout, and its actions (Investigate, Try again) are the response it asks for, so they
-   * stay in sight; `'menu'` folds them into one menu button at the end of the label's line, for a
-   * list of rows that should not grow by a line per action. See `TReqoreNarrowRowActions`. A single
-   * action is a button under the label either way.
+   * `'stack'` (default) puts them under the label, one to a line - each the row's width on a phone, as wide
+   * as its label on a wider screen - a severity row is a callout, and its actions (Investigate, Try again)
+   * are the response it asks for, so they stay in sight; `'row'` keeps them under the label as a row of
+   * buttons; `'menu'`, opted into, folds them into one menu button at the end of the label's line, for a
+   * list of rows that should not grow by a line per action. See `TReqoreNarrowRowActions`. A single action
+   * is a button under the label either way.
    */
   narrowActions?: TReqoreNarrowRowActions;
   /** What the menu button of `narrowActions='menu'` is called (its accessible name and tooltip). */
@@ -227,7 +230,7 @@ const StyledRow = styled(StyledEffect).withConfig({
     justify-content: flex-start;
   }
 
-  /* Narrow, the actions stack under the label, one to a line, each the row's width, with its label
+  /* Narrow, the actions stack under the label, one to a line (each the row's width on a phone), with its label
      whole (qorus#646): kept on one line that does not wrap, two labelled actions reached past the row on
      a phone. An icon's tooltip is its label there, and a finger gets a target it can hit. */
   @media (pointer: coarse) {
@@ -364,8 +367,15 @@ const ReqoreSeverityRow = memo(
       const [containerRef, isNarrow] = useNarrowContainer<HTMLDivElement>(
         SEVERITY_ROW_NARROW_BREAKPOINT_PX
       );
-      // Narrow, two or more actions are one menu button, unless the caller wants them stacked.
+      // Narrow, two or more actions are one menu button only where the caller asks for it.
       const actionsAsMenu = isNarrow && narrowActions === 'menu' && (actions?.length ?? 0) > 1;
+      // Narrow and stacked (the default): one to a line. With `'row'`, a row of buttons under the label.
+      const actionsStacked = isNarrow && narrowActions !== 'row';
+      /* Stacked, each action is the row's width only on a phone, where a full-width row is a finger's target;
+         in a narrow container on a wider screen (a drawer, a side panel) it is as wide as its label, as a control
+         is on any screen wider than a phone's (David's width rule, qorus#646). */
+      const isPhone = useReqoreProperty('isMobile');
+      const actionsSpanRow = actionsStacked && !!isPhone;
 
       return (
         <StyledContainer
@@ -377,7 +387,12 @@ const ReqoreSeverityRow = memo(
             // A div, not the effect's span: the row holds blocks, which a span may not.
             as='div'
             data-narrow={isNarrow || undefined}
-            data-actions={actionsAsMenu ? 'menu' : undefined}
+            data-actions={
+              !isNarrow || !actions?.length ? undefined
+              : actionsAsMenu ? 'menu'
+              : actionsStacked ? 'stack'
+              : 'row'
+            }
             {...rest}
             Component={StyledRow}
             tooltip={tooltip}
@@ -394,6 +409,8 @@ const ReqoreSeverityRow = memo(
             $padded={padded}
             $paddingSize={paddingSize ?? size}
             disabled={disabled}
+            // disabled says so; when not, the caller's own (it was spread above) stands
+            aria-disabled={disabled ? true : rest['aria-disabled']}
             effect={effect}
             className={`${className || ''} reqore-severity-row`}
           >
@@ -443,15 +460,18 @@ const ReqoreSeverityRow = memo(
                 size={size}
                 intent={intent}
                 label={actionsMenuLabel}
+                rowLabel={rowLabelText(label)}
               />
             )}
             {!actionsAsMenu && actions && actions.length > 0 && (
               <ReqoreControlGroup
                 gapSize='small'
                 className='reqore-severity-row-actions'
-                // narrow: one to a line, each the row's width (see the narrow rules above)
-                vertical={isNarrow}
-                fluid={isNarrow}
+                /* narrow and stacked: one to a line, each the row's width on a phone and as wide as its label
+                   elsewhere; narrow in a row: as wide as they are, onto another line where they do not fit */
+                vertical={actionsStacked}
+                fluid={actionsSpanRow}
+                wrap={isNarrow && !actionsStacked}
               >
                 {actions.map((action, idx) => (
                   <ReqoreButton
@@ -459,7 +479,7 @@ const ReqoreSeverityRow = memo(
                     size={size}
                     intent={action.intent ?? intent}
                     {...action}
-                    {...(isNarrow ? { fluid: true, wrap: true } : {})}
+                    {...(actionsStacked ? { fluid: actionsSpanRow, wrap: true } : {})}
                     // After the spread: `action` carries the consumer's raw
                     // handler and this has to be the one that wins. Applied
                     // even when the action has no handler of its own — an
@@ -469,11 +489,11 @@ const ReqoreSeverityRow = memo(
                     // toggles what the row toggles cancels itself out.
                     onClick={withStoppedPropagation<HTMLButtonElement>(action.onClick)}
                   >
-                    {/* Stacked, an action with only an icon is a button the row's width: its tooltip is
+                    {/* Stacked, an action with only an icon is a button of its own line: its tooltip is
                         its label, as a finger gets no tooltip to read. */}
                     {hasRowActionLabel(action.label)
                       ? action.label
-                      : isNarrow
+                      : actionsStacked
                         ? getRowActionLabel({ tooltip: action.tooltip })
                         : undefined}
                   </ReqoreButton>
