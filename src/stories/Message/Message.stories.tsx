@@ -187,7 +187,7 @@ export const MutedRefusalOnThePage: Story = {
     docs: {
       description: {
         story:
-          'A muted message as the Qorus IDE draws a refusal: the default muted fill, an icon and a title, on the dark page. Its title and text read on the fill as it is drawn — the translucent muted grey over the page — not on the opaque muted color the fill is made from, which is near-white and used to pick near-black text (about 1.7:1).',
+          'Renders a muted message with a lock icon, the title "Not allowed" and a line of text, on the dark page. Its title and text are drawn in colors that read on the message\'s translucent grey fill as it is drawn over the page.',
       },
     },
   },

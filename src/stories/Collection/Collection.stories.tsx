@@ -148,7 +148,7 @@ export const SearchKeepsEveryTypedCharacter: Story = {
     docs: {
       description: {
         story:
-          'A filterable collection whose search box asks to be auto-focused (`inputProps.focusRules`). Typing filters a hundred items on every keystroke — a heavy re-render — and each typed character has to survive it. useAutoFocus re-applied its focus and moved the caret to the end on that re-render, which dropped a character: typing "ca" left "c". The search box now keeps exactly what was typed, and the caret stays where the person is typing.',
+          'Renders a filterable collection of a hundred items whose search box is focused when it opens. Typing "cat" filters the items on every key and the box keeps every character; "XY" typed after its first letter reads "cXYat", the caret staying where it was put.',
       },
     },
   },
