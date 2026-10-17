@@ -1,12 +1,12 @@
-import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
+import { IReqoreCustomTheme, IReqoreTheme } from '../constants/theme';
 import {
   getColorFromMaybeString,
   getDrawnColor,
   getThemeSurface,
   isValidSixCharHex,
   TReqoreSurface,
-} from '../../helpers/colors';
-import { getEffectTextColor, TReqoreEffectColor, TReqoreHexColor } from '../Effect';
+} from './colors';
+import { getEffectTextColor, TReqoreEffectColor, TReqoreHexColor } from '../components/Effect';
 
 /**
  * `color` as the theme resolves it (a theme color, a shade of one, a hex), or undefined where it cannot: a CSS color

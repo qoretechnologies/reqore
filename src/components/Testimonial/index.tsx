@@ -12,18 +12,16 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeDarkness,
   changeLightness,
-  getDrawnColor,
   getMainBackgroundColor,
   getReadableAlpha,
   getReadableColor,
   getReadableIconLook,
   getReadableIntentColor,
-  getReadableTextOn,
-  getThemeSurface,
   READABLE_ICON_CONTRAST,
 } from '../../helpers/colors';
-import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
+import { ReqoreSurfaceProvider } from '../../context/SurfaceContext';
 import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
+import { useReqoreDrawnSurface } from '../../hooks/useDrawnSurface';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -40,11 +38,10 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
-import { getEffectBackgrounds, IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
+import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreEntityRow from '../EntityRow';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
-import { getUnpaintedSurface } from '../Panel/surface';
 import ReqoreRating from '../Rating';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -319,27 +316,13 @@ const ReqoreTestimonial = memo(
 
       /* What the card is drawn in: what it holds is read against it, and the quote mark, in its own
          color or the intent's, stands out from it by 3:1 however faint it is drawn. */
-      const aroundSurface = useReqoreSurface();
-      // transparent, it is on what is around it: what a component there says, or its customTheme's main
-      const surface = useMemo(
-        () => getUnpaintedSurface(theme, customTheme, aroundSurface, transparent),
-        [theme, customTheme, aroundSurface, transparent]
-      );
-      const background = useMemo(
-        () =>
-          transparent
-            ? getThemeSurface(theme, surface)
-            : getDrawnColor(tintedBgFor(theme, intent), getThemeSurface(theme, surface)),
-        [transparent, theme, intent, surface]
-      );
-      /* each color of the card's gradient, when its effect draws one: for as long as its colors hold, not the
-         effect object - one given inline is new on every render, and so was the surface handed down */
-      const gradientKey = JSON.stringify(effect?.gradient ?? null);
-      const backgrounds = useMemo(
-        () => getEffectBackgrounds(theme, effect, background, getThemeSurface(theme, surface)),
-        [theme, gradientKey, background, surface]
-      );
-      const text = useMemo(() => getReadableTextOn(theme, backgrounds), [theme, backgrounds]);
+      const { backgrounds, text } = useReqoreDrawnSurface({
+        theme,
+        customTheme,
+        transparent,
+        fill: tintedBgFor(theme, intent),
+        effect,
+      });
       const resolvedAvatarColor: TReqoreEffectColor = useMemo(() => {
         if (avatarColor) {
           return (getReadableIconLook(theme, backgrounds, text, 1, avatarColor).color ??
@@ -384,8 +367,9 @@ const ReqoreTestimonial = memo(
           disabled={disabled}
           // a disabled card says so; any other keeps what the caller says
           aria-disabled={disabled ? true : rest['aria-disabled']}
-          // transparent, its own text is read where it is drawn, not on its theme's main
-          $color={transparent ? text : undefined}
+          // its text is read on the card as it is drawn - its tint, its gradient - or, transparent, where it is
+          $color={text}
+          $backgrounds={backgrounds}
           effect={effect}
           onClick={onClick}
           className={`${className || ''} reqore-testimonial`}

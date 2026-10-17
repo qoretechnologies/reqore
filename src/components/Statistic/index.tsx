@@ -7,14 +7,10 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeDarkness,
   changeLightness,
-  getDrawnColor,
   getMainBackgroundColor,
   getReadableAlpha,
-  getReadableColor,
-  getReadableTextOn,
-  getThemeSurface,
 } from '../../helpers/colors';
-import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
+import { ReqoreSurfaceProvider } from '../../context/SurfaceContext';
 import {
   alignToFlexAlign,
   getOneHigherSize,
@@ -23,6 +19,7 @@ import {
   TReqorePadded,
 } from '../../helpers/utils';
 import { IReqoreCountUpOptions, useCountUp } from '../../hooks/useCountUp';
+import { useReqoreDrawnSurface } from '../../hooks/useDrawnSurface';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, InactiveIconScale, RaisedElement, ScaleIconOnHover } from '../../styles';
 import {
@@ -37,7 +34,6 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreControlGroup from '../ControlGroup';
 import {
-  getEffectBackgrounds,
   IReqoreEffect,
   patchPrimaryGradient,
   StyledEffect,
@@ -46,7 +42,7 @@ import {
 } from '../Effect';
 import { ReqoreHeading, StyledHeader } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
-import { getDrawnEffectTextColor, getUnpaintedSurface } from '../Panel/surface';
+import { getDrawnEffectTextColor } from '../../helpers/surface';
 import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -183,8 +179,10 @@ interface IStyledStatisticWrapper {
   $fluid?: boolean;
   disabled?: boolean;
   $hasBackground?: boolean;
-  /** The statistic as it is drawn, over what is under it: its text is read against it. */
-  $background?: TReqoreHexColor;
+  /** The statistic's text: what reads on it as it is drawn, its gradient's colors included. */
+  $text?: TReqoreHexColor;
+  /** Each color the statistic is drawn in: an `effect.color` is read against them. */
+  $backgrounds?: TReqoreHexColor[];
   $interactive?: boolean;
   $align?: 'flex-start' | 'center' | 'flex-end';
   rounded?: boolean;
@@ -305,7 +303,7 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
     opacity = 1,
     $padded,
     $paddingSize,
-    $background,
+    $text,
   }) =>
     $hasBackground &&
     css`
@@ -317,7 +315,7 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
             intent ? theme.intents[intent] : getMainBackgroundColor(theme),
             0.08
           )}`};
-      color: ${getReadableColor(theme, undefined, undefined, true, $background)};
+      color: ${$text};
       padding: ${resolvePadding({
         padded: $padded,
         paddingSize: $paddingSize,
@@ -485,39 +483,31 @@ const ReqoreStatistic = memo(
       /* What the statistic is drawn on and in: its own surface, at the opacity it is drawn at, over what is under
          it when it has one. What it holds is read against that, and its label and prefix and suffix fade only as
          far as they stay readable there. Painting nothing, it is on what is around it: what a component there
-         says, or its customTheme's main. */
-      const aroundSurface = useReqoreSurface();
-      const surface = useMemo(
-        () =>
-          getUnpaintedSurface(
-            theme,
-            customTheme,
-            aroundSurface,
-            !hasBackground || drawnOpacity === 0
-          ),
-        [theme, customTheme, aroundSurface, hasBackground, drawnOpacity]
-      );
-      const background = useMemo(
-        () =>
-          hasBackground
-            ? getDrawnColor(
-                rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), drawnOpacity ?? 1),
-                getThemeSurface(theme, surface)
-              )
-            : getThemeSurface(theme, surface),
-        [hasBackground, theme, drawnOpacity, surface]
-      );
-      /* each color of the statistic's gradient, when its effect draws one: for as long as its colors hold, not
-         the effect object - one given inline is new on every render, and so was the surface handed down */
-      const gradientKey = JSON.stringify(effect?.gradient ?? null);
-      const backgrounds = useMemo(
-        () =>
-          hasBackground
-            ? getEffectBackgrounds(theme, effect, background, getThemeSurface(theme, surface))
-            : [background],
-        [hasBackground, theme, gradientKey, background, surface]
-      );
-      const text = useMemo(() => getReadableTextOn(theme, backgrounds), [theme, backgrounds]);
+         says, or its customTheme's main. What it paints: with an intent, its gradient is ringed in the intent's
+         color. */
+      const transformedEffect: IReqoreEffect = useMemo(() => {
+        if (!effect) return undefined;
+
+        const newEffect: IReqoreEffect = { ...effect };
+
+        if (newEffect.gradient && intent) {
+          newEffect.gradient = patchPrimaryGradient(newEffect.gradient, {
+            borderColor: theme.intents[intent] as TReqoreEffectColor,
+          });
+        }
+
+        return newEffect;
+      }, [effect, intent, theme]);
+      /* Painting nothing, it is on what is around it; else its fill, and the gradient it paints - the one it
+         draws (`transformedEffect`), not the effect as given: an intent rings it, and a ringed gradient is drawn
+         without its own surface color. */
+      const { backgrounds, text } = useReqoreDrawnSurface({
+        theme,
+        customTheme,
+        transparent: !hasBackground || drawnOpacity === 0,
+        fill: rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), drawnOpacity ?? 1),
+        effect: hasBackground ? transformedEffect : undefined,
+      });
       /* fainter than the value, as far as it stays readable in the color it is drawn in, unless the caller gives
          its opacity: one object while it holds, for a memo component */
       const labelLook = useMemo(
@@ -550,20 +540,6 @@ const ReqoreStatistic = memo(
         [trend]
       );
 
-      const transformedEffect: IReqoreEffect = useMemo(() => {
-        if (!effect) return undefined;
-
-        const newEffect: IReqoreEffect = { ...effect };
-
-        if (newEffect.gradient && intent) {
-          newEffect.gradient = patchPrimaryGradient(newEffect.gradient, {
-            borderColor: theme.intents[intent] as TReqoreEffectColor,
-          });
-        }
-
-        return newEffect;
-      }, [effect, intent, theme]);
-
       return (
         <ReqoreTooltipComponent
           {...rest}
@@ -587,7 +563,8 @@ const ReqoreStatistic = memo(
           // a disabled statistic says so; any other keeps what the caller says
           aria-disabled={disabled ? true : rest['aria-disabled']}
           $hasBackground={hasBackground}
-          $background={background}
+          $text={text}
+          $backgrounds={backgrounds}
           $interactive={interactive}
           $align={flexAlign}
           rounded={rounded}

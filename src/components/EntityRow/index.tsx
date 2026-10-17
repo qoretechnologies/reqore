@@ -10,14 +10,11 @@ import {
   getMainBackgroundColor,
   getReadableAlpha,
   getReadableFadedColor,
-  getReadableColor,
   getReadableIconLook,
   getReadableIntentColor,
-  getReadableTextOn,
-  getThemeSurface,
   READABLE_ICON_CONTRAST,
 } from '../../helpers/colors';
-import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
+import { ReqoreSurfaceProvider } from '../../context/SurfaceContext';
 import {
   getOneLessSize,
   resolvePadding,
@@ -25,6 +22,7 @@ import {
   withStoppedPropagation,
 } from '../../helpers/utils';
 import { useNarrowContainer } from '../../hooks/useNarrowContainer';
+import { useReqoreDrawnSurface } from '../../hooks/useDrawnSurface';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
@@ -43,7 +41,6 @@ import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown, { IReqoreDropdownProps } from '../Dropdown';
 import {
-  getEffectBackgrounds,
   IReqoreEffect,
   StyledEffect,
   TReqoreEffectColor,
@@ -51,7 +48,7 @@ import {
 } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { IReqorePanelSubAction } from '../Panel';
-import { getDrawnEffectTextColor, getUnpaintedSurface } from '../Panel/surface';
+import { getDrawnEffectTextColor } from '../../helpers/surface';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import ReqoreRowActionsMenu, {
@@ -189,8 +186,10 @@ interface IStyledRowProps {
   theme: IReqoreTheme;
   $intent?: TReqoreIntent;
   $transparent?: boolean;
-  /** The row as it is drawn, over what is under it: its text is read against it. */
-  $background?: TReqoreHexColor;
+  /** The row's text: what reads on the row as it is drawn, its gradient's colors included. */
+  $text?: TReqoreHexColor;
+  /** Each color the row is drawn in: an `effect.color` is read against them. */
+  $backgrounds?: TReqoreHexColor[];
   size: TSizes;
   $fluid?: boolean;
   flat?: boolean;
@@ -268,8 +267,7 @@ const StyledRow = styled(StyledEffect).withConfig({
         )}`};
   align-items: center;
   width: ${({ $fluid }) => ($fluid ? '100%' : 'auto')};
-  color: ${({ theme, $background }) =>
-    getReadableColor(theme, undefined, undefined, true, $background)};
+  color: ${({ $text }) => $text};
   transition: background-color 0.15s ease-out;
 
   /* Narrow-container layout, driven by the data-narrow attribute the row's
@@ -501,27 +499,13 @@ const ReqoreEntityRow = memo(
       /* What the row is drawn on and in - its tint over what is under it, and the icon's tile over
          that - and its text: what it holds, its fainter description and metadata and its icon are read
          against them. */
-      const aroundSurface = useReqoreSurface();
-      // transparent, it is on what is around it: what a component there says, or its customTheme's main
-      const surface = useMemo(
-        () => getUnpaintedSurface(theme, customTheme, aroundSurface, transparent),
-        [theme, customTheme, aroundSurface, transparent]
-      );
-      const background = useMemo(
-        () =>
-          transparent
-            ? getThemeSurface(theme, surface)
-            : getDrawnColor(tintedBgFor(theme, intent), getThemeSurface(theme, surface)),
-        [transparent, theme, intent, surface]
-      );
-      /* each color of the row's gradient, when its effect draws one: for as long as its colors hold, not the
-         effect object - one given inline is new on every render, and so was the surface handed down */
-      const gradientKey = JSON.stringify(effect?.gradient ?? null);
-      const backgrounds = useMemo(
-        () => getEffectBackgrounds(theme, effect, background, getThemeSurface(theme, surface)),
-        [theme, gradientKey, background, surface]
-      );
-      const text = useMemo(() => getReadableTextOn(theme, backgrounds), [theme, backgrounds]);
+      const { backgrounds, text } = useReqoreDrawnSurface({
+        theme,
+        customTheme,
+        transparent,
+        fill: tintedBgFor(theme, intent),
+        effect,
+      });
       /* The description and the metadata are fainter than the label, as far as they stay readable (see
          getSecondaryTextEffect): one object while it holds, for memo components. */
       const descriptionLook = useMemo(
@@ -575,7 +559,8 @@ const ReqoreEntityRow = memo(
             theme={theme}
             $intent={intent}
             $transparent={transparent}
-            $background={background}
+            $text={text}
+            $backgrounds={backgrounds}
             size={size}
             $fluid={fluid}
             flat={flat}
