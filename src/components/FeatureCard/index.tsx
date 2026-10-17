@@ -19,7 +19,6 @@ import {
   getReadableAccentColor,
   getReadableAlpha,
   getReadableColor,
-  getThemeSurface,
   READABLE_ICON_CONTRAST,
   READABLE_TEXT_CONTRAST,
 } from '../../helpers/colors';
@@ -29,6 +28,7 @@ import {
   TReqorePadded,
   withStoppedPropagation,
 } from '../../helpers/utils';
+import { useReqoreDrawnSurface } from '../../hooks/useDrawnSurface';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -48,17 +48,16 @@ import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import ReqoreControlGroupItem from '../ControlGroup/item';
 import {
-  getEffectBackgrounds,
   IReqoreEffect,
   StyledEffect,
   TReqoreEffectColor,
   TReqoreHexColor,
 } from '../Effect';
-import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
+import { ReqoreSurfaceProvider } from '../../context/SurfaceContext';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
-import { getDrawnEffectTextColor, getUnpaintedSurface } from '../Panel/surface';
+import { getDrawnEffectTextColor } from '../../helpers/surface';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export type TReqoreFeatureCardMarker = 'line' | 'number' | 'icon' | 'none';
@@ -431,26 +430,13 @@ export const ReqoreFeatureCard = memo(
       const hasActions = !!actions?.length;
       const hasFooter = (footer !== undefined && footer !== null && footer !== false) || hasActions;
       // What the card is drawn in: its marker, its text and its footer are read against it.
-      const aroundSurface = useReqoreSurface();
-      // transparent, it is on what is around it: what a component there says, or its customTheme's main
-      const surface = useMemo(
-        () => getUnpaintedSurface(theme, customTheme, aroundSurface, transparent),
-        [theme, customTheme, aroundSurface, transparent]
-      );
-      const background = useMemo(
-        () =>
-          transparent
-            ? getThemeSurface(theme, surface)
-            : getDrawnColor(
-                changeDarkness(getMainBackgroundColor(theme), 0.03),
-                getThemeSurface(theme, surface)
-              ),
-        [transparent, theme, surface]
-      );
-      const text = useMemo(
-        () => getReadableColor(theme, undefined, undefined, true, background),
-        [theme, background]
-      );
+      const { background, backgrounds, text } = useReqoreDrawnSurface({
+        theme,
+        customTheme,
+        transparent,
+        fill: changeDarkness(getMainBackgroundColor(theme), 0.03),
+        effect,
+      });
       /* fainter than the label, as far as it stays readable on the card in the color it is drawn in - its effect's,
          where the theme can resolve it, else the card's text - unless the caller gives its opacity: one object
          while it holds, for a memo component */
@@ -461,19 +447,12 @@ export const ReqoreFeatureCard = memo(
             : {
                 ...descriptionEffect,
                 opacity: getReadableAlpha(
-                  getDrawnEffectTextColor(theme, descriptionEffect?.color, [background]) ?? text,
-                  background,
+                  getDrawnEffectTextColor(theme, descriptionEffect?.color, backgrounds) ?? text,
+                  backgrounds,
                   0.72
                 ),
               },
-        [descriptionEffect, theme, text, background]
-      );
-      /* what its footer's actions are drawn on: each color of the card's gradient, when its effect draws one - for
-         as long as its colors hold, not the effect object, which given inline is new on every render */
-      const gradientKey = JSON.stringify(effect?.gradient ?? null);
-      const backgrounds = useMemo(
-        () => getEffectBackgrounds(theme, effect, background, getThemeSurface(theme, surface)),
-        [theme, gradientKey, background, surface]
+        [descriptionEffect, theme, text, backgrounds]
       );
 
       return (
@@ -494,8 +473,9 @@ export const ReqoreFeatureCard = memo(
           tooltip={tooltip}
           rounded={rounded}
           $transparent={transparent}
-          // transparent, its own text is read where it is drawn, not on its theme's main
-          $color={transparent ? text : undefined}
+          // its text is read on the card as it is drawn - its fill, its gradient - or, transparent, where it is
+          $color={text}
+          $backgrounds={backgrounds}
           $raised={raised}
           $padded={padded}
           $paddingSize={paddingSize ?? size}
@@ -505,6 +485,9 @@ export const ReqoreFeatureCard = memo(
           size={size}
           className={`${className || ''} reqore-feature-card`}
         >
+          {/* what it holds - its marker, its text, its footer's actions - is drawn on the card: read against it,
+              not what is around it */}
+          <ReqoreSurfaceProvider color={backgrounds}>
           {marker !== 'none' && (
             <StyledFeatureCardMarker
               marker={marker}
@@ -556,8 +539,6 @@ export const ReqoreFeatureCard = memo(
             )}
           </StyledFeatureCardContent>
           {hasFooter && (
-            // its actions are drawn on the card: they read against it, not what is around it
-            <ReqoreSurfaceProvider color={backgrounds}>
               <ReqoreControlGroup
                 wrap
                 gapSize='small'
@@ -596,8 +577,8 @@ export const ReqoreFeatureCard = memo(
                   </ReqoreButton>
                 ))}
               </ReqoreControlGroup>
-            </ReqoreSurfaceProvider>
           )}
+          </ReqoreSurfaceProvider>
         </ReqoreTooltipComponent>
       );
     }

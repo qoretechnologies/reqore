@@ -12,18 +12,17 @@ import { IReqoreTheme } from '../../constants/theme';
 import {
   changeDarkness,
   changeLightness,
-  getDrawnColor,
   getMainBackgroundColor,
   getReadableAlpha,
   getReadableFadedColor,
   getReadableIconLook,
   getReadableIntentColor,
   getReadableTextOn,
-  getThemeSurface,
   READABLE_ICON_CONTRAST,
 } from '../../helpers/colors';
-import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
+import { ReqoreSurfaceProvider } from '../../context/SurfaceContext';
 import { getOneLessSize, resolveAccentSize, TReqorePadded } from '../../helpers/utils';
+import { useReqoreDrawnSurface } from '../../hooks/useDrawnSurface';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -42,7 +41,6 @@ import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import {
-  getEffectBackgrounds,
   IReqoreEffect,
   StyledEffect,
   StyledTextEffect,
@@ -52,7 +50,7 @@ import {
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
-import { getDrawnEffectTextColor, getUnpaintedSurface } from '../Panel/surface';
+import { getDrawnEffectTextColor } from '../../helpers/surface';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreCalloutProps
@@ -338,11 +336,11 @@ const StyledCalloutContent = styled(StyledTextEffect)<{
      afterthought. */
   $underLabel?: boolean;
   /* What the callout is drawn in: the body is a shade softer than the label, as far as it
-     stays readable there. */
-  $background: TReqoreHexColor[];
+     stays readable there, and an `effect.color` given for it is read there too (`StyledEffect`). */
+  $backgrounds: TReqoreHexColor[];
 }>`
-  color: ${({ theme, $background }) =>
-    getReadableFadedColor(getReadableTextOn(theme, $background), $background, 0.84)};
+  color: ${({ theme, $backgrounds }) =>
+    getReadableFadedColor(getReadableTextOn(theme, $backgrounds), $backgrounds, 0.84)};
   font-size: ${({ size = 'normal', $underLabel }) =>
     TEXT_FROM_SIZE[size] * ($underLabel ? 1 : 1.2)}px;
   line-height: 1.25;
@@ -401,31 +399,14 @@ export const ReqoreCallout = memo(
       // Exactly one piece of text beside the icon — see `StyledCallout`.
       const loneText = !children && !!label !== !!description;
 
-      const aroundSurface = useReqoreSurface();
-      // transparent, it is on what is around it: what a component there says, or its customTheme's main
-      const surface = useMemo(
-        () => getUnpaintedSurface(theme, customTheme, aroundSurface, transparent),
-        [theme, customTheme, aroundSurface, transparent]
-      );
       // What the callout is drawn in: its icon, its text and what it holds are read against it.
-      const background = useMemo(
-        () =>
-          transparent
-            ? getThemeSurface(theme, surface)
-            : getDrawnColor(
-                changeDarkness(getMainBackgroundColor(theme), 0.03),
-                getThemeSurface(theme, surface)
-              ),
-        [transparent, theme, surface]
-      );
-      /* each color of the callout's gradient, when its effect draws one: for as long as its colors hold, not the
-         effect object - one given inline is new on every render, and so was the surface handed down */
-      const gradientKey = JSON.stringify(effect?.gradient ?? null);
-      const backgrounds = useMemo(
-        () => getEffectBackgrounds(theme, effect, background, getThemeSurface(theme, surface)),
-        [theme, gradientKey, background, surface]
-      );
-      const text = useMemo(() => getReadableTextOn(theme, backgrounds), [theme, backgrounds]);
+      const { backgrounds, text } = useReqoreDrawnSurface({
+        theme,
+        customTheme,
+        transparent,
+        fill: changeDarkness(getMainBackgroundColor(theme), 0.03),
+        effect,
+      });
       /* softer than the label, as far as it stays readable - in the color it is drawn in - unless the caller gives
          its opacity: one object while it holds, for a memo component */
       const descriptionLook = useMemo(
@@ -489,6 +470,7 @@ export const ReqoreCallout = memo(
           rounded={rounded}
           $transparent={transparent}
           $color={text}
+          $backgrounds={backgrounds}
           $raised={raised}
           effect={{ interactive: isInteractive, ...effect }}
           interactive={isInteractive}
@@ -551,7 +533,7 @@ export const ReqoreCallout = memo(
                     theme={theme}
                     size={label ? descriptionSize : size}
                     $underLabel={!!label}
-                    $background={backgrounds}
+                    $backgrounds={backgrounds}
                     effect={contentEffect || {}}
                     className='reqore-callout-content'
                   >
@@ -566,7 +548,7 @@ export const ReqoreCallout = memo(
                 as='div'
                 theme={theme}
                 size={size}
-                $background={backgrounds}
+                $backgrounds={backgrounds}
                 effect={contentEffect || {}}
                 className='reqore-callout-content'
               >

@@ -99,7 +99,7 @@ import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 import { LabelEditor } from './LabelEditor';
 import { ReqorePanelNonResponsiveActions } from './NonResponsiveActions';
-import { getDrawnEffectTextColor, getUnpaintedSurface } from './surface';
+import { getDrawnEffectTextColor, getUnpaintedSurface } from '../../helpers/surface';
 
 const getPaddingSize = (padded: boolean | TSizes, size: TSizes): number =>
   typeof padded === 'string' ? SPECIAL_PADDING_FROM_SIZE[padded] : PADDING_FROM_SIZE[size];
