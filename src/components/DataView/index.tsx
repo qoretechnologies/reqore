@@ -441,6 +441,12 @@ const Row = styled.div<
   & > .reqore-data-view-key-edit-group {
     grid-area: key;
   }
+  /* An editable key's "Rename key" control is as wide as its key, not its column: a grid item stretches to its
+     cell, and it was a click target across the empty column (or, stacked, across the row). */
+  & > .reqore-data-view-key-shell {
+    grid-area: key;
+    justify-self: start;
+  }
   & > .reqore-data-view-value-cell {
     grid-area: value;
   }
@@ -1157,6 +1163,7 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
           role='button'
           tabIndex={0}
           aria-label='Rename key'
+          className='reqore-data-view-key-shell'
         >
           <ReqoreTag
             size={ctx.size}

@@ -854,7 +854,7 @@ export const EditableKeyRename: Story = {
     docs: {
       description: {
         story:
-          'Renders DataView and renames a key inline.',
+          'Renders an editable DataView whose keys are each a control as wide as the key itself. A click on display_name opens it for editing, and "label" typed with Enter renames it.',
       },
     },
   },
@@ -877,8 +877,14 @@ export const EditableKeyRename: Story = {
       (r) => r.querySelector('.reqore-data-view-key')?.textContent === 'display_name'
     )!;
 
-    // Click key chip → input appears.
+    // The key is the control: as wide as the key, not as its column.
     const keyChip = row.querySelector('.reqore-data-view-key') as HTMLElement;
+    const renameControl = row.querySelector('[aria-label="Rename key"]') as HTMLElement;
+    await expect(
+      Math.abs(renameControl.getBoundingClientRect().width - keyChip.getBoundingClientRect().width)
+    ).toBeLessThanOrEqual(1);
+
+    // Click key chip → input appears.
     fireEvent.click(keyChip);
     const keyInput = row.querySelector(
       'input.reqore-data-view-key-edit'
