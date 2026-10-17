@@ -22,7 +22,7 @@ import {
   ReqoreUIProvider,
 } from '../src';
 import { getInputClearButtonOpacity } from '../src/components/Input';
-import { REDUCED_MOTION_SELECTORS } from '../src/containers/UIProvider';
+import { getReducedMotionSelectors, REDUCED_MOTION_SELECTORS } from '../src/containers/UIProvider';
 import { DEFAULT_THEME } from '../src/constants/theme';
 import { buildTheme } from '../src/helpers/colors';
 import { REDUCED_MOTION_QUERY } from '../src/hooks/usePrefersReducedMotion';
@@ -187,4 +187,27 @@ describe('without it', () => {
 
     expect(Number(drawerBox().style.opacity)).toBeLessThan(1);
   });
+});
+
+/*
+ * An app can open Reqore's drawers, modals and popovers in a portal of its own (`customPortalId`): reduced motion
+ * stills Reqore's elements there too, not only in Reqore's own portal.
+ */
+test("stills Reqore's elements in the portal the app names", () => {
+  document.body.insertAdjacentHTML(
+    'beforeend',
+    '<div id="app-portal"><div class="reqore-drawer" id="drawer-in-app-portal"></div></div>'
+  );
+  try {
+    const drawer = document.getElementById('drawer-in-app-portal')!;
+    const stilled = (selectors: string[]) =>
+      selectors.filter((selector) => !selector.includes('::')).some((selector) => drawer.matches(selector));
+
+    // where the provider is told the app's portal, its drawers are stilled there
+    expect(stilled(getReducedMotionSelectors('#app-portal'))).toBe(true);
+    // Reqore's own portal alone does not reach it
+    expect(stilled(REDUCED_MOTION_SELECTORS)).toBe(false);
+  } finally {
+    document.getElementById('app-portal')?.remove();
+  }
 });
