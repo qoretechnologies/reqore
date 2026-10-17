@@ -52,19 +52,24 @@ export interface IReqoreUIProviderProps {
 /**
  * What reduced motion stills: Reqore's own elements, each named by a class that starts with
  * `reqore-`, and what they draw before and after them, in the layout and in the portal its dialogs,
- * popovers and notifications open in. Not every element in there: the app's own elements inside the
- * layout keep the transitions the app gave them.
+ * popovers and notifications open in - Reqore's own, and the one the app names (`customPortalId`,
+ * where drawers, modals and popovers then open). Not every element in there: the app's own elements
+ * inside the layout keep the transitions the app gave them.
  */
-export const REDUCED_MOTION_SELECTORS: string[] = [
+export const getReducedMotionSelectors = (customPortalId?: string): string[] => [
   '.reqore-layout-wrapper',
-  ...['.reqore-layout-wrapper', '#reqore-portal'].flatMap((scope) =>
-    ['', '::before', '::after'].flatMap((part) =>
-      ["[class^='reqore-']", "[class*=' reqore-']"].map((own) => `${scope} ${own}${part}`)
-    )
+  ...['.reqore-layout-wrapper', '#reqore-portal', ...(customPortalId ? [customPortalId] : [])].flatMap(
+    (scope) =>
+      ['', '::before', '::after'].flatMap((part) =>
+        ["[class^='reqore-']", "[class*=' reqore-']"].map((own) => `${scope} ${own}${part}`)
+      )
   ),
 ];
 
-const GlobalStyle = createGlobalStyle`
+/** What reduced motion stills where the app names no portal of its own (`getReducedMotionSelectors`). */
+export const REDUCED_MOTION_SELECTORS: string[] = getReducedMotionSelectors();
+
+const GlobalStyle = createGlobalStyle<{ $customPortalId?: string }>`
   .reqore-blur-wrapper {
     position: fixed;
     top: 0;
@@ -88,7 +93,7 @@ const GlobalStyle = createGlobalStyle`
      which settled the app's springs too. (No backticks in here: this comment lives inside a
      template literal.) */
   @media (prefers-reduced-motion: reduce) {
-    ${REDUCED_MOTION_SELECTORS.join(', ')} {
+    ${({ $customPortalId }) => getReducedMotionSelectors($customPortalId).join(', ')} {
       transition-duration: 0.01ms !important;
       transition-delay: 0s !important;
     }
@@ -140,7 +145,7 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = memo(
       <>
         <ThemeContext.Provider value={{ ...rebuiltTheme }}>
           <ReqoreThemeProvider>
-            <GlobalStyle />
+            <GlobalStyle $customPortalId={options?.customPortalId} />
           </ReqoreThemeProvider>
           <ReqoreLayoutWrapper {...layoutWrapperProps} withSidebar={options?.withSidebar}>
             {modalPortal ? <ReqoreProvider options={options}>{children}</ReqoreProvider> : null}
