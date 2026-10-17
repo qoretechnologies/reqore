@@ -15,15 +15,12 @@ import {
   getDrawnColor,
   READABLE_ICON_CONTRAST,
 } from '../src/helpers/colors';
+import { iconLookOf } from './shared/iconLook';
 
 const iconOf = (testId: string) =>
   document.querySelector(`[data-testid='${testId}'] .reqore-icon`) as HTMLElement;
 
-/* the color the glyph is drawn in (react-icons sets it on the svg) and the opacity the icon is drawn at */
-const look = (el: HTMLElement) => ({
-  color: (el.querySelector('svg') as SVGElement).style.color,
-  opacity: getComputedStyle(el).opacity,
-});
+const look = iconLookOf;
 
 describe("a button's icon with a color in its own props", () => {
   for (const [name, iconProps] of [

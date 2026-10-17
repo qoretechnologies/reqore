@@ -113,28 +113,32 @@ export const Grid = ({
   </div>
 );
 
-/**
- * Something busy behind the glass, so the frost and the translucency can be
- * judged — a plain canvas hides both.
- */
+/** The backdrop's gradient: its colors, painted and read alike. */
 const BACKDROP_COLORS: TReqoreHexColor[] = ['#1d3557', '#7b2d7a', '#0f6b4f'];
+
+/** Its stripes: a white wash over the gradient, painted and read alike. */
+const BACKDROP_STRIPE = 'rgba(255,255,255,0.08)';
 
 /* Every color the backdrop shows: its gradient's, and each under a stripe. The notifications on it are told
    (`ReqoreSurfaceProvider`), so their text and icons read on all of it, as an app does for a background of its own. */
 const BACKDROP_SURFACES: TReqoreHexColor[] = [
   ...BACKDROP_COLORS,
-  ...BACKDROP_COLORS.map((color) => getDrawnColor('rgba(255,255,255,0.08)', color)),
+  ...BACKDROP_COLORS.map((color) => getDrawnColor(BACKDROP_STRIPE, color)),
 ];
 
+/**
+ * Something busy behind the glass, so the frost and the translucency can be
+ * judged — a plain canvas hides both.
+ */
 export const Backdrop = ({ children }: { children: ReactNode }) => (
   <div
     style={{
       padding: 24,
       borderRadius: 12,
+      // the stripes over the gradient, drawn as the surfaces above read them: a plain wash, no blend mode
       background:
-        'linear-gradient(135deg, #1d3557 0%, #7b2d7a 45%, #0f6b4f 100%), ' +
-        'repeating-linear-gradient(45deg, transparent 0 18px, rgba(255,255,255,0.08) 18px 22px)',
-      backgroundBlendMode: 'overlay',
+        `repeating-linear-gradient(45deg, transparent 0 18px, ${BACKDROP_STRIPE} 18px 22px), ` +
+        `linear-gradient(135deg, ${BACKDROP_COLORS[0]} 0%, ${BACKDROP_COLORS[1]} 45%, ${BACKDROP_COLORS[2]} 100%)`,
     }}
   >
     <ReqoreSurfaceProvider color={BACKDROP_SURFACES}>{children}</ReqoreSurfaceProvider>

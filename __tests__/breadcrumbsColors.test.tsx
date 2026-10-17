@@ -6,13 +6,14 @@ import { render } from '@testing-library/react';
 import { ReqoreBreadcrumbs, ReqoreUIProvider } from '../src';
 import { IReqoreBreadcrumbItem } from '../src/components/Breadcrumbs';
 import { DEFAULT_THEME } from '../src/constants/theme';
-import { useReqoreSurface } from '../src/context/SurfaceContext';
 import {
   buildTheme,
+  getContrastRatio,
   getDrawnColor,
   getReadableColorFrom,
   getThemeSurface,
 } from '../src/helpers/colors';
+import { SurfaceProbe } from './shared/surfaces';
 
 const ITEMS: IReqoreBreadcrumbItem[] = [
   { label: 'Plain' },
@@ -46,7 +47,7 @@ describe("a breadcrumbs bar's crumbs", () => {
     expect(crumbColor('Current')).toBe('#123456');
   });
 
-  test('in the readable colour of a bar drawn in a colour of its own (e3e8742)', () => {
+  test('in the readable colour of a bar drawn in a colour of its own', () => {
     renderBar({ customTheme: { main: '#ff69b4' } });
 
     const readable = getReadableColorFrom(getDrawnColor('#ff69b4', getThemeSurface(theme)), true);
@@ -57,21 +58,21 @@ describe("a breadcrumbs bar's crumbs", () => {
   test("a crumb with an intent of its own picks its text against its own colour", () => {
     renderBar({ customTheme: { main: '#ff69b4', item: { color: '#123456' } } });
 
+    // not the theme's item colour, but one that reads on the crumb as it is drawn on the bar
+    const crumb = Array.from(document.querySelectorAll<HTMLElement>('.reqore-breadcrumbs-item')).find(
+      (element) => element.textContent?.includes('Warning')
+    )!;
+    const bar = getDrawnColor('#ff69b4', getThemeSurface(theme));
+    const drawn = getDrawnColor(getComputedStyle(crumb).backgroundColor || 'transparent', bar);
     expect(crumbColor('Warning')).not.toBe('#123456');
+    expect(getContrastRatio(crumbColor('Warning'), drawn)).toBeGreaterThanOrEqual(4.5);
   });
 });
-
-/** What a part on the bar reads as its surface. */
-const Surface = () => {
-  const surface = useReqoreSurface();
-
-  return <span data-testid='surface'>{([] as string[]).concat(surface ?? 'none').join(',')}</span>;
-};
 
 test("the right element is drawn on the bar, and reads it as its surface", () => {
   const { getByTestId } = renderBar({
     customTheme: { main: '#ff69b4' },
-    rightElement: <Surface />,
+    rightElement: <SurfaceProbe id='surface' />,
   });
 
   expect(getByTestId('surface').textContent).toBe(

@@ -22,7 +22,7 @@ export const Basic: Story = {
     docs: {
       description: {
         story:
-          'Renders Icon in its default configuration.',
+          'Renders icons at several sizes, in an intent and in colors of their own, with effects (sepia, blur, contrast, grayscale, invert, opacity), rotated, and one with its tooltip open; and images as icons, square and rounded, with and without effects.',
       },
     },
   },

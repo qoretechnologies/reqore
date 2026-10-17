@@ -44,6 +44,41 @@ test.each([
   expect(document.querySelector(selector)!.getAttribute('aria-disabled')).toBe('true');
 });
 
+/** The same components, given `props`. */
+const withProps = (props: Record<string, unknown>): [string, JSX.Element, string][] => [
+  ['a progress bar', <ReqoreProgress key='p' value={50} {...props} />, '.reqore-progress'],
+  ['a stacked bar', <ReqoreStackedBar key='s' items={[{ value: 1 }]} {...props} />, '.reqore-stacked-bar'],
+  ['a severity row', <ReqoreSeverityRow key='r' label='Row' {...props} />, '.reqore-severity-row'],
+  [
+    'a collapsible content',
+    <ReqoreCollapsibleContent key='c' {...props}>
+      Text
+    </ReqoreCollapsibleContent>,
+    '.reqore-collapsible-content',
+  ],
+];
+
+test.each(withProps({ disabled: true }))('%s that is disabled says so', (_name, element, selector) => {
+  render(<ReqoreUIProvider>{element}</ReqoreUIProvider>);
+
+  expect(document.querySelector(selector)!.getAttribute('aria-disabled')).toBe('true');
+});
+
+test.each(withProps({ disabled: true, 'aria-disabled': false }))(
+  '%s that is disabled says so, whatever the caller says',
+  (_name, element, selector) => {
+    render(<ReqoreUIProvider>{element}</ReqoreUIProvider>);
+
+    expect(document.querySelector(selector)!.getAttribute('aria-disabled')).toBe('true');
+  }
+);
+
+test.each(withProps({}))('%s that is neither disabled nor told says nothing', (_name, element, selector) => {
+  render(<ReqoreUIProvider>{element}</ReqoreUIProvider>);
+
+  expect(document.querySelector(selector)!.hasAttribute('aria-disabled')).toBe(false);
+});
+
 test('a disabled accordion item says so on its header, the control', () => {
   render(
     <ReqoreUIProvider>

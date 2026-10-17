@@ -581,7 +581,7 @@ export const NarrowContainerActionsMenu: Story = {
     docs: {
       description: {
         story:
-          "Renders the same row (`narrowActions='menu'`) in two framed containers of different widths, each named above it: in the 720px one Run and the More actions menu sit side by side as always; in the 400px one they are one menu button at the end of the label's line. Each row fills its frame exactly. Clicked, the menu names Run and More actions with their icons, More actions holding Show in chat and Copy name; Escape puts it away with the focus on the button, and Run chosen runs and closes it without opening the row.",
+          "Renders the same row (`narrowActions='menu'`) in two framed containers of different widths, each named above it: in the 720px one Run and the More actions menu sit side by side as always; in the 400px one they are one menu button at the end of the label's line, named for its row (\"Actions: Process Incoming Order · order-intake-workflow\"). Each row fills its frame exactly. Clicked, the menu names Run and More actions with their icons, More actions holding Show in chat and Copy name; Escape puts it away with the focus on the button, and Run chosen runs and closes it without opening the row.",
       },
     },
   },

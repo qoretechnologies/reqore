@@ -1,5 +1,5 @@
 // Copyright 2026 Qore Technologies, s.r.o.
-import { fireEvent, render } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
 import { act } from 'react-dom/test-utils';
 import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 import ReqoreRowActionsMenu, {
@@ -296,6 +296,12 @@ test('A host word for the button is named for the row too, and a row without wor
   expect(
     document.querySelector('.reqore-row-actions-menu-button')?.getAttribute('aria-label')
   ).toBe('Akce: Short copy');
+  cleanup();
+
+  renderNamedMenu({ label: 'Akce' });
+  expect(
+    document.querySelector('.reqore-row-actions-menu-button')?.getAttribute('aria-label')
+  ).toBe('Akce');
 });
 
 test('A row label that is blank names nothing', () => {

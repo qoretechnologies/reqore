@@ -2,13 +2,15 @@ import { render } from '@testing-library/react';
 import { ReqoreControlGroup, ReqoreMenu, ReqoreMenuDivider, ReqoreUIProvider } from '../src';
 import { getEffectTextColor, IReqoreEffect, TReqoreHexColor } from '../src/components/Effect';
 import { DEFAULT_THEME } from '../src/constants/theme';
-import { ReqoreSurfaceProvider, useReqoreSurface } from '../src/context/SurfaceContext';
+import { ReqoreSurfaceProvider } from '../src/context/SurfaceContext';
 import {
   buildTheme,
   getContrastRatio,
+  getDrawnColor,
   getThemeSurface,
   READABLE_TEXT_CONTRAST,
 } from '../src/helpers/colors';
+import { SurfaceProbe } from './shared/surfaces';
 
 describe("an effect's text color", () => {
   const theme = buildTheme(DEFAULT_THEME);
@@ -32,17 +34,6 @@ describe("an effect's text color", () => {
   });
 });
 
-/** Every color a component reads as what it is drawn on. */
-const Surfaces = () => {
-  const surface = useReqoreSurface();
-
-  return (
-    <span data-testid='surfaces'>
-      {surface === undefined ? 'none' : ([] as string[]).concat(surface).join(',')}
-    </span>
-  );
-};
-
 const gradient: IReqoreEffect = { gradient: { colors: { 0: '#5e00ff', 100: '#c20058' } } };
 
 describe('a component drawn in a gradient hands each of its colors to what it holds', () => {
@@ -50,7 +41,7 @@ describe('a component drawn in a gradient hands each of its colors to what it ho
     const { getByTestId } = render(
       <ReqoreUIProvider>
         <ReqoreControlGroup effect={gradient}>
-          <Surfaces />
+          <SurfaceProbe />
         </ReqoreControlGroup>
       </ReqoreUIProvider>
     );
@@ -63,7 +54,7 @@ describe('a component drawn in a gradient hands each of its colors to what it ho
       <ReqoreUIProvider>
         <ReqoreSurfaceProvider color='#111111'>
           <ReqoreControlGroup>
-            <Surfaces />
+            <SurfaceProbe />
           </ReqoreControlGroup>
         </ReqoreSurfaceProvider>
       </ReqoreUIProvider>
@@ -77,13 +68,13 @@ describe('a component drawn in a gradient hands each of its colors to what it ho
       <ReqoreUIProvider>
         <ReqoreSurfaceProvider color='#111111'>
           <ReqoreMenu effect={gradient}>
-            <Surfaces />
+            <SurfaceProbe />
           </ReqoreMenu>
           <ReqoreMenu>
-            <Surfaces />
+            <SurfaceProbe />
           </ReqoreMenu>
           <ReqoreMenu transparent>
-            <Surfaces />
+            <SurfaceProbe />
           </ReqoreMenu>
         </ReqoreSurfaceProvider>
       </ReqoreUIProvider>
@@ -93,8 +84,9 @@ describe('a component drawn in a gradient hands each of its colors to what it ho
     );
 
     expect(inGradient).toBe('#5e00ff,#c20058');
-    // its own (opaque) color, not the one around it
-    expect(inColor).toMatch(/^#[0-9a-f]{6}$/);
+    // its own color as it is drawn over what is around it: what it hands down is what it paints
+    const menus = Array.from(document.querySelectorAll<HTMLElement>('.reqore-menu'));
+    expect(inColor).toBe(getDrawnColor(getComputedStyle(menus[1]).backgroundColor, '#111111'));
     expect(inColor).not.toBe('#111111');
     // a transparent menu paints nothing
     expect(inNothing).toBe('#111111');
@@ -108,7 +100,7 @@ test("a minimal menu's divider drawn in a gradient reads on the menu", () => {
   const { container, getByTestId } = render(
     <ReqoreUIProvider>
       <ReqoreMenu minimal>
-        <Surfaces />
+        <SurfaceProbe />
         <ReqoreMenuDivider
           label='Fancy divider'
           effect={{ gradient: { colors: { 0: '#0d5ba5', 100: '#ff5dfd' } } }}

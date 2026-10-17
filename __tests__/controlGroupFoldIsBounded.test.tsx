@@ -2,6 +2,7 @@ import { act, fireEvent, render } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReqoreControlGroup, ReqoreUIProvider } from '../src';
+import { modelGroupLayout } from './shared/controlGroupLayout';
 
 /**
  * A responsive control group folds only what it has, and folds each child once (qorus#646).
@@ -37,33 +38,18 @@ const Action = ({ index }: { index: number }) => (
   </span>
 );
 
-const contentWidth = (group: HTMLElement): number =>
-  Array.from(group.children).reduce(
-    (total, child) => total + Number((child as HTMLElement).dataset.testWidth ?? layout.menuWidth),
-    0
-  );
-
-/** Teaches jsdom the two widths the group reads, as the box model would give them. */
-const modelLayout = (group: HTMLElement) => {
-  Object.defineProperty(group, 'scrollWidth', {
-    configurable: true,
-    get: () => {
+/** Teaches jsdom the widths the group reads, and stops a group that keeps measuring itself. */
+const modelLayout = (group: HTMLElement) =>
+  modelGroupLayout(group, {
+    available: () => layout.available,
+    menuWidth: () => layout.menuWidth,
+    onMeasure: () => {
       layout.measurements++;
       if (layout.measurements > MEASUREMENT_LIMIT) {
         throw new Error('the group kept measuring itself');
       }
-      return contentWidth(group);
     },
   });
-  Object.defineProperty(group, 'clientWidth', {
-    configurable: true,
-    get: () => Math.min(contentWidth(group), layout.available),
-  });
-  Object.defineProperty(group.parentElement!, 'clientWidth', {
-    configurable: true,
-    get: () => layout.available,
-  });
-};
 
 /** Renders the group with nothing folded, then gives it `available` px of room and lets it fold. */
 const renderGroup = (children: ReactNode) => {

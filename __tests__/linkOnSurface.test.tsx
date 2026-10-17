@@ -7,12 +7,7 @@ import { render } from '@testing-library/react';
 import { ReqoreLink, ReqoreSurfaceProvider, ReqoreUIProvider } from '../src';
 import { TReqoreHexColor } from '../src/components/Effect';
 import { getContrastRatio, READABLE_TEXT_CONTRAST } from '../src/helpers/colors';
-
-const rgbToHex = (rgb: string): TReqoreHexColor =>
-  `#${(rgb.match(/\d+/g) as string[])
-    .slice(0, 3)
-    .map((value) => Number(value).toString(16).padStart(2, '0'))
-    .join('')}` as TReqoreHexColor;
+import { hexOf } from './shared/colorMath';
 
 const linkColorOn = (surface: TReqoreHexColor | TReqoreHexColor[]) => {
   const { container } = render(
@@ -25,7 +20,7 @@ const linkColorOn = (surface: TReqoreHexColor | TReqoreHexColor[]) => {
     </ReqoreUIProvider>
   );
 
-  return rgbToHex(getComputedStyle(container.ownerDocument.querySelector('.reqore-link')!).color);
+  return hexOf(getComputedStyle(container.ownerDocument.querySelector('.reqore-link')!).color);
 };
 
 describe('a link with an intent', () => {

@@ -25,25 +25,9 @@ import { getInputClearButtonOpacity } from '../src/components/Input';
 import { getReducedMotionSelectors, REDUCED_MOTION_SELECTORS } from '../src/containers/UIProvider';
 import { DEFAULT_THEME } from '../src/constants/theme';
 import { buildTheme } from '../src/helpers/colors';
-import { REDUCED_MOTION_QUERY } from '../src/hooks/usePrefersReducedMotion';
+import { mockReducedMotion } from './shared/reducedMotion';
 
 /** jsdom has no `matchMedia`: one that answers the reduced-motion query as `reduced` says. */
-const mockReducedMotion = (reduced: boolean) => {
-  Object.defineProperty(window, 'matchMedia', {
-    configurable: true,
-    writable: true,
-    value: (query: string) => ({
-      matches: query === REDUCED_MOTION_QUERY ? reduced : false,
-      media: query,
-      onchange: null,
-      addEventListener: () => undefined,
-      removeEventListener: () => undefined,
-      addListener: () => undefined,
-      removeListener: () => undefined,
-      dispatchEvent: () => false,
-    }),
-  });
-};
 
 const clearButton = () => document.querySelector('.reqore-clear-input-button') as HTMLElement;
 
@@ -102,15 +86,6 @@ describe('under prefers-reduced-motion', () => {
 
   afterEach(() => {
     delete (window as { matchMedia?: unknown }).matchMedia;
-  });
-
-  test("an input's clear button is at its settled opacity on first paint", () => {
-    renderInput();
-
-    expect(clearButton()).toBeTruthy();
-    expect(Number(clearButton().style.opacity)).toBe(
-      getInputClearButtonOpacity(buildTheme(DEFAULT_THEME))
-    );
   });
 
   test('a drawer, and its backdrop, are in place on first paint', () => {

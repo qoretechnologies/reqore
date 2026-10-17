@@ -6,30 +6,9 @@
  */
 import { render } from '@testing-library/react';
 import { ReqoreStatistic, ReqoreUIProvider } from '../src';
-import { IReqoreEffect, TReqoreHexColor } from '../src/components/Effect';
+import { IReqoreEffect } from '../src/components/Effect';
 import { getContrastRatio, READABLE_TEXT_CONTRAST } from '../src/helpers/colors';
-
-type TRgba = [number, number, number, number];
-
-const parse = (color: string): TRgba => {
-  const [r, g, b, a = '1'] = color.match(/[\d.]+/g) as string[];
-
-  return [Number(r), Number(g), Number(b), Number(a)];
-};
-
-const over = ([r, g, b, a]: TRgba, under: TRgba, opacity = 1): TRgba => {
-  const alpha = a * opacity;
-
-  return [
-    r * alpha + under[0] * (1 - alpha),
-    g * alpha + under[1] * (1 - alpha),
-    b * alpha + under[2] * (1 - alpha),
-    1,
-  ];
-};
-
-const hex = ([r, g, b]: TRgba) =>
-  `#${[r, g, b].map((value) => Math.round(value).toString(16).padStart(2, '0')).join('')}` as TReqoreHexColor;
+import { hex, over, parse, TRgba } from './shared/colorMath';
 
 /* the color of each layer of a painted background-image at its start (the first stop), top layer first */
 const firstStops = (image: string): TRgba[] =>
