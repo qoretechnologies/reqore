@@ -49,14 +49,17 @@ import { getCardHoverFill, getCardMarkColor, getDrawnEffectTextColor } from '../
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import ReqoreRowActionsMenu, {
+  getCompactRowAction,
   getRowActionLabel,
   hasRowActionLabel,
+  IReqoreRowActionShortLabel,
   rowLabelText,
   TReqoreNarrowRowActions,
 } from '../RowActionsMenu';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
-export interface IReqoreEntityRowAction extends Omit<IReqoreButtonProps, 'children'> {
+export interface IReqoreEntityRowAction
+  extends Omit<IReqoreButtonProps, 'children'>, IReqoreRowActionShortLabel {
   /** Visible button label. */
   label?: string;
   /**
@@ -126,7 +129,8 @@ export interface IReqoreEntityRowProps
    * as its label on a wider screen; `'menu'`, opted into, folds them into one menu button at the end of
    * the label's line - an action that is itself a menu becomes a submenu there. See
    * `TReqoreNarrowRowActions`. A single action is a button under the label with `'row'` and `'stack'`; with
-   * `'menu'` it stays a button at the end of the label's line, where the menu would be (`data-actions='end'`).
+   * `'menu'` it stays a button at the end of the label's line, where the menu would be (`data-actions='end'`),
+   * saying its `shortLabel` there (see `getCompactRowAction`).
    */
   narrowActions?: TReqoreNarrowRowActions;
   /** What the menu button of `narrowActions='menu'` is called (its accessible name and tooltip). */
@@ -661,58 +665,71 @@ const ReqoreEntityRow = memo(
                   fluid={actionsSpanRow}
                   wrap={isNarrow && !actionsStacked && !loneActionAtLineEnd}
                 >
-                  {actions.map(({ actions: subActions, actionsProps, ...action }, idx) =>
-                    subActions?.length ? (
-                      // An action carrying sub-actions is a menu, not a button — same
-                      // contract as ReqorePanel. The click is stopped here because the row
-                      // itself is commonly clickable: opening the menu must not also
-                      // trigger the row.
-                      <ReqoreDropdown
-                        key={idx}
-                        fixed
-                        size={size}
-                        intent={action.intent ?? intent}
-                        {...action}
-                        {...actionsProps}
-                        /* Stacked, a menu is a button like the others (the row's width on a phone), and an
+                  {actions.map(
+                    ({ actions: subActions, actionsProps, shortLabel, ...action }, idx) => {
+                      /* At the end of a narrow row's label line, an action says its short label, or is its icon
+                       alone where it has a tooltip (`getCompactRowAction`): a long label took the line's room
+                       (David, qorus#646). On a line of its own, and wide, it says its label. */
+                      const compact = loneActionAtLineEnd
+                        ? getCompactRowAction({ ...action, shortLabel })
+                        : undefined;
+
+                      return subActions?.length ? (
+                        // An action carrying sub-actions is a menu, not a button — same
+                        // contract as ReqorePanel. The click is stopped here because the row
+                        // itself is commonly clickable: opening the menu must not also
+                        // trigger the row.
+                        <ReqoreDropdown
+                          key={idx}
+                          fixed
+                          size={size}
+                          intent={action.intent ?? intent}
+                          {...action}
+                          {...actionsProps}
+                          /* Stacked, a menu is a button like the others (the row's width on a phone), and an
                            icon-only one says what it is: its tooltip is its label, as a finger gets no tooltip
                            to read. */
-                        {...(actionsStacked ?
-                          {
-                            fluid: actionsSpanRow,
-                            fixed: !actionsSpanRow,
-                            label: hasRowActionLabel(action.label)
-                              ? action.label
-                              : getRowActionLabel({ tooltip: action.tooltip }),
-                          }
-                        : {})}
-                        items={subActions.filter(isSubActionShown)}
-                        onClick={stopRowClick}
-                      />
-                    ) : (
-                      <ReqoreButton
-                        key={idx}
-                        size={size}
-                        intent={action.intent ?? intent}
-                        {...action}
-                        {...(actionsStacked ? { fluid: actionsSpanRow, wrap: true } : {})}
-                        // After the spread, so it wraps the consumer's handler rather
-                        // than being replaced by it. Applied even to an action with no
-                        // handler of its own: an action button is a control, and a click
-                        // that lands on one should never read as a click on the row.
-                        // Without it both fire, and an action that toggles what the row
-                        // toggles cancels itself out. Matches ReqoreSeverityRow.
-                        onClick={withStoppedPropagation<HTMLButtonElement>(action.onClick)}
-                      >
-                        {/* Stacked, an icon-only action is a button of its own line: its tooltip is its
+                          {...(actionsStacked
+                            ? {
+                                fluid: actionsSpanRow,
+                                fixed: !actionsSpanRow,
+                                label: hasRowActionLabel(action.label)
+                                  ? action.label
+                                  : getRowActionLabel({ tooltip: action.tooltip }),
+                              }
+                            : {})}
+                          {...compact}
+                          items={subActions.filter(isSubActionShown)}
+                          onClick={stopRowClick}
+                        />
+                      ) : (
+                        <ReqoreButton
+                          key={idx}
+                          size={size}
+                          intent={action.intent ?? intent}
+                          {...action}
+                          {...(actionsStacked ? { fluid: actionsSpanRow, wrap: true } : {})}
+                          {...compact}
+                          // After the spread, so it wraps the consumer's handler rather
+                          // than being replaced by it. Applied even to an action with no
+                          // handler of its own: an action button is a control, and a click
+                          // that lands on one should never read as a click on the row.
+                          // Without it both fire, and an action that toggles what the row
+                          // toggles cancels itself out. Matches ReqoreSeverityRow.
+                          onClick={withStoppedPropagation<HTMLButtonElement>(action.onClick)}
+                        >
+                          {/* Stacked, an icon-only action is a button of its own line: its tooltip is its
                             label, as a finger gets no tooltip to read. */}
-                        {hasRowActionLabel(action.label)
-                          ? action.label
-                          : actionsStacked
-                            ? getRowActionLabel({ tooltip: action.tooltip })
-                            : undefined}
-                      </ReqoreButton>
-                    )
+                          {compact
+                            ? compact.label
+                            : hasRowActionLabel(action.label)
+                              ? action.label
+                              : actionsStacked
+                                ? getRowActionLabel({ tooltip: action.tooltip })
+                                : undefined}
+                        </ReqoreButton>
+                      );
+                    }
                   )}
                 </ReqoreControlGroup>
               )}
