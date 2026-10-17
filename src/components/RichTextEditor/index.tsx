@@ -39,7 +39,7 @@ import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
 import { ReqoreP } from '../Paragraph';
 import { IReqoreSpanProps, ReqoreSpan } from '../Span';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
-import { getInputColors } from '../Input';
+import { getInputColors, INPUT_PLACEHOLDER_ALPHA } from '../Input';
 import { IReqoreTextareaProps } from '../Textarea';
 
 type CustomElement = {
@@ -291,7 +291,7 @@ type TRichTextField = Pick<
 const RichTextFieldContext = createContext<TRichTextField>({});
 
 /**
- * How faint the placeholder is: as a field's (30%), as far as it stays readable on the field,
+ * How faint the placeholder is: as a field's (`INPUT_PLACEHOLDER_ALPHA`), as far as it stays readable on the field,
  * which it is drawn in - the editor's own theme (its `customTheme`, its `intent`), a 10% wash of
  * it over what the field is drawn on, or nothing when it is minimal or transparent. Read in the
  * provider's theme, it was faded for another field.
@@ -305,7 +305,7 @@ const usePlaceholderOpacity = (): number => {
   return useMemo(() => {
     const { background, text } = getInputColors(theme, minimal, transparent, false, surface);
 
-    return getReadableAlpha(text, background, 0.3);
+    return getReadableAlpha(text, background, INPUT_PLACEHOLDER_ALPHA);
   }, [theme, minimal, transparent, surface]);
 };
 

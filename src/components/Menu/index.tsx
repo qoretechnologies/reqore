@@ -58,6 +58,9 @@ export interface IReqoreMenuStyle extends IReqoreMenuProps {
   theme: IReqoreTheme;
 }
 
+/** A menu's fill: what its styled rule paints and what it hands its items as their surface. */
+const getMenuFill = (theme: IReqoreTheme) => changeDarkness(getMainBackgroundColor(theme), 0.03);
+
 /* Rendered as re-resizable's `Resizable` when the menu is resizable, which writes every prop it
    does not know onto its `div`: the menu's styling flags stop here. Resizable's own props
    (`size`, `minWidth`, `maxHeight`, …) still pass. */
@@ -95,7 +98,7 @@ const StyledReqoreMenu = styled(StyledEffect).withConfig({
   flex-flow: column nowrap;
 
   background-color: ${({ theme, transparent }) =>
-    transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
+    transparent ? 'transparent' : getMenuFill(theme)};
   border-radius: ${({ rounded, _size }) => (rounded ? `${RADIUS_FROM_SIZE[_size]}px` : `0`)};
 
   ${({ theme, position, _size, padded, isResizableLeft, showResizableBorder }) =>
@@ -173,9 +176,7 @@ const ReqoreMenu = memo(
                 getEffectBackgrounds(
                   theme,
                   rest.effect,
-                  rest.transparent
-                    ? under
-                    : getDrawnColor(changeDarkness(getMainBackgroundColor(theme), 0.03), under),
+                  rest.transparent ? under : getDrawnColor(getMenuFill(theme), under),
                   under
                 )
               ),

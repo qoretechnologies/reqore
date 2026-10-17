@@ -19,6 +19,7 @@ import {
   getReadableAccentColor,
   getReadableAlpha,
   getReadableColor,
+  LARGE_BOLD_TEXT_PX,
   READABLE_ICON_CONTRAST,
   READABLE_TEXT_CONTRAST,
 } from '../../helpers/colors';
@@ -241,6 +242,9 @@ const StyledFeatureCard = styled(StyledEffect).withConfig({
       : undefined}
 `;
 
+/** How much larger than the card's text its marker (a number, an icon) is drawn. */
+const MARKER_TEXT_SCALE = 1.4;
+
 /**
  * The marker's color on the card: the intent's, or a muted shade of the card, in a shade of it that stands out
  * from what it is drawn on - a number as text (3:1 once it is large), an icon on its tile at 3:1.
@@ -271,8 +275,8 @@ const getFeatureCardMarkerColor = (
     );
   }
 
-  // the number is bold: large from 18.66px on
-  const large = TEXT_FROM_SIZE[size] * 1.4 >= 18.66;
+  // the number is bold
+  const large = TEXT_FROM_SIZE[size] * MARKER_TEXT_SCALE >= LARGE_BOLD_TEXT_PX;
 
   return getReadableAccentColor(
     getDrawnColor(
@@ -295,7 +299,7 @@ const StyledFeatureCardMarker = styled.div<{
   align-items: flex-start;
   color: ${({ theme, intent, marker, size, $background }) =>
     getFeatureCardMarkerColor(theme, marker, size, $background, intent)};
-  font-size: ${({ size }) => TEXT_FROM_SIZE[size] * 1.4}px;
+  font-size: ${({ size }) => TEXT_FROM_SIZE[size] * MARKER_TEXT_SCALE}px;
   font-weight: 900;
   line-height: 0.9;
 

@@ -460,3 +460,24 @@ test('The "More" button is drawn on the track, and reads on it, as the items bes
   expect(getLuminance(getComputedStyle(more).color)).toBeGreaterThan(0.5);
   expect(getComputedStyle(more).color).toBe(getComputedStyle(beside).color);
 });
+
+test('a click answers to the onChange the control has now, not the one it was first given', () => {
+  const first = vi.fn();
+  const now = vi.fn();
+  const control = (onChange: (value?: string) => void) => (
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSegmentedControl items={defaultItems} value='day' onChange={onChange} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+  const { rerender } = render(control(first));
+
+  rerender(control(now));
+  fireEvent.click(document.querySelectorAll('.reqore-segmented-control-item')[2]);
+
+  expect(now).toHaveBeenCalledWith('month');
+  expect(first).not.toHaveBeenCalled();
+});

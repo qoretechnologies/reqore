@@ -143,6 +143,13 @@ export interface IReqoreInputStyle extends IReqoreInputProps {
 }
 
 /**
+ * An input's (or a text area's) fill when it paints one: a 10% wash of the theme's main, 15% while focused. What
+ * the styled rules paint and what the field's text is read on.
+ */
+export const getInputFill = (theme: IReqoreTheme, focused: boolean = false): string =>
+  rgba(theme.main, focused ? 0.15 : 0.1);
+
+/**
  * What an input (or a text area) is drawn on and in: its background as drawn over the theme it sits on (a 10% wash
  * of the theme's main, or nothing when minimal or transparent; focused, 15%), and the text that reads there.
  */
@@ -157,7 +164,7 @@ export const getInputColors = (
   const background =
     minimal || transparent
       ? getDrawnColor(under)
-      : getDrawnColor(rgba(theme.main, focused ? 0.15 : 0.1), under);
+      : getDrawnColor(getInputFill(theme, focused), under);
 
   return { background, text: getReadableColor(theme, undefined, undefined, true, background) };
 };
@@ -169,6 +176,10 @@ export const getInputClearButtonOpacity = (
   transparent?: boolean,
   surface?: TReqoreSurface
 ): number => getInputLook(theme, minimal, transparent, surface).clearOpacity;
+
+/** How faint a field's placeholder is at the least: 30% of its text, 50% while the field is focused. */
+export const INPUT_PLACEHOLDER_ALPHA = 0.3;
+const INPUT_FOCUSED_PLACEHOLDER_ALPHA = 0.5;
 
 /** Everything an input (or a text area) is drawn in, worked out at once (see `getInputLook`). */
 export interface IReqoreInputLook {
@@ -201,8 +212,12 @@ export const getInputLook = (
   return {
     background: resting.background,
     text: resting.text,
-    placeholder: getReadableFadedColor(resting.text, resting.background, 0.3),
-    focusedPlaceholder: getReadableFadedColor(focused.text, focused.background, 0.5),
+    placeholder: getReadableFadedColor(resting.text, resting.background, INPUT_PLACEHOLDER_ALPHA),
+    focusedPlaceholder: getReadableFadedColor(
+      focused.text,
+      focused.background,
+      INPUT_FOCUSED_PLACEHOLDER_ALPHA
+    ),
     clearOpacity: Math.max(
       getReadableAlpha(resting.text, resting.background, 0.5, READABLE_ICON_CONTRAST),
       getReadableAlpha(focused.text, focused.background, 0.5, READABLE_ICON_CONTRAST)
@@ -355,7 +370,7 @@ export const StyledInput = styled(StyledEffect).withConfig({
       : undefined}
 
   background-color: ${({ theme, minimal, transparent }: IReqoreInputStyle) =>
-    minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
+    minimal || transparent ? 'transparent' : getInputFill(theme)};
   color: ${(props) => lookOf(props).text};
 
   transition: all 0.2s ease-out;
@@ -364,7 +379,7 @@ export const StyledInput = styled(StyledEffect).withConfig({
   &:focus {
     outline: none;
     background-color: ${({ theme, minimal, transparent }: IReqoreInputStyle) =>
-      minimal || transparent ? 'transparent' : rgba(theme.main, 0.15)};
+      minimal || transparent ? 'transparent' : getInputFill(theme, true)};
   }
 
   &::placeholder {

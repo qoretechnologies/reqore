@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useMemo } from 'react';
 import { css } from 'styled-components';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
@@ -69,7 +69,8 @@ const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
     ref: any
   ) => {
     const theme = useReqoreTheme();
-    const surfaces = getThemeSurfaces(theme, useReqoreSurface());
+    const around = useReqoreSurface();
+    const surfaces = useMemo(() => getThemeSurfaces(theme, around), [theme, around]);
 
     return line ? (
       <ReqoreVerticalSpacer

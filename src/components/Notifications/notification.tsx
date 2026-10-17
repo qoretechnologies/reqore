@@ -204,6 +204,11 @@ export interface IReqoreNotificationDefaults
 
 const DARK: TReqoreHexColor = '#000000';
 const LIGHT: TReqoreHexColor = '#ffffff';
+/* What the styled rules paint and the palette reads the text and the icon on, so the two cannot drift apart: the
+   surface's alpha unless it is opaque (it is frosted), the intent's bloom behind the icon, the icon's tile. */
+const FROSTED_SURFACE_ALPHA = 0.74;
+const BLOOM_ALPHA = 0.55;
+const ICON_TILE_ALPHA = 0.2;
 
 interface IStyledNotificationProps {
   theme: IReqoreTheme;
@@ -330,7 +335,7 @@ export const StyledNotification = styled(StyledEffect)<IStyledNotificationProps>
     }
 
     return css`
-      background: ${rgba($surface, $opaque ? 1 : 0.74)};
+      background: ${rgba($surface, $opaque ? 1 : FROSTED_SURFACE_ALPHA)};
       ${!$opaque &&
       $blur > 0 &&
       css`
@@ -392,7 +397,7 @@ const StyledNotificationBloom = styled.div<{ $color: TReqoreHexColor; $compact?:
         `}
   background: radial-gradient(
     circle at center,
-    ${({ $color }) => rgba($color, 0.55)} 0%,
+    ${({ $color }) => rgba($color, BLOOM_ALPHA)} 0%,
     ${({ $color }) => rgba($color, 0)} 70%
   );
 `;
@@ -416,7 +421,7 @@ const StyledNotificationIconTile = styled.div<{
   width: ${({ $size, $boxPx }) => $boxPx ?? ICON_TILE_SIZE_FROM_SIZE[$size]}px;
   height: ${({ $size, $boxPx }) => $boxPx ?? ICON_TILE_SIZE_FROM_SIZE[$size]}px;
   border-radius: 50%;
-  background: ${({ $tinted, $color }) => ($tinted ? rgba($color, 0.2) : 'transparent')};
+  background: ${({ $tinted, $color }) => ($tinted ? rgba($color, ICON_TILE_ALPHA) : 'transparent')};
 `;
 
 const StyledNotificationBody = styled.div<{ $compact?: boolean }>`
@@ -715,7 +720,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       /* The notification as it is drawn - its surface, frosted unless opaque, over what is under it
          (nothing when minimal) - is what its text and its icon are read against. */
       const drawn = getThemeSurfaces(theme, under).map((page) =>
-        minimal ? page : getDrawnColor(rgba(surface, opaque ? 1 : 0.74), page)
+        minimal ? page : getDrawnColor(rgba(surface, opaque ? 1 : FROSTED_SURFACE_ALPHA), page)
       );
       const text = getReadableTextOn(theme, drawn);
       // `muted` is the readable colour at 30% alpha — as a bloom or a line it
@@ -731,10 +736,10 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       /* ...and then as far as it needs to stand out by 3:1 from its tile, over the surface and over the
          bloom behind the tile (WCAG 1.4.11): lifted by a fixed step, it did not always. */
       const tile = (below: TReqoreHexColor) =>
-        tinted ? getDrawnColor(rgba(accent, 0.2), below) : below;
+        tinted ? getDrawnColor(rgba(accent, ICON_TILE_ALPHA), below) : below;
       const bloomed =
         resolvedIntent && !minimal
-          ? drawn.map((each) => getDrawnColor(rgba(accent, 0.55), each))
+          ? drawn.map((each) => getDrawnColor(rgba(accent, BLOOM_ALPHA), each))
           : drawn;
       const tiles = [...drawn.map(tile), ...bloomed.map(tile)];
       const glyph = getReadableAccentColorOn(

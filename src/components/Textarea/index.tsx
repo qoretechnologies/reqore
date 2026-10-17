@@ -1,5 +1,4 @@
 import { nanoid } from 'nanoid';
-import { rgba } from 'polished';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { css } from 'styled-components';
 import { ReqoreDropdown, useReqoreTheme } from '../..';
@@ -34,7 +33,7 @@ import {
 } from '../../types/global';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { StyledEffect } from '../Effect';
-import { getInputLook, IReqoreInputLook, lookOfField } from '../Input';
+import { getInputFill, getInputLook, IReqoreInputLook, lookOfField } from '../Input';
 import ReqoreInputClearButton from '../InputClearButton';
 import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
 import { IPopoverControls } from '../Popover';
@@ -206,14 +205,14 @@ export const StyledTextarea = styled(StyledEffect).withConfig({
   resize: vertical;
 
   background-color: ${({ theme, minimal, transparent }: IReqoreTextareaStyle) =>
-    minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
+    minimal || transparent ? 'transparent' : getInputFill(theme)};
   color: ${(props) => lookOf(props).text};
 
   &:active,
   &:focus {
     outline: none;
     background-color: ${({ theme, minimal, transparent }: IReqoreTextareaStyle) =>
-      minimal || transparent ? 'transparent' : rgba(theme.main, 0.15)};
+      minimal || transparent ? 'transparent' : getInputFill(theme, true)};
   }
 
   border-radius: inherit;

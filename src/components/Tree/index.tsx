@@ -133,10 +133,11 @@ export const StyledTreeWrapper = styled.div<ITreeStyle>`
   cursor: ${({ expandable }) => (expandable ? 'pointer' : 'default')};
 `;
 
-/* One object each for every node of every tree: what they are given to is a memo component,
-   which an object made in the render handed a new prop on every render - and a node's key,
-   written in its intent's readable shade, worked that shade out again. The key is one string
-   for the same reason. */
+/* One object each for every node of every tree, not one made in each render: a node's key, its
+   type and its arrow are memo components, which a new object re-rendered every time (and the
+   key, written in its intent's readable shade, worked that shade out again). The key is one
+   string for the same reason: `{displayKey}:` is two children, an array made anew. The row's
+   group re-renders whatever it is given: its click handler is the node's own. */
 const TREE_ROW_STYLE: CSSProperties = { cursor: 'pointer' };
 const TREE_KEY_EFFECT: IReqoreEffect = { weight: 'normal' };
 const TREE_LEAF_KEY_STYLE: CSSProperties = { flexShrink: 0 };
