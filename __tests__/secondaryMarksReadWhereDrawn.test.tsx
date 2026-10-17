@@ -65,3 +65,22 @@ test("a panel's own text reads on the fill it paints, not on the color it is mad
     READABLE_TEXT_CONTRAST
   );
 });
+
+test("a panel's title icon stands out from the title bar it is drawn on", () => {
+  // the bar paints the panel's color a step lighter, the content a step darker: on a mid grey, each reads its own
+  render(
+    <ReqoreUIProvider>
+      <ReqorePanel customTheme={{ main: GREY }} label='Orders' icon='24HoursFill'>
+        Some text
+      </ReqorePanel>
+    </ReqoreUIProvider>
+  );
+
+  const bar = parse(
+    getComputedStyle(document.querySelector('.reqore-panel-title') as HTMLElement).backgroundColor
+  );
+  const icon = document.querySelector('.reqore-panel-title-icon') as HTMLElement;
+  const drawn = over(getComputedStyle(icon).color, bar, drawnOpacity(icon));
+
+  expect(getContrastRatio(hex(drawn), hex(bar))).toBeGreaterThanOrEqual(READABLE_ICON_CONTRAST);
+});
