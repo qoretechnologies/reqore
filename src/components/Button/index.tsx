@@ -513,6 +513,8 @@ export interface IReqoreButtonPaint {
   activeHoverEdge: string;
   /** The description's color, faded as far as it still reads (with a description only). */
   description?: string;
+  /** Hovered (not when active): the description's color, faded as far as it reads on the hover fill. */
+  hoverDescription?: string;
 }
 
 /**
@@ -557,6 +559,12 @@ export const getButtonPaint = (
     description: description
       ? getReadableFadedColor(drawn.text, drawn.backgrounds, 0.7)
       : undefined,
+    /* hovered, the description is on the hover fill, in the hovered text: faded as far as it reads there. Faded for
+       the resting fill, it fell to 3.8:1 on an info button's lighter hover fill (qorus#646) */
+    hoverDescription:
+      description && states.hover
+        ? getReadableFadedColor(states.hover.text, states.hover.backgrounds, 0.7)
+        : undefined,
   };
 };
 
@@ -740,7 +748,7 @@ export const StyledButton = styled(StyledEffect).withConfig({
         : undefined;
     }
 
-    const { ring, hoverBackground, hoverText } = getStyledButtonPaint(props);
+    const { ring, hoverBackground, hoverText, hoverDescription } = getStyledButtonPaint(props);
 
     return css`
       &:not(:disabled) {
@@ -767,6 +775,10 @@ export const StyledButton = styled(StyledEffect).withConfig({
           /* Ended here: the animated content's rules below ran on into this declaration, which the
              browser then dropped - a hovered button kept its resting text on its hovered fill. */
           color: ${hoverText};
+
+          .reqore-button-description {
+            color: ${hoverDescription};
+          }
 
           ${animate
             ? css`
