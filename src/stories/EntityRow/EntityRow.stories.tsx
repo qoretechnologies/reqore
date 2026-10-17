@@ -810,6 +810,97 @@ export const NarrowRowsInEqualContainersAreEqual: Story = {
   },
 };
 
+/** The row's one action, at the end of the label's line, inside the row: where a menu of two or more would be. */
+const expectLoneActionAtLineEnd = async (row: HTMLElement) => {
+  await waitFor(() => expect(row.getAttribute('data-actions')).toBe('end'));
+  await waitFor(() => {
+    const buttons = row.querySelectorAll<HTMLElement>('.reqore-entity-row-actions .reqore-button');
+    expect(buttons).toHaveLength(1);
+    expect(rowActionsMenuButtons(row)).toHaveLength(0);
+    const label = (
+      row.querySelector('.reqore-entity-row-label') as HTMLElement
+    ).getBoundingClientRect();
+    const box = buttons[0].getBoundingClientRect();
+    // on the label's line, after it - not under the label
+    expect(box.top).toBeLessThan(label.bottom);
+    expect(box.left).toBeGreaterThanOrEqual(label.right - 0.5);
+  });
+  await expectControlsInside(row);
+};
+
+const LONE_ACTION: IReqoreEntityRowProps['actions'] = ORDER_ACTIONS.slice(0, 1);
+
+export const NarrowContainerLoneActionInMenuMode: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a row with one action, Run, that folds two or more into a menu (`narrowActions='menu'`), in a 400px container. When narrow, Run stays a button at the end of the label's line, where the menu of a row with more actions is, not on a line of its own under the label.",
+      },
+    },
+  },
+  render: () => (
+    <StoryRowBox className='narrow-row-box' width={400} caption='A 400px container: one action'>
+      <ReqoreEntityRow
+        label='Sync Inventory · inventory-sync-workflow'
+        description='Last run 9m ago · 312 executions today'
+        icon='GitBranchLine'
+        fluid
+        narrowActions='menu'
+        actions={LONE_ACTION}
+      />
+    </StoryRowBox>
+  ),
+  play: async ({ canvasElement }) => {
+    const row = await narrowEntityRow(canvasElement.querySelector('.narrow-row-box')!);
+    await expectLoneActionAtLineEnd(row);
+  },
+};
+
+export const NarrowContainerLoneActionInMenuModeOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders a connection row with one action, Test the connection, that folds two or more into a menu (`narrowActions='menu'`), in a 320px card on a phone (390 px). The action stays a button at the end of the label's line, a finger's size (44px each way); a tap on it runs it without opening the row.",
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 320, maxWidth: '100%' }}>
+      <ReqoreEntityRow
+        label='orders-db · PostgreSQL'
+        description='Last checked 2 minutes ago · 14 ms'
+        fluid
+        narrowActions='menu'
+        onClick={onEntityRowClick}
+        actions={NARROW_CONNECTION_ACTIONS.slice(0, 1)}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    clearConnectionSpies();
+    await withTouchScreen(async (touch) => {
+      const row = await narrowEntityRow(canvasElement);
+      await expectLoneActionAtLineEnd(row);
+      const button = row.querySelector<HTMLElement>('.reqore-entity-row-actions .reqore-button')!;
+      if (touch.real) {
+        await waitFor(() => {
+          const box = button.getBoundingClientRect();
+          expect(box.width).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+          expect(box.height).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+        });
+      }
+      await touch.tap(button);
+      await waitFor(() => expect(onTestConnection).toHaveBeenCalledTimes(1));
+      expect(onEntityRowClick).not.toHaveBeenCalled();
+    });
+  },
+};
+
 export const NarrowContainerActionsMenuOnATouchScreen: Story = {
   tags: ['touch'],
   globals: PHONE_STORY.globals,

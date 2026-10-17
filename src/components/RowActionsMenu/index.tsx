@@ -22,7 +22,8 @@ export const DEFAULT_ACTIONS_MENU_LABEL = 'Actions';
  *   are what it is there for ("Try again"), which a menu would hide.
  * - `'menu'`: one menu button, at the end of the label's line, opening a menu that names each action.
  *   The content keeps its width, and a list of rows does not grow by a line per action. Opted into, never a
- *   row's default: it hides what a row offers behind a button (qorus#646, Foxhoundn).
+ *   row's default: it hides what a row offers behind a button (qorus#646, Foxhoundn). An entity row of this
+ *   mode with one action keeps it as a button there, at the end of the label's line (David, qorus#646).
  */
 export type TReqoreNarrowRowActions = 'row' | 'stack' | 'menu';
 
