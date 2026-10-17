@@ -64,3 +64,44 @@ describe('the active group of a nav rail', () => {
     }
   });
 });
+
+describe('a nav rail with a gradient of its own', () => {
+  beforeAll(() => {
+    Element.prototype.scrollIntoView = vi.fn();
+  });
+
+  test('gives its resting marks text that reads on its gradient, not on its fill', () => {
+    // a light gradient on the dark theme: what reads on the rail's dark fill does not read on it
+    const { container } = render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreNavRail
+              items={ITEMS}
+              position='static'
+              defaultActiveId='hub'
+              showLabels
+              effect={{
+                gradient: { colors: { 0: STOPS[0], 100: STOPS[1] }, direction: 'to bottom' },
+              }}
+            />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    const resting = Array.from(
+      container.querySelectorAll<HTMLElement>('.reqore-nav-rail-item')
+    ).filter((mark) => !mark.getAttribute('aria-current'));
+
+    expect(resting.length).toBeGreaterThan(0);
+
+    for (const mark of resting) {
+      const text = getComputedStyle(mark).color;
+
+      for (const stop of STOPS) {
+        expect(getContrastRatio(text, stop)).toBeGreaterThanOrEqual(READABLE_TEXT_CONTRAST);
+      }
+    }
+  });
+});
