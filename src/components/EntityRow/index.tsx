@@ -111,7 +111,8 @@ export interface IReqoreEntityRowProps
    * fit; `'stack'` puts them under the label one to a line, each the row's width on a phone and as wide
    * as its label on a wider screen; `'menu'`, opted into, folds them into one menu button at the end of
    * the label's line - an action that is itself a menu becomes a submenu there. See
-   * `TReqoreNarrowRowActions`. A single action is a button under the label either way.
+   * `TReqoreNarrowRowActions`. A single action is a button under the label with `'row'` and `'stack'`; with
+   * `'menu'` it stays a button at the end of the label's line, where the menu would be (`data-actions='end'`).
    */
   narrowActions?: TReqoreNarrowRowActions;
   /** What the menu button of `narrowActions='menu'` is called (its accessible name and tooltip). */
@@ -277,8 +278,11 @@ const StyledRow = styled(StyledEffect).withConfig({
 
   /* Narrow, two or more actions are one menu button at the end of the label's line (qorus#646), not
      a line each under it: the label keeps its width, and a list of rows does not grow by a line per
-     action. The columns are the wide row's. */
-  &[data-narrow='true'][data-actions='menu'] {
+     action. A row of that mode with one action keeps it there too, as a button of its own ('end'): under the
+     label it was a line of its own for one button, where a row with more had none (David, qorus#646). The
+     columns are the wide row's. */
+  &[data-narrow='true'][data-actions='menu'],
+  &[data-narrow='true'][data-actions='end'] {
     grid-template-columns: ${({ $hasIcon, $iconHasBackground, size }) =>
       $hasIcon
         ? `${$iconHasBackground ? `${ICON_TILE_SIZE_FROM_SIZE[size]}px` : 'auto'} 1fr auto`
@@ -286,7 +290,8 @@ const StyledRow = styled(StyledEffect).withConfig({
   }
   /* The last column, named: an item placed in a row with its column left to the grid is placed before
      the items around it, in the first column. */
-  &[data-narrow='true'][data-actions='menu'] > .reqore-entity-row-actions {
+  &[data-narrow='true'][data-actions='menu'] > .reqore-entity-row-actions,
+  &[data-narrow='true'][data-actions='end'] > .reqore-entity-row-actions {
     grid-column: -2 / -1;
     grid-row: 1;
     align-self: start;
@@ -428,6 +433,8 @@ const ReqoreEntityRow = memo(
       const [containerRef, isNarrow] = useNarrowContainer<HTMLDivElement>();
       // Narrow, two or more actions are one menu button only where the caller asks for it.
       const actionsAsMenu = isNarrow && narrowActions === 'menu' && (actions?.length ?? 0) > 1;
+      // Narrow, a row that folds two or more into a menu keeps its one action where the menu would be.
+      const loneActionAtLineEnd = isNarrow && narrowActions === 'menu' && actions?.length === 1;
       // Narrow and stacked: one to a line. Otherwise narrow, they are a row of buttons under the label.
       const actionsStacked = isNarrow && narrowActions === 'stack';
       /* Stacked, each action is the row's width only on a phone, where a full-width row is a finger's target;
@@ -451,6 +458,7 @@ const ReqoreEntityRow = memo(
             data-actions={
               !isNarrow || !actions?.length ? undefined
               : actionsAsMenu ? 'menu'
+              : loneActionAtLineEnd ? 'end'
               : actionsStacked ? 'stack'
               : 'row'
             }
@@ -552,7 +560,7 @@ const ReqoreEntityRow = memo(
                    elsewhere; narrow in a row: as wide as they are, onto another line where they do not fit */
                 vertical={actionsStacked}
                 fluid={actionsSpanRow}
-                wrap={isNarrow && !actionsStacked}
+                wrap={isNarrow && !actionsStacked && !loneActionAtLineEnd}
               >
                 {actions.map(({ actions: subActions, actionsProps, ...action }, idx) =>
                   subActions?.length ? (
