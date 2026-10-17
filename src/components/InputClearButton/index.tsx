@@ -18,6 +18,8 @@ export interface IReqoreInputClearButtonProps extends IReqoreButtonProps {
    * still stands out from its background by 3:1 (WCAG 1.4.11).
    */
   shownOpacity?: number;
+  /** What it is called, for a screen reader and a test: `Clear` unless given. */
+  label?: string;
 }
 
 export const StyledInputClearButton = styled(ReqoreIcon).withConfig({
@@ -44,6 +46,7 @@ const ReqoreInputClearButton = ({
   enabled,
   size = 'normal',
   shownOpacity = 0.5,
+  label = 'Clear',
   ...rest
 }: IReqoreInputClearButtonProps) => {
   // Where motion is unwelcome it is shown and hidden at once, at its settled opacity from its first paint.
@@ -62,6 +65,9 @@ const ReqoreInputClearButton = ({
       <StyledInputClearButton
         {...rest}
         className='reqore-clear-input-button'
+        // a control, named: an icon with a click on it was nothing a screen reader or a test could find
+        role='button'
+        aria-label={label}
         icon='CloseLine'
         wrapperElement={animated.span}
         size={size}

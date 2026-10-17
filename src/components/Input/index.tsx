@@ -74,6 +74,8 @@ export interface IReqoreInputProps
   fixed?: boolean;
   value?: string | number;
   onClearClick?: () => void;
+  /** What the clear button is called, for a screen reader and a test (`Clear` unless given): a host's own words. */
+  clearLabel?: string;
   maxLength?: number;
   icon?: IReqoreIconName;
   rightIcon?: IReqoreIconName;
@@ -407,6 +409,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       fixed,
       className,
       onClearClick,
+      clearLabel,
       icon,
       rightIcon,
       iconColor,
@@ -605,6 +608,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         <ReqoreInputClearButton
           enabled={clearable}
           onClick={onClearClick}
+          label={clearLabel}
           hasRightIcon={!!rightIcon}
           rightOffset={passwordToggleWidth}
           shownOpacity={look.clearOpacity}

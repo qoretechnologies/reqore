@@ -76,6 +76,8 @@ export interface IReqoreTextareaProps
   flat?: boolean;
   fixed?: boolean;
   onClearClick?: () => any;
+  /** What the clear button is called, for a screen reader and a test (`Clear` unless given): a host's own words. */
+  clearLabel?: string;
   wrapperStyle?: React.CSSProperties;
   focusRules?: IReqoreAutoFocusRules;
   /**
@@ -151,6 +153,7 @@ export const StyledTextareaWrapper = styled.div.withConfig({
 export const REQORE_TEXTAREA_STYLE_PROPS = listReqoreStyleProps<
   TReqoreStylePropKeys<IReqoreTextareaStyle, React.TextareaHTMLAttributes<HTMLTextAreaElement>>
 >({
+  clearLabel: true,
   customTheme: true,
   effect: true,
   fixed: true,
@@ -265,6 +268,7 @@ function Textarea<T>(
     size = 'normal',
     className,
     onClearClick,
+    clearLabel,
     fluid,
     tooltip,
     customTheme,
@@ -559,6 +563,7 @@ function Textarea<T>(
           enabled={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
           show={_value && _value !== ''}
           onClick={onClearClick}
+          label={clearLabel}
           shownOpacity={look.clearOpacity}
           size={size}
         />
