@@ -1,8 +1,9 @@
-// A clickable card is read on what it paints while hovered as well as at rest: its text and its fainter text
-// (qorus#646). A clickable entity row's metadata, faded as far as it read on the resting fill, fell to 4.2:1 on
-// the hover fill.
+// A clickable card, and a button's description, are read on what is painted while hovered as well as at rest
+// (qorus#646). Faded as far as they read on the resting fill, a clickable entity row's metadata fell to 4.2:1 on
+// its hover fill, and an info button's description to 3.8:1.
 import { render } from '@testing-library/react';
 import {
+  ReqoreButton,
   ReqoreCallout,
   ReqoreContent,
   ReqoreEntityRow,
@@ -102,4 +103,54 @@ describe('a clickable card, hovered', () => {
       expect(ratio, text).toBeGreaterThanOrEqual(READABLE_TEXT_CONTRAST);
     }
   });
+});
+
+/** The color the stylesheet gives `element` while `host` is hovered, or its own color when no hover rule names it. */
+const hoverColorOf = (element: HTMLElement): string => {
+  let found: string | undefined;
+  for (const sheet of Array.from(document.styleSheets)) {
+    for (const rule of Array.from((sheet as CSSStyleSheet).cssRules)) {
+      const { selectorText, style } = rule as CSSStyleRule;
+      if (!selectorText?.includes(':hover') || !style?.color) {
+        continue;
+      }
+      const base = selectorText.split(',').map((part) => part.replace(/:hover/g, '').trim());
+      if (base.some((selector) => selector && element.matches(selector))) {
+        found = style.color;
+      }
+    }
+  }
+  return found ?? getComputedStyle(element).color;
+};
+
+const opaque = (color: string, under: ReturnType<typeof parse>) =>
+  over(color.startsWith('#') ? fromHex(color) : parse(color), under);
+
+describe('a button with a description, hovered', () => {
+  test.each([undefined, 'info', 'muted'] as const)(
+    '%s: its description reads on its hover fill',
+    (intent) => {
+      inLayout(
+        <ReqoreButton
+          intent={intent}
+          description='This is a very interesting description for a button'
+        >
+          With Default Description
+        </ReqoreButton>
+      );
+
+      const button = document.querySelector('.reqore-button') as HTMLElement;
+      const description = button.querySelector('.reqore-button-description') as HTMLElement;
+      const page = parse(
+        getComputedStyle(document.querySelector('.reqore-layout-wrapper') as HTMLElement)
+          .backgroundColor
+      );
+      const hovered = opaque(hoverBackgroundOf(button), page);
+      const drawn = over(hoverColorOf(description), hovered, drawnOpacity(description));
+
+      expect(getContrastRatio(hex(drawn), hex(hovered))).toBeGreaterThanOrEqual(
+        READABLE_TEXT_CONTRAST
+      );
+    }
+  );
 });
