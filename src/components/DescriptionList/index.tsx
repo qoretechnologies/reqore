@@ -14,6 +14,7 @@ import {
   getMainBackgroundColor,
   getReadableAlpha,
   getReadableColor,
+  getReadableIntentColor,
   getThemeSurface,
 } from '../../helpers/colors';
 import { useReqoreSurface } from '../../context/SurfaceContext';
@@ -224,46 +225,54 @@ const UPPERCASE_LABEL_OPACITY = 0.55;
 /**
  * A row's label: an uppercase one fainter than the content, as far as it stays readable on what
  * the list is drawn on (it is rendered inside the list's panel, whose surface it reads), in the
- * color the list's panel writes it in: its own theme's (`customTheme`), not the provider's.
+ * color it is written in: its intent's readable shade when it has one (`labelIntent`), else the text
+ * color the list's panel writes it in - its own theme's (`customTheme`), not the provider's. Not a
+ * memo component: what it holds is new on every render of the list.
  */
-const DescriptionListLabel = memo(
-  ({
-    width,
-    uppercase,
-    customTheme,
-    inheritCustomTheme,
-    children,
-  }: {
-    width: string;
-    uppercase: boolean;
-    customTheme?: IReqorePanelProps['customTheme'];
-    inheritCustomTheme?: boolean;
-    children?: ReactNode;
-  }) => {
-    const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
-    const around = useReqoreSurface();
-    const opacity = useMemo(() => {
-      const surface = getThemeSurface(theme, around);
+const DescriptionListLabel = ({
+  width,
+  uppercase,
+  intent,
+  customTheme,
+  inheritCustomTheme,
+  children,
+}: {
+  width: string;
+  uppercase: boolean;
+  intent?: TReqoreIntent;
+  customTheme?: IReqorePanelProps['customTheme'];
+  inheritCustomTheme?: boolean;
+  children?: ReactNode;
+}) => {
+  const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
+  const around = useReqoreSurface();
+  // faded only when uppercase: a label in the content's case is drawn at full strength
+  const opacity = useMemo(() => {
+    if (!uppercase) {
+      return undefined;
+    }
+    const surface = getThemeSurface(theme, around);
 
-      return getReadableAlpha(
-        getReadableColor(theme, undefined, undefined, true, surface),
-        surface,
-        UPPERCASE_LABEL_OPACITY
-      );
-    }, [theme, around]);
-
-    return (
-      <StyledLabel
-        $width={width}
-        $uppercase={uppercase}
-        $opacity={opacity}
-        className='reqore-description-list-label'
-      >
-        {children}
-      </StyledLabel>
+    return getReadableAlpha(
+      intent
+        ? getReadableIntentColor(theme, intent, undefined, around)
+        : getReadableColor(theme, undefined, undefined, true, surface),
+      surface,
+      UPPERCASE_LABEL_OPACITY
     );
-  }
-);
+  }, [theme, around, uppercase, intent]);
+
+  return (
+    <StyledLabel
+      $width={width}
+      $uppercase={uppercase}
+      $opacity={opacity}
+      className='reqore-description-list-label'
+    >
+      {children}
+    </StyledLabel>
+  );
+};
 
 const StyledContent = styled.div<IStyledContentProps>`
   flex: 1 1 auto;
@@ -400,6 +409,7 @@ export const ReqoreDescriptionList = memo(
                     <DescriptionListLabel
                       width={labelWidth}
                       uppercase={labelUppercase}
+                      intent={row.labelIntent}
                       customTheme={panelRest.customTheme}
                       inheritCustomTheme={panelRest.inheritCustomTheme}
                     >
