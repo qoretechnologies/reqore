@@ -21,12 +21,11 @@ import {
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
-  fadeColor as fadeColorBy,
   getColorFromMaybeString,
   getDrawnColor,
   getGradientColorList,
   getMainBackgroundColor,
-  getReadableColor,
+  getReadableTextOn,
   getReadableGroupOpacity,
   getThemeSurface,
   IReqoreGroupMark,
@@ -56,6 +55,7 @@ import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { getButtonColors, getButtonIconLook, IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import {
+  getEffectBackgrounds,
   getPrimaryGradient,
   IReqoreEffect,
   StyledEffect,
@@ -301,6 +301,11 @@ export interface IReqoreNavRailProps
 
 // ── Styled surface ────────────────────────────────────────────────────────────
 
+/** The rail's own color, under its opacity: what its styled rule paints, what its items are read on and what its
+ *  fades dissolve into. */
+const getRailFillColor = (theme: IReqoreTheme) =>
+  changeLightness(getMainBackgroundColor(theme), 0.02);
+
 interface ISurfaceStyle {
   theme: IReqoreTheme;
   $gap: number;
@@ -312,7 +317,6 @@ interface ISurfaceStyle {
   $transparent: boolean;
   $opacity: number;
   $blur: number;
-  $bgLightness: number;
   $borderLightness: number;
   // Positioning / reveal (outer surface only)
   $position?: TReqoreNavRailPosition;
@@ -339,10 +343,8 @@ const NavRailSurface = styled(StyledEffect)<ISurfaceStyle>`
   interpolate-size: allow-keywords;
   transition: width 0.2s ease-out;
 
-  background-color: ${({ theme, $transparent, $opacity, $bgLightness }) =>
-    $transparent
-      ? 'transparent'
-      : rgba(changeLightness(getMainBackgroundColor(theme), $bgLightness), $opacity)};
+  background-color: ${({ theme, $transparent, $opacity }) =>
+    $transparent ? 'transparent' : rgba(getRailFillColor(theme), $opacity)};
   border: ${({ $flat, theme, $borderLightness }) =>
     $flat
       ? 'none'
@@ -935,18 +937,20 @@ export const ReqoreNavRail = memo(
     const tipSide: 'left' | 'right' = position === 'right' ? 'left' : 'right';
     const activeIntent: TReqoreIntent = intent ?? 'info';
     const isTransparent = !!(transparent || minimal);
-    // What the rail's items are drawn on: its surface over what is under it, unless it has none.
+    /* What the rail's items are drawn on: its surface over what is under it, unless it has none - or each color of
+       the gradient its effect paints. Read on its fill alone, a light gradient on a dark theme gave its marks light
+       text on light. */
     const surroundingSurface = useReqoreSurface();
-    const railSurface = useMemo(
-      () =>
-        isTransparent
-          ? getThemeSurface(theme, surroundingSurface)
-          : getDrawnColor(
-              fadeColorBy(changeLightness(getMainBackgroundColor(theme), 0.02), opacity),
-              getThemeSurface(theme, surroundingSurface)
-            ),
-      [isTransparent, theme, surroundingSurface, opacity]
-    );
+    // the effect is followed by its gradient's colors: one given inline is new on every render
+    const railGradientKey = JSON.stringify(effect?.gradient ?? null);
+    const railSurfaces = useMemo(() => {
+      const under = getThemeSurface(theme, surroundingSurface);
+      const fill = isTransparent
+        ? under
+        : (getDrawnColor(rgba(getRailFillColor(theme), opacity), under) as TReqoreHexColor);
+
+      return getEffectBackgrounds(theme, effect, fill, under);
+    }, [isTransparent, theme, surroundingSurface, opacity, railGradientKey]);
     const isFlat = !!(flat || minimal);
 
     const [internalId, setInternalId] = useState(defaultActiveId ?? items[0]?.id);
@@ -1225,20 +1229,19 @@ export const ReqoreNavRail = memo(
         return idleOpacity;
       }
 
-      const marks: IReqoreGroupMark[] = [
-        {
-          color: getReadableColor(theme, undefined, undefined, true, railSurface),
-          alpha: CONTROL_ICON_OPACITY,
-          on: railSurface,
-        },
-      ];
+      const restingText = getReadableTextOn(theme, railSurfaces);
+      const marks: IReqoreGroupMark[] = railSurfaces.map((on) => ({
+        color: restingText,
+        alpha: CONTROL_ICON_OPACITY,
+        on,
+      }));
 
       if (activeItem) {
         const style = {
           theme: activeMarkTheme,
           minimal: false,
           effect: { interactive: true, ...(activeItem.effect ?? activeEffect) },
-          $surface: railSurface,
+          $surface: railSurfaces,
         };
         // as the active button draws its icon: on its fill
         const look = getButtonIconLook(style, undefined, true);
@@ -1263,7 +1266,7 @@ export const ReqoreNavRail = memo(
       revealOnScroll,
       idleReveal,
       theme,
-      railSurface,
+      railSurfaces,
       activeItem,
       activeMarkTheme,
       activeEffect,
@@ -1283,10 +1286,7 @@ export const ReqoreNavRail = memo(
     // The fade dissolves the marks into the rail's own surface (or, on a
     // transparent rail, into the page behind it).
     const fadeBase =
-      fadeColor ??
-      (isTransparent
-        ? getMainBackgroundColor(theme)
-        : changeLightness(getMainBackgroundColor(theme), 0.02));
+      fadeColor ?? (isTransparent ? getMainBackgroundColor(theme) : getRailFillColor(theme));
     const fadeFrom = rgba(fadeBase, isTransparent ? 1 : opacity);
     const fadeTo = rgba(fadeBase, 0);
     const expandedCap = isExpanded
@@ -1383,10 +1383,10 @@ export const ReqoreNavRail = memo(
       /* What the group's marks are drawn on, handed to them: each color of the active effect's gradient, or the
          tint, over the rail. A resting mark picks its text for it, not for the rail around the group. */
       const groupSurface = groupGradient
-        ? getGradientColorList(theme, groupGradient.colors).map((stop) =>
-            getDrawnColor(stop, railSurface)
+        ? getGradientColorList(theme, groupGradient.colors).flatMap((stop) =>
+            railSurfaces.map((under) => getDrawnColor(stop, under))
           )
-        : getDrawnColor(groupTint, railSurface);
+        : railSurfaces.map((under) => getDrawnColor(groupTint, under));
       // One mark wide (inset-shadow "border", no horizontal padding) so the rail
       // never changes width; the top mark sits flush in the pill cap and a little
       // bottom padding keeps the last section off the edge.
@@ -1464,7 +1464,6 @@ export const ReqoreNavRail = memo(
           $transparent={isTransparent}
           $opacity={opacity}
           $blur={blur}
-          $bgLightness={0.02}
           $borderLightness={0.14}
           $position={position}
           $floating={floating}
@@ -1474,7 +1473,7 @@ export const ReqoreNavRail = memo(
           $restOpacity={restOpacity}
           $maxHeight={expandedCap}
         >
-          <ReqoreSurfaceProvider color={railSurface}>
+          <ReqoreSurfaceProvider color={railSurfaces}>
             <ReqoreControlGroup
               vertical
               gapSize={size}
