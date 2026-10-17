@@ -5,6 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { configDefaults, defineConfig, mergeConfig } from 'vitest/config';
+import type { BrowserCommand } from 'vitest/node';
 import viteConfig from './vite.config';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -76,12 +77,9 @@ const storyBrowser = (phone = false) => ({
      while it measures, so it measures what stays on screen, never a frame of a fade (qorus#646: a clear button
      measured on its way in); a story tagged `reduced-motion` runs under it (.storybook/vitest.setup.ts). */
   commands: {
-    emulateReducedMotion: async (
-      { page }: { page: { emulateMedia: (options: { reducedMotion: string }) => Promise<void> } },
-      reduce: boolean
-    ) => {
+    emulateReducedMotion: (async ({ page }, reduce) => {
       await page.emulateMedia({ reducedMotion: reduce ? 'reduce' : 'no-preference' });
-    },
+    }) satisfies BrowserCommand<[reduce: boolean]>,
   },
   headless: true,
   instances: [{ browser: 'chromium' as const }],

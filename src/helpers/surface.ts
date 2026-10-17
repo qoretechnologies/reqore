@@ -1,9 +1,12 @@
-import { IReqoreCustomTheme, IReqoreTheme } from '../constants/theme';
+import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../constants/theme';
 import {
   getColorFromMaybeString,
   getDrawnColor,
+  getReadableIconLook,
+  getReadableIntentColor,
   getThemeSurface,
   isValidSixCharHex,
+  READABLE_ICON_CONTRAST,
   TReqoreSurface,
 } from './colors';
 import { getEffectTextColor, TReqoreEffectColor, TReqoreHexColor } from '../components/Effect';
@@ -73,4 +76,25 @@ export const getDrawnEffectTextColor = (
   } catch {
     return undefined;
   }
+};
+
+/**
+ * The color a card's own mark (an entity row's icon, a callout's icon, a testimonial's avatar and quote mark) is
+ * drawn in on `backgrounds`: its `own` color, moved to a shade that stands out by 3:1 there when it is a theme's;
+ * else its intent's shade that does; else the card's `text`.
+ */
+export const getCardMarkColor = (
+  theme: IReqoreTheme,
+  backgrounds: TReqoreHexColor[],
+  text: TReqoreHexColor,
+  own?: TReqoreEffectColor,
+  intent?: TReqoreIntent
+): TReqoreEffectColor => {
+  if (own) {
+    return (getReadableIconLook(theme, backgrounds, text, 1, own).color ?? own) as TReqoreEffectColor;
+  }
+  if (intent) {
+    return getReadableIntentColor(theme, intent, READABLE_ICON_CONTRAST, backgrounds) as TReqoreEffectColor;
+  }
+  return text as TReqoreEffectColor;
 };

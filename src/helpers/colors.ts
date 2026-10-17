@@ -396,6 +396,27 @@ export const getReadableAlpha = (
     )
   );
 
+/**
+ * The least alpha from `from` up to 1 at which `reads` holds, to a hundredth, rounded up: `reads` holds at 1 and not
+ * at `from`. The range in which it starts to hold is halved until it is less than half a hundredth wide.
+ */
+const leastReadingAlpha = (from: number, reads: (alpha: number) => boolean): number => {
+  let low = from;
+  let high = 1;
+
+  while (high - low > 0.005) {
+    const middle = (low + high) / 2;
+
+    if (reads(middle)) {
+      high = middle;
+    } else {
+      low = middle;
+    }
+  }
+
+  return Math.min(1, Math.ceil(high * 100) / 100);
+};
+
 const rememberAlpha = createColorCache<number>();
 
 const getReadableAlphaOn = (
@@ -424,24 +445,9 @@ const getReadableAlphaOn = (
       return 1;
     }
 
-    // halve the range in which the alpha starts to read until it is less than half a hundredth wide
-    let low = alpha;
-    let high = 1;
-
-    while (high - low > 0.005) {
-      const middle = (low + high) / 2;
-
-      if (getContrastAtAlpha(parts, surface, middle) >= minContrast) {
-        high = middle;
-      } else {
-        low = middle;
-      }
-    }
-
-    return Math.min(1, Math.ceil(high * 100) / 100);
+    return leastReadingAlpha(alpha, (at) => getContrastAtAlpha(parts, surface, at) >= minContrast);
   });
 
-/** `color` at `alpha`, or at as much more as it needs to stand out from `background` (`getReadableAlpha`). */
 /** A mark (a text, an icon) as drawn in a group: its color, at `alpha`, on `on` (opaque). */
 export interface IReqoreGroupMark {
   color: TReqoreMultiTypeColor | string;
@@ -491,22 +497,10 @@ export const getReadableGroupOpacity = (
     return 1;
   }
 
-  let low = opacity;
-  let high = 1;
-
-  while (high - low > 0.005) {
-    const middle = (low + high) / 2;
-
-    if (reads(middle)) {
-      high = middle;
-    } else {
-      low = middle;
-    }
-  }
-
-  return Math.min(1, Math.ceil(high * 100) / 100);
+  return leastReadingAlpha(opacity, reads);
 };
 
+/** `color` at `alpha`, or at as much more as it needs to stand out from `background` (`getReadableAlpha`). */
 export const getReadableFadedColor = (
   color: TReqoreMultiTypeColor | string,
   background: TReqoreReadableBackground,
@@ -516,29 +510,6 @@ export const getReadableFadedColor = (
   isOpaque(getDrawnColor(color))
     ? rgba(getDrawnColor(color), getReadableAlpha(color, background, alpha, minContrast))
     : color;
-
-/**
- * The opacity a component draws its secondary text (a description, metadata, a timestamp) or an icon at, on `surface`
- * (its theme's main unless given; translucent, drawn over the theme it was made from): `opacity`, or as much more as
- * the text color (`color`, or the theme's readable one there) needs to stand out by `minContrast`: 4.5:1 for text,
- * `READABLE_ICON_CONTRAST` for an icon.
- */
-export const getReadableOpacity = (
-  theme: IReqoreTheme,
-  opacity: number,
-  minContrast: number = READABLE_TEXT_CONTRAST,
-  surface: TReqoreMultiTypeColor | string = theme.main,
-  color?: TReqoreMultiTypeColor | string
-): number => {
-  const background = getDrawnColor(surface, theme.originalMain);
-
-  return getReadableAlpha(
-    color ?? getReadableColor(theme, undefined, undefined, true, background),
-    background,
-    opacity,
-    minContrast
-  );
-};
 
 /**
  * A theme's text color on every one of `backgrounds` (what a component is drawn in - each color of its gradient):

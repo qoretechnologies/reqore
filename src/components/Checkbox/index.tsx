@@ -415,9 +415,9 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
     /* What the box or the switch is drawn on, and in: its state is visual information, so the box
        (faded when not checked), the knob's icon and both of the switch's words stand out from it -
        3:1 for an icon, 4.5:1 for a word (WCAG 1.4.11, 1.4.3). */
-    const surfaces = getThemeSurfaces(theme, useReqoreSurface());
-    const surfacesKey = surfaces.join();
-    // the knob paints nothing when all it shows is an icon or an image
+    const surface = useReqoreSurface();
+    const surfaces = useMemo(() => getThemeSurfaces(theme, surface), [theme, surface]);
+    // the knob paints nothing when all it shows is an icon or an image: what it is drawn as and read on
     const knobTransparent =
       !!(image || checkedIcon) && !(onText || offText || onText === 0 || offText === 0);
     const colors = useMemo(() => {
@@ -474,7 +474,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         offSideOpacity: Math.max(...trackInks.map((ink) => getReadableAlpha(ink, tracks, 0.3))),
         knobIconOpacity,
       };
-    }, [theme, checked, surfacesKey, _intent, knobTransparent, effect, switchTextEffect]);
+    }, [theme, checked, surfaces, _intent, knobTransparent, effect, switchTextEffect]);
 
     // one object for as long as what it holds holds: an icon is a memo component
     const knobIconEffect = useMemo(
@@ -498,10 +498,6 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
 
       return selectedWidth + addedWidth;
     }, [checked, offWidth, onWidth, size]);
-
-    const hasText = useMemo(() => {
-      return !!(onText || offText || onText === 0 || offText === 0);
-    }, [onText, offText]);
 
     /* One activation, one click. A pointer clicks the drawing (the native input takes no
        pointer events), and that click is handed to the native input so it toggles, fires its
@@ -746,7 +742,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
               width={width}
               theme={theme}
               parentEffect={effect}
-              transparent={(image || checkedIcon) && !hasText}
+              transparent={knobTransparent}
             >
               {!onText && !offText ? (
                 <ReqoreIcon
