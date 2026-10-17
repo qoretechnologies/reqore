@@ -1045,6 +1045,10 @@ export const StyledPanelTitle = styled.div.withConfig({
 `;
 
 export const StyledPanelTopBar = styled(StyledPanelTitle)`
+  /* What the bar holds that sets no color of its own (its icon) is written in the bar's text, read on the bar's
+     fill. The panel's own text is read on its content, which it paints a step darker than the bar: on a mid grey
+     the two are different colors. */
+  color: ${({ $color }: IStyledPanel) => $color};
   padding-bottom: ${({ padded, size, isCollapsed, minimal }: IStyledPanel) =>
     !padded || isCollapsed || !minimal
       ? `${getPaddingSize(padded, size)}px`
@@ -2437,6 +2441,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           {hasTitleBar && (
             <ReqoreSurfaceProvider color={barSurface}>
               <StyledPanelTopBar
+                $color={barText}
                 flat={flat}
                 isCollapsed={_isCollapsed}
                 collapsible={collapsible}

@@ -324,6 +324,21 @@ export const Basic: Story = {
   },
 };
 
+export const MidGreyTheme: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel in a mid grey (#808080). It paints its color a step darker, and its text is picked for what it paints: white, where a dark text picked for #808080 itself did not read on the darker fill.',
+      },
+    },
+  },
+  render: Template,
+  args: {
+    customTheme: { main: '#808080' },
+  },
+};
+
 export const NoPadding: Story = {
   parameters: {
     docs: {
