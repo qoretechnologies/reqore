@@ -24,6 +24,7 @@ import {
   getThemeColorKey,
   getThemeSurfaces,
   READABLE_TEXT_CONTRAST,
+  TReqoreReadableBackground,
   TReqoreSurface,
 } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
@@ -1050,12 +1051,7 @@ export const StyledTextEffect = styled(StyledEffect)
       $backgrounds
     );
     const under = $backgrounds?.length ? $backgrounds : getThemeSurfaces(theme, $surface);
-    // the frost fades the letters toward their foot, but only as far as they stay readable
-    const opacity = getReadableAlpha(
-      color,
-      under,
-      (frost.opacity ?? 0.72) * 0.52
-    ) / 0.52;
+    const opacity = getFrostOpacity(color, under, frost.opacity);
     const shadowOpacity = frost.shadowOpacity ?? 0.28;
     const blur = frost.blur ?? 0.4;
 
@@ -1064,7 +1060,7 @@ export const StyledTextEffect = styled(StyledEffect)
       background: linear-gradient(
         180deg,
         ${getColorAtAlpha(color, Math.min(opacity + 0.18, 1))},
-        ${getColorAtAlpha(color, opacity * 0.52)}
+        ${getColorAtAlpha(color, opacity * FROST_FOOT)}
       );
       -webkit-background-clip: text !important;
       background-clip: text !important;
@@ -1076,6 +1072,21 @@ export const StyledTextEffect = styled(StyledEffect)
     `;
   }}
 `;
+
+/** How far down its letters frosted text fades: its foot is drawn at this part of its opacity. */
+export const FROST_FOOT = 0.52;
+
+/**
+ * The opacity frosted text is drawn at (its top; its foot is `FROST_FOOT` of it): the caller's `opacity` as given,
+ * or by default 0.72, raised as far as the foot needs to stand out from what it is drawn on. Only the default is
+ * floored: what a caller sets is the caller's (see COMPONENTS.md).
+ */
+export const getFrostOpacity = (
+  color: TReqoreHexColor | string,
+  under: TReqoreReadableBackground,
+  opacity?: number
+): number =>
+  opacity !== undefined ? opacity : getReadableAlpha(color, under, 0.72 * FROST_FOOT) / FROST_FOOT;
 
 export const ReqoreEffect = ({ children, ...rest }: IReqoreTextEffectProps) => {
   return (
