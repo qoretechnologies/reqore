@@ -79,6 +79,52 @@ export const getRowActionLabel = (action: {
   return tooltipText(action.tooltip) ?? (action['aria-label']?.trim() || undefined);
 };
 
+/** What a row's action says where reqore draws it compactly (`getCompactRowAction`). */
+export interface IReqoreRowActionShortLabel {
+  /**
+   * What the action says where reqore draws it compactly, on a line it shares with the row's label: the one
+   * action of a narrow `narrowActions='menu'` row (`ReqoreEntityRow`, `ReqoreSeverityRow`) and a narrow table's
+   * folded column - `'Test'` for `'Test the connection'`. Its label is then its tooltip (unless it has one) and
+   * its accessible name (unless it has one), so write it as words of its label: what a screen reader says holds
+   * what is seen. Wide, and on a line of its own (stacked, or in a row under the label), the action says its
+   * label.
+   */
+  shortLabel?: string;
+}
+
+/**
+ * An action as reqore draws it compactly (a row-end action on a narrow screen, qorus#646):
+ * - its `shortLabel`, its label its tooltip and its accessible name;
+ * - with none, an action with an icon and a tooltip is its icon alone, named by its label: one its author gave a
+ *   tooltip reads without its words;
+ * - any other says its label, as it did before (its icon and its label, or its label alone).
+ * The action's own `tooltip` and `aria-label` stand.
+ */
+export const getCompactRowAction = (action: {
+  label?: React.ReactNode;
+  shortLabel?: string;
+  icon?: IReqoreButtonProps['icon'];
+  tooltip?: TReqoreTooltipProp;
+  'aria-label'?: string;
+}): { label?: React.ReactNode; tooltip?: TReqoreTooltipProp; 'aria-label'?: string } => {
+  const { label, icon, tooltip } = action;
+  const shortLabel = action.shortLabel?.trim() || undefined;
+  const ownName = action['aria-label'];
+  // its label in words: what the action is called where it does not say it
+  const named =
+    typeof label === 'number' || (typeof label === 'string' && label.trim())
+      ? String(label)
+      : undefined;
+
+  if (shortLabel) {
+    return { label: shortLabel, tooltip: tooltip ?? named, 'aria-label': ownName ?? named };
+  }
+  if (icon && tooltipText(tooltip) && hasRowActionLabel(label)) {
+    return { label: undefined, tooltip, 'aria-label': ownName ?? named };
+  }
+  return { label: hasRowActionLabel(label) ? label : undefined, tooltip, 'aria-label': ownName };
+};
+
 /** A row's label in words, where it is text: what its actions menu is named for (`rowLabel`). */
 export const rowLabelText = (label: React.ReactNode): string | undefined =>
   typeof label === 'number' || (typeof label === 'string' && label.trim())

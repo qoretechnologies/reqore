@@ -29,7 +29,7 @@ import ReqoreInput, { IReqoreInputProps } from '../Input';
 import { NARROW_CONTAINER_BREAKPOINT_PX } from '../../hooks/useNarrowContainer';
 import { TReqoreKeyValueTableExportMapper } from '../KeyValueTable';
 import { IReqorePanelAction, IReqorePanelProps, IReqorePanelSubAction } from '../Panel';
-import { DEFAULT_ACTIONS_MENU_LABEL } from '../RowActionsMenu';
+import { DEFAULT_ACTIONS_MENU_LABEL, IReqoreRowActionShortLabel } from '../RowActionsMenu';
 import ReqoreTableBody from './body';
 import ReqoreTableHeader, { IReqoreCustomHeaderCellComponent } from './header';
 import { IReqoreTableHeaderCellProps } from './headerCell';
@@ -128,8 +128,8 @@ export interface IReqoreTableColumn extends IReqoreIntent {
      * actions into one menu (see `actionsMenuBelowWidth`), it is the action's name in that menu -
      * its text, or a number; otherwise its string `tooltip`, or its `aria-label` - and a row with
      * only one action keeps it as a button the menu's width, its icon alone, its label then its
-     * tooltip (unless it has one) and its accessible name. A button that draws no label is named
-     * by its tooltip's text.
+     * tooltip (unless it has one) and its accessible name; one with no icon says its `shortLabel`
+     * there, where it has one. A button that draws no label is named by its tooltip's text.
      */
     actions?: (data: IReqoreTableRowData) => TReqoreTableCellAction[];
     /**
@@ -164,9 +164,10 @@ export interface IReqoreTableColumn extends IReqoreIntent {
  * cells too. In the menu a narrow table folds the actions into, only text or a number names the
  * action; anything else gives way to its string `tooltip`.
  */
-export type TReqoreTableCellAction = Omit<IReqoreButtonProps, 'children' | 'label' | 'rightIcon'> & {
-  label?: React.ReactNode;
-};
+export type TReqoreTableCellAction = Omit<IReqoreButtonProps, 'children' | 'label' | 'rightIcon'> &
+  IReqoreRowActionShortLabel & {
+    label?: React.ReactNode;
+  };
 
 export interface IReqoreTableRowData {
   [key: string]: any;

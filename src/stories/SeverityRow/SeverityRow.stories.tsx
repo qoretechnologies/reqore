@@ -14,6 +14,7 @@ import {
   rowActionsMenuButtons,
 } from '../utils/rowActionsMenu';
 import { expectEqualBoxesEqualRows, expectRowsFillTheirBoxes, StoryRowBox } from '../utils/rowBoxes';
+import { buttonSays } from '../utils/buttonSays';
 import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import { withViewport } from '../utils/viewport';
 
@@ -888,6 +889,101 @@ export const NarrowContainerLoneActionInMenuModeOnAPhone: Story = {
         );
       }
     });
+  },
+};
+
+/* What a row-end action says on a narrow line (David, qorus#646): its short label; with none, its icon alone
+   where it has a tooltip; else its label, as before. Wide, every one says its label. */
+const SHORT_LABEL_SEVERITY_ROWS: Array<
+  Pick<IReqoreSeverityRowProps, 'label' | 'actions'> & { narrow: string }
+> = [
+  {
+    label: 'Payment Processing · stripe-webhook-receiver',
+    actions: [
+      {
+        label: 'Investigate the incident',
+        shortLabel: 'Investigate',
+        icon: 'SearchEyeLine',
+        intent: 'danger',
+        onClick: onInvestigate,
+      },
+    ],
+    narrow: 'Investigate',
+  },
+  {
+    label: 'Order sync lagging · order-sync-workflow',
+    actions: [
+      { label: 'Dismiss this alert', icon: 'CloseLine', tooltip: 'Dismiss', onClick: onDismiss },
+    ],
+    narrow: '',
+  },
+  {
+    label: 'Inventory feed stale · inventory-feed',
+    actions: [{ label: 'Retry', icon: 'RefreshLine' }],
+    narrow: 'Retry',
+  },
+];
+
+const ShortLabelSeverityRows = () => (
+  <ReqoreControlGroup vertical gapSize='big'>
+    {[720, 400].map((width) => (
+      <StoryRowBox
+        key={width}
+        className={width > 640 ? 'wide-row-box' : 'narrow-row-box'}
+        width={width}
+        caption={`A ${width}px container: one action each`}
+      >
+        <ReqoreControlGroup vertical fluid>
+          {SHORT_LABEL_SEVERITY_ROWS.map(({ label, actions }, index) => (
+            <ReqoreSeverityRow
+              key={index}
+              label={label}
+              description='Avg duration 4.7s exceeded 3.5s threshold · just now'
+              intent='danger'
+              leading={CRITICAL_TAG}
+              fluid
+              narrowActions='menu'
+              actions={actions}
+            />
+          ))}
+        </ReqoreControlGroup>
+      </StoryRowBox>
+    ))}
+  </ReqoreControlGroup>
+);
+
+export const NarrowContainerLoneActionShortLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders three rows (`narrowActions='menu'`), each with one action, in a 720px container and a 400px one. Wide, each action says its label: Investigate the incident, Dismiss this alert, Retry. Narrow, at the end of the label's line, Investigate the incident reads \"Investigate\" (its `shortLabel`); Dismiss this alert, which has no short label but has an icon and a tooltip, is its icon alone; Retry, with neither, says Retry. Each is still called by its label.",
+      },
+    },
+  },
+  render: () => <ShortLabelSeverityRows />,
+  play: async ({ canvasElement }) => {
+    const rowsIn = (box: string) =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>(`.${box} .reqore-severity-row`));
+    await waitFor(() => {
+      expect(rowsIn('narrow-row-box')).toHaveLength(SHORT_LABEL_SEVERITY_ROWS.length);
+      expect(
+        rowsIn('narrow-row-box').every((row) => row.getAttribute('data-actions') === 'end')
+      ).toBe(true);
+    });
+
+    const wide = rowsIn('wide-row-box');
+    const narrow = rowsIn('narrow-row-box');
+    for (const [index, { actions, narrow: says }] of SHORT_LABEL_SEVERITY_ROWS.entries()) {
+      const button = (row: HTMLElement) =>
+        row.querySelector<HTMLElement>('.reqore-severity-row-actions .reqore-button')!;
+      expect(wide[index].getAttribute('data-narrow')).toBeNull();
+      expect(buttonSays(button(wide[index]))).toBe(actions![0].label);
+      expect(buttonSays(button(narrow[index]))).toBe(says);
+      expect(button(narrow[index])).toHaveAccessibleName(actions![0].label as string);
+      await expectLoneActionAtLineEnd(narrow[index]);
+    }
+    expectRowsFillTheirBoxes(canvasElement, '.reqore-severity-row');
   },
 };
 
