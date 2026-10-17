@@ -13,8 +13,11 @@ import axe from 'axe-core';
  *   not check: the element's own and its ancestors' backgrounds, layered as the browser draws them - a translucent
  *   color over what is under it, a gradient as each of its colors - with the opacity they are drawn at.
  *
- * Text and icons on an image, which cannot be told, are left alone, as is anything disabled, which WCAG exempts, and
- * anything not drawn (no size, hidden, or at no opacity).
+ * Text axe cannot decide for another reason - drawn in a translucent color, beside pseudo-content, with a shadow -
+ * is measured here the same way, against what it is drawn on. Left alone: text and icons on an image, which cannot be
+ * told (`IMAGE_KEYS`); text something else is drawn over or that is off screen, where what is under it is not what
+ * its ancestors paint (`POSITION_KEYS`); anything disabled, and decoration the page marks as such
+ * (`data-decorative`), which WCAG exempts; and anything not drawn (no size, hidden, or at no opacity).
  */
 
 /** A color: red, green and blue (0 to 255) and alpha (0 to 1). */
@@ -132,7 +135,7 @@ const colorAlong = (
  * over the part of it the target covers (where it starts, where it ends and every stop between); otherwise - an
  * angle, a radial gradient, a target the painter has no size for - each of its colors. Undefined for an image.
  */
-export const gradientColorsUnder = (
+const gradientColorsUnder = (
   image: string,
   painter: DOMRect,
   target: DOMRect
@@ -318,7 +321,7 @@ export const opacityOf = (element: Element): number => {
  * Whether WCAG exempts an element: it is part of a control that is disabled, or decoration the page says is
  * decoration (`data-decorative`: a busy backdrop behind a frosted surface, say), which WCAG exempts too.
  */
-export const isDisabled = (element: Element): boolean =>
+const isExempt = (element: Element): boolean =>
   !!element.closest(
     '[disabled], [aria-disabled="true"], .reqore-disabled, [data-disabled="true"], .reqore-control-disabled, [data-decorative]'
   );
@@ -332,7 +335,7 @@ const isDrawn = (element: Element): boolean => {
 };
 
 /** Where an element is, for a message: its id and classes, up a few ancestors. */
-export const whereIs = (element: Element): string => {
+const whereIs = (element: Element): string => {
   const parts: string[] = [];
   for (let at: Element | null = element; at && parts.length < 3; at = at.parentElement) {
     const classes = Array.from(at.classList)
@@ -357,7 +360,7 @@ export const lowContrastIconsIn = (root: ParentNode = document.body): string[] =
   const found: string[] = [];
   for (const icon of Array.from(root.querySelectorAll(ICONS))) {
     const holder = icon.closest('.reqore-icon') ?? icon;
-    if (!isDrawn(holder) || isDisabled(holder)) continue;
+    if (!isDrawn(holder) || isExempt(holder)) continue;
     const style = getComputedStyle(icon);
     // an icon is painted in its fill, which is most often its text color (`currentColor`)
     const fill = style.fill;
@@ -394,7 +397,7 @@ const textGradientHolder = (element: Element): Element | undefined => {
  * of its colors counts as the text's - axe measures the color the letters are not drawn in). The worst pair counts.
  */
 const measureText = (element: Element | null, where: string): string[] => {
-  if (!element || isDisabled(element) || !isDrawn(element)) return [];
+  if (!element || isExempt(element) || !isDrawn(element)) return [];
   const holder = textGradientHolder(element);
   const colors = holder
     ? textGradientOf(holder)
@@ -411,6 +414,20 @@ const measureText = (element: Element | null, where: string): string[] => {
       ]
     : [];
 };
+
+/** What axe cannot decide for text on an image (`bgImage`, an `<img>` under it): it cannot be told. */
+const IMAGE_KEYS = new Set(['bgImage', 'imgNode']);
+
+/**
+ * What axe cannot decide for text that something else is drawn over or under, or that is off screen: what is under
+ * it is not what its ancestors paint, which is all `measureText` knows.
+ */
+const POSITION_KEYS = new Set([
+  'bgOverlap',
+  'elmPartiallyObscured',
+  'elmPartiallyObscuring',
+  'outsideViewport',
+]);
 
 /** Each piece of text in `root` too close to what it is drawn on, with where it is. */
 export const lowContrastTextIn = async (root: Element = document.body): Promise<string[]> => {
@@ -430,6 +447,10 @@ export const lowContrastTextIn = async (root: Element = document.body): Promise<
           }
         | undefined;
       const element = describe(node);
+      // disabled, or decoration the page says is decoration: WCAG exempts it
+      if (element && isExempt(element)) {
+        return [];
+      }
       // text drawn in a gradient: axe measured the color it is not drawn in
       if (element && textGradientHolder(element)) {
         return measureText(element, 'drawn in a gradient');
@@ -439,19 +460,22 @@ export const lowContrastTextIn = async (root: Element = document.body): Promise<
       ];
     })
   );
-  // what axe could not decide because it is on a gradient: measured here, against each of the gradient's colors
-  const onGradients = results.incomplete.flatMap((incomplete) =>
+  /* what axe could not decide: measured here against what it is drawn on (a gradient as each of its colors), but
+     for text on an image or where what is under it is not what its ancestors paint */
+  const undecided = results.incomplete.flatMap((incomplete) =>
     incomplete.nodes.flatMap((node) => {
-      if ((node.any[0]?.data as { messageKey?: string } | undefined)?.messageKey !== 'bgGradient')
-        return [];
+      const key = (node.any[0]?.data as { messageKey?: string } | undefined)?.messageKey;
+      if (key && (IMAGE_KEYS.has(key) || POSITION_KEYS.has(key))) return [];
       const element = describe(node);
       return measureText(
         element,
-        element && textGradientHolder(element) ? 'drawn in a gradient' : 'on a gradient'
+        element && textGradientHolder(element) ? 'drawn in a gradient'
+        : key === 'bgGradient' ? 'on a gradient'
+        : `undecided by axe (${key ?? 'no reason'})`
       );
     })
   );
-  return [...violations, ...onGradients];
+  return [...violations, ...undecided];
 };
 
 /**
