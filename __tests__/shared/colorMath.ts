@@ -13,6 +13,14 @@ export const parse = (color: string): TRgba => {
   return [Number(r), Number(g), Number(b), Number(a)];
 };
 
+/** A six-digit hex color (`#1a2b3c`) as numbers, opaque. */
+export const fromHex = (color: string): TRgba => [
+  parseInt(color.slice(1, 3), 16),
+  parseInt(color.slice(3, 5), 16),
+  parseInt(color.slice(5, 7), 16),
+  1,
+];
+
 /** `color` (with its alpha, times `opacity`) drawn over the opaque `under`. */
 export const over = (color: string | TRgba, under: TRgba, opacity = 1): TRgba => {
   const [r, g, b, a] = typeof color === 'string' ? parse(color) : color;
