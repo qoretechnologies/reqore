@@ -15,12 +15,11 @@ import {
   getMainBackgroundColor,
   getReadableAlpha,
   getReadableColor,
-  getReadableIconLook,
-  getReadableIntentColor,
   READABLE_ICON_CONTRAST,
 } from '../../helpers/colors';
 import { ReqoreSurfaceProvider } from '../../context/SurfaceContext';
 import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
+import { getCardMarkColor } from '../../helpers/surface';
 import { useReqoreDrawnSurface } from '../../hooks/useDrawnSurface';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
@@ -323,21 +322,10 @@ const ReqoreTestimonial = memo(
         fill: tintedBgFor(theme, intent),
         effect,
       });
-      const resolvedAvatarColor: TReqoreEffectColor = useMemo(() => {
-        if (avatarColor) {
-          return (getReadableIconLook(theme, backgrounds, text, 1, avatarColor).color ??
-            avatarColor) as TReqoreEffectColor;
-        }
-        if (intent) {
-          return getReadableIntentColor(
-            theme,
-            intent,
-            READABLE_ICON_CONTRAST,
-            backgrounds
-          ) as TReqoreEffectColor;
-        }
-        return text as TReqoreEffectColor;
-      }, [avatarColor, intent, theme, backgrounds, text]);
+      const resolvedAvatarColor: TReqoreEffectColor = useMemo(
+        () => getCardMarkColor(theme, backgrounds, text, avatarColor, intent),
+        [avatarColor, intent, theme, backgrounds, text]
+      );
       const quoteMarkOpacity = useMemo(
         () => getReadableAlpha(resolvedAvatarColor, backgrounds, 0.7, READABLE_ICON_CONTRAST),
         [resolvedAvatarColor, backgrounds]

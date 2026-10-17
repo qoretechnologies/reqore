@@ -279,14 +279,13 @@ export const getEffectGradientBackgrounds = (
   under: TReqoreHexColor
 ): TReqoreHexColor[] => {
   const behind = base === 'transparent' ? under : getDrawnColor(base, under);
+  // the ring as the effect paints it (`getEffectRingStops`): one per stop, in the same order
+  const rings = getEffectRingStops(theme, colors, 0.15, minimal);
 
-  return getGradientColorList(theme, colors).map((stop) => {
+  return getGradientColorList(theme, colors).map((stop, index) => {
     const fill = minimal ? getColorAtAlpha(changeLightness(stop, 0.05), 0.25) : stop;
-    const ring = minimal
-      ? getColorAtAlpha(changeLightness(stop, 0.15), 0.25)
-      : changeLightness(stop, 0.15);
 
-    return getDrawnColor(fill, getDrawnColor(ring, behind));
+    return getDrawnColor(fill, getDrawnColor(rings[index], behind));
   });
 };
 
@@ -326,7 +325,7 @@ export const getEffectBackgrounds = (
  * The lighter ring an effect draws under its gradient (border-box): each color of the gradient, `lighten` lighter
  * (a quarter of it when minimal), as `createEffectGradient` paints it.
  */
-export const getEffectRingStops = (
+const getEffectRingStops = (
   theme: IReqoreTheme,
   colors: TReqoreEffectGradientColors,
   lighten: number = 0.15,
@@ -346,7 +345,7 @@ export const getEffectRingStops = (
  * ring, and a label faded for it read 3.6:1). One fill layer and its ring share the gradient's geometry, so each stop
  * is drawn over the ring's same stop; more layers are drawn over every color of the ones under them.
  */
-export const drawEffectLayers = (
+const drawEffectLayers = (
   theme: IReqoreTheme,
   layers: TReqoreHexColor[][],
   ringColors: TReqoreEffectGradientColors | undefined,
@@ -378,7 +377,7 @@ export const drawEffectLayers = (
  * the layers under it, over `under` - every color the stack can show somewhere. A step lighter with `lighten`, as
  * an effect draws them hovered or pressed.
  */
-export const drawGradientLayers = (
+const drawGradientLayers = (
   layers: TReqoreHexColor[][],
   under: TReqoreHexColor,
   lighten: number = 0

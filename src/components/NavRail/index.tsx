@@ -556,10 +556,10 @@ const NavRailScrollBox = styled.div<{ $scrollable: boolean; $bleed: number }>`
     `}
 `;
 
-// Hoisted so the memo'd control group / spacer children see stable objects.
 /** How faded an idle rail rests when the caller does not say: no fainter than its icons can still be read. */
 const DEFAULT_IDLE_OPACITY = 0.34;
 
+// Hoisted so the memo'd control group / spacer children see stable objects.
 const EXPANDED_GROUP_STYLE: CSSProperties = { minHeight: 0, flex: '1 1 auto' };
 // A labelled rail aligns its column to the leading edge (so fluid marks can
 // stretch); a divider has a fixed width and must be re-centred by hand.

@@ -762,6 +762,14 @@ export const REQORE_PANEL_STYLE_PROPS = listReqoreStyleProps<
   wrapperPadding: true,
 });
 
+/** A panel's fill at `opacity`: what its styled rule paints and what it hands what it holds as its surface. */
+const getPanelFill = (theme: IReqoreTheme, opacity: number) =>
+  fadeColor(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity);
+
+/** A panel's title and top bar fill at `opacity`, painted and handed down alike. */
+const getPanelBarFill = (theme: IReqoreTheme, opacity: number) =>
+  fadeColor(changeLightness(getMainBackgroundColor(theme), 0.03), opacity);
+
 export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
   // Its own props, `interactive` (set by the panel for its hover styles) and the layout flags a
   // containing ControlGroup hands it — except `size`, which a panel never forwards but a
@@ -773,7 +781,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
   ),
 })<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    fadeColor(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
+    getPanelFill(theme, opacity)};
   border-radius: ${({ rounded, radiusSize }) =>
     rounded ? resolveRadius('normal', radiusSize) : 0}px;
   border: ${({ theme, flat, intent, accentPosition }) =>
@@ -999,7 +1007,7 @@ export const StyledPanelTitle = styled.div.withConfig({
     `}
 
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    fadeColor(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
+    getPanelBarFill(theme, opacity)};
   justify-content: space-between;
 
   padding: ${({ noHorizontalPadding, size, padded, opacity, flat, intent }: IStyledPanel) =>
@@ -1110,7 +1118,7 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
           )}px`
       : undefined};
   background: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    fadeColor(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
+    getPanelBarFill(theme, opacity)};
   // When the header is sticky AND the panel is minimal / transparent (opacity === 0), the
   // header has no surface of its own — scrolling content slides straight under it and the
   // label / actions become illegible. Apply a backdrop blur so the underlying content stays
@@ -2033,7 +2041,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const contentSurface = useMemo(
       () =>
         getDrawnColor(
-          fadeColor(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity ?? 1),
+          getPanelFill(theme, opacity ?? 1),
           getThemeSurface(theme, surface)
         ),
       [theme, opacity, surface]
@@ -2055,10 +2063,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       () =>
         contentSurfaces.map((under) =>
           getDrawnColor(
-            fadeColor(
-              changeLightness(getMainBackgroundColor(theme), 0.03),
-              minimal ? 0 : (opacity ?? 1)
-            ),
+            getPanelBarFill(theme, minimal ? 0 : (opacity ?? 1)),
             under
           )
         ),

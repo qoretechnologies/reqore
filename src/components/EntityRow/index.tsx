@@ -10,9 +10,6 @@ import {
   getMainBackgroundColor,
   getReadableAlpha,
   getReadableFadedColor,
-  getReadableIconLook,
-  getReadableIntentColor,
-  READABLE_ICON_CONTRAST,
 } from '../../helpers/colors';
 import { ReqoreSurfaceProvider } from '../../context/SurfaceContext';
 import {
@@ -48,7 +45,7 @@ import {
 } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { IReqorePanelSubAction } from '../Panel';
-import { getDrawnEffectTextColor } from '../../helpers/surface';
+import { getCardMarkColor, getDrawnEffectTextColor } from '../../helpers/surface';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import ReqoreRowActionsMenu, {
@@ -535,21 +532,10 @@ const ReqoreEntityRow = memo(
         [resolvedIconHasBackground, theme, intent, backgrounds]
       );
       // The icon is in its own color, or the intent's, in a shade that stands out by 3:1 from its tile.
-      const resolvedIconColor: TReqoreEffectColor = useMemo(() => {
-        if (iconColor) {
-          return (getReadableIconLook(theme, iconBackgrounds, text, 1, iconColor).color ??
-            iconColor) as TReqoreEffectColor;
-        }
-        if (intent) {
-          return getReadableIntentColor(
-            theme,
-            intent,
-            READABLE_ICON_CONTRAST,
-            iconBackgrounds
-          ) as TReqoreEffectColor;
-        }
-        return text as TReqoreEffectColor;
-      }, [iconColor, intent, theme, iconBackgrounds, text]);
+      const resolvedIconColor: TReqoreEffectColor = useMemo(
+        () => getCardMarkColor(theme, iconBackgrounds, text, iconColor, intent),
+        [iconColor, intent, theme, iconBackgrounds, text]
+      );
 
       return (
         <StyledContainer ref={containerRef} $fluid={fluid} className='reqore-entity-row-container'>

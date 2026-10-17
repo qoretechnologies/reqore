@@ -34,7 +34,7 @@ import {
 } from '../../types/global';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { StyledEffect } from '../Effect';
-import { getInputLook, IReqoreInputLook } from '../Input';
+import { getInputLook, IReqoreInputLook, lookOfField } from '../Input';
 import ReqoreInputClearButton from '../InputClearButton';
 import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
 import { IPopoverControls } from '../Popover';
@@ -111,9 +111,8 @@ export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
   _size?: TSizes;
 }
 
-/** A field's look: the component's, or worked out from its style props where it has none. */
-const lookOf = ({ $look, theme, minimal, transparent, $surface }: IReqoreTextareaStyle) =>
-  $look ?? getInputLook(theme, minimal, transparent, $surface);
+/** A field's look: the component's, or worked out from its style props where it has none (Input's). */
+const lookOf = lookOfField;
 
 // `width` and `height` size the wrapper through its styles; a `div` has neither attribute.
 export const StyledTextareaWrapper = styled.div.withConfig({

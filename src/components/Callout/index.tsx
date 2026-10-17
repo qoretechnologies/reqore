@@ -15,10 +15,7 @@ import {
   getMainBackgroundColor,
   getReadableAlpha,
   getReadableFadedColor,
-  getReadableIconLook,
-  getReadableIntentColor,
   getReadableTextOn,
-  READABLE_ICON_CONTRAST,
 } from '../../helpers/colors';
 import { ReqoreSurfaceProvider } from '../../context/SurfaceContext';
 import { getOneLessSize, resolveAccentSize, TReqorePadded } from '../../helpers/utils';
@@ -50,7 +47,7 @@ import {
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
-import { getDrawnEffectTextColor } from '../../helpers/surface';
+import { getCardMarkColor, getDrawnEffectTextColor } from '../../helpers/surface';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreCalloutProps
@@ -433,21 +430,10 @@ export const ReqoreCallout = memo(
         [closeButtonProps, onClose]
       );
       // The icon is in its own color, or the intent's, in a shade that stands out by 3:1.
-      const resolvedIconColor: TReqoreEffectColor = useMemo(() => {
-        if (iconColor) {
-          return (getReadableIconLook(theme, backgrounds, text, 1, iconColor).color ??
-            iconColor) as TReqoreEffectColor;
-        }
-        if (intent) {
-          return getReadableIntentColor(
-            theme,
-            intent,
-            READABLE_ICON_CONTRAST,
-            backgrounds
-          ) as TReqoreEffectColor;
-        }
-        return text as TReqoreEffectColor;
-      }, [iconColor, intent, theme, backgrounds, text]);
+      const resolvedIconColor: TReqoreEffectColor = useMemo(
+        () => getCardMarkColor(theme, backgrounds, text, iconColor, intent),
+        [iconColor, intent, theme, backgrounds, text]
+      );
 
       return (
         <ReqoreTooltipComponent

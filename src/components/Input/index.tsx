@@ -142,7 +142,6 @@ export interface IReqoreInputStyle extends IReqoreInputProps {
   hasPasswordToggle?: boolean;
 }
 
-// `width` is the field's CSS width; on a `div` it is not an attribute.
 /**
  * What an input (or a text area) is drawn on and in: its background as drawn over the theme it sits on (a 10% wash
  * of the theme's main, or nothing when minimal or transparent; focused, 15%), and the text that reads there.
@@ -163,34 +162,13 @@ export const getInputColors = (
   return { background, text: getReadableColor(theme, undefined, undefined, true, background) };
 };
 
-/** A placeholder, fainter than a value (30%, 50% focused) but never too faint to read. */
-export const getInputPlaceholderColor = (
-  theme: IReqoreTheme,
-  minimal?: boolean,
-  transparent?: boolean,
-  focused: boolean = false,
-  surface?: TReqoreSurface
-): string => {
-  const { background, text } = getInputColors(theme, minimal, transparent, focused, surface);
-
-  return getReadableFadedColor(text, background, focused ? 0.5 : 0.3);
-};
-
-/** The clear button's opacity when shown: 50%, or as much more as it needs to stand out by 3:1. */
+/** The clear button's opacity when shown: 50%, or as much more as it needs to stand out by 3:1 (`getInputLook`). */
 export const getInputClearButtonOpacity = (
   theme: IReqoreTheme,
   minimal?: boolean,
   transparent?: boolean,
   surface?: TReqoreSurface
-): number => {
-  const resting = getInputColors(theme, minimal, transparent, false, surface);
-  const focused = getInputColors(theme, minimal, transparent, true, surface);
-
-  return Math.max(
-    getReadableAlpha(resting.text, resting.background, 0.5, READABLE_ICON_CONTRAST),
-    getReadableAlpha(focused.text, focused.background, 0.5, READABLE_ICON_CONTRAST)
-  );
-};
+): number => getInputLook(theme, minimal, transparent, surface).clearOpacity;
 
 /** Everything an input (or a text area) is drawn in, worked out at once (see `getInputLook`). */
 export interface IReqoreInputLook {
@@ -198,7 +176,7 @@ export interface IReqoreInputLook {
   background: TReqoreHexColor;
   /** Its text, and the icons and the clear button beside it. */
   text: TReqoreHexColor;
-  /** The placeholder, at rest and focused (`getInputPlaceholderColor`). */
+  /** The placeholder, fainter than a value (30%, 50% focused) but never too faint to read. */
   placeholder: string;
   focusedPlaceholder: string;
   /** The clear button's opacity when shown (`getInputClearButtonOpacity`). */
@@ -232,10 +210,19 @@ export const getInputLook = (
   };
 };
 
-/** An input's look: the component's, or worked out from its style props where it has none. */
-const lookOf = ({ $look, theme, minimal, transparent, $surface }: IReqoreInputStyle) =>
+/** A field's look (an input's, a text area's): the component's, or worked out from its style props where it has none. */
+export const lookOfField = ({
+  $look,
+  theme,
+  minimal,
+  transparent,
+  $surface,
+}: Pick<IReqoreInputStyle, '$look' | 'theme' | 'minimal' | 'transparent' | '$surface'>) =>
   $look ?? getInputLook(theme, minimal, transparent, $surface);
 
+const lookOf = lookOfField;
+
+// `width` is the field's CSS width; on a `div` it is not an attribute.
 export const StyledInputWrapper = styled.div.withConfig({
   shouldForwardProp: omitStyleProps('width'),
 })<IReqoreInputStyle>`

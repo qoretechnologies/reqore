@@ -20,7 +20,7 @@ import {
   getDrawnColor,
   getNotificationIntent,
   getReadableAccentColorOn,
-  getReadableAlpha,
+  getReadableFadedColor,
   getReadableColorFrom,
   getReadableTextOn,
   getThemeSurfaces,
@@ -756,7 +756,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
         accent,
         glyph: own ? getReadableAccentColorOn(own, tiles, READABLE_ICON_CONTRAST) : glyph,
         // the content under a title is a shade softer, as far as it stays readable
-        content: rgba(text, getReadableAlpha(text, drawn, 0.78)),
+        content: getReadableFadedColor(text, drawn, 0.78),
         onAccent: getReadableColorFrom(accent, false),
       };
     }, [theme, resolvedIntent, under, minimal, opaque, tinted, iconColor]);
