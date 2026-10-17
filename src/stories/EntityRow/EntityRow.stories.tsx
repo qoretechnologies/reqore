@@ -515,9 +515,10 @@ export const WithOverflowMenu: Story = {
 
 /* A narrow row's actions (qorus#646), as ReqoreSeverityRow's and a narrow table's. The row measures its
    OWN container - not the viewport, because the case this exists for is a narrow drawer / sidebar / split
-   panel on a wide screen - and below 480px of it, two or more actions are one menu button at the end of
-   the label's line: the label keeps the row's width, and a list of rows does not grow by a line per
-   action. An action that is itself a menu becomes a submenu there. */
+   panel on a wide screen - and below 480px of it its actions move under the label, as a row of buttons.
+   A row can opt into `narrowActions='menu'` instead: two or more actions are then one menu button at the
+   end of the label's line, so the label keeps the row's width and a list of rows does not grow by a line
+   per action; an action that is itself a menu becomes a submenu there. */
 
 const onRun = fn();
 const onShowInChat = fn();
@@ -546,6 +547,7 @@ const OrderRow = ({ clickable }: { clickable?: boolean }) => (
     metadata='workflow'
     icon='GitBranchLine'
     fluid
+    narrowActions='menu'
     onClick={clickable ? onEntityRowClick : undefined}
     actions={ORDER_ACTIONS}
   />
@@ -579,7 +581,7 @@ export const NarrowContainerActionsMenu: Story = {
     docs: {
       description: {
         story:
-          "Renders the same row in two framed containers of different widths, each named above it: in the 720px one Run and the More actions menu sit side by side as always; in the 400px one they are one menu button at the end of the label's line. Each row fills its frame exactly. Clicked, the menu names Run and More actions with their icons, More actions holding Show in chat and Copy name; Escape puts it away with the focus on the button, and Run chosen runs and closes it without opening the row.",
+          "Renders the same row (`narrowActions='menu'`) in two framed containers of different widths, each named above it: in the 720px one Run and the More actions menu sit side by side as always; in the 400px one they are one menu button at the end of the label's line. Each row fills its frame exactly. Clicked, the menu names Run and More actions with their icons, More actions holding Show in chat and Copy name; Escape puts it away with the focus on the button, and Run chosen runs and closes it without opening the row.",
       },
     },
   },
@@ -753,11 +755,15 @@ const clearConnectionSpies = () =>
 
 /** The rows of a narrow list, each different: as many actions as a menu takes, one action, stacked, none, a long name. */
 const EQUAL_BOX_ENTITY_ROWS: Array<Pick<IReqoreEntityRowProps, 'label' | 'actions' | 'narrowActions'>> = [
-  { label: 'Process Incoming Order · order-intake-workflow', actions: ORDER_ACTIONS },
+  { label: 'Process Incoming Order · order-intake-workflow', actions: ORDER_ACTIONS, narrowActions: 'menu' },
   { label: 'Sync Inventory', actions: ORDER_ACTIONS.slice(0, 1) },
   { label: 'Export Ledger', actions: ORDER_ACTIONS, narrowActions: 'stack' },
   { label: 'Nightly Cleanup' },
-  { label: 'process-incoming-order-order-intake-workflow-production-eu-west-1', actions: ORDER_ACTIONS },
+  {
+    label: 'process-incoming-order-order-intake-workflow-production-eu-west-1',
+    actions: ORDER_ACTIONS,
+    narrowActions: 'menu',
+  },
 ];
 
 const EqualBoxEntityRows = () => (
@@ -812,11 +818,11 @@ export const NarrowContainerActionsMenuOnATouchScreen: Story = {
     docs: {
       description: {
         story:
-          "Renders a connection row with three actions in a 320px card on a phone (390 px): they are one menu button at the end of the label's line. On a touch screen the button is a finger's size (44px each way); a tap opens the menu - Test the connection, Open its settings and Remove (the icon's tooltip), each with its icon and a finger's height - and a tap on Remove runs it and closes the menu without opening the row.",
+          "Renders a connection row with three actions (`narrowActions='menu'`) in a 320px card on a phone (390 px): they are one menu button at the end of the label's line. On a touch screen the button is a finger's size (44px each way); a tap opens the menu - Test the connection, Open its settings and Remove (the icon's tooltip), each with its icon and a finger's height - and a tap on Remove runs it and closes the menu without opening the row.",
       },
     },
   },
-  render: () => <NarrowConnectionRow />,
+  render: () => <NarrowConnectionRow narrowActions='menu' />,
   play: async ({ canvasElement }) => {
     clearConnectionSpies();
     await withTouchScreen(async (touch) => {
@@ -861,7 +867,7 @@ const stackedEntityActions = (row: HTMLElement) =>
 
 const expectEntityActionsStacked = async (canvasElement: HTMLElement) => {
   const row = await narrowEntityRow(canvasElement);
-  expect(row.getAttribute('data-actions')).toBeNull();
+  expect(row.getAttribute('data-actions')).toBe('stack');
   expect(rowActionsMenuButtons(row)).toHaveLength(0);
   await expectControlsInside(row);
   // Reqore's phone width (`isMobile`)
@@ -886,6 +892,44 @@ const expectEntityActionsStacked = async (canvasElement: HTMLElement) => {
   // the icon-only Remove reads its tooltip as its label
   expect(row.querySelector('.reqore-entity-row-actions')?.textContent).toContain('Remove');
   return row;
+};
+
+/** The row's actions as a row of buttons under the label: none folded, none stretched, all inside the row. */
+const expectEntityActionsInARow = async (canvasElement: HTMLElement) => {
+  const row = await narrowEntityRow(canvasElement);
+  expect(row.getAttribute('data-actions')).toBe('row');
+  expect(rowActionsMenuButtons(row)).toHaveLength(0);
+  await expectControlsInside(row);
+  await waitFor(() => {
+    const label = (row.querySelector('.reqore-entity-row-label') as HTMLElement).getBoundingClientRect();
+    const column = row.querySelector('.reqore-entity-row-actions')!.getBoundingClientRect();
+    const buttons = Array.from(row.querySelectorAll<HTMLElement>('.reqore-entity-row-actions > .reqore-button'));
+    expect(buttons).toHaveLength(3);
+    for (const button of buttons) {
+      const box = button.getBoundingClientRect();
+      // under the label, each as wide as what it says
+      expect(box.top).toBeGreaterThanOrEqual(label.bottom - 0.5);
+      expect(box.width).toBeLessThan(column.width - 1);
+    }
+  });
+  // the icon-only Remove is an icon, as at full width
+  expect(row.querySelector('.reqore-entity-row-actions')?.textContent).not.toContain('Remove');
+  return row;
+};
+
+export const NarrowContainerActionsRow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a connection row with three actions in a 320px container, with no `narrowActions` set: by default its actions move under the label as a row of buttons, each as wide as what it says (the Remove icon an icon), onto another line where they do not fit. None is folded into a menu, and none reaches past the row.",
+      },
+    },
+  },
+  render: () => <NarrowConnectionRow />,
+  play: async ({ canvasElement }) => {
+    await expectEntityActionsInARow(canvasElement);
+  },
 };
 
 export const NarrowContainerActionsStack: Story = {
