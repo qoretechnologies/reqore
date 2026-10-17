@@ -2071,12 +2071,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     );
     // The bar's description and icon fade only as far as they stay readable there.
     const barText = useMemo(() => getReadableTextOn(theme, barSurface), [theme, barSurface]);
-    /* Drawn at less than full opacity, the panel's own text (what it holds that sets no color of its own) is read
-       on what its content is drawn on, as what it holds is - not on the theme's main, which it barely paints. */
+    /* The panel's own text (what it holds that sets no color of its own) is read on what its content is drawn on, as
+       what it holds is - not on the theme's main, which it does not paint: it paints it a step darker, and at less
+       than full opacity barely at all. On a mid grey the step alone decides which text reads. */
     const panelText = useMemo(
-      () =>
-        opacity !== undefined && opacity < 1 ? getReadableTextOn(theme, contentSurfaces) : undefined,
-      [theme, opacity, contentSurfaces]
+      () => getReadableTextOn(theme, contentSurfaces),
+      [theme, contentSurfaces]
     );
     // the title icon's own color: in its props (which win, as they are spread over the rest), else the panel's
     const [titleIconPropsColor, titleIconRest] = splitIconColor(iconProps);
