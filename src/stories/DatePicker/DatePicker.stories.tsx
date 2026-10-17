@@ -140,6 +140,37 @@ export const WithDefaultISOValue: Story = {
     value: '2024-04-10T08:00:00.000Z',
   },
 };
+export const ValuesWithoutAZoneOrUnreadable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders three date pickers given values a server may send. When the value is a date-time without a zone ("2026-06-02T08:00:00"), it shows that wall-clock time, local. When it is a date alone ("2026-10-17"), it shows that day at midnight. When it is text that is no date, the field is empty and drawn as invalid, in the danger intent; none of them throws.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical>
+      <DatePicker
+        value='2026-06-02T08:00:00'
+        onChange={() => undefined}
+        locale='en-CA'
+        fluid={false}
+      />
+      <DatePicker value='2026-10-17' onChange={() => undefined} locale='en-CA' fluid={false} />
+      <DatePicker value='not a date' onChange={() => undefined} locale='en-CA' fluid={false} />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const fields = Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-type="day"]')).map(
+      (day) => day.parentElement?.textContent?.replace(/[\u200e\u200f\u2066-\u2069]/g, '') ?? ''
+    );
+    await expect(fields[0]).toContain('2026-06-02, 08:00');
+    await expect(fields[1]).toContain('2026-10-17, 00:00');
+    await expect(fields[2]).not.toMatch(/\d/);
+    await expect(canvasElement.querySelectorAll('[data-invalid="true"]').length).toBeGreaterThan(0);
+  },
+};
 export const WithCustomDateTimeSeparator: Story = {
   parameters: {
     docs: {
