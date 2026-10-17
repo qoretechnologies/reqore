@@ -1,5 +1,10 @@
 import { useMemo } from 'react';
-import { getEffectBackgrounds, IReqoreEffect, TReqoreHexColor } from '../components/Effect';
+import {
+  getEffectBackgrounds,
+  getPrimaryGradient,
+  IReqoreEffect,
+  TReqoreHexColor,
+} from '../components/Effect';
 import { IReqoreCustomTheme, IReqoreTheme } from '../constants/theme';
 import { useReqoreSurface } from '../context/SurfaceContext';
 import { getDrawnColor, getReadableTextOn, getThemeSurface, TReqoreSurface } from '../helpers/colors';
@@ -14,6 +19,11 @@ export interface IReqoreDrawnSurfaceOptions {
   fill: string;
   /** The effect it paints: what its gradient draws is what it holds is read on. */
   effect?: IReqoreEffect;
+  /**
+   * The fill it paints while hovered, when it is clickable (`getCardHoverFill`): what it holds is drawn on that
+   * too, unless its effect paints a gradient over it.
+   */
+  hoverFill?: string;
 }
 
 export interface IReqoreDrawnSurface {
@@ -21,7 +31,8 @@ export interface IReqoreDrawnSurface {
   surface: TReqoreSurface | undefined;
   /** Its fill as drawn over that (the surface itself when it paints nothing). */
   background: TReqoreHexColor;
-  /** Each color what it holds is drawn on: its gradient's, when its effect paints one, else its fill. */
+  /** Each color what it holds is drawn on: its gradient's, when its effect paints one, else its fill (and its
+   *  hover fill, when it is clickable). */
   backgrounds: TReqoreHexColor[];
   /** The text that reads on all of them. */
   text: TReqoreHexColor;
@@ -40,6 +51,7 @@ export const useReqoreDrawnSurface = ({
   transparent,
   fill,
   effect,
+  hoverFill,
 }: IReqoreDrawnSurfaceOptions): IReqoreDrawnSurface => {
   const aroundSurface = useReqoreSurface();
   const surface = useMemo(
@@ -54,11 +66,16 @@ export const useReqoreDrawnSurface = ({
     [transparent, theme, fill, surface]
   );
   const gradientKey = JSON.stringify(effect?.gradient ?? null);
-  const backgrounds = useMemo(
-    () => getEffectBackgrounds(theme, effect, background, getThemeSurface(theme, surface)),
+  const backgrounds = useMemo(() => {
+    const under = getThemeSurface(theme, surface);
+    const drawn = getEffectBackgrounds(theme, effect, background, under);
+
+    // hovered, it paints its hover fill where its gradient does not cover it
+    return hoverFill && !getPrimaryGradient(effect?.gradient)
+      ? [...drawn, getDrawnColor(hoverFill, under) as TReqoreHexColor]
+      : drawn;
     // `effect` is followed by its gradient's colors (see above)
-    [theme, gradientKey, background, surface]
-  );
+  }, [theme, gradientKey, background, surface, hoverFill]);
   const text = useMemo(
     () => getReadableTextOn(theme, backgrounds) as TReqoreHexColor,
     [theme, backgrounds]

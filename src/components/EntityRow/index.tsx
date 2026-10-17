@@ -45,7 +45,7 @@ import {
 } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { IReqorePanelSubAction } from '../Panel';
-import { getCardMarkColor, getDrawnEffectTextColor } from '../../helpers/surface';
+import { getCardHoverFill, getCardMarkColor, getDrawnEffectTextColor } from '../../helpers/surface';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import ReqoreRowActionsMenu, {
@@ -229,6 +229,19 @@ const iconTileFillFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
 /* Wrapper the ResizeObserver measures. Width follows the row's `fluid` prop so a
    `fluid={false}` row nested in a flex parent still shrinks to content and the
    observer sees the shrunk width. Mirrors ReqoreSeverityRow. */
+/** The row's fill while hovered, when it is clickable: its rule paints it, and what it holds is read on it. */
+const getEntityRowHoverFill = (
+  theme: IReqoreTheme,
+  intent?: TReqoreIntent,
+  transparent?: boolean
+) =>
+  getCardHoverFill(
+    theme,
+    intent,
+    transparent,
+    changeLightness(getMainBackgroundColor(theme), 0.08)
+  );
+
 const StyledContainer = styled.div<{ $fluid: boolean }>`
   width: ${({ $fluid }) => ($fluid ? '100%' : 'auto')};
 `;
@@ -330,13 +343,7 @@ const StyledRow = styled(StyledEffect).withConfig({
     css`
       cursor: pointer;
       &:hover {
-        background-color: ${
-          $intent
-            ? rgba(theme.intents[$intent], $transparent ? 0.04 : 0.1)
-            : $transparent
-              ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
-              : rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 1)
-        };
+        background-color: ${getEntityRowHoverFill(theme, $intent, $transparent)};
       }
     `}
 
@@ -513,6 +520,8 @@ const ReqoreEntityRow = memo(
         transparent,
         fill: tintedBgFor(theme, intent),
         effect,
+        // clickable, it is hovered too: what it holds is read on its hover fill as well
+        hoverFill: interactive ? getEntityRowHoverFill(theme, intent, transparent) : undefined,
       });
       /* The description and the metadata are fainter than the label, as far as they stay readable (see
          getSecondaryTextEffect): one object while it holds, for memo components. */
