@@ -38,6 +38,12 @@ import {
   openRowActionsMenuItems,
   rowActionsMenuButtons,
 } from '../utils/rowActionsMenu';
+import {
+  findCoveredPinnedHeaders,
+  findDrawnOverStickyHeader,
+  findSeeThroughPinnedHeaders,
+  stickyHeaderOf,
+} from '../utils/stickyStacking';
 import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import { withViewport } from '../utils/viewport';
 
@@ -1091,6 +1097,71 @@ export const PinnedColumns: Story = {
     showHelp: true,
   },
   play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
+};
+
+/* A pinned column at each side, and more columns between them than the box shows. */
+const stickyLayerColumns: IReqoreTableColumn[] = [
+  { dataId: 'id', header: { label: 'ID' }, width: 70, align: 'center', pin: 'left' },
+  { dataId: 'firstName', header: { label: 'First name' }, width: 220 },
+  { dataId: 'lastName', header: { label: 'Last name' }, width: 220 },
+  { dataId: 'address', header: { label: 'Address' }, width: 320 },
+  { dataId: 'occupation', header: { label: 'Occupation' }, width: 220 },
+  { dataId: 'age', header: { label: 'Age' }, width: 90, align: 'center', pin: 'right' },
+];
+
+export const StickyHeaderAbovePinnedColumns: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A table with a sticky header, a label and a menu, a pinned column at each side and 30 rows, in a box ' +
+          '400px high and narrower than its columns. Scrolled, its column headers and then its rows pass under ' +
+          'its header, and the header with its label and its menu stays above all of them, the pinned columns ' +
+          'too. Scrolled sideways, the column headers between the pinned ones pass under the pinned headers, ' +
+          'which hide them.',
+      },
+    },
+  },
+  args: {
+    label: 'Orders',
+    stickyHeader: true,
+    actions: [
+      {
+        label: 'With selected',
+        icon: 'CheckboxMultipleLine',
+        actions: [{ label: 'Delete', icon: 'DeleteBinLine' }],
+      },
+    ],
+    columns: stickyLayerColumns,
+    data: slice(tableData.data, 0, 30),
+    height: undefined,
+  },
+  render: (args) => (
+    <div data-testid='sticky-layers-scroller' style={{ height: 400, width: 600, overflow: 'auto' }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectTableContentWithinItsRows(canvasElement);
+
+    const table = canvasElement.querySelector<HTMLElement>('.reqore-table');
+    const columnHeaders = table.querySelector('.reqore-table-header-wrapper');
+    const firstRow = table.querySelector('.reqore-table-row');
+
+    await expect(stickyHeaderOf(table)).toHaveTextContent('Orders');
+    // under the header, its column headers and then its rows
+    await expect(findDrawnOverStickyHeader(table, columnHeaders)).toEqual([]);
+    await expect(findDrawnOverStickyHeader(table, firstRow)).toEqual([]);
+
+    // sideways, so the column headers between the pinned ones pass under them
+    const body = table.querySelector<HTMLElement>('.reqore-table-body');
+    body.scrollLeft = 300;
+    fireEvent.scroll(body);
+    await expect(columnHeaders.scrollLeft).toBe(body.scrollLeft);
+    await expect(body.scrollLeft).toBeGreaterThan(0);
+    await expect(findSeeThroughPinnedHeaders(table)).toEqual([]);
+    await expect(findCoveredPinnedHeaders(table)).toEqual([]);
+  },
 };
 
 export const Selectable: Story = {
