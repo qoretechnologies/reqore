@@ -7,10 +7,10 @@ import { RADIUS_FROM_SIZE, RATING_GAP_FROM_SIZE, TSizes } from '../../constants/
 import { IReqoreTheme } from '../../constants/theme';
 import {
   changeLightness,
-  getColorFromMaybeString,
   getDrawnColor,
   getReadableAccentColorOn,
   getReadableTextOn,
+  getReadableThemeColor,
   getThemeSurfaces,
   READABLE_ICON_CONTRAST,
 } from '../../helpers/colors';
@@ -169,9 +169,14 @@ const ReqoreRating = memo(
       /* The stars are what the rating says, so each - filled and empty - stands out by 3:1 from what it
          is drawn on (WCAG 1.4.11), in a shade of its color: the empty ones were a faint wash, 1.3:1. */
       // each color of what the rating is drawn on (a card's gradient, say)
-      const surfaces = getThemeSurfaces(theme, useReqoreSurface());
+      const surface = useReqoreSurface();
+      const surfaces = useMemo(() => getThemeSurfaces(theme, surface), [theme, surface]);
+      /* A color the caller gives is the caller's, but a theme's color (an intent, a shade of one) is drawn in the
+         shade of it that stands out by 3:1 here, as an icon given it is: a hex is as given. */
       const resolvedFilledColor = useMemo(() => {
-        if (filledColor) return getColorFromMaybeString(theme, filledColor);
+        if (filledColor) {
+          return getReadableThemeColor(theme, filledColor, READABLE_ICON_CONTRAST, undefined, surfaces);
+        }
         const hasIntent = theme.main !== theme.originalMain;
         return hasIntent
           ? getReadableAccentColorOn(
@@ -180,16 +185,18 @@ const ReqoreRating = memo(
               READABLE_ICON_CONTRAST
             )
           : getReadableTextOn(theme, surfaces);
-      }, [filledColor, theme, surfaces.join()]);
+      }, [filledColor, theme, surfaces]);
 
       const resolvedEmptyColor = useMemo(() => {
-        if (emptyColor) return getColorFromMaybeString(theme, emptyColor);
+        if (emptyColor) {
+          return getReadableThemeColor(theme, emptyColor, READABLE_ICON_CONTRAST, undefined, surfaces);
+        }
         return getReadableAccentColorOn(
           getDrawnColor(rgba(changeLightness(theme.main, 0.15), 0.4), surfaces[0]),
           surfaces,
           READABLE_ICON_CONTRAST
         );
-      }, [emptyColor, theme, surfaces.join()]);
+      }, [emptyColor, theme, surfaces]);
 
       /* The stars a mouse rests on are previewed; a finger's tap previews nothing. The `mousemove` a browser
          emulates after a tap left the tapped value previewed until a tap elsewhere - over a value the tap had
