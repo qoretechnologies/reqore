@@ -537,6 +537,49 @@ test('Keeps every action inline in a wide container, and a single one a button w
   expect(document.querySelectorAll('.reqore-row-actions-menu-button')).toHaveLength(0);
 });
 
+test('With narrowActions="menu", keeps one action a button at the end of the label\'s line (data-actions="end")', () => {
+  renderMeasured(600, { actions: [{ label: 'Investigate' }], narrowActions: 'menu' });
+
+  const row = document.querySelector('.reqore-severity-row')!;
+  expect(row.getAttribute('data-narrow')).toBe('true');
+  expect(row.getAttribute('data-actions')).toBe('end');
+  const buttons = row.querySelectorAll('.reqore-severity-row-actions .reqore-button');
+  expect(buttons).toHaveLength(1);
+  expect(buttons[0].classList.contains('reqore-row-actions-menu-button')).toBe(false);
+  expect(buttons[0].textContent).toContain('Investigate');
+  cleanup();
+
+  // an icon-only action stays its icon, as at full width and as the menu button is: it is not stacked, so its
+  // tooltip is not written out as its label
+  renderMeasured(400, {
+    actions: [{ icon: 'CloseLine', tooltip: 'Dismiss' }],
+    narrowActions: 'menu',
+  });
+  const iconOnly = document.querySelector('.reqore-severity-row')!;
+  expect(iconOnly.getAttribute('data-actions')).toBe('end');
+  expect(
+    iconOnly.querySelector('.reqore-severity-row-actions .reqore-button')?.textContent
+  ).not.toContain('Dismiss');
+});
+
+test('Leaves one action as it was by default, with "stack" and with "row", and wide with "menu"', () => {
+  for (const [props, expected] of [
+    [{}, 'stack'],
+    [{ narrowActions: 'stack' as const }, 'stack'],
+    [{ narrowActions: 'row' as const }, 'row'],
+  ] as const) {
+    renderMeasured(600, { actions: [{ icon: 'CloseLine', tooltip: 'Dismiss' }], ...props });
+    const row = document.querySelector('.reqore-severity-row')!;
+    expect(row.getAttribute('data-actions')).toBe(expected);
+    cleanup();
+  }
+
+  renderMeasured(800, { actions: [{ label: 'Investigate' }], narrowActions: 'menu' });
+  const wide = document.querySelector('.reqore-severity-row')!;
+  expect(wide.getAttribute('data-narrow')).toBeNull();
+  expect(wide.getAttribute('data-actions')).toBeNull();
+});
+
 test('Stacked, labels an action whose label is empty with its tooltip', () => {
   renderMeasured(400, {
     actions: [{ label: 'Investigate' }, { label: '', icon: 'CloseLine', tooltip: 'Dismiss' }],

@@ -761,6 +761,136 @@ export const NarrowContainerActionsMenuOnATouchScreen: Story = {
   },
 };
 
+/** The row's one action, at the end of the label's line, inside the row: where a menu of two or more would be. */
+const expectLoneActionAtLineEnd = async (row: HTMLElement) => {
+  await waitFor(() => expect(row.getAttribute('data-actions')).toBe('end'));
+  await waitFor(() => {
+    const buttons = row.querySelectorAll<HTMLElement>(
+      '.reqore-severity-row-actions .reqore-button'
+    );
+    expect(buttons).toHaveLength(1);
+    expect(rowActionsMenuButtons(row)).toHaveLength(0);
+    const label = (
+      row.querySelector('.reqore-severity-row-label') as HTMLElement
+    ).getBoundingClientRect();
+    const box = buttons[0].getBoundingClientRect();
+    // on the label's line, after it - not under the label
+    expect(box.top).toBeLessThan(label.bottom);
+    expect(box.left).toBeGreaterThanOrEqual(label.right - 0.5);
+  });
+  await expectControlsInside(row);
+};
+
+const LONE_INCIDENT_ACTION: IReqoreSeverityRowProps['actions'] = INCIDENT_ACTIONS.slice(0, 1);
+
+const LoneActionRow = ({
+  clickable,
+  narrowActions,
+}: {
+  clickable?: boolean;
+  narrowActions?: IReqoreSeverityRowProps['narrowActions'];
+}) => (
+  <ReqoreSeverityRow
+    {...(narrowActions ? { narrowActions } : {})}
+    label='Payment Processing · stripe-webhook-receiver'
+    description='Avg duration 4.7s exceeded 3.5s threshold · just now'
+    intent='danger'
+    leading={CRITICAL_TAG}
+    fluid
+    onClick={clickable ? onRowClick : undefined}
+    actions={LONE_INCIDENT_ACTION}
+  />
+);
+
+export const NarrowContainerLoneActionInMenuMode: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a row with one action, Investigate, that folds two or more into a menu (`narrowActions='menu'`), in a 400px container, and the same row with no `narrowActions` in another. When narrow, the first keeps Investigate as a button at the end of the label's line, where the menu of a row with more actions is, not on a line of its own under the label. The second stacks it under the label, as a severity row does by default.",
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <StoryRowBox
+        className='menu-row-box'
+        width={400}
+        caption="A 400px container: 'menu', one action"
+      >
+        <LoneActionRow narrowActions='menu' />
+      </StoryRowBox>
+      <StoryRowBox
+        className='stack-row-box'
+        width={400}
+        caption='A 400px container: the default, one action'
+      >
+        <LoneActionRow />
+      </StoryRowBox>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const row = await narrowRow(canvasElement.querySelector('.menu-row-box')!);
+    await expectLoneActionAtLineEnd(row);
+
+    // the default is as it was: under the label
+    const stacked = await narrowRow(canvasElement.querySelector('.stack-row-box')!);
+    expect(stacked.getAttribute('data-actions')).toBe('stack');
+    const label = (
+      stacked.querySelector('.reqore-severity-row-label') as HTMLElement
+    ).getBoundingClientRect();
+    const [button] = stackedActions(stacked);
+    expect(button.getBoundingClientRect().top).toBeGreaterThanOrEqual(label.bottom - 0.5);
+    expectRowsFillTheirBoxes(canvasElement, '.reqore-severity-row');
+  },
+};
+
+export const NarrowContainerLoneActionInMenuModeOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders a row with one action, Investigate, that folds two or more into a menu (`narrowActions='menu'`), in a card on a phone (390 px). The action stays a button at the end of the label's line, a finger's size (44px each way); a tap on it runs it without opening the row. Nothing reaches past the screen.",
+      },
+    },
+  },
+  render: () => (
+    <div
+      className='phone-card'
+      style={{ padding: '0 16px', maxWidth: 390, boxSizing: 'border-box' }}
+    >
+      <LoneActionRow narrowActions='menu' clickable />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    clearRowSpies();
+    await withTouchScreen(async (touch) => {
+      const row = await narrowRow(canvasElement);
+      await expectLoneActionAtLineEnd(row);
+      const button = row.querySelector<HTMLElement>('.reqore-severity-row-actions .reqore-button')!;
+      if (touch.real) {
+        await waitFor(() => {
+          const box = button.getBoundingClientRect();
+          expect(box.width).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+          expect(box.height).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+        });
+      }
+      await touch.tap(button);
+      await waitFor(() => expect(onInvestigate).toHaveBeenCalledTimes(1));
+      expect(onRowClick).not.toHaveBeenCalled();
+
+      if (touch.narrowed) {
+        await waitFor(() =>
+          expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1)
+        );
+      }
+    });
+  },
+};
+
 /**
  * A concrete narrow-container use case: a "sidebar of incidents". Same rows
  * a dashboard shows at full width, but the sidebar container is narrow, so

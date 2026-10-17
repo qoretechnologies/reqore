@@ -79,7 +79,8 @@ export interface IReqoreSeverityRowProps
    * are the response it asks for, so they stay in sight; `'row'` keeps them under the label as a row of
    * buttons; `'menu'`, opted into, folds them into one menu button at the end of the label's line, for a
    * list of rows that should not grow by a line per action. See `TReqoreNarrowRowActions`. A single action
-   * is a button under the label either way.
+   * is a button under the label with `'stack'` and `'row'`; with `'menu'` it stays a button at the end of the
+   * label's line, where the menu would be (`data-actions='end'`).
    */
   narrowActions?: TReqoreNarrowRowActions;
   /** What the menu button of `narrowActions='menu'` is called (its accessible name and tooltip). */
@@ -241,13 +242,16 @@ const StyledRow = styled(StyledEffect).withConfig({
 
   /* Narrow, two or more actions are one menu button at the end of the label's line (qorus#646), not
      a line each under it: the label keeps its width, and a list of rows does not grow by a line per
-     action. */
-  &[data-narrow='true'][data-actions='menu'] {
+     action. A row of that mode with one action keeps it there too, as a button of its own ('end'): under the
+     label it was a line of its own for one button, where a row with more had none (David, qorus#646). */
+  &[data-narrow='true'][data-actions='menu'],
+  &[data-narrow='true'][data-actions='end'] {
     grid-template-columns: ${STRIP_WIDTH_PX}px 1fr auto;
   }
   /* The last column, named: an item placed in a row with its column left to the grid is placed before
      the items around it, in the first column. */
-  &[data-narrow='true'][data-actions='menu'] > .reqore-severity-row-actions {
+  &[data-narrow='true'][data-actions='menu'] > .reqore-severity-row-actions,
+  &[data-narrow='true'][data-actions='end'] > .reqore-severity-row-actions {
     grid-column: -2 / -1;
     grid-row: 1;
     align-self: start;
@@ -369,8 +373,10 @@ const ReqoreSeverityRow = memo(
       );
       // Narrow, two or more actions are one menu button only where the caller asks for it.
       const actionsAsMenu = isNarrow && narrowActions === 'menu' && (actions?.length ?? 0) > 1;
+      // Narrow, a row that folds two or more into a menu keeps its one action where the menu would be.
+      const loneActionAtLineEnd = isNarrow && narrowActions === 'menu' && actions?.length === 1;
       // Narrow and stacked (the default): one to a line. With `'row'`, a row of buttons under the label.
-      const actionsStacked = isNarrow && narrowActions !== 'row';
+      const actionsStacked = isNarrow && narrowActions !== 'row' && !loneActionAtLineEnd;
       /* Stacked, each action is the row's width only on a phone, where a full-width row is a finger's target;
          in a narrow container on a wider screen (a drawer, a side panel) it is as wide as its label, as a control
          is on any screen wider than a phone's (David's width rule, qorus#646). */
@@ -388,10 +394,15 @@ const ReqoreSeverityRow = memo(
             as='div'
             data-narrow={isNarrow || undefined}
             data-actions={
-              !isNarrow || !actions?.length ? undefined
-              : actionsAsMenu ? 'menu'
-              : actionsStacked ? 'stack'
-              : 'row'
+              !isNarrow || !actions?.length
+                ? undefined
+                : actionsAsMenu
+                  ? 'menu'
+                  : loneActionAtLineEnd
+                    ? 'end'
+                    : actionsStacked
+                      ? 'stack'
+                      : 'row'
             }
             {...rest}
             Component={StyledRow}
@@ -469,7 +480,7 @@ const ReqoreSeverityRow = memo(
                    elsewhere; narrow in a row: as wide as they are, onto another line where they do not fit */
                 vertical={actionsStacked}
                 fluid={actionsSpanRow}
-                wrap={isNarrow && !actionsStacked}
+                wrap={isNarrow && !actionsStacked && !loneActionAtLineEnd}
               >
                 {actions.map((action, idx) => (
                   <ReqoreButton
