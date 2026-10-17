@@ -395,6 +395,27 @@ export const FlatAndRaised: Story = {
   ),
 };
 
+/** A LIGHT GRADIENT of its own: its marks read on it, not on the rail's dark fill under it. */
+export const LightGradient: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a labelled rail whose effect paints a light gradient, on the dark theme. Its marks are drawn on the gradient, so their icons and labels are dark: they read on the gradient, not on the dark fill the rail paints without one.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreNavRail
+      items={ITEMS}
+      position='static'
+      showLabels
+      defaultActiveId='dashboard'
+      effect={{ gradient: { colors: { 0: '#f4f1ff', 100: '#ddd5ff' }, direction: 'to bottom' } }}
+    />
+  ),
+};
+
 /** IDLE REVEAL — rests dim, fades fully in on approach (hover the gutter). */
 export const IdleReveal: Story = {
   args: {

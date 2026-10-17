@@ -81,7 +81,8 @@ export const STATIC: Partial<IReqoreNotificationProps> = { onClose: noop, onFini
 
 export const Row = ({ label, children }: { label: string; children: ReactNode }) => (
   <div style={{ display: 'flex', flexFlow: 'column', gap: 8, minWidth: 0 }}>
-    <ReqoreP size='tiny' effect={{ opacity: 0.85, uppercase: true, spaced: 1 }}>
+    {/* in the text color, not faded: on the busy backdrop a faded label did not read everywhere it is drawn */}
+    <ReqoreP size='tiny' effect={{ uppercase: true, spaced: 1 }}>
       {label}
     </ReqoreP>
     {children}
