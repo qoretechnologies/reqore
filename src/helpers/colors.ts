@@ -115,6 +115,9 @@ export const READABLE_TEXT_CONTRAST = 4.5;
  */
 export const READABLE_ICON_CONTRAST = 3;
 
+/** The least size (px) from which bold text is large in WCAG's sense (14pt), and needs to stand out by 3:1 only. */
+export const LARGE_BOLD_TEXT_PX = 18.66;
+
 interface IColorParts {
   red: number;
   green: number;

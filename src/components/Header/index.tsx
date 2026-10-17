@@ -26,7 +26,7 @@ export interface IReqoreHeadingStyle extends IReqoreHeadingProps {
 export const StyledHeader = styled(StyledTextEffect)`
   margin: 0;
   padding: 0;
-  /* An intent colours the heading in a shade of it that reads on the theme's surface. */
+  /* An intent colours the heading in a shade of it that reads on what the heading is drawn on. */
   color: ${({ theme, intent, $surface }) =>
     intent ? getReadableIntentColor(theme, intent, undefined, $surface) : 'inherit'};
 

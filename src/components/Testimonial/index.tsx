@@ -331,6 +331,16 @@ const ReqoreTestimonial = memo(
         [resolvedAvatarColor, backgrounds]
       );
 
+      // the author's row is a memo component: one effect object each, for as long as the caller's holds
+      const authorLabelEffect = useMemo(
+        (): IReqoreEffect => ({ weight: 'bold', italic: false, ...authorEffect }),
+        [authorEffect]
+      );
+      const roleDescriptionEffect = useMemo(
+        (): IReqoreEffect => ({ italic: false, ...roleEffect }),
+        [roleEffect]
+      );
+
       return (
         <ReqoreTooltipComponent
           // A div, not the effect's span: the card holds blocks, which a span may not.
@@ -407,9 +417,9 @@ const ReqoreTestimonial = memo(
               <ReqoreEntityRow
                 className='reqore-testimonial-footer'
                 label={author}
-                labelEffect={{ weight: 'bold', italic: false, ...authorEffect }}
+                labelEffect={authorLabelEffect}
                 description={role}
-                descriptionEffect={{ italic: false, ...roleEffect }}
+                descriptionEffect={roleDescriptionEffect}
                 icon={avatarIcon}
                 iconImage={avatar}
                 iconColor={resolvedAvatarColor}

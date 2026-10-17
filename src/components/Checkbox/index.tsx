@@ -212,6 +212,9 @@ const StyledSwitchToggle = styled.div.withConfig({
       : getSwitchKnobColor(theme, checked, parentEffect)};
 `;
 
+/** A switch's track: what its styled rule paints and what the knob and the words are read on. */
+const getSwitchTrackFill = (theme: IReqoreTheme) => rgba(changeLightness(theme.main, 0.3), 0.1);
+
 const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
   transition: all 0.2s ease-out;
   position: relative;
@@ -226,7 +229,7 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
   border: 1px solid ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.35 : 0.2)};
   border-radius: 50px;
 
-  background-color: ${({ theme }) => rgba(changeLightness(theme.main, 0.3), 0.1)};
+  background-color: ${({ theme }) => getSwitchTrackFill(theme)};
 
   ${StyledIconWrapper} {
     z-index: 1;
@@ -434,7 +437,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         getEffectBackgrounds(
           theme,
           effect,
-          getDrawnColor(rgba(changeLightness(theme.main, 0.3), 0.1), surface),
+          getDrawnColor(getSwitchTrackFill(theme), surface),
           surface
         )
       );

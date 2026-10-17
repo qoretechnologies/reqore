@@ -3,6 +3,7 @@ import React, {
   forwardRef,
   memo,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -143,13 +144,16 @@ interface IStyledIndicatorProps {
 
 const CONTAINER_PADDING = 3;
 
+/** The track the items sit on: what its styled rule paints and what the items are read on. */
+const getSegmentedTrackFill = (theme: IReqoreTheme) => changeLightness(theme.main, 0.03);
+
 const StyledSegmentedControl = styled.div<IStyledSegmentedControlProps>`
   display: inline-flex;
   align-items: center;
   position: relative;
   box-sizing: border-box;
   padding: ${CONTAINER_PADDING}px;
-  background-color: ${({ theme }) => changeLightness(theme.main, 0.03)};
+  background-color: ${({ theme }) => getSegmentedTrackFill(theme)};
   border: ${({ theme, flat }) =>
     !flat ? `1px solid ${changeLightness(theme.main, 0.07)}` : 'none'};
   border-radius: ${({ size, pill }) =>
@@ -342,7 +346,7 @@ const ReqoreSegmentedControl = memo(
       const surroundingSurface = useReqoreSurface();
       const trackSurface = useMemo(
         () =>
-          getDrawnColor(changeLightness(theme.main, 0.03), getThemeSurface(theme, surroundingSurface)),
+          getDrawnColor(getSegmentedTrackFill(theme), getThemeSurface(theme, surroundingSurface)),
         [theme, surroundingSurface]
       );
       const indicatorSurface = useMemo(
@@ -355,20 +359,38 @@ const ReqoreSegmentedControl = memo(
       );
 
       const itemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-      /* One ref callback per item for the life of the control: an item's button is a memo component, and a
-         new callback with every render was a new prop each time. */
-      const itemRefCallbacks = useRef(new Map<string, (el: HTMLButtonElement | null) => void>());
-      const itemRefFor = (value: string) => {
-        let callback = itemRefCallbacks.current.get(value);
-        if (!callback) {
-          callback = (el) => {
-            itemRefs.current[value] = el;
+      /* One ref callback and one click handler per item for as long as the item is there: an item's button is a
+         memo component, and a new function with every render was a new prop each time. The handler selects
+         through the latest `handleSelect` (below). */
+      const itemHandlers = useRef(
+        new Map<string, { ref: (el: HTMLButtonElement | null) => void; onClick: () => void }>()
+      );
+      const latestSelect = useRef<(itemValue: string) => void>();
+      const itemHandlersFor = (value: string) => {
+        let handlers = itemHandlers.current.get(value);
+        if (!handlers) {
+          handlers = {
+            ref: (el) => {
+              itemRefs.current[value] = el;
+            },
+            onClick: () => latestSelect.current?.(value),
           };
-          itemRefCallbacks.current.set(value, callback);
+          itemHandlers.current.set(value, handlers);
         }
-        return callback;
+        return handlers;
       };
       const wrapperRefs = useRef<Record<string, HTMLDivElement | null>>({});
+      // an item that is gone takes what was kept for it along
+      useEffect(() => {
+        const values = new Set(items.map((item) => item.value));
+        itemHandlers.current.forEach((_handlers, value) => {
+          if (!values.has(value)) {
+            itemHandlers.current.delete(value);
+            delete itemRefs.current[value];
+            delete wrapperRefs.current[value];
+          }
+        });
+      }, [items]);
       const containerRef = useRef<HTMLDivElement>(null);
       const [measureRef, { width: measuredWidth }] = useMeasure();
       const [indicatorStyle, setIndicatorStyle] = useState<{
@@ -470,6 +492,14 @@ const ReqoreSegmentedControl = memo(
           onChange?.(itemValue);
         },
         [_value, onChange, allowDeselect, disabled, readOnly]
+      );
+      useEffect(() => {
+        latestSelect.current = handleSelect;
+      }, [handleSelect]);
+      // the selected item without an intent of its own is written in what reads on the indicator
+      const selectedItemTheme = useMemo(
+        () => ({ main: getReadableColorFrom(theme.main) }),
+        [theme.main]
       );
 
       const enabledItems = useMemo(
@@ -642,7 +672,7 @@ const ReqoreSegmentedControl = memo(
                 <ReqoreSurfaceProvider color={isSelected ? indicatorSurface : trackSurface}>
                   <ReqoreButton
                     {...item.props}
-                    ref={itemRefFor(item.value)}
+                    ref={itemHandlersFor(item.value).ref}
                     flat
                     transparent
                     // The item's own fields win over its props, but only where they are set.
@@ -664,14 +694,8 @@ const ReqoreSegmentedControl = memo(
                         ? selectedItemIntent
                         : undefined
                     }
-                    customTheme={
-                      isSelected && !selectedItemIntent
-                        ? {
-                            main: getReadableColorFrom(theme.main),
-                          }
-                        : customTheme
-                    }
-                    onClick={() => handleSelect(item.value)}
+                    customTheme={isSelected && !selectedItemIntent ? selectedItemTheme : customTheme}
+                    onClick={itemHandlersFor(item.value).onClick}
                     role='radio'
                     aria-checked={isSelected}
                     tabIndex={

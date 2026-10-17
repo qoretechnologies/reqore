@@ -55,6 +55,17 @@ export interface IReqoreNotificationStyle extends IWithReqoreOpaque {
   $main?: TReqoreHexColor;
 }
 
+/** A notification's (or a message's) fill when not minimal: what its styled rule paints and what it is read on. */
+const getNotificationFill = ({
+  theme,
+  intent,
+  type,
+  opaque = true,
+}: Pick<IReqoreNotificationStyle, 'theme' | 'intent' | 'type' | 'opaque'>): string =>
+  opaque
+    ? changeLightness(theme.main, 0.1)
+    : rgba(getNotificationIntent(theme, intent || type), 0.3);
+
 /**
  * What a notification (or a message) is drawn in, as drawn over what is under it, and the text that reads there:
  * the theme's main a step lighter when opaque - translucent when the intent is (muted) - a 30% wash of the intent
@@ -88,12 +99,7 @@ export const getNotificationColors = ({
     };
   }
 
-  const background = getDrawnColor(
-    opaque
-      ? changeLightness(theme.main, 0.1)
-      : rgba(getNotificationIntent(theme, intent || type), 0.3),
-    under
-  );
+  const background = getDrawnColor(getNotificationFill({ theme, intent, type, opaque }), under);
 
   return { background, text: getReadableColor(theme, null, null, true, background) };
 };
@@ -194,9 +200,7 @@ export const StyledReqoreNotification = styled(StyledEffect).withConfig({
   }: IReqoreNotificationStyle) => css`
     background-color: ${minimal
       ? 'transparent'
-      : opaque
-      ? changeLightness(theme.main, 0.1)
-      : rgba(getNotificationIntent(theme, intent || type), 0.3)};
+      : getNotificationFill({ theme, intent, type, opaque })};
     border: ${flat ? 0 : '1px solid'};
     border-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.2)};
 

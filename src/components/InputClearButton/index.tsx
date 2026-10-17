@@ -21,7 +21,7 @@ export interface IReqoreInputClearButtonProps extends IReqoreButtonProps {
 }
 
 export const StyledInputClearButton = styled(ReqoreIcon).withConfig({
-  shouldForwardProp: omitStyleProps('hasRightIcon', 'show', 'rightOffset', 'shownOpacity'),
+  shouldForwardProp: omitStyleProps('hasRightIcon', 'show', 'rightOffset'),
 })<{ hasRightIcon?: boolean; show?: boolean; rightOffset?: number }>`
   position: absolute;
   right: ${({ size, hasRightIcon, rightOffset = 0 }) =>
