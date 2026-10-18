@@ -8,6 +8,9 @@ import { ReqoreControlGroup, ReqoreMessage, ReqoreVerticalSpacer } from '../../i
 import { StoryMeta } from '../utils';
 import { StoryForm, storyFormText } from '../utils/formPreview';
 import { ALL_SIZES, IconArg, RadiusSizeArg, SizeArg } from '../utils/args';
+import { expectControlsInside, expectWordsWhole } from '../utils/controlsInside';
+import { StoryRowBox } from '../utils/rowBoxes';
+import { PHONE_STORY } from '../utils/touchScreen';
 
 const meta = {
   title: 'Form/Button',
@@ -1105,5 +1108,102 @@ export const FormAttributesMobile: Story = {
 
     const form = document.querySelector('.story-form') as HTMLElement;
     expect(form.scrollWidth).toBeLessThanOrEqual(form.clientWidth + 1);
+  },
+};
+
+/** What a select's button says once a step of a path is picked: the step and what it is. */
+const PICKED_STEP = {
+  icon: 'DatabaseLine',
+  rightIcon: 'ArrowDownSLine',
+  label: 'omquser',
+  description:
+    'The Qorus system datasource: workflow, service and job state, and every order with its data',
+} as const;
+
+/**
+ * Buttons that are `fixed` (they do not stretch), as a picker draws them: one alone, one in a group of its own in a
+ * wrapped row, a short one, and one with its own `maxWidth`.
+ */
+const FixedButtons = () => (
+  <>
+    <ReqoreButton fixed {...PICKED_STEP} className='fixed-alone' />
+    <ReqoreVerticalSpacer height={10} />
+    <ReqoreControlGroup fluid wrap>
+      <ReqoreControlGroup fluid={false}>
+        <ReqoreButton fixed {...PICKED_STEP} className='fixed-in-a-step' />
+      </ReqoreControlGroup>
+    </ReqoreControlGroup>
+    <ReqoreVerticalSpacer height={10} />
+    <ReqoreControlGroup>
+      <ReqoreButton fixed icon='CheckLine' label='Apply' className='fixed-short' />
+      <ReqoreButton fixed maxWidth='200px' {...PICKED_STEP} className='fixed-own-max-width' />
+    </ReqoreControlGroup>
+  </>
+);
+
+/**
+ * Every control in `container` is inside it and every word it says is whole; a fixed button that says more than
+ * a row holds is as wide as the container, its description on as many lines as it takes; a short one keeps its own
+ * width, and one with its own `maxWidth` keeps that.
+ */
+const expectFixedButtonsInside = async (container: HTMLElement) => {
+  await expectControlsInside(container);
+  await expectWordsWhole(container);
+  const width = container.getBoundingClientRect().width;
+  const widthOf = (className: string) =>
+    (container.querySelector(`.${className}`) as HTMLElement).getBoundingClientRect().width;
+  expect(Math.abs(widthOf('fixed-alone') - width)).toBeLessThanOrEqual(0.5);
+  expect(Math.abs(widthOf('fixed-in-a-step') - width)).toBeLessThanOrEqual(0.5);
+  expect(widthOf('fixed-short')).toBeLessThan(width / 2);
+  expect(widthOf('fixed-own-max-width')).toBeLessThanOrEqual(200.5);
+  for (const description of Array.from(
+    container.querySelectorAll<HTMLElement>('.reqore-button-description')
+  )) {
+    expect(description.scrollWidth).toBeLessThanOrEqual(description.clientWidth);
+  }
+};
+
+export const FixedButtonStaysInsideItsContainer: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders fixed buttons (they do not stretch) in a 346px card: a picked step, omquser with its description, alone and in a group of its own in a wrapped row; a short Apply; and the step with its own maxWidth of 200px. Neither long one is wider than the card: each is the card's width, its description on as many lines as it takes. Apply keeps its own width, and the 200px one its own limit.",
+      },
+    },
+  },
+  render: () => (
+    <StoryRowBox className='fixed-buttons-box' width={346} caption='A 346px card'>
+      <FixedButtons />
+    </StoryRowBox>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectFixedButtonsInside(
+      canvasElement.querySelector<HTMLElement>('.fixed-buttons-box .story-row-box-frame')!
+    );
+  },
+};
+
+export const FixedButtonStaysInsideItsContainerOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'The same fixed buttons on a phone (390px): the picked step, alone and in a group of its own, is as wide as the screen leaves it, its description on as many lines as it takes; Apply and the 200px one keep their own widths.',
+      },
+    },
+  },
+  render: () => (
+    <div className='fixed-buttons-page'>
+      <FixedButtons />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectFixedButtonsInside(
+      canvasElement.querySelector<HTMLElement>('.fixed-buttons-page')!
+    );
   },
 };
