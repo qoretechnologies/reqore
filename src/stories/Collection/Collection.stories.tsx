@@ -11,6 +11,10 @@ import { noop } from 'lodash';
 import { sleep } from '../../helpers/utils';
 import { StoryMeta } from '../utils';
 import { argManager, IntentArg, SizeArg } from '../utils/args';
+import { ReqoreModal } from '../../components/Modal';
+import { expectControlsInside } from '../utils/controlsInside';
+import { StoryRowBox } from '../utils/rowBoxes';
+import { PHONE_STORY } from '../utils/touchScreen';
 
 export interface IColumnsStoryArgs extends IReqoreColumnsProps {
   multipleColumns?: boolean;
@@ -944,5 +948,91 @@ export const ItemIsInMultipleGroups: Story = {
         },
       },
     ],
+  },
+};
+
+/** Saved favorites as a picker's dialog lists them: a name, the path it picks, Apply and Remove. */
+const FAVORITE_ITEMS: IReqoreCollectionProps['items'] = [
+  { label: 'Orders table', content: 'datasource · omquser · bb_local' },
+  { label: 'Inventory', content: 'datasource · omquser · inventory' },
+  { label: 'Billing events', content: 'datasource · omquser · billing_events' },
+].map((item) => ({
+  ...item,
+  flat: false,
+  className: 'favorite',
+  actions: [
+    { icon: 'CheckLine', label: 'Apply', className: 'favorite-apply' },
+    { icon: 'DeleteBinLine', tooltip: 'Remove' },
+  ],
+}));
+
+/** The favorites, as a picker's dialog shows them: filterable, sortable, paged with buttons. */
+const Favorites = () => (
+  <ReqoreCollection filterable sortable paging='buttons' items={FAVORITE_ITEMS} />
+);
+
+/** Every favorite, and every control, is inside `container`, side to side. */
+const expectFavoritesInside = async (container: HTMLElement) => {
+  await waitFor(() =>
+    expect(container.querySelectorAll('.favorite')).toHaveLength(FAVORITE_ITEMS.length)
+  );
+  await expectControlsInside(container);
+  await waitFor(() => {
+    const inside = container.getBoundingClientRect();
+    for (const item of Array.from(container.querySelectorAll<HTMLElement>('.favorite'))) {
+      const box = item.getBoundingClientRect();
+      expect(box.left, item.textContent ?? '').toBeGreaterThanOrEqual(inside.left - 0.5);
+      expect(box.right, item.textContent ?? '').toBeLessThanOrEqual(inside.right + 0.5);
+    }
+  });
+};
+
+export const NarrowContainerKeepsItsItemsInside: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders saved favorites (filterable, sortable, paged) in a 342px box: each card, with its Apply and Remove, is inside the box. A column is never wider than the collection: its width at the zoom (400px at 100%) is the narrowest a card is where there is room for it, not a width it keeps where there is less.',
+      },
+    },
+  },
+  render: () => (
+    <StoryRowBox className='favorites-box' width={342} caption='A 342px box'>
+      <Favorites />
+    </StoryRowBox>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectFavoritesInside(
+      canvasElement.querySelector<HTMLElement>('.favorites-box .story-row-box-frame')!
+    );
+  },
+};
+
+export const NarrowContainerKeepsItsItemsInsideOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'The saved favorites in a dialog on a phone (390px): each card, with its Apply and Remove, is inside the dialog.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreModal isOpen label='Data provider favorites' className='favorites-dialog'>
+      <Favorites />
+    </ReqoreModal>
+  ),
+  play: async () => {
+    const content = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>(
+        '.favorites-dialog .reqore-collection-content'
+      );
+      expect(element).toBeTruthy();
+      return element!;
+    });
+    await expectFavoritesInside(content);
   },
 };
