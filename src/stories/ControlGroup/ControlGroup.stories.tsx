@@ -17,6 +17,9 @@ import {
 } from '../../index';
 import { StoryMeta } from '../utils';
 import { GapSizeArg, MinimalArg, SizeArg, argManager } from '../utils/args';
+import { expectControlsInside, expectWordsWhole } from '../utils/controlsInside';
+import { StoryRowBox } from '../utils/rowBoxes';
+import { PHONE_STORY } from '../utils/touchScreen';
 
 /**
  * An input in a group that can be typed into, as a page's would be: it holds its own text. Given a `value` and no
@@ -820,5 +823,122 @@ export const ResponsiveFoldSettles: Story = {
     // nothing could not pass this by standing still.
     await expect(group.children.length).toBe(foldedTo);
     await expect(group.scrollWidth).toBeLessThanOrEqual(group.clientWidth);
+  },
+};
+
+/** The steps of a picked path, each with what it is: a datasource, a schema and a table. */
+const PATH_STEPS = [
+  {
+    label: 'omquser',
+    description:
+      'The Qorus system datasource: workflow, service and job state, and every order with its data',
+  },
+  { label: 'public', description: 'The default schema' },
+  {
+    label: 'bb_local',
+    description: 'A table of the business data the examples write to and read from',
+  },
+];
+
+/**
+ * A path picked a step at a time, as a data provider picker draws it (the Qorus IDE's, qorus#646): what it picks
+ * from, then each step in a group of its own (`fluid={false}`) saying the step and what it is, then a button that
+ * applies the path.
+ */
+const WrappedPath = () => (
+  <ReqoreControlGroup fluid wrap fill className='wrapped-path'>
+    <ReqoreButton fixed icon='DatabaseLine' label='Datasource' />
+    {PATH_STEPS.map(({ label, description }) => (
+      <ReqoreControlGroup fluid={false} key={label} className='wrapped-path-step'>
+        <ReqoreDropdown fluid label={label} description={description} items={[{ label }]} />
+      </ReqoreControlGroup>
+    ))}
+    <ReqoreButton
+      fluid={false}
+      icon='CheckLine'
+      label='Apply this path'
+      description='Picks the datasource, the schema and the table, and closes the favorites'
+      className='wrapped-path-apply'
+    />
+  </ReqoreControlGroup>
+);
+
+/**
+ * Every control of the wrapped path is inside it, side to side; every word it says is whole; and what says too
+ * much for a row is capped at the row, while what fits keeps its own width.
+ */
+const expectPathInside = async (path: HTMLElement) => {
+  await expectControlsInside(path);
+  await expectWordsWhole(path);
+
+  const width = path.getBoundingClientRect().width;
+  const steps = Array.from(path.querySelectorAll<HTMLElement>('.wrapped-path-step'));
+  expect(steps).toHaveLength(PATH_STEPS.length);
+  // the long steps and Apply are capped at the row; the short ones keep their own width
+  const [omquser, schema, table] = steps.map((step) => step.getBoundingClientRect().width);
+  const apply = path.querySelector('.wrapped-path-apply')!.getBoundingClientRect().width;
+  const datasource = (path.firstElementChild as HTMLElement).getBoundingClientRect().width;
+  expect(Math.abs(omquser - width)).toBeLessThanOrEqual(0.5);
+  expect(Math.abs(apply - width)).toBeLessThanOrEqual(0.5);
+  expect(schema).toBeLessThan(width / 2);
+  expect(datasource).toBeLessThan(width / 2);
+  expect(table).toBeLessThanOrEqual(width + 0.5);
+
+  // each description is said whole, on as many lines as it takes, inside its button
+  for (const description of Array.from(
+    path.querySelectorAll<HTMLElement>('.reqore-button-description')
+  )) {
+    expect(description.scrollWidth).toBeLessThanOrEqual(description.clientWidth);
+    const button = description.closest('.reqore-button')!.getBoundingClientRect();
+    expect(description.getBoundingClientRect().right).toBeLessThanOrEqual(button.right + 0.5);
+  }
+};
+
+export const WrappedGroupKeepsALongButtonInside: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a picked path in a 346px card, as a data provider picker draws it: Datasource, then the steps omquser, public and bb_local, each in a group of its own with what it is, then Apply this path. The group wraps, and none of its children is wider than it: a step or a button whose description is longer than the card is as wide as the card, its description on as many lines as it takes, and a step that fits keeps its own width.',
+      },
+    },
+  },
+  render: () => (
+    <StoryRowBox className='wrapped-path-box' width={346} caption='A 346px card'>
+      <WrappedPath />
+    </StoryRowBox>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectPathInside(canvasElement.querySelector<HTMLElement>('.wrapped-path')!);
+  },
+};
+
+export const WrappedGroupKeepsALongButtonInsideOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "The same picked path in a card on a phone (390px), with the card's own Apply in its header: every step and button of the path is inside the card, a long description on as many lines as it takes, and the card's Apply stays on screen.",
+      },
+    },
+  },
+  render: () => (
+    <ReqorePanel
+      label='Orders table'
+      className='wrapped-path-card'
+      actions={[{ label: 'Apply', icon: 'CheckLine', className: 'wrapped-path-card-apply' }]}
+    >
+      <WrappedPath />
+    </ReqorePanel>
+  ),
+  play: async ({ canvasElement }) => {
+    const card = canvasElement.querySelector<HTMLElement>('.wrapped-path-card')!;
+    await expectPathInside(card.querySelector<HTMLElement>('.wrapped-path')!);
+    await expectControlsInside(card);
+    const apply = card.querySelector('.wrapped-path-card-apply')!.getBoundingClientRect();
+    expect(apply.right).toBeLessThanOrEqual(window.innerWidth);
   },
 };

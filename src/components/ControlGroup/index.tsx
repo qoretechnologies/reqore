@@ -770,7 +770,7 @@ const ReqoreControlGroup = memo(
           stack={isStack}
           verticalAlign={verticalAlign}
           horizontalAlign={horizontalAlign}
-          className={`${className || ''} reqore-control-group`}
+          className={`${className || ''} reqore-control-group${wrap ? ' reqore-control-group-wrapped' : ''}`}
         >
           <ReqoreGroupSurface effect={rest.effect}>{clone(_children)}</ReqoreGroupSurface>
         </StyledReqoreControlGroup>
