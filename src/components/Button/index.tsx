@@ -449,12 +449,16 @@ export const StyledButton = styled(StyledEffect).withConfig({
           CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2}px;
         `
       : null}
-  max-width: ${({ square, maxWidth, fluid, fixed, size, verticalPadding = 'normal' }) =>
+  /* A button is never wider than its container, unless it sets its own maxWidth: fixed means it does not
+     stretch, not that it may run past what holds it. A fixed button saying a value and its description stayed as
+     wide as both on one line, 487-712px in a 346px card on a phone (qorus#646); capped, its label is clipped as any
+     button's is, and its description takes as many lines as it needs. */
+  max-width: ${({ square, maxWidth, size, verticalPadding = 'normal' }) =>
     square
       ? `${
           SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2
         }px`
-      : maxWidth || (fluid && !fixed ? '100%' : undefined)};
+      : maxWidth || '100%'};
 
   ${({ wrap, description }) =>
     !wrap && !description
