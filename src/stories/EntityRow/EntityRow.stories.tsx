@@ -873,7 +873,7 @@ export const NarrowContainerLoneActionInMenuModeOnAPhone: Story = {
     docs: {
       description: {
         story:
-          "Renders a connection row with one action, Test the connection, that folds two or more into a menu (`narrowActions='menu'`), in a 320px card on a phone (390 px). The action stays a button at the end of the label's line and reads \"Test\", its short label (`shortLabel`), so it leaves the label its room; it is still called \"Test the connection\". It is a finger's size (44px each way), and a tap on it runs it without opening the row.",
+          "Renders a connection row with one action, Test the connection, that folds two or more into a menu (`narrowActions='menu'`), in a 320px card on a phone (390 px). The action stays a button at the end of the label's line and reads “Test”, its short label (`shortLabel`), so it leaves the label its room; it is still called “Test the connection”. It is a finger's size (44px each way), and a tap on it runs it without opening the row.",
       },
     },
   },
