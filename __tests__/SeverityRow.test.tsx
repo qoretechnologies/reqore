@@ -575,3 +575,30 @@ test('Stacked, labels an action whose label is empty with its tooltip', () => {
   expect(buttons).toHaveLength(2);
   expect(buttons[1].textContent).toContain('Dismiss');
 });
+
+test('A row with no strip and no mark keeps the strip column unless stripGutter is false', () => {
+  const renderRow = (stripGutter?: boolean) =>
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreSeverityRow label='Primary source' showStrip={false} stripGutter={stripGutter} />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+  // Default: the empty column stays, so the label lines up with striped rows.
+  renderRow();
+  const row = document.querySelector('.reqore-severity-row')!;
+  expect(row.getAttribute('data-gutter')).toBeNull();
+  expect(row.querySelector(':scope > span[aria-hidden]')).not.toBeNull();
+  cleanup();
+
+  // stripGutter={false}: no column, the label starts at the padding.
+  renderRow(false);
+  const flush = document.querySelector('.reqore-severity-row')!;
+  expect(flush.getAttribute('data-gutter')).toBe('none');
+  expect(flush.querySelector(':scope > span[aria-hidden]')).toBeNull();
+  expect(flush.firstElementChild!.className).toContain('reqore-severity-row-body');
+});

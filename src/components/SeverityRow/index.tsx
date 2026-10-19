@@ -91,6 +91,14 @@ export interface IReqoreSeverityRowProps
   transparent?: boolean;
   /** Show the colored severity strip on the left edge. Default `true`. */
   showStrip?: boolean;
+  /**
+   * Keep the strip's column when the row has neither a strip (`showStrip={false}`) nor a
+   * `leading` mark. Default `true`: the label starts where a striped row's does, so rows with and
+   * without a strip line up in one list. `false` drops the empty column, so the label starts at
+   * the row's padding — for a list whose rows never carry a strip, where the column is 20px of
+   * nothing before every label.
+   */
+  stripGutter?: boolean;
   /** Rounded corners on the row. Default `true`. */
   rounded?: boolean;
   /**
@@ -262,6 +270,21 @@ const StyledRow = styled(StyledEffect).withConfig({
     grid-template-columns: auto 1fr auto;
   }
 
+  /* stripGutter={false} on a row with no strip and no mark: no first column, so the label starts
+     at the row's padding. */
+  &[data-gutter='none'] {
+    grid-template-columns: 1fr auto;
+  }
+  &[data-gutter='none'][data-narrow='true'] {
+    grid-template-columns: 1fr;
+  }
+  &[data-gutter='none'][data-narrow='true']:not([data-actions='menu']) > .reqore-severity-row-actions {
+    grid-column: 1 / -1;
+  }
+  &[data-gutter='none'][data-narrow='true'][data-actions='menu'] {
+    grid-template-columns: 1fr auto;
+  }
+
   /* The last column, named: an item placed in a row with its column left to the grid is placed before
      the items around it, in the first column. */
   &[data-narrow='true'][data-actions='menu'] > .reqore-severity-row-actions {
@@ -372,6 +395,7 @@ const ReqoreSeverityRow = memo(
         intent,
         transparent = false,
         showStrip = true,
+        stripGutter = true,
         size = 'normal',
         flat = true,
         fluid = true,
@@ -412,6 +436,8 @@ const ReqoreSeverityRow = memo(
       const hasLeading = leading !== undefined && leading !== null && leading !== false;
       // Without a strip, the mark takes the strip's column (see StyledRow).
       const leadingColumn = hasLeading && !showStrip;
+      // Nothing to put in the strip's column, and the caller does not want it kept empty.
+      const noGutter = !showStrip && !hasLeading && !stripGutter;
 
       return (
         <StyledContainer
@@ -425,6 +451,7 @@ const ReqoreSeverityRow = memo(
             data-narrow={isNarrow || undefined}
             data-actions={actionsAsMenu ? 'menu' : undefined}
             data-leading-column={leadingColumn || undefined}
+            data-gutter={noGutter ? 'none' : undefined}
             {...rest}
             Component={StyledRow}
             tooltip={tooltip}
@@ -459,7 +486,7 @@ const ReqoreSeverityRow = memo(
               >
                 {leading}
               </StyledLeadingCell>
-            ) : (
+            ) : noGutter ? null : (
               <span aria-hidden style={{ width: STRIP_WIDTH_PX }} />
             )}
             <StyledBody className='reqore-severity-row-body'>
