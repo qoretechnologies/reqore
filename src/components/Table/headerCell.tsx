@@ -2,7 +2,7 @@ import count from 'lodash/size';
 import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
 import { memo, useMemo } from 'react';
-import { css } from 'styled-components';
+import { css, useTheme } from 'styled-components';
 import styled from '../../helpers/styled';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreIcon } from '../..';
@@ -274,11 +274,17 @@ export const ReqoreTableHeaderCell = memo(
       otherActionsLabel,
     ]);
 
+    const theme = useTheme() as IReqoreTheme | undefined;
+    /* A pinned header cell is drawn over the header cells that scroll under it, so it paints the theme's
+       main color - opaque, as a pinned body cell is. Without it the cells passing under showed through
+       ("ORDER DA" under "ACTIONS"). */
+    const pinnedFill = useMemo(() => (pin && theme?.main ? theme.main : undefined), [pin, theme]);
     const pinStyle: React.CSSProperties = pin
       ? {
           position: 'sticky',
           [pin === 'left' ? 'left' : 'right']: pinOffset || 0,
           zIndex: 2,
+          backgroundColor: pinnedFill,
         }
       : {};
     const hasExplicitSizing =
@@ -343,117 +349,119 @@ export const ReqoreTableHeaderCell = memo(
           right: resizable,
         }}
       >
-        <ReqoreControlGroup fluid stack rounded={false} fill style={{ height: '100%' }}>
-          {content ? (
-            content
-          ) : (
-            <>
-              {count(items) ? (
-                <ReqoreDropdown<IReqoreButtonProps>
-                  className={`${
-                    className || ''
-                  } reqore-table-header-cell-options reqore-table-header-cell`}
-                  compact
-                  size={size}
-                  rounded={false}
-                  filterable={filterable}
-                  filterPlaceholder={filterPlaceholder || columnFilterPlaceholder}
-                  filter={filter}
-                  onFilterChange={(value) => {
-                    onFilterChange?.(dataId, value);
-                  }}
-                  items={items}
-                  showCaret={false}
-                  textAlign={align}
-                  readOnlyOnEmpty
-                  onBeforeOpen={(_popoverData, event) => {
-                    if (event.metaKey) {
-                      return false;
-                    }
+        <>
+          <ReqoreControlGroup fluid stack rounded={false} fill style={{ height: '100%' }}>
+            {content ? (
+              content
+            ) : (
+              <>
+                {count(items) ? (
+                  <ReqoreDropdown<IReqoreButtonProps>
+                    className={`${
+                      className || ''
+                    } reqore-table-header-cell-options reqore-table-header-cell`}
+                    compact
+                    size={size}
+                    rounded={false}
+                    filterable={filterable}
+                    filterPlaceholder={filterPlaceholder || columnFilterPlaceholder}
+                    filter={filter}
+                    onFilterChange={(value) => {
+                      onFilterChange?.(dataId, value);
+                    }}
+                    items={items}
+                    showCaret={false}
+                    textAlign={align}
+                    readOnlyOnEmpty
+                    onBeforeOpen={(_popoverData, event) => {
+                      if (event.metaKey) {
+                        return false;
+                      }
 
-                    return true;
-                  }}
-                  inputProps={{ intent: filter ? 'info' : undefined }}
-                  onClick={(e) => {
-                    if (sortable && e.metaKey) {
-                      onSortChange?.(dataId);
-                    }
+                      return true;
+                    }}
+                    inputProps={{ intent: filter ? 'info' : undefined }}
+                    onClick={(e) => {
+                      if (sortable && e.metaKey) {
+                        onSortChange?.(dataId);
+                      }
 
-                    onClick?.(e);
-                  }}
-                  labelEffect={baseHeaderEffect}
-                  {...rest}
-                  effect={{
-                    glow: filter
-                      ? {
-                          color: 'info',
-                          opacity: 1,
-                          inset: true,
-                          size: 1,
-                        }
-                      : undefined,
-                    gradient:
-                      sortable && sortData.by === dataId
+                      onClick?.(e);
+                    }}
+                    labelEffect={baseHeaderEffect}
+                    {...rest}
+                    effect={{
+                      glow: filter
                         ? {
-                            direction: `to ${sortData.direction === 'desc' ? 'top' : 'bottom'}`,
-                            colors: {
-                              0: 'main:lighten:2',
-                              30: 'main:lighten:2',
-                              150: 'info:darken:3',
-                            },
+                            color: 'info',
+                            opacity: 1,
+                            inset: true,
+                            size: 1,
                           }
                         : undefined,
-                    ...rest.effect,
-                  }}
-                />
-              ) : (
-                <ReqoreButton
-                  className={`${
-                    className || ''
-                  } reqore-table-header-cell-options reqore-table-header-cell`}
-                  compact
-                  size={size}
-                  rounded={false}
-                  textAlign={align}
-                  onClick={(e) => {
-                    if (sortable && e.metaKey) {
-                      onSortChange?.(dataId);
-                    }
+                      gradient:
+                        sortable && sortData.by === dataId
+                          ? {
+                              direction: `to ${sortData.direction === 'desc' ? 'top' : 'bottom'}`,
+                              colors: {
+                                0: 'main:lighten:2',
+                                30: 'main:lighten:2',
+                                150: 'info:darken:3',
+                              },
+                            }
+                          : undefined,
+                      ...rest.effect,
+                    }}
+                  />
+                ) : (
+                  <ReqoreButton
+                    className={`${
+                      className || ''
+                    } reqore-table-header-cell-options reqore-table-header-cell`}
+                    compact
+                    size={size}
+                    rounded={false}
+                    textAlign={align}
+                    onClick={(e) => {
+                      if (sortable && e.metaKey) {
+                        onSortChange?.(dataId);
+                      }
 
-                    onClick?.(e);
-                  }}
-                  {...rest}
-                  effect={{ ...baseHeaderEffect, ...rest.effect }}
-                />
-              )}
-            </>
-          )}
-          {content && (filterable || hideable || resizable) ? (
-            <ReqoreDropdown<IReqoreButtonProps>
-              icon='More2Line'
-              className='reqore-table-header-cell-options'
-              fixed
-              compact
-              buttonStyle={{
-                paddingLeft: 0,
-                paddingRight: 0,
-                minWidth: '10px',
-                borderLeft: 'none',
-              }}
-              size={size}
-              rounded={false}
-              intent={filter || sortData.by === dataId ? 'info' : rest.intent}
-              filterable={filterable}
-              filterPlaceholder={filterPlaceholder || columnFilterPlaceholder}
-              filter={filter}
-              inputProps={{ intent: filter ? 'info' : undefined }}
-              onFilterChange={(value) => {
-                onFilterChange?.(dataId, value);
-              }}
-              items={items}
-            />
-          ) : null}
-        </ReqoreControlGroup>
+                      onClick?.(e);
+                    }}
+                    {...rest}
+                    effect={{ ...baseHeaderEffect, ...rest.effect }}
+                  />
+                )}
+              </>
+            )}
+            {content && (filterable || hideable || resizable) ? (
+              <ReqoreDropdown<IReqoreButtonProps>
+                icon='More2Line'
+                className='reqore-table-header-cell-options'
+                fixed
+                compact
+                buttonStyle={{
+                  paddingLeft: 0,
+                  paddingRight: 0,
+                  minWidth: '10px',
+                  borderLeft: 'none',
+                }}
+                size={size}
+                rounded={false}
+                intent={filter || sortData.by === dataId ? 'info' : rest.intent}
+                filterable={filterable}
+                filterPlaceholder={filterPlaceholder || columnFilterPlaceholder}
+                filter={filter}
+                inputProps={{ intent: filter ? 'info' : undefined }}
+                onFilterChange={(value) => {
+                  onFilterChange?.(dataId, value);
+                }}
+                items={items}
+              />
+            ) : null}
+          </ReqoreControlGroup>
+        </>
       </StyledHeaderResizable>
     );
   }

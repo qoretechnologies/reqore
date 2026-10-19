@@ -1151,6 +1151,12 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
   overflow: auto;
   overflow-wrap: anywhere;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
+  /* Under a sticky header the body scrolls beneath it, and whatever in the body was positioned with a
+     z-index as high as the header's (2) was drawn over it: a table's pinned columns are sticky at 2, and
+     come later in the document. A stacking context of its own puts everything in the body in one layer
+     under the header, whatever z-index it is given. It is not a containing block, so nothing in the body
+     is placed differently; popovers and menus are drawn outside the panel and stay above it. */
+  isolation: ${({ stickyHeader }) => (stickyHeader ? 'isolate' : undefined)};
 `;
 
 /** The media frame. Its outer corners take the panel's inner curve, so the media is clipped to
@@ -2678,6 +2684,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               size={contentSize || panelSize}
               ref={getContentRef}
               noHorizontalPadding={noHorizontalPadding}
+              stickyHeader={rest.stickyHeader}
             >
               {children}
             </StyledPanelContent>
