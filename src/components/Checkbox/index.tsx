@@ -120,6 +120,8 @@ export interface IReqoreCheckboxProps
 
 export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
   theme: IReqoreTheme;
+  /** The label wraps (`wrapLabel`): the checkbox is as high as its label and never wider than its container. */
+  $wrapLabel?: boolean;
 }
 
 /** The switch's knob: lighter than the theme, or than its effect's gradient when it has one. */
@@ -135,6 +137,9 @@ const getSwitchKnobColor = (
     ? changeLightness(from, 0.2)
     : changeLightness(theme.main, checked ? 0.25 : 0.2);
 };
+
+/** The style of the groups a label that wraps is in: they shrink with the room the checkbox has. */
+const WRAPPING_LABEL_GROUP_STYLE: React.CSSProperties = { flexShrink: 1, minWidth: 0 };
 
 /** How much of an unset switch's knob is drawn: a fifth. */
 const UNSET_KNOB_ALPHA = 0.2;
@@ -277,11 +282,24 @@ const StyledCheckbox = styled.div.withConfig({
   padding: 0px;
   transition: all 0.2s ease-out;
 
-  height: ${({ size }) => SIZE_TO_PX[size]}px;
+  /* A label that wraps (qorus#646) makes the checkbox as high as the lines it takes, at least one; and the
+     checkbox gives way to the room it is in rather than keep its label on one line, so it is never wider than
+     its container, and shrinks in a row. */
+  ${({ size, $wrapLabel }) =>
+    $wrapLabel
+      ? css`
+          min-height: ${SIZE_TO_PX[size]}px;
+          min-width: 0;
+        `
+      : css`
+          height: ${SIZE_TO_PX[size]}px;
+        `}
   font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
 
-  max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
-  flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 auto' : '0 0 auto')};
+  max-width: ${({ fluid, fixed, $wrapLabel }) =>
+    (fluid && !fixed) || $wrapLabel ? '100%' : undefined};
+  flex: ${({ fluid, fixed, $wrapLabel }) =>
+    fixed ? '0 auto' : fluid ? '1 auto' : $wrapLabel ? '0 1 auto' : '0 0 auto'};
 
   ${({ disabled }) =>
     disabled &&
@@ -601,6 +619,10 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       onClick: handleLabelClick,
     };
 
+    /* The groups the label is in keep the width of its one line unless told to give way: a group that is not
+       fluid does not shrink. A label that wraps is let wrap in the room the checkbox has (qorus#646). */
+    const labelGroupStyle = wrapLabel ? WRAPPING_LABEL_GROUP_STYLE : undefined;
+
     const { Component, props } = useComponentTooltip(
       {
         ...rowProps,
@@ -614,6 +636,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         'aria-disabled': disabled ? true : undefined,
         checked,
         readOnly,
+        $wrapLabel: wrapLabel,
         className: `${className || ''} reqore-checkbox reqore-control`,
       },
       StyledCheckbox,
@@ -627,8 +650,8 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         ) : null}
         {label && labelPosition === 'left' ? (
           <>
-            <ReqoreControlGroup vertical>
-              <ReqoreControlGroup>
+            <ReqoreControlGroup vertical style={labelGroupStyle}>
+              <ReqoreControlGroup style={labelGroupStyle}>
                 {labelDetailPosition === 'left' && labelDetail}
                 <ReqoreTextEffect
                   {...labelProps}
@@ -778,8 +801,8 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         {label && labelPosition === 'right' ? (
           <>
             <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
-            <ReqoreControlGroup vertical gapSize={getOneLessSize(size)}>
-              <ReqoreControlGroup>
+            <ReqoreControlGroup vertical gapSize={getOneLessSize(size)} style={labelGroupStyle}>
+              <ReqoreControlGroup style={labelGroupStyle}>
                 {labelDetailPosition === 'left' && labelDetail}
                 <ReqoreTextEffect
                   {...labelProps}
