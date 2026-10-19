@@ -421,8 +421,14 @@ const ReqoreDropdownList = memo(
     // Register document-level keyboard listener so arrow keys work
     // regardless of which element has focus (button, external input, etc.)
     // Skip if the event target is already inside the dropdown (handled by input/menu onKeyDown)
+    //
+    // Only the level the list shows hears them. The list of an opened level is drawn by the
+    // list of the level above it, which kept its own listener: each key was handled twice,
+    // and Enter in an opened level also selected the row the level above had highlighted.
+    const showsItsOwnRows = !currentSelectedItem;
+
     useEffect(() => {
-      if (!keyboardNavigation) {
+      if (!keyboardNavigation || !showsItsOwnRows) {
         return () => {};
       }
 
@@ -461,14 +467,14 @@ const ReqoreDropdownList = memo(
 
       document.addEventListener('keydown', listener, true);
       return () => document.removeEventListener('keydown', listener, true);
-    }, [keyboardNavigation, handleKeyDown, menuRef]);
+    }, [keyboardNavigation, handleKeyDown, menuRef, showsItsOwnRows]);
 
     // Expose keyboard controls to external components (aria-activedescendant pattern)
     useEffect(() => {
-      if (passKeyHandler && keyboardNavigation) {
+      if (passKeyHandler && keyboardNavigation && showsItsOwnRows) {
         passKeyHandler({ handleKeyDown, focusedItemId: focusedItemDomId });
       }
-    }, [passKeyHandler, handleKeyDown, keyboardNavigation, focusedItemDomId]);
+    }, [passKeyHandler, handleKeyDown, keyboardNavigation, focusedItemDomId, showsItsOwnRows]);
 
     const getAction = useCallback(
       (item: TReqoreDropdownItem, position: 'left' | 'right') => {
@@ -527,6 +533,8 @@ const ReqoreDropdownList = memo(
             multiSelect,
             listStyle,
             filterable,
+            // an opened level is the same list: it ranks, says and is reached as the list does
+            filterRanking,
             closePopover,
             width,
             height,
@@ -536,10 +544,14 @@ const ReqoreDropdownList = memo(
             paging,
             onFilterChange,
             filterPlaceholder,
+            filterPlaceholderBuilder,
+            noItemsFoundText,
             filter,
             customTheme,
             intent,
             keyboardNavigation,
+            passKeyHandler,
+            listId,
             labels: [
               ...labels,
               {
