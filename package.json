@@ -1,6 +1,6 @@
 {
   "name": "@qoretechnologies/reqore",
-  "version": "0.78.5",
+  "version": "0.78.6",
   "description": "ReQore is a highly theme-able and modular UI library for React",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -78,7 +78,6 @@
     "eslint-plugin-storybook": "10.4.3",
     "jsdom": "^29.1.1",
     "mockdate": "^3.0.5",
-    "npm-cli-login": "^0.1.1",
     "playwright": "^1.60.0",
     "pre-push": "^0.1.4",
     "react": "^18.2.0",
@@ -127,6 +126,11 @@
     "zustand": "^5.0.3"
   },
   "resolutions": {
-    "jackspeak": "2.1.1"
+    "jackspeak": "2.1.1",
+    "serialize-javascript": "^7.0.5",
+    "js-cookie": "^3.0.7",
+    "pre-push/cross-spawn": "^7.0.6",
+    "**/serve-handler/minimatch": "^3.1.5",
+    "**/@typescript-eslint/typescript-estree/minimatch": "^9.0.9"
   }
 }
