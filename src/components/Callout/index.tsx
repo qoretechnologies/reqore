@@ -2,17 +2,14 @@ import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import { css } from 'styled-components';
 import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
-import {
-  PADDING_FROM_SIZE,
-  resolveRadius,
-  TEXT_FROM_SIZE,
-  TSizes,
-} from '../../constants/sizes';
+import { PADDING_FROM_SIZE, resolveRadius, TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
 import {
-  changeDarkness,
   changeLightness,
   getMainBackgroundColor,
+  getPanelBackgroundColor,
+  getPanelHairlineColor,
   getReadableColor,
 } from '../../helpers/colors';
 import { getOneLessSize, resolveAccentSize, TReqorePadded } from '../../helpers/utils';
@@ -219,7 +216,7 @@ const StyledCallout = styled(StyledEffect).withConfig({
     return `${top}px ${right}px ${bottom}px ${left}px`;
   }};
   background-color: ${({ theme, $transparent }) =>
-    $transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
+    $transparent ? 'transparent' : getPanelBackgroundColor(theme)};
   border: ${({ theme, flat, intent }) =>
     flat
       ? 0
@@ -270,7 +267,7 @@ const StyledCallout = styled(StyledEffect).withConfig({
             background-color: ${intent
               ? rgba(theme.intents[intent], $transparent ? 0.04 : 0.1)
               : $transparent
-              ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
+              ? rgba(getPanelHairlineColor(theme), 0.08)
               : changeLightness(getMainBackgroundColor(theme), -0.32)};
           }
         `
@@ -318,8 +315,8 @@ const StyledCalloutContent = styled(StyledTextEffect)<{
   $underLabel?: boolean;
 }>`
   color: ${({ theme }) => rgba(getReadableColor(theme, undefined, undefined, true), 0.84)};
-  font-size: ${({ size = 'normal', $underLabel }) =>
-    TEXT_FROM_SIZE[size] * ($underLabel ? 1 : 1.2)}px;
+  font-size: ${({ size = 'normal', $underLabel, theme }) =>
+    getTextSize(theme, size as TSizes) * ($underLabel ? 1 : 1.2)}px;
   line-height: 1.25;
 `;
 

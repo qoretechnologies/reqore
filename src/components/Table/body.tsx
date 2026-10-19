@@ -14,7 +14,7 @@ import { css } from 'styled-components';
 import styled from '../../helpers/styled';
 import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import { getRowExpandId, getTotalColumnsWidth } from './helpers';
+import { TABLE_OVERFLOW_ATTRIBUTE, getRowExpandId, getTotalColumnsWidth } from './helpers';
 import ReqoreTableRow, { IReqoreTableRowOptions } from './row';
 import { ReqoreTableScrollbar } from './scrollbar';
 
@@ -188,23 +188,53 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
     }
     const itemData = itemDataRef.current;
 
-    // Sync body horizontal scroll to the header and notify vertical scroll state
+    // Sync body horizontal scroll to the header, mark which pinned edges have
+    // columns hidden under them, and notify vertical scroll state
     useEffect(() => {
       const el = targetRef.current;
       if (!el) {
         return undefined;
       }
 
+      // A pinned column's edge shadow says "there is more under here". It is
+      // only true while there is: content scrolled past the left edge, or
+      // content still to the right of the viewport. Written as an attribute
+      // on the two scroll containers rather than through React state, so a
+      // scroll never re-renders a row to move a shadow.
+      const markOverflow = () => {
+        const sides = [
+          el.scrollLeft > 0 ? 'left' : undefined,
+          el.scrollLeft + el.clientWidth < el.scrollWidth - 1 ? 'right' : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ');
+        for (const target of [el, headerRef.current]) {
+          if (!target) continue;
+          if (sides) target.setAttribute(TABLE_OVERFLOW_ATTRIBUTE, sides);
+          else target.removeAttribute(TABLE_OVERFLOW_ATTRIBUTE);
+        }
+      };
+
       const handleScroll = () => {
         if (headerRef.current) {
           headerRef.current.scrollLeft = el.scrollLeft;
         }
+        markOverflow();
         onScrollChange?.(el.scrollTop > 0);
       };
 
+      markOverflow();
       el.addEventListener('scroll', handleScroll, { passive: true });
-      return () => el.removeEventListener('scroll', handleScroll);
-    }, [headerRef, onScrollChange, targetRef]);
+      // The viewport changing width changes what is hidden, without a scroll.
+      const observer =
+        typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(markOverflow);
+      observer?.observe(el);
+      return () => {
+        el.removeEventListener('scroll', handleScroll);
+        observer?.disconnect();
+      };
+      // `totalColumnsWidth`: the columns changing width changes what is hidden too.
+    }, [headerRef, onScrollChange, targetRef, totalColumnsWidth]);
 
     /**
      * Measured heights of open detail panels, keyed by expansion id.

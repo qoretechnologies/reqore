@@ -8,6 +8,7 @@ import { DEFAULT_INTENTS } from '../../constants/theme';
 import { StoryMeta } from '../utils';
 import { ALL_SIZES, FlatArg, IntentArg, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreCalloutProps>();
 
 const meta = {
@@ -752,4 +753,21 @@ export const LabelOnly: Story = {
       });
     });
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a neutral and a warning callout on the default and on the themed surface: the neutral one takes the panel surface and hairline, the warning one keeps its intent.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreCallout label='Neutral callout' description='Sits on the panel surface.' />
+      <ReqoreCallout intent='warning' label='Warning callout' description='Keeps its intent.' />
+    </ThemedSurfaceComparison>
+  ),
 };

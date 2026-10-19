@@ -1,3 +1,4 @@
+import type { IReqoreEffect } from '../Effect';
 import { omit } from 'lodash';
 import { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
 import { css } from 'styled-components';
@@ -37,6 +38,9 @@ export interface IReqoreCustomHeaderCellProps
       | 'pinOffset'
       | 'pinEdge'
       | 'parentMinimal'
+      | 'parentHeaderEffect'
+      | 'dividers'
+      | 'sortIndicator'
       | 'sortAscendingLabel'
       | 'sortDescendingLabel'
       | 'pinLeftLabel'
@@ -69,6 +73,12 @@ export interface IReqoreTableSectionProps extends IWithReqoreSize {
    * `header.transparent` still wins.
    */
   minimal?: boolean;
+  /** See `IReqoreTableProps.headerEffect`. */
+  headerEffect?: IReqoreEffect;
+  /** See `IReqoreTableProps.headerDividers`. */
+  dividers?: boolean;
+  /** See `IReqoreTableProps.sortIndicator`. */
+  sortIndicator?: 'wash' | 'arrow';
   /** See `IReqoreTableProps.sortAscendingLabel`. */
   sortAscendingLabel?: string;
   /** See `IReqoreTableProps.sortDescendingLabel`. */
@@ -190,6 +200,9 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
       bodyRef,
       tableWidth,
       minimal,
+      headerEffect,
+      dividers,
+      sortIndicator,
       sortAscendingLabel,
       sortDescendingLabel,
       pinLeftLabel,
@@ -270,6 +283,9 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
         pinOffset: pinInfo?.offset,
         pinEdge: pinInfo?.isEdge,
         parentMinimal: minimal,
+        parentHeaderEffect: headerEffect,
+        dividers,
+        sortIndicator,
         sortAscendingLabel,
         sortDescendingLabel,
         pinLeftLabel,
@@ -315,6 +331,9 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
             hasColumns: true,
             grow: 1,
             parentMinimal: minimal,
+        parentHeaderEffect: headerEffect,
+        dividers,
+        sortIndicator,
           })}
           <StyledColumnGroupHeaders className='reqore-table-headers'>
             {renderUnpinnedColumns(subColumns)}

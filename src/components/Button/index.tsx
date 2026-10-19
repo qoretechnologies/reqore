@@ -7,7 +7,6 @@ import { css, keyframes } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
   CONTROL_HORIZONTAL_PADDING_FROM_SIZE,
-  CONTROL_TEXT_FROM_SIZE,
   CONTROL_VERTICAL_PADDING_FROM_SIZE,
   CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE,
   ICON_FROM_SIZE,
@@ -18,9 +17,11 @@ import {
   SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
+  getColorFromMaybeString,
   getGradientMix,
   getReadableColor,
   getReadableColorFrom,
@@ -433,7 +434,7 @@ export const StyledButton = styled(StyledEffect).withConfig({
         ? CONTROL_VERTICAL_PADDING_FROM_SIZE[size]
         : CONTROL_HORIZONTAL_PADDING_FROM_SIZE[size]
     }px`};
-  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getControlTextSize(theme, size)}px;
   outline-offset: -2px;
 
   min-height: ${({ size, verticalPadding = 'normal' }) =>
@@ -620,6 +621,11 @@ export const StyledButton = styled(StyledEffect).withConfig({
 
   .reqore-button-description {
     padding-top: ${({ size }) => PADDING_FROM_SIZE[size] / 2}px;
+    /* A one-line description (descriptionEffect.noWrap) ellipsises at the button's edge:
+       never wider than the button, and never shrunk by the button's column, which sliced a
+       line with overflow: hidden in half vertically. */
+    flex-shrink: 0;
+    max-width: 100%;
     color: ${({ theme, color, minimal, transparent }) =>
       rgba(getButtonTextColor({ minimal, transparent, color, theme }), 0.7)};
   }
@@ -868,11 +874,22 @@ const ReqoreButton = memo(
         [isLink, href, type, rest.disabled]
       );
 
-      // If color or intent was specified, set the color
-      const customColor = useMemo(
-        () => (intent ? theme.main : changeLightness(theme.main, 0.07)),
-        [intent, theme.main]
-      );
+      // If color or intent was specified, set the color. Otherwise a button takes
+      // `theme.buttons.main` when the theme names one (and the button's surface is not
+      // customised — a customTheme main, given or inherited, moves `main` off
+      // `originalMain`), else `main` a step lighter.
+      const customColor = useMemo(() => {
+        if (intent) {
+          return theme.main;
+        }
+
+        const themedButtons =
+          theme.buttons?.main && (!theme.originalMain || theme.main === theme.originalMain)
+            ? getColorFromMaybeString(theme, theme.buttons.main)
+            : undefined;
+
+        return themedButtons ?? changeLightness(theme.main, 0.07);
+      }, [intent, theme]);
       const _flat = minimal ? flat : flat === true;
       const _children = useMemo(() => label || children, [label, children]);
       const _compact = compact ?? theme.buttons?.compact ?? !children;

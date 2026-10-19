@@ -2,12 +2,12 @@ import { isNumber } from 'lodash';
 import { mix, rgba } from 'polished';
 import { memo, useMemo } from 'react';
 import styled from '../../helpers/styled';
-import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
-  changeDarkness,
-  getMainBackgroundColor,
   getOpaqueColor,
+  getPanelBackgroundColor,
   getReadableAccentColor,
   getReadableColor,
 } from '../../helpers/colors';
@@ -358,7 +358,7 @@ export const getTierColors = (
   accentIntent?: TReqoreIntent
 ): IReqoreTierColors => {
   // What the panel paints (see StyledPanel), without its opacity.
-  const panelSurface = getOpaqueColor(changeDarkness(getMainBackgroundColor(theme), 0.03));
+  const panelSurface = getOpaqueColor(getPanelBackgroundColor(theme));
   const accentColor = accentIntent ? theme.intents[accentIntent] : undefined;
   const accent = accentColor ? getOpaqueColor(accentColor) : undefined;
   const surface = (
@@ -535,7 +535,7 @@ const ReqoreModernTier = memo(
     const accentIntent = highlight ? intent : undefined;
     const colors = useMemo(() => getTierColors(theme, accentIntent), [theme, accentIntent]);
     const gap = TIER_GAP_FROM_SIZE[size];
-    const textSize = TEXT_FROM_SIZE[size];
+    const textSize = getTextSize(theme, size);
     const lineHeight = Math.round(textSize * TIER_LINE_HEIGHT);
 
     // A highlighted tier: a faint wash of its accent, its border, and a soft shadow in the same

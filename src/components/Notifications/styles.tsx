@@ -1,9 +1,17 @@
 import { rgba } from 'polished';
 import { css, keyframes } from 'styled-components';
-import { PADDING_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { fadeIn } from '../../helpers/animations';
-import { changeDarkness, changeLightness, getNotificationIntent, getReadableColor } from '../../helpers/colors';
+import {
+  changeDarkness,
+  changeLightness,
+  getMainBackgroundColor,
+  getNotificationIntent,
+  getReadableColor,
+  getReadableColorFrom,
+} from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { resolvePadding, TReqorePadded } from '../../helpers/utils';
 import { RaisedElement } from '../../styles';
@@ -48,6 +56,28 @@ const timeoutAnimation = keyframes`
     width: 0;
   }
 `;
+
+/**
+ * A message on the panel surface (`theme.messageSurface: 'panel'`): the surface and hairline
+ * of `theme.panel`, or what a panel derives from the theme's own main colour — never the
+ * intent's, which the message's theme carries as its `main`.
+ */
+const getMessagePanelColors = (theme: IReqoreTheme) => {
+  const base = { ...theme, main: theme.originalMain ?? theme.main };
+  const surface = theme.panel?.main ?? changeDarkness(getMainBackgroundColor(base), 0.03);
+  return {
+    surface,
+    hairline: theme.panel?.border ?? changeLightness(getMainBackgroundColor(base), 0.08),
+    text: getReadableColorFrom(surface, true),
+  };
+};
+
+/** The intents that need a person: their panel-surface message glows in its corner. */
+const GLOWING_MESSAGE_INTENTS: TReqoreIntent[] = ['danger', 'warning'];
+
+/** Whether a message is drawn on the panel surface rather than tinted with its intent. */
+export const isPanelSurfaceMessage = (theme: IReqoreTheme, asMessage?: boolean) =>
+  !!asMessage && theme.messageSurface === 'panel';
 
 export const StyledReqoreNotification = styled(StyledEffect).withConfig({
   // The notification renders as `animated.div` (see `as` below), so styled-components
@@ -126,7 +156,36 @@ export const StyledReqoreNotification = styled(StyledEffect).withConfig({
     opaque = true,
     backgroundBlur,
     raised,
-  }: IReqoreNotificationStyle) => css`
+    asMessage,
+  }: IReqoreNotificationStyle) => isPanelSurfaceMessage(theme, asMessage)
+    ? (() => {
+        const colors = getMessagePanelColors(theme);
+        const glow = intent && GLOWING_MESSAGE_INTENTS.includes(intent);
+        return css`
+          background-color: ${minimal ? 'transparent' : colors.surface};
+          ${glow &&
+          !minimal &&
+          css`
+            background-image: radial-gradient(
+              circle 320px at 0% 0%,
+              ${rgba(getNotificationIntent(theme, intent), 0.22)},
+              transparent
+            );
+          `}
+          border: ${flat ? 0 : '1px solid'};
+          border-color: ${colors.hairline};
+          color: ${minimal ? 'inherit' : colors.text};
+
+          ${clickable &&
+          css`
+            cursor: pointer;
+            &:hover {
+              background-color: ${minimal ? 'transparent' : changeLightness(colors.surface, 0.02)};
+            }
+          `}
+        `;
+      })()
+    : css`
     background-color: ${minimal
       ? 'transparent'
       : opaque
@@ -243,7 +302,7 @@ export const StyledNotificationContent = styled.div`
   margin: 0;
   padding: 0;
   flex: 1;
-  font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size = 'normal', theme }) => getTextSize(theme, size as TSizes)}px;
   overflow-wrap: anywhere;
   display: flex;
   flex-flow: column;

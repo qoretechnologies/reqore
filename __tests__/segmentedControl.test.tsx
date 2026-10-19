@@ -437,3 +437,25 @@ test('A segment folded into the More menu passes its props to its menu item', ()
 
   expect(menuItem).toBeTruthy();
 });
+
+test('fitSize makes the whole control the size of a button beside it', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSegmentedControl
+            size='small'
+            fitSize
+            items={[
+              { value: 'a', label: 'All' },
+              { value: 'b', label: 'Open' },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+  const item = document.querySelector('.reqore-segmented-control-item') as HTMLElement;
+  // small = 32: the frame's 3px padding and 1px border, top and bottom, come out of the item.
+  expect(item.style.height).toBe('24px');
+});

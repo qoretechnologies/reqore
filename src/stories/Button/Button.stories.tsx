@@ -9,6 +9,7 @@ import { StoryMeta } from '../utils';
 import { StoryForm, storyFormText } from '../utils/formPreview';
 import { ALL_SIZES, IconArg, RadiusSizeArg, SizeArg } from '../utils/args';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const meta = {
   title: 'Form/Button',
   component: ReqoreButton,
@@ -1102,4 +1103,29 @@ export const FormAttributesMobile: Story = {
     const form = document.querySelector('.story-form') as HTMLElement;
     expect(form.scrollWidth).toBeLessThanOrEqual(form.clientWidth + 1);
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders buttons on the default and on the themed surface: a plain button takes `theme.buttons.main`, an intent and a customTheme still win, and a minimal button on a near-neutral customTheme (#141417) keeps readable grey text instead of a saturated tint.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreControlGroup wrap>
+        <ReqoreButton icon='AddLine'>Plain</ReqoreButton>
+        <ReqoreButton intent='danger' icon='DeleteBinLine'>
+          Danger
+        </ReqoreButton>
+        <ReqoreButton customTheme={{ main: '#1e2a3a' }}>customTheme</ReqoreButton>
+        <ReqoreButton customTheme={{ main: '#141417' }} minimal flat icon='DashboardLine'>
+          Minimal on a near-neutral surface
+        </ReqoreButton>
+      </ReqoreControlGroup>
+    </ThemedSurfaceComparison>
+  ),
 };

@@ -34,21 +34,25 @@ import {
   TReqoreZoom,
 } from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
+import { useUppercaseLabels } from '../../hooks/useUppercaseLabels';
 
-const CollectionGroupHeader = memo(({ name }: { name: string }) => (
-  <ReqoreP
-    style={{ gridColumn: '1 / -1' }}
-    effect={{
-      opacity: 0.8,
-      uppercase: true,
-      weight: 'bold',
-      textSize: 'small',
-      spaced: 1,
-    }}
-  >
-    {name}
-  </ReqoreP>
-));
+const CollectionGroupHeader = memo(({ name }: { name: string }) => {
+  const upper = useUppercaseLabels();
+  return (
+    <ReqoreP
+      style={{ gridColumn: '1 / -1' }}
+      effect={{
+        opacity: 0.8,
+        uppercase: upper,
+        weight: 'bold',
+        textSize: 'small',
+        spaced: upper ? 1 : 0,
+      }}
+    >
+      {name}
+    </ReqoreP>
+  );
+});
 
 export type TReqoreCollectionActions = (IReqorePanelAction & { position?: 'left' | 'right' })[];
 
@@ -215,6 +219,7 @@ export const ReqoreCollection = memo(
 
     ...rest
   }: IReqoreCollectionProps) => {
+    const uppercaseLabels = useUppercaseLabels();
     const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
     const [sort, setSort] = useState<'asc' | 'desc'>(defaultSort);
     const [sortBy, setSortBy] = useState<string>(defaultSortBy);
@@ -559,10 +564,10 @@ export const ReqoreCollection = memo(
                         {...groupConfig}
                         labelEffect={{
                           opacity: 0.8,
-                          uppercase: true,
+                          uppercase: uppercaseLabels,
                           weight: 'bold',
                           textSize: 'small',
-                          spaced: 1,
+                          spaced: uppercaseLabels ? 1 : 0,
                           ...groupConfig?.labelEffect,
                         }}
                         key={groupName}

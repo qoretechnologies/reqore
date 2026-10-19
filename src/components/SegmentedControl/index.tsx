@@ -13,15 +13,16 @@ import { css } from 'styled-components';
 import styled from '../../helpers/styled';
 import {
   CONTROL_HORIZONTAL_PADDING_FROM_SIZE,
-  CONTROL_TEXT_FROM_SIZE,
   ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
   PILL_RADIUS_MODIFIER,
   RADIUS_FROM_SIZE,
+  SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -105,6 +106,14 @@ export interface IReqoreSegmentedControlProps
   pill?: boolean;
   /** Allow deselecting by clicking active item */
   allowDeselect?: boolean;
+  /**
+   * The whole control is the size's height — as tall as a button or an input of the same
+   * `size` beside it — and its items are that much shorter inside the frame. Off (the
+   * default), each item is the size's height and the frame adds its padding and border
+   * around them, so a `small` control stands 8px taller than the `small` controls in its
+   * toolbar.
+   */
+  fitSize?: boolean;
   /** Intent applied to the selected item */
   activeIntent?: TReqoreIntent;
   /**
@@ -212,7 +221,8 @@ const StyledItemWrapper = styled.div<{
  */
 const estimateItemWidth = (
   item: IReqoreSegmentedControlItem,
-  itemSize: TSizes = 'normal'
+  itemSize: TSizes = 'normal',
+  theme?: IReqoreTheme
 ): number => {
   const hPad = CONTROL_HORIZONTAL_PADDING_FROM_SIZE[itemSize];
   let width = hPad * 2;
@@ -220,7 +230,7 @@ const estimateItemWidth = (
   if (item.label) {
     width += calculateStringSizeInPixels(
       item.label.toString(),
-      CONTROL_TEXT_FROM_SIZE[itemSize]
+      getControlTextSize(theme, itemSize)
     );
   }
 
@@ -243,7 +253,8 @@ const getItemsLength = (
   items: (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[],
   itemSize: TSizes = 'normal',
   selectedValue?: string,
-  overflowLabel: string = 'More'
+  overflowLabel: string = 'More',
+  theme?: IReqoreTheme
 ): number =>
   items.reduce((len, item) => {
     if (Array.isArray(item)) {
@@ -256,12 +267,12 @@ const getItemsLength = (
       const iconWidth = ICON_FROM_SIZE[itemSize] + PADDING_FROM_SIZE[itemSize] / 2;
       const labelWidth = calculateStringSizeInPixels(
         moreLabel.toString(),
-        CONTROL_TEXT_FROM_SIZE[itemSize]
+        getControlTextSize(theme, itemSize)
       );
       return len + hPad * 2 + iconWidth + labelWidth;
     }
 
-    return len + estimateItemWidth(item, itemSize);
+    return len + estimateItemWidth(item, itemSize, theme);
   }, 0);
 
 /**
@@ -274,7 +285,8 @@ const getTransformedItems = (
   availableWidth: number,
   itemSize: TSizes = 'normal',
   selectedValue?: string,
-  overflowLabel: string = 'More'
+  overflowLabel: string = 'More',
+  theme?: IReqoreTheme
 ): (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[] => {
   if (!availableWidth) {
     return items;
@@ -283,7 +295,7 @@ const getTransformedItems = (
   let newItems = [...items];
 
   while (
-    getItemsLength(newItems, itemSize, selectedValue, overflowLabel) > availableWidth &&
+    getItemsLength(newItems, itemSize, selectedValue, overflowLabel, theme) > availableWidth &&
     newItems.length > 1
   ) {
     const last = newItems[newItems.length - 1];
@@ -315,6 +327,7 @@ const ReqoreSegmentedControl = memo(
         flat,
         pill,
         allowDeselect,
+        fitSize,
         activeIntent,
         disabled,
         readOnly,
@@ -330,6 +343,14 @@ const ReqoreSegmentedControl = memo(
       ref
     ) => {
       const animations = useReqoreProperty('animations');
+      // fitSize: the frame (its padding and its 1px border, top and bottom) comes out of
+      // the items, so the control as a whole is the size's height.
+      const fittedItemHeight = SIZE_TO_PX[size] - 2 * (CONTAINER_PADDING + (flat ? 0 : 1));
+      const fittedItemStyle = {
+        height: fittedItemHeight,
+        minHeight: fittedItemHeight,
+        maxHeight: fittedItemHeight,
+      };
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
 
       const [_value, _setValue] = useState<string | undefined>(
@@ -359,8 +380,8 @@ const ReqoreSegmentedControl = memo(
 
       // Transform items using the Tabs-style width estimation approach
       const transformedItems = useMemo(
-        () => getTransformedItems(items, availableWidth, size, _value, overflowLabel),
-        [items, availableWidth, size, _value, overflowLabel]
+        () => getTransformedItems(items, availableWidth, size, _value, overflowLabel, theme),
+        [items, availableWidth, size, _value, overflowLabel, theme]
       );
 
       // Split into visible items and hidden items (the More group)
@@ -596,6 +617,7 @@ const ReqoreSegmentedControl = memo(
                   }
                   className={`${item.props?.className || ''} reqore-segmented-control-item`}
                   pill={pill}
+                  style={fitSize ? { ...item.props?.style, ...fittedItemStyle } : item.props?.style}
                 >
                   {item.label}
                 </ReqoreButton>
@@ -628,6 +650,7 @@ const ReqoreSegmentedControl = memo(
                   className:
                     'reqore-segmented-control-item reqore-segmented-control-more',
                   label: moreLabel,
+                  style: fitSize ? fittedItemStyle : undefined,
                 }}
                 closeOnOutsideClick
                 isReqoreComponent

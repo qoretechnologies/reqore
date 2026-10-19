@@ -15,6 +15,7 @@ import {
 } from '../../index';
 import { StoryMeta } from '../utils';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const meta = {
   title: 'Navigation/Nav Rail',
   component: ReqoreNavRail,
@@ -1196,5 +1197,31 @@ export const RaisedGlow: Story = {
     <Backdrop>
       <ReqoreNavRail {...args} />
     </Backdrop>
+  ),
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a navigation rail on the default and on the themed surface: with `theme.panel` set the rail sits on the panel surface, edged with the hairline.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <div style={{ height: 260 }}>
+        <ReqoreNavRail
+          activeId='dashboard'
+          position='static'
+          items={[
+            { id: 'dashboard', label: 'Dashboard', icon: 'DashboardLine' },
+            { id: 'workflows', label: 'Workflows', icon: 'GitBranchLine' },
+            { id: 'services', label: 'Services', icon: 'ServerLine' },
+          ]}
+        />
+      </div>
+    </ThemedSurfaceComparison>
   ),
 };
