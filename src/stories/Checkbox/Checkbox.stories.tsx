@@ -5,6 +5,7 @@ import Checkbox from '../../components/Checkbox';
 import { ReqoreCheckbox, ReqoreControlGroup, ReqoreVerticalSpacer } from '../../index';
 import { StoryMeta } from '../utils';
 import { StoryForm, storyFormText } from '../utils/formPreview';
+import { withTouchScreen } from '../utils/touchScreen';
 
 const meta = {
   title: 'Form/Checkbox',
@@ -524,5 +525,193 @@ export const FormControlMobile: Story = {
 
     const form = document.querySelector('.story-form') as HTMLElement;
     expect(form.scrollWidth).toBeLessThanOrEqual(form.clientWidth + 1);
+  },
+};
+
+/* -------------------------------------------------------------------------------------------
+ * A label that wraps (`wrapLabel`) in less room than the box and the label on one line take
+ * (qorus#646: the Qorus IDE's "Skip totals rows" ran past its 38px row). The label sat in two
+ * control groups that kept the width of its one line, so it never wrapped, and the checkbox was
+ * as high as one line, so a label that did wrap would have run out of it.
+ * ----------------------------------------------------------------------------------------- */
+
+const WRAPPING_LABEL = 'Skip the totals rows at the end of every sheet';
+const THREE_LINE_LABEL =
+  'Skip the totals rows, the blank rows and the notes at the end of every sheet in the workbook';
+
+/** A box narrower than a checkbox and its label on one line, outlined, with a checkbox in it. */
+const NarrowBox = ({ name, width, children }: { name: string; width: number; children: any }) => (
+  <div
+    className={`story-narrow-${name}`}
+    style={{ width, outline: '1px dashed currentColor', boxSizing: 'border-box' }}
+  >
+    {children}
+  </div>
+);
+
+const boxOf = (name: string) =>
+  (document.querySelector(`.story-narrow-${name}`) as HTMLElement).getBoundingClientRect();
+const partOf = (name: string, part: string) =>
+  (
+    document.querySelector(`.story-narrow-${name} .reqore-checkbox${part}`) as HTMLElement
+  ).getBoundingClientRect();
+
+/** The checkbox, its box and its label are inside their box, and the label takes `lines` lines or more. */
+const expectWrappedInside = async (name: string, lines: number, oneLine: number) => {
+  const box = boxOf(name);
+  for (const part of ['', ' .reqore-checkbox-box', ' .reqore-checkbox-label']) {
+    const rect = partOf(name, part);
+    await expect(rect.left).toBeGreaterThanOrEqual(box.left - 0.5);
+    await expect(rect.right).toBeLessThanOrEqual(box.right + 0.5);
+  }
+  const label = partOf(name, ' .reqore-checkbox-label');
+  const checkbox = partOf(name, '');
+  await expect(label.height).toBeGreaterThanOrEqual(oneLine * lines - 1);
+  // the checkbox is as high as its label: the label does not run out of it
+  await expect(label.top).toBeGreaterThanOrEqual(checkbox.top - 0.5);
+  await expect(label.bottom).toBeLessThanOrEqual(checkbox.bottom + 0.5);
+};
+
+/** The height of one line of a label, from a checkbox that does not wrap its own. */
+const oneLineOf = (name: string) => partOf(name, ' .reqore-checkbox-label').height;
+
+export const ALongLabelWrapsInANarrowBox: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders checkboxes with a long label in a 160px box, narrower than the box and the label on one line. With `wrapLabel` the label wraps inside the box, beside the checkbox; without it, the label stays on one line, as it always has (qorus#646).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical>
+      <NarrowBox name='wraps' width={160}>
+        <ReqoreCheckbox label={WRAPPING_LABEL} wrapLabel checked />
+      </NarrowBox>
+      <NarrowBox name='one-line' width={160}>
+        <ReqoreCheckbox label={WRAPPING_LABEL} />
+      </NarrowBox>
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    await waitFor(() => expect(document.querySelector('.story-narrow-wraps')).toBeTruthy());
+    await expectWrappedInside('wraps', 2, oneLineOf('one-line'));
+  },
+};
+
+export const ALongLabelOnTheLeftWrapsInANarrowBox: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same with the label on the left of the checkbox (`labelPosition="left"`): the label wraps inside the 160px box, and the checkbox stays beside it, inside (qorus#646).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical>
+      <NarrowBox name='wraps' width={160}>
+        <ReqoreCheckbox label={WRAPPING_LABEL} labelPosition='left' wrapLabel />
+      </NarrowBox>
+      <NarrowBox name='one-line' width={160}>
+        <ReqoreCheckbox label={WRAPPING_LABEL} labelPosition='left' />
+      </NarrowBox>
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    await waitFor(() => expect(document.querySelector('.story-narrow-wraps')).toBeTruthy());
+    await expectWrappedInside('wraps', 2, oneLineOf('one-line'));
+  },
+};
+
+export const AThreeLineLabelMakesTheCheckboxAsHigh: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a checkbox whose label takes three lines in its 160px box, as a switch too. The checkbox is as high as its label: the label does not run out of a checkbox one line high, and what comes after it starts below it (qorus#646).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical>
+      <NarrowBox name='wraps' width={160}>
+        <ReqoreCheckbox label={THREE_LINE_LABEL} wrapLabel />
+      </NarrowBox>
+      <NarrowBox name='switch' width={200}>
+        <ReqoreCheckbox label={THREE_LINE_LABEL} wrapLabel asSwitch checked />
+      </NarrowBox>
+      <NarrowBox name='one-line' width={160}>
+        <ReqoreCheckbox label={WRAPPING_LABEL} />
+      </NarrowBox>
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    await waitFor(() => expect(document.querySelector('.story-narrow-wraps')).toBeTruthy());
+    const oneLine = oneLineOf('one-line');
+    await expectWrappedInside('wraps', 3, oneLine);
+    await expectWrappedInside('switch', 3, oneLine);
+    // what comes after a checkbox starts below it
+    await expect(boxOf('switch').top).toBeGreaterThanOrEqual(partOf('wraps', '').bottom - 0.5);
+  },
+};
+
+export const LongLabelsWrapOnAPhone: Story = {
+  tags: ['touch'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders settings with long labels on a phone (390px), each a checkbox or a switch that wraps its label. Every label wraps inside the screen, nothing runs past it, and a tap on a wrapped label checks its box (qorus#646).',
+      },
+    },
+    qlip: { viewport: { width: 390, height: 844 } },
+  },
+  render: () => {
+    const [skipTotals, setSkipTotals] = useState(false);
+
+    return (
+      <div className='story-phone-settings' style={{ boxSizing: 'border-box', maxWidth: '100%' }}>
+        <ReqoreControlGroup vertical>
+          <ReqoreCheckbox
+            className='story-skip-totals'
+            label={THREE_LINE_LABEL}
+            wrapLabel
+            checked={skipTotals}
+            onClick={() => setSkipTotals(!skipTotals)}
+          />
+          <ReqoreCheckbox label={WRAPPING_LABEL} labelPosition='left' wrapLabel asSwitch />
+          <ReqoreCheckbox
+            label='Treat the first row of every sheet as the names of its columns, not as data'
+            description='When off, the columns are named A, B, C and on'
+            wrapLabel
+          />
+        </ReqoreControlGroup>
+      </div>
+    );
+  },
+  play: async () => {
+    await withTouchScreen(async (touch) => {
+      await waitFor(() => expect(document.querySelector('.story-skip-totals')).toBeTruthy());
+      const screenWidth = document.documentElement.clientWidth;
+      for (const label of Array.from(
+        document.querySelectorAll<HTMLElement>('.story-phone-settings .reqore-checkbox-label')
+      )) {
+        const rect = label.getBoundingClientRect();
+        await expect(rect.right).toBeLessThanOrEqual(screenWidth + 0.5);
+      }
+      await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(screenWidth);
+
+      await touch.tap(
+        document.querySelector('.story-skip-totals .reqore-checkbox-label') as HTMLElement
+      );
+      await waitFor(() =>
+        expect(
+          (document.querySelector('.story-skip-totals .reqore-checkbox-input') as HTMLInputElement)
+            .checked
+        ).toBe(true)
+      );
+    });
   },
 };
