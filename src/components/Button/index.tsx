@@ -621,6 +621,11 @@ export const StyledButton = styled(StyledEffect).withConfig({
 
   .reqore-button-description {
     padding-top: ${({ size }) => PADDING_FROM_SIZE[size] / 2}px;
+    /* A one-line description (descriptionEffect.noWrap) ellipsises at the button's edge:
+       never wider than the button, and never shrunk by the button's column, which sliced a
+       line with overflow: hidden in half vertically. */
+    flex-shrink: 0;
+    max-width: 100%;
     color: ${({ theme, color, minimal, transparent }) =>
       rgba(getButtonTextColor({ minimal, transparent, color, theme }), 0.7)};
   }
