@@ -426,6 +426,11 @@ const ReqoreTabsList = ({
                     flat,
                     size,
                     padded,
+                    // The fold carries the active tab when that tab is hidden, so it is
+                    // marked the way every tab is. Without these it fell back to the
+                    // button's filled active state: a grey box among underlined tabs.
+                    activeTabMarker,
+                    activeTabMarkerColor,
                     className: 'reqore-tabs-list-item-menu',
                   } as IReqoreTabListItemProps
                 }
