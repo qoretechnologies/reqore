@@ -1133,3 +1133,26 @@ describe('the fonts of an editable DataView', () => {
       .forEach((button) => expect(fontOf(button)).not.toContain('monospace'));
   });
 });
+
+test('`colorValuesByType={false}` draws a number like any other value', () => {
+  // An app whose colours each mean something (green "healthy") cannot have a
+  // number painted green for being a number.
+  const chipStyle = (text: string) => {
+    const chip = Array.from(document.querySelectorAll('.reqore-tag')).find(
+      (tag) => tag.textContent?.trim() === text
+    ) as HTMLElement;
+    const style = getComputedStyle(chip);
+    return `${style.backgroundColor}|${style.borderColor}|${style.color}`;
+  };
+  const data = { count: 42, name: 'orders' };
+
+  const { rerender } = render(wrap(<ReqoreDataView data={data} collapsibleRoot={false} />));
+  const byTypeNumber = chipStyle('42');
+  const byTypeString = chipStyle('orders');
+  expect(byTypeNumber).not.toBe(byTypeString);
+
+  rerender(
+    wrap(<ReqoreDataView data={data} collapsibleRoot={false} colorValuesByType={false} />)
+  );
+  expect(chipStyle('42')).toBe(chipStyle('orders'));
+});

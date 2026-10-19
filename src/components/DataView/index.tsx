@@ -215,6 +215,13 @@ export interface IReqoreDataViewProps
    *  `'info'`. */
   keyIntent?: TReqoreIntent | null;
 
+  /** Colour each value chip by its type — a number green, a boolean amber, a date blue.
+   *  Default `true`. `false` draws every value as the one neutral chip (an empty value stays
+   *  muted): for an app whose colours each mean something (green "healthy", amber "unusual"),
+   *  where a number painted green reads as a verdict it is not. The type is unchanged
+   *  everywhere else it shows. */
+  colorValuesByType?: boolean;
+
   /** Enable inline editing. When `true`, the view becomes a
    *  click-to-edit tree:
    *    - **Scalars** (string / number / boolean / null) render as
@@ -294,6 +301,8 @@ type TRenderContext = {
   keyColor?: TReqoreEffectColor;
   /** Key-chip intent (defaults to `'info'`, `null` drops it). */
   keyIntent?: TReqoreIntent | null;
+  /** See `IReqoreDataViewProps.colorValuesByType`. */
+  colorValuesByType: boolean;
   /** When true, scalar leaves render as click-to-edit chips, keys
    *  are renamable, rows expose delete affordances, and containers
    *  expose `+ Add` affordances. */
@@ -787,6 +796,10 @@ PreservedDetails.displayName = 'ReqoreDataView.PreservedDetails';
  *  both the read-only view and the click-to-edit cell share one
  *  rendering — keeps the "before / after" look of an edited row
  *  perfectly aligned with rows you can't edit. */
+/** A value chip's intent: by type, unless the view draws every value neutral. */
+const valueIntent = (kind: TReqoreDataValueKind, ctx: TRenderContext) =>
+  ctx.colorValuesByType || kind === 'null' ? reqoreDataValueIntent(kind) : undefined;
+
 const renderScalarChip = (
   value: unknown,
   type: string | undefined,
@@ -795,7 +808,7 @@ const renderScalarChip = (
 ): ReactNode => {
   const scalar = reqoreFormatScalar(value, type, ctx.scalarOptions);
   const kind = type ? reqoreDataValueKind(value, type) : scalar.kind;
-  const intent = reqoreDataValueIntent(kind);
+  const intent = valueIntent(kind, ctx);
   return (
     <ReqoreTag
       size={ctx.size}
@@ -1480,7 +1493,7 @@ const renderScalar = (
 ): ReactNode => {
   const scalar = reqoreFormatScalar(value, type, ctx.scalarOptions);
   const kind = type ? reqoreDataValueKind(value, type) : scalar.kind;
-  const intent = reqoreDataValueIntent(kind);
+  const intent = valueIntent(kind, ctx);
   const displayType = type ?? kind;
 
   // Editable mode: render the click-to-edit cell instead of the
@@ -1919,6 +1932,7 @@ export const ReqoreDataView = memo(
         onSectionToggle,
         keyColor,
         keyIntent,
+        colorValuesByType = true,
         editable = false,
         onDataChange,
         onValueChange,
@@ -2055,6 +2069,7 @@ export const ReqoreDataView = memo(
         onSectionToggle,
         keyColor,
         keyIntent,
+        colorValuesByType,
         editable,
         commitScalar: editable ? commitScalar : undefined,
         commitDelete: editable ? commitDelete : undefined,
