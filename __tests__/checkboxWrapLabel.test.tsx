@@ -5,6 +5,7 @@
 import { render } from '@testing-library/react';
 import { ReqoreCheckbox, ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 import { SIZE_TO_PX } from '../src/constants/sizes';
+import { requiredElement } from '../src/stories/utils/required';
 
 const inLayout = (node: React.ReactNode) =>
   render(
@@ -17,8 +18,8 @@ const inLayout = (node: React.ReactNode) =>
 
 /** The checkbox's row, and the groups its label is in (outermost first). */
 const partsOf = (container: HTMLElement) => {
-  const row = container.querySelector('.reqore-checkbox') as HTMLElement;
-  const label = row.querySelector('.reqore-checkbox-label') as HTMLElement;
+  const row = requiredElement('.reqore-checkbox', 'the checkbox', container);
+  const label = requiredElement('.reqore-checkbox-label', 'its label', row);
   const groups: HTMLElement[] = [];
 
   for (
