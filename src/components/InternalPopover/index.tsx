@@ -338,7 +338,14 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
 
         if (scroller) {
           const left = scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop;
-          scroller.scrollTop += Math.min(deficit, Math.max(left, 0));
+          /* The field never leaves view: it is scrolled up at most to the top of what shows it (its
+             scroller, or the window where the scroller starts above it). Scrolled by the whole deficit, a
+             list taller than a short window took the field out of sight - from y=209 to y=-59 in a 380px
+             canvas - Popper marked it hidden, and the list closed as it opened (qorus#646). What is still
+             missing then is taken from the list's height below, or it flips. */
+          const shownFrom = Math.max(scroller.getBoundingClientRect().top, 0);
+          const toTheTop = Math.max(targetElement.getBoundingClientRect().top - shownFrom, 0);
+          scroller.scrollTop += Math.min(deficit, Math.max(left, 0), toTheTop);
           forceUpdate?.();
         }
       }
