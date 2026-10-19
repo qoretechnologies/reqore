@@ -11,6 +11,7 @@ import { sleep } from '../../helpers/utils';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreInput, ReqoreTextarea } from '../../index';
 import { StoryMeta } from '../utils';
 import { argManager } from '../utils/args';
+import { requiredElement } from '../utils/required';
 
 const { createArg, disableArg } = argManager<IReqoreDropdownProps>();
 
@@ -1400,7 +1401,7 @@ const rowNamed = (label: string): HTMLElement => {
 
 /** The open level's search field. */
 const searchField = () =>
-  openListElement()?.querySelector<HTMLInputElement>('.reqore-input') ?? null;
+  requiredElement<HTMLInputElement>('.reqore-popover-content .reqore-input', "the list's search");
 
 export const OnlyTheOpenLevelHearsTheKeys: Story = {
   parameters: {
@@ -1505,15 +1506,15 @@ export const AnOpenedLevelSaysAndRanksAsTheListDoes: Story = {
     await waitFor(() => expect(rowLabels()).toEqual(['Alerts to Telegram', 'Telegram']));
     await expect(searchField()).toHaveAttribute('placeholder', '2 Einträge durchsuchen');
 
-    await userEvent.type(searchField()!, 'telegram');
+    await userEvent.type(searchField(), 'telegram');
     await waitFor(() => expect(rowLabels()).toEqual(['Telegram', 'Alerts to Telegram']));
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() =>
       expect(document.getElementById('connections-list-option-0')).toHaveTextContent('Telegram')
     );
 
-    await userEvent.clear(searchField()!);
-    await userEvent.type(searchField()!, 'zzz');
+    await userEvent.clear(searchField());
+    await userEvent.type(searchField(), 'zzz');
     await waitFor(() => expect(openListElement()).toHaveTextContent('Nichts gefunden'));
     await expect(rowLabels()).toEqual([]);
   },

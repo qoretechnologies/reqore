@@ -6,6 +6,7 @@ import { ReqoreCheckbox, ReqoreControlGroup, ReqoreVerticalSpacer } from '../../
 import { StoryMeta } from '../utils';
 import { StoryForm, storyFormText } from '../utils/formPreview';
 import { withTouchScreen } from '../utils/touchScreen';
+import { requiredElement } from '../utils/required';
 
 const meta = {
   title: 'Form/Checkbox',
@@ -550,10 +551,11 @@ const NarrowBox = ({ name, width, children }: { name: string; width: number; chi
 );
 
 const boxOf = (name: string) =>
-  (document.querySelector(`.story-narrow-${name}`) as HTMLElement).getBoundingClientRect();
+  requiredElement(`.story-narrow-${name}`, `the ${name} box`).getBoundingClientRect();
 const partOf = (name: string, part: string) =>
-  (
-    document.querySelector(`.story-narrow-${name} .reqore-checkbox${part}`) as HTMLElement
+  requiredElement(
+    `.story-narrow-${name} .reqore-checkbox${part}`,
+    `the checkbox${part} in the ${name} box`
   ).getBoundingClientRect();
 
 /** The checkbox, its box and its label are inside their box, and the label takes `lines` lines or more. */
@@ -703,13 +705,13 @@ export const LongLabelsWrapOnAPhone: Story = {
       }
       await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(screenWidth);
 
-      await touch.tap(
-        document.querySelector('.story-skip-totals .reqore-checkbox-label') as HTMLElement
-      );
+      await touch.tap(requiredElement('.story-skip-totals .reqore-checkbox-label', 'its label'));
       await waitFor(() =>
         expect(
-          (document.querySelector('.story-skip-totals .reqore-checkbox-input') as HTMLInputElement)
-            .checked
+          requiredElement<HTMLInputElement>(
+            '.story-skip-totals .reqore-checkbox-input',
+            'its input'
+          ).checked
         ).toBe(true)
       );
     });

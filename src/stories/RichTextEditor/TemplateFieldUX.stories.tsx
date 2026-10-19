@@ -5,6 +5,7 @@ import { IReqoreRichTextEditorProps, ReqoreRichTextEditor } from '../../componen
 import { sleep } from '../../helpers/utils';
 import { StoryMeta } from '../utils';
 import { withTouchScreen } from '../utils/touchScreen';
+import { requiredElement } from '../utils/required';
 import { withViewport } from '../utils/viewport';
 
 /**
@@ -584,24 +585,24 @@ const expectTheListOpensBelowTheFieldInView = async (
   open: (editor: HTMLElement) => Promise<void>
 ) => {
   const editor = await editorIn(doc);
-  const control = (editor.closest('.reqore-control-wrapper') as HTMLElement) ?? editor;
-  const scroller = doc.querySelector<HTMLElement>('.story-scroller')!;
+  const control = editor.closest<HTMLElement>('.reqore-control-wrapper') ?? editor;
+  const scroller = requiredElement('.story-scroller', 'the scrolling page', doc);
+  const view = doc.defaultView ?? window;
 
   await open(editor);
   await waitFor(() => expect(listIsOpen(doc)).toBe(true));
   // what the click put in motion - the page scrolled to make room - has been drawn, and the list is still open
-  await afterTwoFrames(doc.defaultView!);
-  await afterTwoFrames(doc.defaultView!);
+  await afterTwoFrames(view);
+  await afterTwoFrames(view);
 
   await waitFor(async () => {
-    const list = doc.querySelector<HTMLElement>('.reqore-popover-content');
-    await expect(list, 'the list stays open').toBeTruthy();
+    const list = requiredElement('.reqore-popover-content', 'the list, which stays open,', doc);
     const field = control.getBoundingClientRect();
     const shownFrom = Math.max(scroller.getBoundingClientRect().top, 0);
     // the field is in view: not scrolled above the top of the page
     await expect(field.top).toBeGreaterThanOrEqual(shownFrom - 0.5);
     await expect(field.bottom).toBeLessThanOrEqual(doc.documentElement.clientHeight + 0.5);
-    const rect = list!.getBoundingClientRect();
+    const rect = list.getBoundingClientRect();
     // below the field, on screen, and tall enough to read
     await expect(Math.round(rect.top)).toBeGreaterThanOrEqual(Math.round(field.bottom) - 1);
     await expect(rect.bottom).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);

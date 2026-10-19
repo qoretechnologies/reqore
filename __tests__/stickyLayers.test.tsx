@@ -9,6 +9,7 @@ import { ReqoreLayoutContent, ReqorePanel, ReqoreTable, ReqoreUIProvider } from 
 import { IReqoreTableColumn } from '../src/components/Table';
 import { ReqoreSurfaceProvider, useReqoreSurface } from '../src/context/SurfaceContext';
 import { TReqoreSurface } from '../src/helpers/colors';
+import { requiredAttribute, requiredElement } from '../src/stories/utils/required';
 
 /** What the components in a header cell are told they are drawn on. */
 const SurfaceProbe = ({ name }: { name: string }) => {
@@ -53,15 +54,26 @@ const renderTable = (columns: IReqoreTableColumn[], surface?: TReqoreSurface) =>
 
 /** Each column's header cell, by its column: the cells of the header row, in the order they are drawn. */
 const headerCells = (container: HTMLElement): Record<string, HTMLElement> => {
-  const row = container.querySelector('.reqore-table-header-wrapper')?.firstElementChild;
+  const row = requiredElement(
+    '.reqore-table-header-wrapper',
+    'the header',
+    container
+  ).firstElementChild;
 
-  expect(row, 'the header row').toBeTruthy();
+  if (!row) {
+    throw new Error('the header row is missing');
+  }
 
   return Object.fromEntries(
-    Array.from(row!.children).map((cell) => [
-      cell.querySelector('[data-probe]')!.getAttribute('data-probe'),
-      cell as HTMLElement,
-    ])
+    Array.from(row.children)
+      .filter((cell): cell is HTMLElement => cell instanceof HTMLElement)
+      .map((cell) => [
+        requiredAttribute(
+          requiredElement('[data-probe]', "a header cell's probe", cell),
+          'data-probe'
+        ),
+        cell,
+      ])
   );
 };
 
@@ -70,7 +82,9 @@ const rgbOf = (hex: string): string =>
   `rgb(${[1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16)).join(', ')})`;
 
 const surfaceIn = (cell: HTMLElement): TReqoreSurface | null =>
-  JSON.parse(cell.querySelector('[data-probe]')!.getAttribute('data-surface')!);
+  JSON.parse(
+    requiredAttribute(requiredElement('[data-probe]', "the cell's probe", cell), 'data-surface')
+  );
 
 describe('A panel with a sticky header', () => {
   test('draws its body in a stacking context of its own, under the header', () => {
@@ -84,8 +98,8 @@ describe('A panel with a sticky header', () => {
       </ReqoreUIProvider>
     );
 
-    const header = container.querySelector<HTMLElement>('.reqore-panel-title')!;
-    const body = container.querySelector<HTMLElement>('.reqore-panel-content')!;
+    const header = requiredElement('.reqore-panel-title', "the panel's header", container);
+    const body = requiredElement('.reqore-panel-content', "the panel's body", container);
 
     expect(getComputedStyle(header).position).toBe('sticky');
     expect(getComputedStyle(header).zIndex).toBe('2');
@@ -101,7 +115,7 @@ describe('A panel with a sticky header', () => {
       </ReqoreUIProvider>
     );
 
-    const body = container.querySelector<HTMLElement>('.reqore-panel-content')!;
+    const body = requiredElement('.reqore-panel-content', "the panel's body", container);
 
     expect(getComputedStyle(body).isolation).not.toBe('isolate');
   });
@@ -109,8 +123,8 @@ describe('A panel with a sticky header', () => {
   test("a table's body is drawn under its sticky header", () => {
     const { container } = renderTable(pinnedColumns);
 
-    const table = container.querySelector<HTMLElement>('.reqore-table')!;
-    const body = table.querySelector<HTMLElement>('.reqore-panel-content')!;
+    const table = requiredElement('.reqore-table', 'the table', container);
+    const body = requiredElement('.reqore-panel-content', "the table's body", table);
 
     expect(body.contains(table.querySelector('.reqore-table-header-wrapper'))).toBe(true);
     expect(getComputedStyle(body).isolation).toBe('isolate');
