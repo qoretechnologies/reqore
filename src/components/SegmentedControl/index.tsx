@@ -17,6 +17,7 @@ import {
   PADDING_FROM_SIZE,
   PILL_RADIUS_MODIFIER,
   RADIUS_FROM_SIZE,
+  SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
@@ -105,6 +106,14 @@ export interface IReqoreSegmentedControlProps
   pill?: boolean;
   /** Allow deselecting by clicking active item */
   allowDeselect?: boolean;
+  /**
+   * The whole control is the size's height — as tall as a button or an input of the same
+   * `size` beside it — and its items are that much shorter inside the frame. Off (the
+   * default), each item is the size's height and the frame adds its padding and border
+   * around them, so a `small` control stands 8px taller than the `small` controls in its
+   * toolbar.
+   */
+  fitSize?: boolean;
   /** Intent applied to the selected item */
   activeIntent?: TReqoreIntent;
   /**
@@ -318,6 +327,7 @@ const ReqoreSegmentedControl = memo(
         flat,
         pill,
         allowDeselect,
+        fitSize,
         activeIntent,
         disabled,
         readOnly,
@@ -333,6 +343,14 @@ const ReqoreSegmentedControl = memo(
       ref
     ) => {
       const animations = useReqoreProperty('animations');
+      // fitSize: the frame (its padding and its 1px border, top and bottom) comes out of
+      // the items, so the control as a whole is the size's height.
+      const fittedItemHeight = SIZE_TO_PX[size] - 2 * (CONTAINER_PADDING + (flat ? 0 : 1));
+      const fittedItemStyle = {
+        height: fittedItemHeight,
+        minHeight: fittedItemHeight,
+        maxHeight: fittedItemHeight,
+      };
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
 
       const [_value, _setValue] = useState<string | undefined>(
@@ -599,6 +617,7 @@ const ReqoreSegmentedControl = memo(
                   }
                   className={`${item.props?.className || ''} reqore-segmented-control-item`}
                   pill={pill}
+                  style={fitSize ? { ...item.props?.style, ...fittedItemStyle } : item.props?.style}
                 >
                   {item.label}
                 </ReqoreButton>
@@ -631,6 +650,7 @@ const ReqoreSegmentedControl = memo(
                   className:
                     'reqore-segmented-control-item reqore-segmented-control-more',
                   label: moreLabel,
+                  style: fitSize ? fittedItemStyle : undefined,
                 }}
                 closeOnOutsideClick
                 isReqoreComponent
