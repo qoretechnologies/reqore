@@ -29,6 +29,7 @@ import {
   StyledReqoreNotification,
   typeToIcon,
 } from '../Notifications/styles';
+import { ReqoreSpan } from '../Span';
 import { ReqoreSpinner } from '../Spinner';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -190,7 +191,13 @@ const ReqoreMessage = memo(
                 </>
               ) : null}
               <StyledNotificationInnerContent>
-                {title && (
+                {title && isPanelSurfaceMessage(theme, true) ? (
+                  // On the panel surface a message is a callout, and its title is drawn as a
+                  // callout's label: bold, at the message's own size — not a heading.
+                  <ReqoreSpan size={size} effect={{ weight: 'bold' }} className='reqore-message-title'>
+                    {title}
+                  </ReqoreSpan>
+                ) : title && (
                   <ReqoreHeading
                     size={size}
                     customTheme={

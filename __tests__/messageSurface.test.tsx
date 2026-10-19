@@ -33,5 +33,10 @@ describe('theme.messageSurface', () => {
     expect(surfaceOf().backgroundColor).toBe('rgb(20, 20, 23)');
     expect(surfaceOf().borderTopColor).toBe('rgb(45, 45, 51)');
     expect(document.querySelector('.reqore-message')?.textContent).toContain('Could not load');
+    // The title is a callout's label, not a heading.
+    expect(document.querySelector('.reqore-message .reqore-message-title')?.textContent).toBe(
+      'Could not load'
+    );
+    expect(document.querySelector('.reqore-message h3, .reqore-message h4')).toBeNull();
   });
 });
