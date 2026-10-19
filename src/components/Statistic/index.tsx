@@ -508,7 +508,12 @@ const ReqoreStatistic = memo(
         <ReqoreSpan
           size={secondarySize}
           className='reqore-statistic-label'
-          effect={{ opacity: 0.7, uppercase: true, spaced: 1, ...labelEffect }}
+          effect={{
+            opacity: 0.7,
+            uppercase: theme.uppercaseLabels !== false,
+            spaced: theme.uppercaseLabels !== false ? 1 : 0,
+            ...labelEffect,
+          }}
         >
           {label}
         </ReqoreSpan>

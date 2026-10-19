@@ -5,6 +5,7 @@ import { getReadableColor } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize, isStringSize } from '../../helpers/utils';
 import { IWithReqoreEffect, IWithReqoreSize } from '../../types/global';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreEffect, StyledTextEffect } from '../Effect';
 import { ReqoreVerticalSpacer } from '../Spacer';
 
@@ -63,8 +64,10 @@ const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
       ...rest
     }: IReqoreMenuDividerProps,
     ref: any
-  ) =>
-    line ? (
+  ) => {
+    const theme = useReqoreTheme();
+    const upper = theme.uppercaseLabels !== false;
+    return line ? (
       <ReqoreVerticalSpacer
         className={`${className || ''} reqore-menu-divider`}
         height={PADDING_FROM_SIZE[size]}
@@ -80,8 +83,8 @@ const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
         ref={ref}
         effect={
           {
-            uppercase: true,
-            spaced: 2,
+            uppercase: upper,
+            spaced: upper ? 2 : 0,
             textAlign: align,
             textSize: getOneLessSize(size),
             weight: 'bold',
@@ -91,7 +94,8 @@ const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
       >
         {label}
       </StyledMenuDivider>
-    )
+    );
+  }
 );
 
 export default ReqoreMenuDivider;

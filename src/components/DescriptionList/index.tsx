@@ -14,6 +14,7 @@ import { getOneHigherSize, getOneLessSize } from '../../helpers/utils';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 import { IReqorePanelProps, ReqorePanel } from '../Panel';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { ReqoreP } from '../Paragraph';
 
 /**
@@ -287,7 +288,7 @@ export const ReqoreDescriptionList = memo(
       {
         items,
         labelWidth = '160px',
-        uppercaseLabels = true,
+        uppercaseLabels: uppercaseLabelsProp,
         separatorOpacity = 0.06,
         size = 'normal',
         contentSize,
@@ -299,6 +300,9 @@ export const ReqoreDescriptionList = memo(
       },
       ref
     ) => {
+      const theme = useReqoreTheme();
+      // A caller that says wins; otherwise the theme decides (`theme.uppercaseLabels`).
+      const uppercaseLabels = uppercaseLabelsProp ?? theme.uppercaseLabels !== false;
       // Default the panel's padding one size up from the list's text
       // size — gives the rows visible breathing room from the panel
       // edge without callers having to size it manually. The caller
