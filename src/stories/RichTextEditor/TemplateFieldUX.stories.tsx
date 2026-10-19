@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { IReqoreRichTextEditorProps, ReqoreRichTextEditor } from '../../components/RichTextEditor';
 import { sleep } from '../../helpers/utils';
 import { StoryMeta } from '../utils';
+import { withTouchScreen } from '../utils/touchScreen';
+import { withViewport } from '../utils/viewport';
 
 /**
  * The interactions an author actually performs on a reference field.
@@ -550,5 +552,114 @@ export const ClickingAChipLeavesAnOpenListOpen: Story = {
 
     await expect(listIsOpen(doc)).toBe(true);
     await expect(scroller.scrollTop).toBe(scrollTop);
+  },
+};
+
+/** Templates enough that their list is taller than a short window: twenty fields of a record. */
+const MANY_TAGS = {
+  template: {
+    label: 'Templates',
+    items: Array.from({ length: 20 }, (_, index) => ({
+      label: `field_${index + 1}`,
+      value: `$.field_${index + 1}`,
+    })),
+  },
+};
+
+/** A scrolling page with the field 200px down it, and room below to scroll into. */
+const aShortWayDown = (Story: any) => (
+  <div style={{ height: '100vh', overflowY: 'auto' }} className='story-scroller'>
+    <div style={{ height: 200 }} />
+    <Story />
+    <div style={{ height: '150vh' }} />
+  </div>
+);
+
+/**
+ * In a window shorter than the list, clicking the field opens the list, and it stays open: the field is scrolled
+ * at most to the top of the page, never out of it, and the list takes the room under it.
+ */
+const expectTheListOpensBelowTheFieldInView = async (
+  doc: Document,
+  open: (editor: HTMLElement) => Promise<void>
+) => {
+  const editor = await editorIn(doc);
+  const control = (editor.closest('.reqore-control-wrapper') as HTMLElement) ?? editor;
+  const scroller = doc.querySelector<HTMLElement>('.story-scroller')!;
+
+  await open(editor);
+  await waitFor(() => expect(listIsOpen(doc)).toBe(true));
+  // what the click put in motion - the page scrolled to make room - has been drawn, and the list is still open
+  await afterTwoFrames(doc.defaultView!);
+  await afterTwoFrames(doc.defaultView!);
+
+  await waitFor(async () => {
+    const list = doc.querySelector<HTMLElement>('.reqore-popover-content');
+    await expect(list, 'the list stays open').toBeTruthy();
+    const field = control.getBoundingClientRect();
+    const shownFrom = Math.max(scroller.getBoundingClientRect().top, 0);
+    // the field is in view: not scrolled above the top of the page
+    await expect(field.top).toBeGreaterThanOrEqual(shownFrom - 0.5);
+    await expect(field.bottom).toBeLessThanOrEqual(doc.documentElement.clientHeight + 0.5);
+    const rect = list!.getBoundingClientRect();
+    // below the field, on screen, and tall enough to read
+    await expect(Math.round(rect.top)).toBeGreaterThanOrEqual(Math.round(field.bottom) - 1);
+    await expect(rect.bottom).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
+    await expect(rect.height).toBeGreaterThan(90);
+  });
+};
+
+export const TheListOpensInAShortWindow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a reference field 200px down a scrolling page, in a window 380px high, shorter than its list of twenty templates. When it is clicked, the list opens below the field and stays open: the page is scrolled until the field is at its top, never past it, and the list takes the room left under the field. Before, the page was scrolled by the whole list, the field went out of view, and the list closed as it opened (qorus#646).',
+      },
+    },
+    qlip: { viewport: { width: 980, height: 380 } },
+  },
+  args: {
+    value: [{ type: 'paragraph', children: [{ text: '' }] }],
+    tags: MANY_TAGS,
+    onChange: fn(),
+  },
+  decorators: [aShortWayDown],
+  play: async ({ canvasElement }) => {
+    await withViewport(980, 380, async () => {
+      await expectTheListOpensBelowTheFieldInView(canvasElement.ownerDocument, (editor) =>
+        userEvent.click(editor)
+      );
+    });
+  },
+};
+
+export const TheListOpensOnAPhoneInLandscape: Story = {
+  tags: ['touch'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same field on a phone turned on its side (844 × 390): a tap on the field opens its list of twenty templates below it, and it stays open, the field still in view at the top of the page.',
+      },
+    },
+    qlip: { viewport: { width: 844, height: 390 } },
+  },
+  args: {
+    value: [{ type: 'paragraph', children: [{ text: '' }] }],
+    tags: MANY_TAGS,
+    onChange: fn(),
+  },
+  decorators: [aShortWayDown],
+  play: async ({ canvasElement }) => {
+    // a phone on its side: the touch screen at 844 x 390
+    await withTouchScreen(
+      async (touch) => {
+        await expectTheListOpensBelowTheFieldInView(canvasElement.ownerDocument, (editor) =>
+          touch.tap(editor)
+        );
+      },
+      { width: 844, height: 390 }
+    );
   },
 };
