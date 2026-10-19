@@ -145,6 +145,14 @@ export interface IReqoreTheme {
    * reached yet. A component's own `uppercase` prop or effect still wins.
    */
   uppercaseLabels?: boolean;
+  /**
+   * How a message (`ReqoreMessage`) shows its intent. `'tint'` (the default, unchanged): the
+   * box is filled with a shade of the intent and edged in it. `'panel'`: the box sits on the
+   * panel surface (`theme.panel`) with the panel hairline, like a calm callout — the intent is
+   * on the icon, and a danger or warning message carries a soft glow in its top-left corner. A
+   * theme that keeps colour for state sets it once here, instead of restyling every message.
+   */
+  messageSurface?: 'tint' | 'panel';
   header?: IReqoreNavbarTheme;
   footer?: IReqoreNavbarTheme;
   breadcrumbs?: IReqoreBreadcrumbsTheme;

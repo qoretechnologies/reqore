@@ -3,7 +3,7 @@ import React, { forwardRef, memo, useEffect, useMemo, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { getColorFromMaybeString } from '../../helpers/colors';
+import { getColorFromMaybeString, getNotificationIntent } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   IReqoreIntent,
@@ -21,6 +21,7 @@ import { TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import {
+  isPanelSurfaceMessage,
   StyledIconWrapper,
   StyledNotificationContent,
   StyledNotificationContentWrapper,
@@ -124,6 +125,13 @@ const ReqoreMessage = memo(
         }
       });
 
+      // On the panel surface the box no longer says the intent, so the icon does.
+      const resolvedIconColor: TReqoreEffectColor | undefined =
+        iconColor ??
+        (intent && isPanelSurfaceMessage(theme, true)
+          ? getNotificationIntent(theme, intent)
+          : undefined);
+
       const leftIcon: IReqoreIconName | undefined = useMemo(
         () => icon || (intent ? typeToIcon[intent] : undefined),
         [icon, intent]
@@ -175,7 +183,7 @@ const ReqoreMessage = memo(
                       icon={leftIcon}
                       margin={'right'}
                       size={size}
-                      color={iconColor}
+                      color={resolvedIconColor}
                       {...iconProps}
                     />
                   )}
