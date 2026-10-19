@@ -204,6 +204,26 @@ export const StyledTableCell = styled.div.withConfig({
         `}
       `}
 
+      ${interactive &&
+      css`
+        /* A row that does something on a click says so under the pointer: the whole row lights,
+           the way a cell with its own click already did. Row hover was dropped with the row's
+           hover STATE (a re-render per mouse move); it is plain CSS on the row now, free. */
+        .reqore-table-row:hover > & {
+          ${pin
+            ? css`
+                background: linear-gradient(
+                    ${lighten(0.1, displayedBackgroundColor)},
+                    ${lighten(0.1, displayedBackgroundColor)}
+                  ),
+                  ${getPanelBackgroundColor(theme)};
+              `
+            : css`
+                background-color: ${lighten(0.1, displayedBackgroundColor)};
+              `}
+        }
+      `}
+
       ${interactiveCell &&
       css`
         &:hover {

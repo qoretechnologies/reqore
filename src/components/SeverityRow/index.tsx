@@ -35,6 +35,7 @@ import {
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, StyledEffect } from '../Effect';
+import { getTextSize } from '../../helpers/typeScale';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import ReqoreRowActionsMenu, {
@@ -247,6 +248,20 @@ const StyledRow = styled(StyledEffect).withConfig({
   &[data-narrow='true'][data-actions='menu'] {
     grid-template-columns: ${STRIP_WIDTH_PX}px 1fr auto;
   }
+  /* A row without a strip whose \`leading\` mark (a status dot) takes the strip's column: the mark
+     sits in the gutter, level with the label's first line, and the label and description wrap
+     beside it. It used to be the first item of the label's WRAPPING line, so a label too long for
+     the rest of that line moved down whole and left the mark alone on a line of its own. */
+  &[data-leading-column='true'] {
+    grid-template-columns: auto 1fr auto;
+  }
+  &[data-leading-column='true'][data-narrow='true'] {
+    grid-template-columns: auto 1fr;
+  }
+  &[data-leading-column='true'][data-narrow='true'][data-actions='menu'] {
+    grid-template-columns: auto 1fr auto;
+  }
+
   /* The last column, named: an item placed in a row with its column left to the grid is placed before
      the items around it, in the first column. */
   &[data-narrow='true'][data-actions='menu'] > .reqore-severity-row-actions {
@@ -287,6 +302,29 @@ const StyledBody = styled.div`
   flex-flow: column;
   gap: 4px;
   min-width: 0;
+`;
+
+/** The strip's column, holding the `leading` mark instead: one line tall at the label's own size,
+ *  so the mark is centred on the label's first line however many lines the text runs to. */
+const StyledLeadingCell = styled.span<{ theme: IReqoreTheme; $size: TSizes }>`
+  align-self: start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: ${({ theme, $size }) => getTextSize(theme, $size)}px;
+  font-weight: 500;
+  height: 1.2em;
+  height: 1lh;
+`;
+
+/** A mark kept on the label's line (a row WITH a strip): the mark and the label never part. The
+ *  label shrinks and wraps its own words beside the mark rather than moving below it. */
+const StyledLeadingGroup = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 0 1 auto;
 `;
 
 const StyledLabelLine = styled.div<{ $wrap: boolean }>`
@@ -371,6 +409,9 @@ const ReqoreSeverityRow = memo(
       );
       // Narrow, two or more actions are one menu button, unless the caller wants them stacked.
       const actionsAsMenu = isNarrow && narrowActions === 'menu' && (actions?.length ?? 0) > 1;
+      const hasLeading = leading !== undefined && leading !== null && leading !== false;
+      // Without a strip, the mark takes the strip's column (see StyledRow).
+      const leadingColumn = hasLeading && !showStrip;
 
       return (
         <StyledContainer
@@ -383,6 +424,7 @@ const ReqoreSeverityRow = memo(
             as='div'
             data-narrow={isNarrow || undefined}
             data-actions={actionsAsMenu ? 'menu' : undefined}
+            data-leading-column={leadingColumn || undefined}
             {...rest}
             Component={StyledRow}
             tooltip={tooltip}
@@ -409,17 +451,35 @@ const ReqoreSeverityRow = memo(
                 className='reqore-severity-row-strip'
                 aria-hidden
               />
+            ) : leadingColumn ? (
+              <StyledLeadingCell
+                theme={theme}
+                $size={size}
+                className='reqore-severity-row-leading'
+              >
+                {leading}
+              </StyledLeadingCell>
             ) : (
               <span aria-hidden style={{ width: STRIP_WIDTH_PX }} />
             )}
             <StyledBody className='reqore-severity-row-body'>
               <StyledLabelLine $wrap={wrap} className='reqore-severity-row-label'>
-                {leading}
-                <StyledTextSlot $wrap={wrap}>
-                  <ReqoreSpan size={size} effect={labelEffect}>
-                    {label}
-                  </ReqoreSpan>
-                </StyledTextSlot>
+                {hasLeading && !leadingColumn ? (
+                  <StyledLeadingGroup className='reqore-severity-row-leading'>
+                    {leading}
+                    <StyledTextSlot $wrap={wrap}>
+                      <ReqoreSpan size={size} effect={labelEffect}>
+                        {label}
+                      </ReqoreSpan>
+                    </StyledTextSlot>
+                  </StyledLeadingGroup>
+                ) : (
+                  <StyledTextSlot $wrap={wrap}>
+                    <ReqoreSpan size={size} effect={labelEffect}>
+                      {label}
+                    </ReqoreSpan>
+                  </StyledTextSlot>
+                )}
                 {hasBadge && (
                   <ButtonBadge
                     size={size}

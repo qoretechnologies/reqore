@@ -83,6 +83,35 @@ test('Renders <SeverityRow /> with leading content', () => {
   );
 
   expect(document.querySelector('.reqore-severity-row-label')!.textContent).toContain('Critical');
+  // With a strip the mark stays on the label's line, grouped with the label so the two never part.
+  const group = document.querySelector('.reqore-severity-row-label .reqore-severity-row-leading');
+  expect(group!.textContent).toContain('Critical');
+  expect(group!.textContent).toContain('Issue');
+});
+
+// A long label used to wrap below its own leading mark, leaving the dot alone on a line.
+test('Renders <SeverityRow /> leading content in the strip column when there is no strip', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSeverityRow
+            label='Retries-exceeded → page on-call'
+            description='May apply'
+            showStrip={false}
+            leading={<span data-testid='dot'>●</span>}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const row = document.querySelector('.reqore-severity-row')!;
+  expect(row.getAttribute('data-leading-column')).toBe('true');
+  // The mark is the row's first cell, beside the body, not inside the label line.
+  expect(row.firstElementChild!.classList.contains('reqore-severity-row-leading')).toBe(true);
+  expect(row.firstElementChild!.textContent).toBe('●');
+  expect(document.querySelector('.reqore-severity-row-label')!.textContent).not.toContain('●');
 });
 
 test('Renders <SeverityRow /> with badge (string)', () => {
