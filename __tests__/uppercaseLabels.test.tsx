@@ -1,12 +1,16 @@
 import { render } from '@testing-library/react';
 import {
+  ReqoreCheckbox,
   ReqoreContent,
+  ReqoreDataView,
   ReqoreDescriptionList,
   ReqoreLayoutContent,
   ReqoreMenu,
   ReqoreMenuDivider,
+  ReqoreProgress,
   ReqoreStatistic,
   ReqoreUIProvider,
+  ReqoreVerticalSpacer,
 } from '../src';
 import { IReqoreTheme } from '../src/constants/theme';
 
@@ -59,5 +63,28 @@ describe('theme.uppercaseLabels', () => {
       <ReqoreDescriptionList uppercaseLabels items={[{ key: 'a', label: 'Timeout', content: '30' }]} />
     );
     expect(document.querySelector('.reqore-description-list, .reqore-panel')).toBeTruthy();
+  });
+
+  test('a progress target label follows the theme', () => {
+    const { unmount } = renderWith(undefined, <ReqoreProgress value={40} target={90} targetLabel='Target 90%' />);
+    expect(transformOf('.reqore-progress-target-label')).toBe('uppercase');
+    unmount();
+
+    renderWith({ uppercaseLabels: false }, <ReqoreProgress value={40} target={90} targetLabel='Target 90%' />);
+    expect(transformOf('.reqore-progress-target-label')).not.toBe('uppercase');
+  });
+
+  test("a switch's on / off text, a spacer's label and a data view's type tags follow the theme", () => {
+    renderWith(
+      { uppercaseLabels: false },
+      <>
+        <ReqoreCheckbox asSwitch checked onText='Yes' offText='No' />
+        <ReqoreVerticalSpacer height={16} label='Or' />
+        <ReqoreDataView data={{ retries: 3 }} showTypes />
+      </>
+    );
+    expect(document.body.innerHTML).not.toMatch(/text-transform:\s*uppercase/);
+    const styles = Array.from(document.querySelectorAll('*')).map((e) => getComputedStyle(e).textTransform);
+    expect(styles).not.toContain('uppercase');
   });
 });

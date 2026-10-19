@@ -47,7 +47,7 @@ import { GAP_FROM_SIZE, PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../.
 import { getTextSize } from '../../helpers/typeScale';
 import { MONO_FONT, getFontFamily } from '../../constants/fonts';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { TReqoreEffectColor } from '../Effect';
+import { IReqoreEffect, TReqoreEffectColor } from '../Effect';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreButton from '../Button';
@@ -284,6 +284,13 @@ export interface IReqoreDataViewProps
 const SECTION_LABEL = (kind: 'Object' | 'List', count: number): string => {
   const word = kind === 'Object' ? 'field' : 'item';
   return `${kind} · ${count} ${word}${count === 1 ? '' : 's'}`;
+};
+
+/** A value's type tag ("string", "int") — tracked uppercase unless the theme sets labels in
+ *  sentence case (`theme.uppercaseLabels`). */
+const typeTagEffect = (theme: IReqoreTheme): IReqoreEffect => {
+  const upper = theme.uppercaseLabels !== false;
+  return { uppercase: upper, spaced: upper ? 1 : 0, opacity: 0.6 };
 };
 
 type TRenderContext = {
@@ -1518,7 +1525,7 @@ const renderScalar = (
           flat
           minimal
           label={displayType}
-          effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+          effect={typeTagEffect(ctx.theme)}
           className='reqore-data-view-type'
         />
       </ScalarRow>
@@ -1575,7 +1582,7 @@ const renderScalar = (
           flat
           minimal
           label={displayType}
-          effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+          effect={typeTagEffect(ctx.theme)}
           className='reqore-data-view-type'
         />
       </ScalarRow>
@@ -1624,7 +1631,7 @@ const renderScalar = (
         flat
         minimal
         label={displayType}
-        effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+        effect={typeTagEffect(ctx.theme)}
         className='reqore-data-view-type'
       />
     </ScalarRow>
@@ -1809,7 +1816,7 @@ const renderTree = (
               minimal
               flat={false}
               label={envelopeType}
-              effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+              effect={typeTagEffect(ctx.theme)}
               className='reqore-data-view-type'
             />
           ) : null}

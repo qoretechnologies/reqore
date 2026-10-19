@@ -181,15 +181,15 @@ const StyledProgressTargetMarker = styled.div<IStyledProgressTargetProps>`
   z-index: 2;
 `;
 
-const StyledProgressTargetLabel = styled.div<{ $left: number; $color: string }>`
+const StyledProgressTargetLabel = styled.div<{ $left: number; $color: string; $upper: boolean }>`
   position: absolute;
   bottom: calc(100% + 4px);
   left: ${({ $left }) => $left}%;
   transform: translateX(-50%);
   font-size: 9px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: ${({ $upper }) => ($upper ? '0.04em' : 'normal')};
+  text-transform: ${({ $upper }) => ($upper ? 'uppercase' : 'none')};
   color: ${({ $color }) => $color};
   white-space: nowrap;
   pointer-events: none;
@@ -371,6 +371,7 @@ const ReqoreProgress = memo(
                   <StyledProgressTargetLabel
                     $left={targetPercent}
                     $color={resolvedTargetColor}
+                    $upper={theme.uppercaseLabels !== false}
                     className='reqore-progress-target-label'
                   >
                     {resolvedTargetLabel}

@@ -137,8 +137,9 @@ export interface IReqoreTheme {
   panel?: IReqorePanelTheme;
   /**
    * Whether the small labels Reqore names things with — a statistic's label, a menu's group
-   * heading, a stacked bar's segment labels, a description list's row labels — are set in
-   * tracked uppercase. Default `true` (unchanged). A theme that sets every label in sentence
+   * heading, a stacked bar's segment labels, a description list's row labels, a collection's
+   * group headers, a switch's on / off text, a progress bar's target label, a data view's type
+   * tags, a spacer's label — are set in tracked uppercase (`useUppercaseLabels()`). Default `true` (unchanged). A theme that sets every label in sentence
    * case (the calm theme) sets `false` once here, instead of overriding each component at every
    * call site — which is how one app ended up with uppercase headings in the menus nobody had
    * reached yet. A component's own `uppercase` prop or effect still wins.

@@ -580,7 +580,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                 parentHasGradient={!!effect?.gradient}
                 effect={
                   {
-                    uppercase: true,
+                    uppercase: theme.uppercaseLabels !== false,
                     textSize: getOneLessSize(size),
                     weight: 'bold',
                     ...switchTextEffect,
@@ -609,7 +609,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                 hasMargin={onText || onText === 0}
                 effect={
                   {
-                    uppercase: true,
+                    uppercase: theme.uppercaseLabels !== false,
                     textSize: getOneLessSize(size),
                     weight: 'thick',
                     ...switchTextEffect,
