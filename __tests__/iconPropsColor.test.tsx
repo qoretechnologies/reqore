@@ -9,16 +9,9 @@ import { render } from '@testing-library/react';
 import { ReactElement } from 'react';
 import { ReqoreInput, ReqorePanel, ReqoreTag, ReqoreUIProvider } from '../src';
 import { splitIconColor } from '../src/helpers/iconProps';
+import { iconLookOf } from './shared/iconLook';
 
-/* the color the glyph is drawn in (react-icons sets it on the svg) and the opacity the icon is drawn at */
-const lookOf = (el: Element | null) => {
-  expect(el, 'no icon').toBeTruthy();
-
-  return {
-    color: ((el as HTMLElement).querySelector('svg') as SVGElement).style.color,
-    opacity: getComputedStyle(el as HTMLElement).opacity,
-  };
-};
+const lookOf = iconLookOf;
 
 const iconIn = (testId: string, selector: string) =>
   document.querySelector(`[data-testid='${testId}'] ${selector}`) ??

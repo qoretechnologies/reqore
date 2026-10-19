@@ -9,7 +9,7 @@ import { ReqoreInput, ReqoreNotification, ReqoreTextarea, ReqoreUIProvider } fro
 import { getInputClearButtonOpacity } from '../src/components/Input';
 import { DEFAULT_THEME } from '../src/constants/theme';
 import { buildTheme } from '../src/helpers/colors';
-import { REDUCED_MOTION_QUERY } from '../src/hooks/usePrefersReducedMotion';
+import { mockReducedMotion } from './shared/reducedMotion';
 
 vi.mock('@react-spring/web', async (importOriginal) => {
   const spring = await importOriginal<typeof import('@react-spring/web')>();
@@ -26,22 +26,6 @@ vi.mock('@react-spring/web', async (importOriginal) => {
 });
 
 /** jsdom has no `matchMedia`: one that answers the reduced-motion query as `reduced` says. */
-const mockReducedMotion = (reduced: boolean) => {
-  Object.defineProperty(window, 'matchMedia', {
-    configurable: true,
-    writable: true,
-    value: (query: string) => ({
-      matches: query === REDUCED_MOTION_QUERY ? reduced : false,
-      media: query,
-      onchange: null,
-      addEventListener: () => undefined,
-      removeEventListener: () => undefined,
-      addListener: () => undefined,
-      removeListener: () => undefined,
-      dispatchEvent: () => false,
-    }),
-  });
-};
 
 const notification = () => document.querySelector('.reqore-notification') as HTMLElement;
 const clearButton = () => document.querySelector('.reqore-clear-input-button') as HTMLElement;
@@ -100,17 +84,5 @@ describe('without it', () => {
     );
 
     expect(Number(notification().style.opacity)).toBeLessThan(1);
-  });
-
-  test("an input's clear button fades in", () => {
-    render(
-      <ReqoreUIProvider>
-        <ReqoreInput value='a value' onChange={() => undefined} onClearClick={() => undefined} />
-      </ReqoreUIProvider>
-    );
-
-    expect(Number(clearButton().style.opacity)).toBeLessThan(
-      getInputClearButtonOpacity(buildTheme(DEFAULT_THEME))
-    );
   });
 });

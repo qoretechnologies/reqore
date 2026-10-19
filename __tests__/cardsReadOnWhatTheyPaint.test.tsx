@@ -12,8 +12,8 @@ import {
   ReqoreUIProvider,
 } from '../src';
 import { IReqoreEffect } from '../src/components/Effect';
-import { useReqoreSurface } from '../src/context/SurfaceContext';
 import { getContrastRatio, getDrawnColor } from '../src/helpers/colors';
+import { SurfaceProbe } from './shared/surfaces';
 
 /** A near-white gradient: on the dark default theme, what reads on the page does not read on it. */
 const LIGHT: IReqoreEffect['gradient'] = { colors: { 0: '#ffffff', 100: '#f2f2f2' } };
@@ -33,13 +33,6 @@ const contrastOnWhite = (selector: string) =>
     getDrawnColor(getComputedStyle(document.querySelector(selector) as HTMLElement).color),
     '#ffffff'
   );
-
-/** Every color a component reads as what it is drawn on. */
-const Surfaces = () => {
-  const surface = useReqoreSurface();
-
-  return <span data-testid='surfaces'>{([] as string[]).concat(surface ?? []).join(',')}</span>;
-};
 
 describe('a card with a light gradient on a dark page', () => {
   test("an entity row's text reads on its gradient", () => {
@@ -78,7 +71,7 @@ describe('a card with a light gradient on a dark page', () => {
 
   test("a feature card's text reads on its gradient, and it hands its body the gradient", () => {
     inLayout(
-      <ReqoreFeatureCard label='Fast' description={<Surfaces />} effect={{ gradient: LIGHT }} />
+      <ReqoreFeatureCard label='Fast' description={<SurfaceProbe />} effect={{ gradient: LIGHT }} />
     );
 
     expect(contrastOnWhite('.reqore-feature-card')).toBeGreaterThanOrEqual(4.5);

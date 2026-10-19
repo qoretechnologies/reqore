@@ -5,7 +5,6 @@
  * drawn as given rather than thrown on.
  */
 import { render } from '@testing-library/react';
-import { parseToRgb } from 'polished';
 import { ReactNode } from 'react';
 import {
   ReqoreButton,
@@ -19,6 +18,7 @@ import { getTagAppearanceColors } from '../src/components/Tag';
 import { DEFAULT_THEME, IReqoreTheme } from '../src/constants/theme';
 import { ReqoreSurfaceProvider } from '../src/context/SurfaceContext';
 import { buildTheme, getContrastRatio, READABLE_TEXT_CONTRAST } from '../src/helpers/colors';
+import { hexOf } from './shared/colorMath';
 
 const wrap = (children: ReactNode) => (
   <ReqoreUIProvider>
@@ -29,11 +29,8 @@ const wrap = (children: ReactNode) => (
 );
 
 /** A computed `rgb()` color as a hex. */
-const toHex = (color: string): string => {
-  const { red, green, blue } = parseToRgb(color);
-
-  return `#${[red, green, blue].map((part) => part.toString(16).padStart(2, '0')).join('')}`;
-};
+/** A computed color as a six-digit hex. */
+const toHex = hexOf;
 
 /** The color an icon's glyph is drawn in. */
 const iconColor = (container: HTMLElement, index = 0): string =>

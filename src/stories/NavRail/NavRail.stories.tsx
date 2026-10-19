@@ -408,7 +408,7 @@ export const IdleReveal: Story = {
     docs: {
       description: {
         story:
-          'Renders the floating rail with `idleReveal`. The play function asserts the full behaviour: it rests dimmed (at `idleOpacity`, 0.34, or as little more as its icons need to still stand out by 3:1), fades fully in when the gutter is hovered, and dims again when the mouse leaves.',
+          'Renders the floating rail with `idleReveal`. It rests dimmed (at `idleOpacity`, 0.34, or as little more as its icons need to still stand out by 3:1); hovered, it fades fully in, and when the mouse leaves it dims again.',
       },
     },
   },
@@ -447,7 +447,7 @@ export const IdleResting: Story = {
     docs: {
       description: {
         story:
-          'Renders the floating `idleReveal` rail with NO interaction, capturing its resting dimmed state (at `idleOpacity`, 0.34, or as little more as its icons need to still stand out by 3:1) — the play only asserts the dim, it never hovers.',
+          'Renders the floating `idleReveal` rail at rest, untouched: dimmed (at `idleOpacity`, 0.34, or as little more as its icons need to still stand out by 3:1).',
       },
     },
   },

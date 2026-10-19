@@ -1,12 +1,10 @@
 import { render } from '@testing-library/react';
-import { ReqoreSurfaceProvider, useReqoreSurface } from '../src/context/SurfaceContext';
-
-/** What a component reads as the surface it is drawn on. */
-const Surface = () => <span data-testid='surface'>{useReqoreSurface() ?? 'none'}</span>;
+import { ReqoreSurfaceProvider } from '../src/context/SurfaceContext';
+import { SurfaceProbe } from './shared/surfaces';
 
 describe('the surface a component is drawn on', () => {
   test('is unknown outside any component that paints one', () => {
-    const { getByTestId } = render(<Surface />);
+    const { getByTestId } = render(<SurfaceProbe id='surface' />);
 
     expect(getByTestId('surface').textContent).toBe('none');
   });
@@ -15,7 +13,7 @@ describe('the surface a component is drawn on', () => {
     const { getByTestId } = render(
       <ReqoreSurfaceProvider color='#111111'>
         <ReqoreSurfaceProvider color='#222222'>
-          <Surface />
+          <SurfaceProbe id='surface' />
         </ReqoreSurfaceProvider>
       </ReqoreSurfaceProvider>
     );
@@ -27,7 +25,7 @@ describe('the surface a component is drawn on', () => {
     const { getByTestId } = render(
       <ReqoreSurfaceProvider color='#111111'>
         <ReqoreSurfaceProvider>
-          <Surface />
+          <SurfaceProbe id='surface' />
         </ReqoreSurfaceProvider>
       </ReqoreSurfaceProvider>
     );

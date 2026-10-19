@@ -11,31 +11,7 @@ import {
   READABLE_ICON_CONTRAST,
   READABLE_TEXT_CONTRAST,
 } from '../src/helpers/colors';
-import { TReqoreHexColor } from '../src/components/Effect';
-
-type TRgba = [number, number, number, number];
-
-const parse = (color: string): TRgba => {
-  const [r, g, b, a = '1'] = color.match(/[\d.]+/g) as string[];
-
-  return [Number(r), Number(g), Number(b), Number(a)];
-};
-
-/** `color` (with its alpha, times `opacity`) drawn over the opaque `under`. */
-const over = (color: string, under: TRgba, opacity = 1): TRgba => {
-  const [r, g, b, a] = parse(color);
-  const alpha = a * opacity;
-
-  return [
-    r * alpha + under[0] * (1 - alpha),
-    g * alpha + under[1] * (1 - alpha),
-    b * alpha + under[2] * (1 - alpha),
-    1,
-  ];
-};
-
-const hex = ([r, g, b]: TRgba) =>
-  `#${[r, g, b].map((value) => Math.round(value).toString(16).padStart(2, '0')).join('')}` as TReqoreHexColor;
+import { hex, over, parse, TRgba } from './shared/colorMath';
 
 const contrast = (front: TRgba, back: TRgba) => getContrastRatio(hex(front), hex(back));
 

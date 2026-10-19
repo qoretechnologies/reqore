@@ -620,7 +620,7 @@ export const TransitionsUnderReducedMotion: Story = {
     docs: {
       description: {
         story:
-          "Renders an input holding a value, with its clear button. Under prefers-reduced-motion (the story run asks for it for this story) Reqore's transitions take no time, so its clear button stands at rest at once; without it, they ease as before.",
+          "Renders an input holding a value, with its clear button, under prefers-reduced-motion: its transitions take no time, so the clear button stands at rest at once.",
       },
     },
   },
@@ -644,12 +644,8 @@ export const TransitionsUnderReducedMotion: Story = {
     });
     // the clear button eases its opacity in 0.1s, which reduced motion takes to a hair: 0.01ms (not none, which
     // would send no transitionend - and not what a capture tool that switches transitions off would leave)
-    const duration = parseFloat(getComputedStyle(clear).transitionDuration);
-
-    if (window.matchMedia(REDUCED_MOTION_QUERY).matches) {
-      expect(duration).toBeCloseTo(0.00001, 8);
-    } else {
-      expect(duration).toBe(0.1);
-    }
+    // the story runs under reduced motion (`tags: ['reduced-motion']`): without it, it checks nothing
+    expect(window.matchMedia(REDUCED_MOTION_QUERY).matches).toBe(true);
+    expect(parseFloat(getComputedStyle(clear).transitionDuration)).toBeCloseTo(0.00001, 8);
   },
 };

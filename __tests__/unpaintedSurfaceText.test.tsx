@@ -23,13 +23,14 @@ import {
   ReqoreUIProvider,
 } from '../src';
 import { DEFAULT_THEME } from '../src/constants/theme';
-import { ReqoreSurfaceProvider, useReqoreSurface } from '../src/context/SurfaceContext';
+import { ReqoreSurfaceProvider } from '../src/context/SurfaceContext';
 import {
   buildTheme,
   getContrastRatio,
   getThemeSurface,
   READABLE_TEXT_CONTRAST,
 } from '../src/helpers/colors';
+import { SurfaceProbe } from './shared/surfaces';
 
 const LIGHT = '#f5f5f5';
 const PAGE = getThemeSurface(buildTheme(DEFAULT_THEME));
@@ -39,17 +40,6 @@ const colorOf = (selector: string) =>
 
 const expectReadable = (color: string, on: string) =>
   expect(getContrastRatio(color, on)).toBeGreaterThanOrEqual(READABLE_TEXT_CONTRAST);
-
-/** Every color a component reads as what it is drawn on. */
-const Surfaces = ({ id }: { id: string }) => {
-  const surface = useReqoreSurface();
-
-  return (
-    <span data-testid={id}>
-      {surface === undefined ? 'none' : ([] as string[]).concat(surface).join(',')}
-    </span>
-  );
-};
 
 const surfaceOf = (id: string) => document.querySelector(`[data-testid='${id}']`)?.textContent;
 
@@ -84,18 +74,18 @@ describe('transparent, given a customTheme, with nothing around it that says wha
           transparent
           customTheme={{ main: LIGHT }}
           value={12}
-          label={(<Surfaces id='in-statistic' />) as any}
+          label={(<SurfaceProbe id='in-statistic' />) as any}
         />
         <ReqoreTestimonial
           transparent
           customTheme={{ main: LIGHT }}
-          quote={<Surfaces id='in-testimonial' />}
+          quote={<SurfaceProbe id='in-testimonial' />}
         />
         <ReqoreFeatureCard
           transparent
           customTheme={{ main: LIGHT }}
           label='Card'
-          footer={<Surfaces id='in-card' />}
+          footer={<SurfaceProbe id='in-card' />}
         />
       </ReqoreUIProvider>
     );
@@ -112,7 +102,7 @@ describe('transparent, given a customTheme, with nothing around it that says wha
     render(
       <ReqoreUIProvider>
         <ReqorePanel transparent customTheme={{ main: LIGHT }}>
-          <Surfaces id='in-panel' />
+          <SurfaceProbe id='in-panel' />
         </ReqorePanel>
       </ReqoreUIProvider>
     );
@@ -209,9 +199,9 @@ describe('what a component holds beside its text is drawn on it', () => {
         <ReqoreSurfaceProvider color='#ffffff'>
           <ReqoreEntityRow
             label='Row'
-            description={<Surfaces id='row-text' />}
+            description={<SurfaceProbe id='row-text' />}
             effect={{ gradient: { colors: { 0: '#5e00ff', 100: '#c20058' } } }}
-            actions={[{ label: (<Surfaces id='row-action' />) as any, transparent: true }]}
+            actions={[{ label: (<SurfaceProbe id='row-action' />) as any, transparent: true }]}
           />
         </ReqoreSurfaceProvider>
       </ReqoreUIProvider>
@@ -225,7 +215,7 @@ describe('what a component holds beside its text is drawn on it', () => {
     render(
       <ReqoreUIProvider>
         <ReqoreSurfaceProvider color='#ffffff'>
-          <ReqoreFeatureCard label='Card' footer={<Surfaces id='card-footer' />} />
+          <ReqoreFeatureCard label='Card' footer={<SurfaceProbe id='card-footer' />} />
         </ReqoreSurfaceProvider>
       </ReqoreUIProvider>
     );

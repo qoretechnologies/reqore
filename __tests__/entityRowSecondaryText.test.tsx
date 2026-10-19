@@ -6,17 +6,9 @@
  */
 import { render } from '@testing-library/react';
 import { ReqoreEntityRow, ReqoreLink, ReqoreTag, ReqoreUIProvider } from '../src';
+import { drawnOpacity } from './shared/colorMath';
 
 /** The opacity `el` is drawn at: its own and every ancestor's, multiplied. */
-const drawnOpacity = (el: Element) => {
-  let opacity = 1;
-
-  for (let at: Element | null = el; at; at = at.parentElement) {
-    opacity *= Number(getComputedStyle(at).opacity || 1);
-  }
-
-  return opacity;
-};
 
 const alphaOf = (color: string) => Number((color.match(/[\d.]+/g) as string[])[3] ?? 1);
 
