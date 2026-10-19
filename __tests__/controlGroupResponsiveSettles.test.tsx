@@ -1,6 +1,7 @@
 import { act, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReqoreControlGroup, ReqoreUIProvider } from '../src';
+import { modelGroupLayout } from './shared/controlGroupLayout';
 
 /**
  * A responsive control group must stop measuring once it has decided.
@@ -89,32 +90,9 @@ const Action = ({ index }: { index: number }) => {
   );
 };
 
-/** What the group's content wants: the sum of what is currently rendered. */
-const contentWidth = (group: HTMLElement): number =>
-  Array.from(group.children).reduce(
-    (total, child) => total + Number((child as HTMLElement).dataset.testWidth ?? MENU_WIDTH),
-    0
-  );
-
-/**
- * Teaches jsdom the widths the group reads, as the box model would give them:
- * the group's content box is as wide as its content wants, up to what the
- * container granted, and the container is as wide as it was granted.
- */
-const modelLayout = (group: HTMLElement) => {
-  Object.defineProperty(group, 'scrollWidth', {
-    configurable: true,
-    get: () => contentWidth(group),
-  });
-  Object.defineProperty(group, 'clientWidth', {
-    configurable: true,
-    get: () => Math.min(contentWidth(group), available.width),
-  });
-  Object.defineProperty(group.parentElement!, 'clientWidth', {
-    configurable: true,
-    get: () => available.width,
-  });
-};
+/** Teaches jsdom the widths the group reads (`modelGroupLayout`). */
+const modelLayout = (group: HTMLElement) =>
+  modelGroupLayout(group, { available: () => available.width, menuWidth: () => MENU_WIDTH });
 
 /** How many callbacks a group is given before the test calls it a spin. */
 const CALLBACK_CAP = 40;

@@ -580,7 +580,7 @@ export const NarrowContainerActionsMenu: Story = {
     docs: {
       description: {
         story:
-          "Renders the same row (`narrowActions='menu'`) in two framed containers of different widths, each named above it: in the 720px one its Investigate and Dismiss sit side by side as always; in the 400px one they are one menu button at the end of the label's line. Each row fills its frame exactly. Clicked, the menu names Investigate and Dismiss (the icon's tooltip) with their icons; Escape puts it away with the focus on the button, and Dismiss chosen runs and closes it without opening the row.",
+          "Renders the same row (`narrowActions='menu'`) in two framed containers of different widths, each named above it: in the 720px one its Investigate and Dismiss sit side by side as always; in the 400px one they are one menu button at the end of the label's line, named for its row (\"Actions: Payment Processing · stripe-webhook-receiver\"). Each row fills its frame exactly. Clicked, the menu names Investigate and Dismiss (the icon's tooltip) with their icons; Escape puts it away with the focus on the button, and Dismiss chosen runs and closes it without opening the row.",
       },
     },
   },

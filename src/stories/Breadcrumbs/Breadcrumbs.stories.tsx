@@ -497,7 +497,7 @@ export const FoldedTrailOpensAtATap: Story = {
     docs: {
       description: {
         story:
-          'Renders two chat trails in a phone\'s header (390 px). In the first the trail is so short that it folds whole into one dropdown labelled with the current chat, its name cut; in the second the chat fits and its ancestors fold into the "…" menu. A finger taps each: the folded current crumb opens its menu, which names the chat in full and offers "Back to chats", which a tap then reaches, and the "…" menu opens and its "Back to chats" is reached by a tap too. Both menus said "open" to assistive technology only while open.',
+          'Renders two chat trails in a phone\'s header (390 px). In the first the 150px header is so narrow that the whole trail folds into one dropdown labelled with the current chat, its name cut; in the second the chat fits and its ancestors fold into the "…" menu. Both are menu buttons that say whether they are open. A finger taps each: the folded current crumb opens its menu, which names the chat in full and offers "Back to chats", which a tap then reaches, and the "…" menu opens and its "Back to chats" is reached by a tap too.',
       },
     },
   },
@@ -542,6 +542,7 @@ export const FoldedTrailOpensAtATap: Story = {
     await expect(current).toHaveAttribute('aria-haspopup', 'menu');
     await expect(current).toHaveAttribute('aria-expanded', 'false');
     await expect(more).toHaveAttribute('aria-haspopup', 'menu');
+    await expect(more).toHaveAttribute('aria-expanded', 'false');
 
     await withTouchScreen(async (touch) => {
       // the folded current crumb: its menu names the chat in full, and "Back to chats" is a tap away
@@ -558,6 +559,7 @@ export const FoldedTrailOpensAtATap: Story = {
       await touch.tap(openMenuRows().find((row) => row.textContent?.includes('Back to chats'))!);
       await waitFor(() => expect(onBackToChats).toHaveBeenCalledTimes(1));
       await waitFor(() => expect(openMenuRows()).toHaveLength(0));
+      await expect(current).toHaveAttribute('aria-expanded', 'false');
 
       // the "…" of folded ancestors: it opens at a tap, and "Back to chats" in it is reached too
       await touch.tap(more);
@@ -567,6 +569,9 @@ export const FoldedTrailOpensAtATap: Story = {
       await expect(more).toHaveAttribute('aria-expanded', 'true');
       await touch.tap(openMenuRows().find((row) => row.textContent?.includes('Back to chats'))!);
       await waitFor(() => expect(onBackToChats).toHaveBeenCalledTimes(2));
+      await waitFor(() => expect(more).toHaveAttribute('aria-expanded', 'false'));
+      // only "Back to chats" was chosen
+      await expect(onWorkspace).not.toHaveBeenCalled();
     });
   },
 };

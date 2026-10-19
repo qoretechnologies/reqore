@@ -661,7 +661,7 @@ test('Names the menu button with actionsMenuLabel', () => {
   });
 });
 
-test('Names the menu button for a row whose label is words, and "Actions" for one that is not', () => {
+test('Names the menu button "Actions" for a row whose label is not words', () => {
   withResizeObserver(NarrowResizeObserver, () => {
     NarrowResizeObserver.width = 400;
     renderRowWithActions({
