@@ -90,6 +90,15 @@ describe("a table's header cell", () => {
     expect(cellButtonDraws()).toBeGreaterThan(first);
   });
 
+  test('is drawn with no sort data, as a table that does not sort hands it none', () => {
+    const plain = { sortable: false, hideable: false, pinnable: false, resizable: false };
+    const { container, rerender } = render(cell({ ...plain, sortData: undefined }));
+
+    expect(container.querySelector('.reqore-table-header-cell')).not.toBeNull();
+    rerender(cell({ sortData: undefined, sortable: false }));
+    expect(container.querySelector('.reqore-table-header-cell')).not.toBeNull();
+  });
+
   test('draws its button again when it is handed another click handler', () => {
     const plain = { sortable: false, hideable: false, pinnable: false, resizable: false };
     const { rerender } = render(cell(plain));

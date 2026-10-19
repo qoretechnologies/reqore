@@ -354,7 +354,9 @@ export const ReqoreTableHeaderCell = memo(
       () => ({ intent: filter ? 'info' : undefined }),
       [filter]
     );
-    const isSortedBy = sortable && sortData.by === dataId;
+    // a cell is told how the table is sorted only when the table sorts: there may be nothing to read
+    const isSortedBy = !!sortable && sortData?.by === dataId;
+    const sortDirection = sortData?.direction;
     const ownEffect = rest.effect;
     const menuEffect = useMemo<IReqoreEffect>(
       () => ({
@@ -368,7 +370,7 @@ export const ReqoreTableHeaderCell = memo(
           : undefined,
         gradient: isSortedBy
           ? {
-              direction: `to ${sortData.direction === 'desc' ? 'top' : 'bottom'}`,
+              direction: `to ${sortDirection === 'desc' ? 'top' : 'bottom'}`,
               colors: {
                 0: 'main:lighten:2',
                 30: 'main:lighten:2',
@@ -378,7 +380,7 @@ export const ReqoreTableHeaderCell = memo(
           : undefined,
         ...ownEffect,
       }),
-      [filter, isSortedBy, sortData.direction, ownEffect]
+      [filter, isSortedBy, sortDirection, ownEffect]
     );
     const buttonEffect = useMemo<IReqoreEffect>(
       () => ({ ...baseHeaderEffect, ...ownEffect }),
