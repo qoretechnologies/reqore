@@ -1,7 +1,7 @@
 import count from 'lodash/size';
 import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { css, useTheme } from 'styled-components';
 import styled from '../../helpers/styled';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
@@ -11,6 +11,7 @@ import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceCo
 import { getReadableColor, getThemeSurface } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
+import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect } from '../Effect';
 import { getColumnRenderedWidth } from './helpers';
@@ -130,6 +131,18 @@ const StyledHeaderResizable = styled(Resizable)<{
       }
     `}
 `;
+
+/** A header cell's menu does not open on a click with ⌘ held, which sorts the column instead. */
+const opensUnlessSorting = (_popoverData: unknown, event?: MouseEvent | KeyboardEvent): boolean =>
+  !event?.metaKey;
+
+/** The style of the ⋯ that opens a header cell's menu beside content of its own. */
+const OPTIONS_BUTTON_STYLE: React.CSSProperties = {
+  paddingLeft: 0,
+  paddingRight: 0,
+  minWidth: '10px',
+  borderLeft: 'none',
+};
 
 export const ReqoreTableHeaderCell = memo(
   ({
@@ -322,6 +335,61 @@ export const ReqoreTableHeaderCell = memo(
       [size, parentMinimal]
     );
 
+    /* What a header cell hands the button and the menus it draws keeps its identity while what it is made
+       of does: the button and the dropdown are memo components, and a handler or an object made anew on
+       every render (DeepScan: REACT_INEFFICIENT_PURE_COMPONENT_PROP) drew them again each time the cell
+       was, for nothing - another column sorted, a column resized. */
+    const handleClick = useCallback(
+      (event: React.MouseEvent<HTMLButtonElement>) => {
+        if (sortable && event.metaKey) {
+          onSortChange?.(dataId);
+        }
+
+        onClick?.(event);
+      },
+      [sortable, onSortChange, dataId, onClick]
+    );
+    const handleFilterChange = useCallback(
+      (value: string) => {
+        onFilterChange?.(dataId, value);
+      },
+      [onFilterChange, dataId]
+    );
+    const filterInputProps = useMemo<IReqoreDropdownProps['inputProps']>(
+      () => ({ intent: filter ? 'info' : undefined }),
+      [filter]
+    );
+    const isSortedBy = sortable && sortData.by === dataId;
+    const ownEffect = rest.effect;
+    const menuEffect = useMemo<IReqoreEffect>(
+      () => ({
+        glow: filter
+          ? {
+              color: 'info',
+              opacity: 1,
+              inset: true,
+              size: 1,
+            }
+          : undefined,
+        gradient: isSortedBy
+          ? {
+              direction: `to ${sortData.direction === 'desc' ? 'top' : 'bottom'}`,
+              colors: {
+                0: 'main:lighten:2',
+                30: 'main:lighten:2',
+                150: 'info:darken:3',
+              },
+            }
+          : undefined,
+        ...ownEffect,
+      }),
+      [filter, isSortedBy, sortData.direction, ownEffect]
+    );
+    const buttonEffect = useMemo<IReqoreEffect>(
+      () => ({ ...baseHeaderEffect, ...ownEffect }),
+      [baseHeaderEffect, ownEffect]
+    );
+
     return (
       <StyledHeaderResizable
         {...({ $pin: pin, $pinEdge: pinEdge, $minimal: parentMinimal } as any)}
@@ -371,52 +439,17 @@ export const ReqoreTableHeaderCell = memo(
                     filterable={filterable}
                     filterPlaceholder={filterPlaceholder || columnFilterPlaceholder}
                     filter={filter}
-                    onFilterChange={(value) => {
-                      onFilterChange?.(dataId, value);
-                    }}
+                    onFilterChange={handleFilterChange}
                     items={items}
                     showCaret={false}
                     textAlign={align}
                     readOnlyOnEmpty
-                    onBeforeOpen={(_popoverData, event) => {
-                      if (event.metaKey) {
-                        return false;
-                      }
-
-                      return true;
-                    }}
-                    inputProps={{ intent: filter ? 'info' : undefined }}
-                    onClick={(e) => {
-                      if (sortable && e.metaKey) {
-                        onSortChange?.(dataId);
-                      }
-
-                      onClick?.(e);
-                    }}
+                    onBeforeOpen={opensUnlessSorting}
+                    inputProps={filterInputProps}
+                    onClick={handleClick}
                     labelEffect={baseHeaderEffect}
                     {...rest}
-                    effect={{
-                      glow: filter
-                        ? {
-                            color: 'info',
-                            opacity: 1,
-                            inset: true,
-                            size: 1,
-                          }
-                        : undefined,
-                      gradient:
-                        sortable && sortData.by === dataId
-                          ? {
-                              direction: `to ${sortData.direction === 'desc' ? 'top' : 'bottom'}`,
-                              colors: {
-                                0: 'main:lighten:2',
-                                30: 'main:lighten:2',
-                                150: 'info:darken:3',
-                              },
-                            }
-                          : undefined,
-                      ...rest.effect,
-                    }}
+                    effect={menuEffect}
                   />
                 ) : (
                   <ReqoreButton
@@ -427,15 +460,9 @@ export const ReqoreTableHeaderCell = memo(
                     size={size}
                     rounded={false}
                     textAlign={align}
-                    onClick={(e) => {
-                      if (sortable && e.metaKey) {
-                        onSortChange?.(dataId);
-                      }
-
-                      onClick?.(e);
-                    }}
+                    onClick={handleClick}
                     {...rest}
-                    effect={{ ...baseHeaderEffect, ...rest.effect }}
+                    effect={buttonEffect}
                   />
                 )}
               </>
@@ -446,22 +473,15 @@ export const ReqoreTableHeaderCell = memo(
                 className='reqore-table-header-cell-options'
                 fixed
                 compact
-                buttonStyle={{
-                  paddingLeft: 0,
-                  paddingRight: 0,
-                  minWidth: '10px',
-                  borderLeft: 'none',
-                }}
+                buttonStyle={OPTIONS_BUTTON_STYLE}
                 size={size}
                 rounded={false}
                 intent={filter || sortData.by === dataId ? 'info' : rest.intent}
                 filterable={filterable}
                 filterPlaceholder={filterPlaceholder || columnFilterPlaceholder}
                 filter={filter}
-                inputProps={{ intent: filter ? 'info' : undefined }}
-                onFilterChange={(value) => {
-                  onFilterChange?.(dataId, value);
-                }}
+                inputProps={filterInputProps}
+                onFilterChange={handleFilterChange}
                 items={items}
               />
             ) : null}
