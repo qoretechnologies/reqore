@@ -9,6 +9,18 @@ import { requiredElement } from '../utils/required';
 import { withViewport } from '../utils/viewport';
 
 /**
+ * The bottom of what the list draws: the surface's content, which held its own height under a surface capped
+ * shorter and ran past it, so the surface's box alone said it fitted while the list ran off the screen.
+ */
+const drawnBottom = (list: HTMLElement) =>
+  Math.max(
+    list.getBoundingClientRect().bottom,
+    ...Array.from(list.children)
+      .filter((child) => !child.hasAttribute('data-popper-arrow'))
+      .map((child) => child.getBoundingClientRect().bottom)
+  );
+
+/**
  * The interactions an author actually performs on a reference field.
  *
  * Written after a run of defects that were each reported from the live IDE
@@ -385,9 +397,7 @@ export const TheListOpensBelowAFieldNearTheBottom: Story = {
       // Below the field — not over the form above it.
       await expect(Math.round(listTop)).toBeGreaterThanOrEqual(Math.round(fieldBottom) - 1);
       // And on screen, rather than hanging off the bottom.
-      await expect(list.getBoundingClientRect().bottom).toBeLessThanOrEqual(
-        doc.documentElement.clientHeight + 1
-      );
+      await expect(drawnBottom(list)).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
     });
   },
 };
@@ -448,8 +458,8 @@ export const TheListFlipsRatherThanVanishWithNoRoomBelow: Story = {
       await expect(getComputedStyle(list).maxHeight).not.toBe('0px');
       // And it went UP, because down was not a place.
       await expect(rect.top).toBeLessThan(control.getBoundingClientRect().top);
-      // Still on screen.
-      await expect(rect.bottom).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
+      // Still on screen, all of what it draws.
+      await expect(drawnBottom(list)).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
     });
   },
 };
@@ -603,10 +613,29 @@ const expectTheListOpensBelowTheFieldInView = async (
     await expect(field.top).toBeGreaterThanOrEqual(shownFrom - 0.5);
     await expect(field.bottom).toBeLessThanOrEqual(doc.documentElement.clientHeight + 0.5);
     const rect = list.getBoundingClientRect();
-    // below the field, on screen, and tall enough to read
+    // below the field, on screen - all of what it draws - and tall enough to read
     await expect(Math.round(rect.top)).toBeGreaterThanOrEqual(Math.round(field.bottom) - 1);
-    await expect(rect.bottom).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
+    await expect(drawnBottom(list)).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
     await expect(rect.height).toBeGreaterThan(90);
+  });
+};
+
+/**
+ * The window made shorter while the list is open - a phone turned, its keyboard coming up, a window resized: the list
+ * follows the room left below the field, and never runs off the bottom of the screen. Only where the story can resize
+ * its window (the story run); a served Storybook leaves the window as it is.
+ */
+const expectTheListFollowsAShorterWindow = async (doc: Document, width: number, height: number) => {
+  await withViewport(width, height, async (narrowed) => {
+    if (!narrowed) {
+      return;
+    }
+    await afterTwoFrames(doc.defaultView ?? window);
+    await waitFor(async () => {
+      const list = requiredElement('.reqore-popover-content', 'the list, which stays open,', doc);
+      await expect(drawnBottom(list)).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
+      await expect(list.getBoundingClientRect().height).toBeGreaterThan(90);
+    });
   });
 };
 
@@ -615,7 +644,7 @@ export const TheListOpensInAShortWindow: Story = {
     docs: {
       description: {
         story:
-          'Renders a reference field 200px down a scrolling page, in a window 380px high, shorter than its list of twenty templates. When it is clicked, the list opens below the field and stays open: the page is scrolled until the field is at its top, never past it, and the list takes the room left under the field. Before, the page was scrolled by the whole list, the field went out of view, and the list closed as it opened (qorus#646).',
+          'Renders a reference field 200px down a scrolling page, in a window 380px high, shorter than its list of twenty templates. When it is clicked, the list opens below the field and stays open: the page is scrolled until the field is at its top, never past it, and the list takes the room left under the field. The window made shorter with the list open, the list follows and still ends inside it. Before, the page was scrolled by the whole list, the field went out of view, and the list closed as it opened (qorus#646).',
       },
     },
     qlip: { viewport: { width: 980, height: 380 } },
@@ -631,6 +660,8 @@ export const TheListOpensInAShortWindow: Story = {
       await expectTheListOpensBelowTheFieldInView(canvasElement.ownerDocument, (editor) =>
         userEvent.click(editor)
       );
+      // the window made 80px shorter with the list open
+      await expectTheListFollowsAShorterWindow(canvasElement.ownerDocument, 980, 300);
     });
   },
 };
@@ -641,7 +672,7 @@ export const TheListOpensOnAPhoneInLandscape: Story = {
     docs: {
       description: {
         story:
-          'The same field on a phone turned on its side (844 × 390): a tap on the field opens its list of twenty templates below it, and it stays open, the field still in view at the top of the page.',
+          'The same field on a phone turned on its side (844 × 390): a tap on the field opens its list of twenty templates below it, and it stays open, the field still in view at the top of the page and the list ending inside the screen, also when the keyboard takes 80px of it.',
       },
     },
     qlip: { viewport: { width: 844, height: 390 } },
@@ -659,6 +690,8 @@ export const TheListOpensOnAPhoneInLandscape: Story = {
         await expectTheListOpensBelowTheFieldInView(canvasElement.ownerDocument, (editor) =>
           touch.tap(editor)
         );
+        // the keyboard coming up takes 80px with the list open
+        await expectTheListFollowsAShorterWindow(canvasElement.ownerDocument, 844, 310);
       },
       { width: 844, height: 390 }
     );
