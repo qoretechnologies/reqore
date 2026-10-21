@@ -84,4 +84,25 @@ describe('a dropdown level the keys go back to', () => {
     press('ArrowRight');
     expect(rowTexts()).toEqual(['Submenu Item 1', 'Submenu Item 2']);
   });
+
+  it('highlights nothing after a click back: a click says nothing of the keys', () => {
+    open([
+      { label: 'Fruit', value: 'fruit', items: [{ label: 'Apple', value: 'apple' }] },
+      { label: 'Vegetables', value: 'vegetables', items: [{ label: 'Carrot', value: 'carrot' }] },
+    ]);
+
+    press('ArrowDown');
+    press('ArrowDown');
+    press('ArrowRight');
+    expect(rowTexts()).toEqual(['Carrot']);
+
+    act(() => {
+      fireEvent.click(document.querySelector('.reqore-dropdown-back-button') as Element);
+    });
+    expect(rowTexts()).toEqual(['Fruit', 'Vegetables']);
+
+    // no row is highlighted, so the right arrow opens none
+    press('ArrowRight');
+    expect(rowTexts()).toEqual(['Fruit', 'Vegetables']);
+  });
 });

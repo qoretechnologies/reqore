@@ -105,7 +105,9 @@ export interface IReqoreDropdownListProps
   /** Unique ID prefix for dropdown items, used for aria-activedescendant support. */
   listId?: string;
 
-  _onBackClick?: () => void;
+  /** Back to the level above: `true` where the keys went back (the left arrow), so it highlights the row they
+   *  came from. */
+  _onBackClick?: (byKeys?: boolean) => void;
   _onNavigateToLevel?: (level: number) => void;
   _level?: number;
 
@@ -399,7 +401,7 @@ const ReqoreDropdownList = memo(
           }
         } else if (key === 'ArrowLeft' && _onBackClick) {
           event.preventDefault();
-          _onBackClick();
+          _onBackClick(true);
         }
       },
       [
@@ -411,6 +413,9 @@ const ReqoreDropdownList = memo(
         handleSelectItemAtLevel,
       ]
     );
+
+    // the back button: a click, which says nothing of the keys
+    const goBackByClick = useCallback(() => _onBackClick?.(), [_onBackClick]);
 
     // Compute the focused item's DOM id for aria-activedescendant
     const focusedItemDomId = useMemo(() => {
@@ -427,16 +432,23 @@ const ReqoreDropdownList = memo(
     // and Enter in an opened level also selected the row the level above had highlighted.
     const showsItsOwnRows = !currentSelectedItem;
 
-    /* Back at this level from the level it showed, the row that level came from is highlighted, as the
-       keys left it: the right arrow opens it again and Enter acts on it. Opening it cleared the
-       highlight, and it showed again on the way back only while this level also heard the keys pressed
-       in the level it showed (qorus#646, Foxhoundn). The same holds for a lone row the list opened by
-       itself. */
+    /* Back at this level from the level it showed by the keys (the left arrow), the row that level came
+       from is highlighted, as the keys left it: the right arrow opens it again and Enter acts on it.
+       Opening it cleared the highlight, and it showed again on the way back only while this level also
+       heard the keys pressed in the level it showed (qorus#646, Foxhoundn). The same holds for a lone row
+       the list opened by itself. Back by a click (the back button, a crumb) says nothing of the keys:
+       nothing is highlighted, as before - a highlighted row looks picked to a pointer. */
     const levelItShowed = useRef<IReqoreDropdownItem | undefined>(undefined);
+    const wentBackByKeys = useRef(false);
     useEffect(() => {
       const cameFrom = levelItShowed.current;
+      const byKeys = wentBackByKeys.current;
       levelItShowed.current = currentSelectedItem;
       if (!cameFrom || currentSelectedItem) {
+        return;
+      }
+      wentBackByKeys.current = false;
+      if (!byKeys) {
         return;
       }
       const index = selectableItems.findIndex(
@@ -560,7 +572,10 @@ const ReqoreDropdownList = memo(
                 _levelIndex: _level + 1,
               },
             ],
-            _onBackClick: () => handleSelectItemAtLevel(undefined),
+            _onBackClick: (byKeys?: boolean) => {
+              wentBackByKeys.current = byKeys === true;
+              handleSelectItemAtLevel(undefined);
+            },
             _onNavigateToLevel,
             _level: _level + 1,
             selectedItems,
@@ -584,7 +599,7 @@ const ReqoreDropdownList = memo(
                   icon='ArrowLeftSLine'
                   fluid={!filterable}
                   fixed={filterable}
-                  onClick={_onBackClick}
+                  onClick={goBackByClick}
                   className='reqore-dropdown-back-button'
                   customTheme={theme}
                   intent={intent}
