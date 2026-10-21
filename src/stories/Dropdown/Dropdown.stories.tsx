@@ -1195,7 +1195,7 @@ export const KeyboardNavigationWithLeftArrowNavigatesBack: Story = {
     docs: {
       description: {
         story:
-          'Renders Dropdown and navigates back using the left-arrow key.',
+          'Renders Dropdown on the level of its lone row, which the list opens by itself, and goes back to the top level with the left arrow. There the row it came from is highlighted, so the right arrow opens it again: the story goes in and back once more and ends on the top level, its row highlighted.',
       },
     },
   },
@@ -1247,6 +1247,28 @@ export const KeyboardNavigationWithLeftArrowNavigatesBack: Story = {
 
     // Menu should still be open
     await expect(document.querySelector('.reqore-popover-content')).toBeTruthy();
+
+    // Back at the top level, the row it came from is highlighted: the right arrow opens it again, and
+    // the left arrow comes back to it. Each level draws its own search field, so the keys go to the
+    // one shown.
+    const press = (key: string) =>
+      fireEvent.keyDown(
+        requiredElement(
+          '.reqore-popover-content .reqore-input',
+          'the search field of the level shown'
+        ),
+        { key }
+      );
+    const rowsShown = () =>
+      Array.from(document.querySelectorAll('.reqore-popover-content .reqore-menu-item')).map(
+        (row) =>
+          row.querySelector('[data-reqore-marquee="text"]:not([aria-hidden])')?.textContent ?? ''
+      );
+    await waitFor(() => expect(rowsShown()).toEqual(['Item with Submenu']));
+    await press('ArrowRight');
+    await waitFor(() => expect(rowsShown()).toEqual(['Submenu Item 1', 'Submenu Item 2']));
+    await press('ArrowLeft');
+    await waitFor(() => expect(rowsShown()).toEqual(['Item with Submenu']));
   },
 };
 
