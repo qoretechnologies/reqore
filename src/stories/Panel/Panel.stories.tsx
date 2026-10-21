@@ -20,6 +20,7 @@ import {
   SizeArg,
   argManager,
 } from '../utils/args';
+import { requiredElement } from '../utils/required';
 import { findDrawnOverStickyHeader, stickyHeaderOf } from '../utils/stickyStacking';
 
 const { createArg } = argManager<IReqorePanelProps>();
@@ -1759,7 +1760,8 @@ export const StickyHeaderAboveItsBody: Story = {
         story:
           'A panel with a sticky header, a label and a menu, whose body holds a row raised with a z-index of its ' +
           'own and a row pinned to its left side, as a table pins a column. Scrolled, each passes under the ' +
-          'header, and the header with its label and its menu stays above both.',
+          'header, and the header with its label and its menu stays above both: the story ends scrolled with ' +
+          'the raised row half under the header, which hides its top half.',
       },
     },
     chromatic: { viewports: [600] },
@@ -1810,6 +1812,30 @@ export const StickyHeaderAboveItsBody: Story = {
     await expect(
       findDrawnOverStickyHeader(panel, canvasElement.querySelector('[data-testid="pinned-row"]'))
     ).toEqual([]);
+
+    // Left scrolled for the frame: the raised row's middle at the stuck header's bottom edge, its top half
+    // under the header, and the header drawn over it there.
+    const scroller = requiredElement(
+      '[data-testid="sticky-body-scroller"]',
+      'the scroller',
+      canvasElement
+    );
+    const header = stickyHeaderOf(panel);
+    const raised = requiredElement('[data-testid="raised-row"]', 'the raised row', canvasElement);
+    scroller.scrollTop += raised.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+    scroller.scrollTop +=
+      raised.getBoundingClientRect().top +
+      raised.getBoundingClientRect().height / 2 -
+      header.getBoundingClientRect().bottom;
+    await waitFor(() => {
+      const stuck = header.getBoundingClientRect();
+      const row = raised.getBoundingClientRect();
+      expect(row.top).toBeLessThan(stuck.bottom - 4);
+      expect(row.bottom).toBeGreaterThan(stuck.bottom + 4);
+      // where the two overlap, what is drawn is the header
+      const drawn = document.elementFromPoint(stuck.left + 40, (row.top + stuck.bottom) / 2);
+      expect(drawn && header.contains(drawn)).toBe(true);
+    });
   },
 };
 
