@@ -14,7 +14,8 @@ import { getCompactRowAction } from '../src/components/RowActionsMenu';
 /*
  * A row-end action on a narrow screen uses a short label (qorus#646, David: "the button takes up too much space on
  * a narrow screen; on a narrow screen it should read 'Test'"). Where reqore draws an action compactly - the one
- * action of a narrow `narrowActions='menu'` row, at the end of its label's line; a narrow table's folded column -
+ * action of a narrow `narrowActions='menu'` row whose container is wider than a phone, at the end of its label's
+ * line; a narrow table's folded column -
  * an action's `shortLabel` is what it says, its label its tooltip and its accessible name. With none, an action
  * that has an icon and a tooltip is its icon alone; any other says its label, as before.
  */
@@ -143,15 +144,18 @@ describe.each([
   const renderRow = (width: number, props: Record<string, unknown>) =>
     renderIn(width, <Row label='orders-db · PostgreSQL' fluid {...(props as any)} />);
 
-  test("narrow with narrowActions='menu' and one action, says its short label at the end of the label's line", () => {
+  /* As narrow as a phone (480px, measured on the row's container), the one action of a 'menu' row is not drawn
+     compactly at the end of the label's line: it goes under the label, on a line of its own the row's width, and
+     says its label (qorus#646, David and Foxhoundn: Fitts's law). */
+  test("as narrow as a phone, with narrowActions='menu' and one action, goes under the label and says its label", () => {
     renderRow(400, { narrowActions: 'menu', actions: [TEST_CONNECTION] });
 
-    expect(document.querySelector(rowSelector)?.getAttribute('data-actions')).toBe('end');
+    const row = document.querySelector(rowSelector);
+    expect(row?.getAttribute('data-narrow')).toBe('true');
+    expect(row?.getAttribute('data-actions')).not.toBe('end');
     const [button] = actionButtons(actionsSelector);
-    expect(says(button)).toBe('Test');
-    expect(button.getAttribute('aria-label')).toBe('Test the connection');
-    // the short label is the row's to read, not an attribute of the button
-    expect(button.outerHTML.toLowerCase()).not.toContain('shortlabel');
+    expect(says(button)).toBe('Test the connection');
+    expect(button.getAttribute('aria-label')).toBeNull();
   });
 
   test('wide, says its label', () => {
@@ -172,19 +176,39 @@ describe.each([
       unmount();
     }
   });
+});
+
+/* Narrow but wider than a phone - only a severity row, narrow below 640px, is - the one action of a 'menu' row
+   stays at the end of the label's line, where the menu would be, and is drawn compactly there. */
+describe('ReqoreSeverityRow wider than a phone', () => {
+  const renderRow = (props: Record<string, unknown>) =>
+    renderIn(560, <ReqoreSeverityRow label='orders-db · PostgreSQL' fluid {...(props as any)} />);
+
+  test("with narrowActions='menu' and one action, says its short label at the end of the label's line", () => {
+    renderRow({ narrowActions: 'menu', actions: [TEST_CONNECTION] });
+
+    const row = document.querySelector('.reqore-severity-row');
+    expect(row?.getAttribute('data-narrow')).toBe('true');
+    expect(row?.getAttribute('data-actions')).toBe('end');
+    const [button] = actionButtons('.reqore-severity-row-actions');
+    expect(says(button)).toBe('Test');
+    expect(button.getAttribute('aria-label')).toBe('Test the connection');
+    // the short label is the row's to read, not an attribute of the button
+    expect(button.outerHTML.toLowerCase()).not.toContain('shortlabel');
+  });
 
   test('with no short label, at the end of the line: its icon alone when it has a tooltip, else its label', () => {
-    const { unmount } = renderRow(400, {
+    const { unmount } = renderRow({
       narrowActions: 'menu',
       actions: [{ label: 'Open its settings', icon: 'Settings3Line', tooltip: 'Settings' }],
     });
-    const [iconOnly] = actionButtons(actionsSelector);
+    const [iconOnly] = actionButtons('.reqore-severity-row-actions');
     expect(says(iconOnly)).toBe('');
     expect(iconOnly.getAttribute('aria-label')).toBe('Open its settings');
     unmount();
 
-    renderRow(400, { narrowActions: 'menu', actions: [{ label: 'Run', icon: 'PlayLine' }] });
-    expect(says(actionButtons(actionsSelector)[0])).toBe('Run');
+    renderRow({ narrowActions: 'menu', actions: [{ label: 'Run', icon: 'PlayLine' }] });
+    expect(says(actionButtons('.reqore-severity-row-actions')[0])).toBe('Run');
   });
 });
 

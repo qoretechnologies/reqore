@@ -15,7 +15,6 @@ import {
   SEVERITY_ROW_NARROW_BREAKPOINT_PX,
   useNarrowContainer,
 } from '../../hooks/useNarrowContainer';
-import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -77,14 +76,15 @@ export interface IReqoreSeverityRowProps
   actions?: IReqoreSeverityRowAction[];
   /**
    * How two or more actions are shown when the row is narrow (below 640px of its container):
-   * `'stack'` (default) puts them under the label, one to a line - each the row's width on a phone, as wide
-   * as its label on a wider screen - a severity row is a callout, and its actions (Investigate, Try again)
-   * are the response it asks for, so they stay in sight; `'row'` keeps them under the label as a row of
-   * buttons; `'menu'`, opted into, folds them into one menu button at the end of the label's line, for a
-   * list of rows that should not grow by a line per action. See `TReqoreNarrowRowActions`. A single action
-   * is a button under the label with `'stack'` and `'row'`; with `'menu'` it stays a button at the end of the
-   * label's line, where the menu would be (`data-actions='end'`), saying its `shortLabel` there (see
-   * `getCompactRowAction`).
+   * `'stack'` (default) puts them under the label, one to a line - each the row's width where the container
+   * is a phone's width or narrower (480px), as wide as its label in a wider one - a severity row is a callout,
+   * and its actions (Investigate, Try again) are the response it asks for, so they stay in sight; `'row'`
+   * keeps them under the label as a row of buttons; `'menu'`, opted into, folds them into one menu button at
+   * the end of the label's line, for a list of rows that should not grow by a line per action. See
+   * `TReqoreNarrowRowActions`. A single action is a button under the label, the row's width where the
+   * container is a phone's width or narrower; with `'menu'` in a container wider than that it stays a button
+   * at the end of the label's line, where the menu would be (`data-actions='end'`), saying its `shortLabel`
+   * there (see `getCompactRowAction`).
    */
   narrowActions?: TReqoreNarrowRowActions;
   /** What the menu button of `narrowActions='menu'` is called (its accessible name and tooltip). */
@@ -235,7 +235,7 @@ const StyledRow = styled(StyledEffect).withConfig({
     justify-content: flex-start;
   }
 
-  /* Narrow, the actions stack under the label, one to a line (each the row's width on a phone), with its label
+  /* Narrow, the actions stack under the label, one to a line (each the row's width in a phone-width container), with its label
      whole (qorus#646): kept on one line that does not wrap, two labelled actions reached past the row on
      a phone. An icon's tooltip is its label there, and a finger gets a target it can hit. */
   @media (pointer: coarse) {
@@ -372,20 +372,25 @@ const ReqoreSeverityRow = memo(
          case, where a narrow container sits on a wide screen. The result is
          stamped on StyledRow as `data-narrow` and an attribute selector rewrites
          the grid. Shared with ReqoreEntityRow so both rows break at one width. */
-      const [containerRef, isNarrow] = useNarrowContainer<HTMLDivElement>(
+      const [containerRef, isNarrow, isPhoneWidth] = useNarrowContainer<HTMLDivElement>(
         SEVERITY_ROW_NARROW_BREAKPOINT_PX
       );
+      const loneAction = actions?.length === 1;
       // Narrow, two or more actions are one menu button only where the caller asks for it.
       const actionsAsMenu = isNarrow && narrowActions === 'menu' && (actions?.length ?? 0) > 1;
-      // Narrow, a row that folds two or more into a menu keeps its one action where the menu would be.
-      const loneActionAtLineEnd = isNarrow && narrowActions === 'menu' && actions?.length === 1;
+      /* Narrow, a row that folds two or more into a menu keeps its one action where the menu would be - only
+         while its container is wider than a phone. As narrow as a phone, the action goes under the label and
+         spans the row like any lone action there (David and Foxhoundn, qorus#646). */
+      const loneActionAtLineEnd = isNarrow && !isPhoneWidth && narrowActions === 'menu' && loneAction;
       // Narrow and stacked (the default): one to a line. With `'row'`, a row of buttons under the label.
       const actionsStacked = isNarrow && narrowActions !== 'row' && !loneActionAtLineEnd;
-      /* Stacked, each action is the row's width only on a phone, where a full-width row is a finger's target;
-         in a narrow container on a wider screen (a drawer, a side panel) it is as wide as its label, as a control
-         is on any screen wider than a phone's (David's width rule, qorus#646). */
-      const isPhone = useReqoreProperty('isMobile');
-      const actionsSpanRow = actionsStacked && !!isPhone;
+      /* Under the label, stacked actions and a lone action are the row's width where the row's container is a
+         phone's width or narrower - on a phone, or in as narrow a container on any screen - where a full-width
+         row is the easiest target there is (Fitts's law). In a container wider than a phone, each is as wide as
+         its label (David's width rule, qorus#646). The container is measured, not the screen. */
+      const actionsSpanRow = isNarrow && isPhoneWidth && (actionsStacked || loneAction);
+      // an action on a line of its own: it is written out (an icon-only one says its tooltip), and may span it
+      const actionsOnTheirOwnLine = actionsStacked || actionsSpanRow;
 
       return (
         <StyledContainer
@@ -480,8 +485,9 @@ const ReqoreSeverityRow = memo(
               <ReqoreControlGroup
                 gapSize='small'
                 className='reqore-severity-row-actions'
-                /* narrow and stacked: one to a line, each the row's width on a phone and as wide as its label
-                   elsewhere; narrow in a row: as wide as they are, onto another line where they do not fit */
+                /* narrow and stacked: one to a line, each the row's width in a container a phone's width or
+                   narrower and as wide as its label in a wider one; narrow in a row: as wide as they are, onto
+                   another line where they do not fit - a lone one the row's width as narrow as a phone */
                 vertical={actionsStacked}
                 fluid={actionsSpanRow}
                 wrap={isNarrow && !actionsStacked && !loneActionAtLineEnd}
@@ -500,7 +506,7 @@ const ReqoreSeverityRow = memo(
                       size={size}
                       intent={action.intent ?? intent}
                       {...action}
-                      {...(actionsStacked ? { fluid: actionsSpanRow, wrap: true } : {})}
+                      {...(actionsOnTheirOwnLine ? { fluid: actionsSpanRow, wrap: true } : {})}
                       {...compact}
                       // After the spread: `action` carries the consumer's raw
                       // handler and this has to be the one that wins. Applied
@@ -517,7 +523,7 @@ const ReqoreSeverityRow = memo(
                         ? compact.label
                         : hasRowActionLabel(action.label)
                           ? action.label
-                          : actionsStacked
+                          : actionsOnTheirOwnLine
                             ? getRowActionLabel({ tooltip: action.tooltip })
                             : undefined}
                     </ReqoreButton>
