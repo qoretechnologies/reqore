@@ -4,6 +4,9 @@ import {
   flattenColumns,
   foldActionsColumns,
   getActionsMenuColumnIds,
+  getFoldedActionText,
+  getFoldedActionTexts,
+  TABLE_CELL_HORIZONTAL_PADDING_PX,
   isActionsMenuWidth,
   getColumnsCount,
   getOnlyShownColumns,
@@ -205,4 +208,104 @@ test('A folded column is the menu button\'s width, a finger\'s on touch, and not
     true
   );
   expect(narrowColumn.width).toBe(20);
+});
+
+/* A folded column is as wide as what its cells draw (qorus#646): the square for a menu or an icon, a
+   row's one action with no icon its words - its short label, or its label - whole in their button. */
+
+test('A folded cell says the short label, or the label, of its one action with no icon; else nothing', () => {
+  // a menu, an icon alone, no action: the square
+  expect(getFoldedActionText([{ label: 'Edit' }, { label: 'Delete' }])).toBeUndefined();
+  expect(
+    getFoldedActionText([{ icon: 'EditLine', label: 'Edit', shortLabel: 'E' }])
+  ).toBeUndefined();
+  expect(getFoldedActionText([])).toBeUndefined();
+  expect(getFoldedActionText(undefined)).toBeUndefined();
+  // words
+  expect(getFoldedActionText([{ label: 'Test the connection', shortLabel: 'Test' }])).toBe('Test');
+  expect(getFoldedActionText([{ label: 'Test the connection', shortLabel: '  ' }])).toBe(
+    'Test the connection'
+  );
+  expect(getFoldedActionText([{ label: 'Test the connection' }])).toBe('Test the connection');
+  expect(getFoldedActionText([{ label: 7 }])).toBe(7);
+  // nothing to say: a blank label, no label
+  expect(getFoldedActionText([{ label: ' ' }])).toBeUndefined();
+  expect(getFoldedActionText([{ tooltip: 'Edit' }])).toBeUndefined();
+});
+
+test("A folded column's words are its rows' distinct ones; an element is not measurable", () => {
+  const element = <strong>Test</strong>;
+  const columns: IReqoreTableColumn[] = [
+    { dataId: 'name', width: 200 },
+    {
+      dataId: 'words',
+      width: 200,
+      cell: {
+        actions: ({ name }) =>
+          name === 'menu'
+            ? [{ label: 'Edit' }, { label: 'Delete' }]
+            : name === 'icon'
+              ? [{ icon: 'EditLine', label: 'Edit' }]
+              : [{ label: `Open ${name}`, shortLabel: name === 'b' ? 'Open' : undefined }],
+      },
+    },
+    { dataId: 'element', width: 200, cell: { actions: () => [{ label: element }] } },
+    { dataId: 'icons', width: 200, cell: { actions: () => [{ icon: 'EditLine', label: 'Edit' }] } },
+    { dataId: 'unfolded', width: 200, cell: { actions: () => [{ label: 'Run' }] } },
+  ];
+  const rows = [{ name: 'a' }, { name: 'b' }, { name: 'a' }, { name: 'menu' }, { name: 'icon' }];
+
+  const texts = getFoldedActionTexts(columns, ['words', 'element', 'icons'], rows);
+
+  expect(texts.words.texts).toEqual(['Open a', 'Open']);
+  expect(texts.words.unmeasurable).toBe(false);
+  expect(texts.words.action).toEqual({ label: 'Open a', shortLabel: undefined });
+  expect(texts.element).toEqual({ texts: [], action: undefined, unmeasurable: true });
+  // a column of icons says no words; one that does not fold is not asked
+  expect(texts.icons).toBeUndefined();
+  expect(texts.unfolded).toBeUndefined();
+  expect(getFoldedActionTexts(columns, [], rows)).toEqual({});
+});
+
+test("A folded column with words is as wide as they need, the square's at least, never wider than it was", () => {
+  const column = actionsColumn({ width: 200 });
+
+  // words wider than the square: their width
+  expect(foldActionsColumns([column], ['actions'], 'normal', false, { actions: 47 })[0].width).toBe(
+    47
+  );
+  // narrower: the square
+  expect(foldActionsColumns([column], ['actions'], 'normal', false, { actions: 10 })[0].width).toBe(
+    SIZE_TO_PX.normal
+  );
+  // never wider than it was
+  expect(
+    foldActionsColumns([column], ['actions'], 'normal', false, { actions: 260 })[0].width
+  ).toBe(200);
+  expect(
+    foldActionsColumns([{ ...column, resizedWidth: 150 }], ['actions'], 'normal', false, {
+      actions: 260,
+    })[0].width
+  ).toBe(150);
+  // words that cannot be measured keep the column's width
+  const [unmeasured] = foldActionsColumns([column], ['actions'], 'normal', false, {
+    actions: Infinity,
+  });
+  expect(unmeasured.width).toBe(200);
+  expect(unmeasured.resizable).toBe(false);
+  // with no width of its own, such a column is left as it is
+  const widthless = actionsColumn({ width: undefined, grow: 2 });
+  expect(
+    foldActionsColumns([widthless], ['actions'], 'normal', false, { actions: Infinity })[0]
+  ).toBe(widthless);
+  // a padded cell holds its words inside its padding
+  expect(
+    foldActionsColumns(
+      [actionsColumn({ width: 200, cell: { ...column.cell, padded: 'horizontal' } })],
+      ['actions'],
+      'normal',
+      false,
+      { actions: 47 }
+    )[0].width
+  ).toBe(47 + 2 * TABLE_CELL_HORIZONTAL_PADDING_PX);
 });

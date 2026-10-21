@@ -14,6 +14,7 @@ import {
 import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { alignToFlexAlign } from '../../helpers/utils';
+import { TABLE_CELL_HORIZONTAL_PADDING_PX } from './helpers';
 import { IWithReqoreTooltip } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { TReqoreColor, TReqoreHexColor } from '../Effect';
@@ -189,7 +190,11 @@ export const StyledTableCell = styled.div.withConfig({
       `}
 
       padding: ${!padded || padded === 'both' || padded === 'vertical' ? (wrap ? '6px' : 0) : undefined}
-        ${!padded || padded === 'both' || padded === 'horizontal' ? '10px' : undefined};
+        ${
+        !padded || padded === 'both' || padded === 'horizontal'
+          ? `${TABLE_CELL_HORIZONTAL_PADDING_PX}px`
+          : undefined
+      };
       font-size: ${TEXT_FROM_SIZE[size]}px;
       background: ${pinnedBackground ??
       (backgroundColor === 'transparent' ? 'transparent' : displayedBackgroundColor)};

@@ -4,7 +4,12 @@ import React, { useState } from 'react';
 import { noop, slice } from 'lodash';
 import { StyledEffect } from '../../components/Effect';
 import { ReqoreEmptyState } from '../../components/EmptyState';
-import { IReqoreTableColumn, IReqoreTableProps, IReqoreTableRowData } from '../../components/Table';
+import {
+  IReqoreTableColumn,
+  IReqoreTableProps,
+  IReqoreTableRowData,
+  TReqoreTableCellAction,
+} from '../../components/Table';
 import { IReqoreCustomTableBodyCellProps } from '../../components/Table/cell';
 import { IReqoreCustomHeaderCellProps } from '../../components/Table/header';
 import { IReqoreCustomTableRowProps } from '../../components/Table/row';
@@ -44,6 +49,7 @@ import {
   findSeeThroughPinnedHeaders,
   stickyHeaderOf,
 } from '../utils/stickyStacking';
+import { buttonSays } from '../utils/buttonSays';
 import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import { withViewport } from '../utils/viewport';
 
@@ -2969,6 +2975,151 @@ export const RowActionLabelsWhenWide: Story = {
     }
     expect(box.querySelector('.reqore-row-actions-menu')).toBeNull();
   },
+};
+
+/* A narrow table's one-action column (qorus#646): where a table is a phone's width or narrower, its actions
+   column folds. A row with one action keeps it as a button there; one with no icon says its `shortLabel`,
+   or its label where it has none, and the column is as wide as those words take in their button - folded
+   to the menu button's square, "Test" was cut to "T…". */
+
+const onTestConnectionClick = fn();
+
+/**
+ * A table of connections whose rows each have one action with no icon, in an actions column 200px wide; the
+ * names take what is left, at least 100px, so a folded column fits beside them in a card on a phone.
+ */
+const oneActionColumns = (action: TReqoreTableCellAction): IReqoreTableColumn[] => [
+  { dataId: 'name', header: { label: 'Name' }, width: 100, grow: 2 },
+  {
+    dataId: 'actions',
+    header: { label: 'Actions' },
+    width: 200,
+    cell: { padded: 'none', actions: () => [{ ...action, onClick: onTestConnectionClick }] },
+  },
+];
+
+const ONE_ACTION_TABLE_DATA = [{ name: 'orders-db' }, { name: 'billing-db' }, { name: 'audit-db' }];
+
+/** The widths the stories draw the table at: wide, then the widest and the narrowest where it folds. */
+const ONE_ACTION_TABLE_WIDTHS = [720, 480, NARROW_TABLE_WIDTH];
+
+const OneActionTables = (args: IReqoreTableProps) => (
+  <ReqoreControlGroup vertical gapSize='big'>
+    {ONE_ACTION_TABLE_WIDTHS.map((width) => (
+      <div key={width} className={`table-box-${width}`} style={{ width }}>
+        <ReqoreTable {...args} label={`${args.label} · ${width}px`} />
+      </div>
+    ))}
+  </ReqoreControlGroup>
+);
+
+/**
+ * Wide, each row's action says its label. Folded (480px and narrower), it says `folded`: whole, in sight
+ * inside its button, not cut to an ellipsis, in a column no wider than those words and the button's
+ * padding - narrower than it was. Its label is its accessible name and its tooltip, and a click runs it.
+ */
+const expectFoldedActionsSay = async (
+  canvasElement: HTMLElement,
+  label: string,
+  folded: string
+) => {
+  onTestConnectionClick.mockClear();
+  const buttonsIn = (width: number) =>
+    actionCells(canvasElement.querySelector(`.table-box-${width}`) as HTMLElement).map(
+      (cell) => cell.querySelector('.reqore-button') as HTMLElement
+    );
+  await waitFor(() => {
+    for (const width of ONE_ACTION_TABLE_WIDTHS) {
+      expect(buttonsIn(width)).toHaveLength(ONE_ACTION_TABLE_DATA.length);
+    }
+  });
+
+  // wide: the label, in the column's own width
+  const [wideButton] = buttonsIn(720);
+  for (const button of buttonsIn(720)) {
+    expect(buttonSays(button)).toBe(label);
+  }
+  const wideWidth = wideButton.getBoundingClientRect().width;
+
+  for (const width of [480, NARROW_TABLE_WIDTH]) {
+    const tableBox = (
+      canvasElement.querySelector(`.table-box-${width}`) as HTMLElement
+    ).getBoundingClientRect();
+    for (const button of buttonsIn(width)) {
+      await waitFor(() => expect(buttonSays(button)).toBe(folded));
+      const text = button.querySelector<HTMLElement>(
+        '.reqore-button-text-content:not([aria-hidden])'
+      ) as HTMLElement;
+      expect(text).toBeVisible();
+      const textBox = text.getBoundingClientRect();
+      const buttonBox = button.getBoundingClientRect();
+      expect(textBox.width).toBeGreaterThan(0);
+      expect(textBox.left).toBeGreaterThanOrEqual(buttonBox.left - 0.5);
+      expect(textBox.right).toBeLessThanOrEqual(buttonBox.right + 0.5);
+      // whole: not cut short to an ellipsis
+      expect(text.scrollWidth).toBeLessThanOrEqual(text.clientWidth);
+      // as wide as the words and the button's padding (and its 1px spacers, and 2px of rounding)
+      const style = getComputedStyle(button);
+      const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      expect(buttonBox.width).toBeLessThanOrEqual(textBox.width + padding + 4);
+      // the column folded: narrower than it was, and in sight inside the table
+      expect(buttonBox.width).toBeLessThan(wideWidth);
+      expect(buttonBox.right).toBeLessThanOrEqual(tableBox.right + 0.5);
+      expect(button).toHaveAccessibleName(label);
+    }
+  }
+
+  const [first] = buttonsIn(NARROW_TABLE_WIDTH);
+  if (folded !== label) {
+    // its tooltip is the label it does not say
+    await userEvent.hover(first);
+    await waitFor(() =>
+      expect(document.querySelector('.reqore-popover-content')).toHaveTextContent(label)
+    );
+  }
+  // and it runs
+  await userEvent.click(first);
+  await waitFor(() => expect(onTestConnectionClick).toHaveBeenCalledTimes(1));
+  await userEvent.unhover(first);
+  first.blur();
+};
+
+export const FoldedColumnSaysTheShortLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: `Renders a table of connections whose rows each have one action, Test the connection, with no icon and a short label, Test - in a 720px box, a 480px one (a phone's width, the widest where the actions column folds) and a ${NARROW_TABLE_WIDTH}px one (a card on a phone). In the 720px box the action says Test the connection. In the 480px and ${NARROW_TABLE_WIDTH}px boxes the column folds to the width of Test in its button, narrower than it was but not cut to an ellipsis; Test the connection is its accessible name and its tooltip.`,
+      },
+    },
+  },
+  args: {
+    label: 'Connections',
+    columns: oneActionColumns({ label: 'Test the connection', shortLabel: 'Test' }),
+    data: ONE_ACTION_TABLE_DATA,
+    height: 200,
+  },
+  render: (args) => <OneActionTables {...args} />,
+  play: async ({ canvasElement }) =>
+    expectFoldedActionsSay(canvasElement, 'Test the connection', 'Test'),
+};
+
+export const FoldedColumnSaysTheFullLabelWithoutAShortLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: `Renders the same table with an action that has no icon and no short label, Test the connection, in a 720px, a 480px and a ${NARROW_TABLE_WIDTH}px box. Folded, at 480px and ${NARROW_TABLE_WIDTH}px, it still says Test the connection, whole and beside the names: the column is as wide as the label in its button, a little narrower than it was, rather than the menu button's square that cut it to "T…". As it says its label, it needs no tooltip.`,
+      },
+    },
+  },
+  args: {
+    label: 'Connections',
+    columns: oneActionColumns({ label: 'Test the connection' }),
+    data: ONE_ACTION_TABLE_DATA,
+    height: 200,
+  },
+  render: (args) => <OneActionTables {...args} />,
+  play: async ({ canvasElement }) =>
+    expectFoldedActionsSay(canvasElement, 'Test the connection', 'Test the connection'),
 };
 
 /* A wide toolbar beside a long one-line description (qorus#646): the narrow bar's rule - the title
