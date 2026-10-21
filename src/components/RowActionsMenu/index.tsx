@@ -9,6 +9,7 @@ import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 import { IDropdownKeyboardControls, IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqorePanelSubAction } from '../Panel';
+import { hasRowActionLabel } from './hasRowActionLabel';
 
 /** What the menu button is called, for a screen reader and in its tooltip, where the host gives no word. */
 export const DEFAULT_ACTIONS_MENU_LABEL = 'Actions';
@@ -57,12 +58,7 @@ const tooltipText = (tooltip?: TReqoreTooltipProp): string | undefined => {
   return typeof tooltip?.content === 'string' ? tooltip.content || undefined : undefined;
 };
 
-/** Whether an action's `label` draws anything: not missing, empty or blank text, or a boolean. */
-export const hasRowActionLabel = (label: React.ReactNode): boolean =>
-  label !== undefined &&
-  label !== null &&
-  typeof label !== 'boolean' &&
-  !(typeof label === 'string' && !label.trim());
+export { hasRowActionLabel };
 
 /**
  * The words an action is called by where it has no room for its icon to speak for it - a menu row, a

@@ -10,6 +10,7 @@ import {
   ReqoreUIProvider,
 } from '../src';
 import { getCompactRowAction } from '../src/components/RowActionsMenu';
+import { SIZE_TO_PX } from '../src/constants/sizes';
 
 /*
  * A row-end action on a narrow screen uses a short label (qorus#646, David: "the button takes up too much space on
@@ -256,5 +257,133 @@ describe("a narrow table's folded column", () => {
     renderTable(900, { label: 'Test the connection', shortLabel: 'Test' });
 
     expect(says(cellButton())).toBe('Test the connection');
+  });
+});
+
+/*
+ * A folded column is as wide as what its cells draw (qorus#646): folded to the menu button's square, a
+ * short label was cut to "T…" - the cell's text read "Test" while the screen showed one letter. The
+ * table measures its words with the browser's text metrics, in a button drawn as the cell draws it, and
+ * folds the column to them plus what the button draws around them. Here every character is 7px wide to
+ * the canvas and to the measuring button, which draws 18px around its words.
+ */
+describe("a narrow table's folded column is as wide as what its cells say", () => {
+  const CHARACTER_PX = 7;
+  const AROUND_PX = 18;
+  const UNFOLDED_PX = 200;
+  const original = Element.prototype.getBoundingClientRect;
+
+  const wordsOf = (element: Element) =>
+    (element.closest('.reqore-button')?.querySelector('.reqore-button-text-content')?.textContent ??
+      '') as string;
+
+  beforeEach(() => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(
+      () =>
+        ({
+          font: '',
+          measureText: (text: string) => ({ width: text.length * CHARACTER_PX }),
+        }) as unknown as CanvasRenderingContext2D
+    );
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: Element
+    ) {
+      if (!this.closest('.reqore-table-folded-probe')) {
+        return original.call(this);
+      }
+      const words = wordsOf(this).length * CHARACTER_PX;
+      const width = this.classList.contains('reqore-button') ? words + AROUND_PX : words;
+
+      return { x: 0, y: 0, top: 0, left: 0, bottom: 0, right: width, width, height: 0 } as DOMRect;
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const renderTable = (width: number, action: Record<string, unknown>) =>
+    act(() => {
+      renderIn(
+        width,
+        <ReqoreTable
+          columns={[
+            { dataId: 'name', header: { label: 'Name' }, width: 200 },
+            {
+              dataId: 'actions',
+              header: { label: 'Actions' },
+              width: UNFOLDED_PX,
+              cell: { actions: () => [action as any] },
+            },
+          ]}
+          data={[{ name: 'orders-db' }, { name: 'billing-db' }]}
+          fill
+        />
+      );
+    });
+
+  const cells = () =>
+    Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '.reqore-table-row [data-reqore-table-column-id="actions"]'
+      )
+    );
+  /** The width the table draws the column's cells at. */
+  const cellWidths = () => cells().map((cell) => parseFloat(getComputedStyle(cell).width));
+  /** What its words need: their width, what the button draws around them, the 1px rounding slack. */
+  const needs = (text: string) => Math.ceil(text.length * CHARACTER_PX + AROUND_PX + 1);
+
+  test('a short label: the column is as wide as its words and their button, not the square', () => {
+    renderTable(400, { label: 'Test the connection', shortLabel: 'Test' });
+
+    expect(cells().map((cell) => says(cell.querySelector('.reqore-button')))).toEqual([
+      'Test',
+      'Test',
+    ]);
+    expect(cellWidths()).toEqual([needs('Test'), needs('Test')]);
+    // the words fit the cell: their width and what the button draws around them
+    for (const width of cellWidths()) {
+      expect(width).toBeGreaterThanOrEqual('Test'.length * CHARACTER_PX + AROUND_PX);
+      expect(width).toBeGreaterThan(SIZE_TO_PX.normal);
+    }
+  });
+
+  test('no short label: the column keeps the whole label, narrower than it was', () => {
+    renderTable(400, { label: 'Test the connection' });
+
+    expect(says(cells()[0].querySelector('.reqore-button'))).toBe('Test the connection');
+    expect(cellWidths()).toEqual([needs('Test the connection'), needs('Test the connection')]);
+    expect(needs('Test the connection')).toBeLessThan(UNFOLDED_PX);
+  });
+
+  test('never wider than the column was', () => {
+    const label = 'Test the connection to the primary database';
+    renderTable(400, { label });
+
+    expect(needs(label)).toBeGreaterThan(UNFOLDED_PX);
+    expect(cellWidths()).toEqual([UNFOLDED_PX, UNFOLDED_PX]);
+  });
+
+  test('an action with an icon is its icon alone, in the square, as before', () => {
+    renderTable(400, { label: 'Test the connection', shortLabel: 'Test', icon: 'PulseLine' });
+
+    expect(says(cells()[0].querySelector('.reqore-button'))).toBe('');
+    expect(cellWidths()).toEqual([SIZE_TO_PX.normal, SIZE_TO_PX.normal]);
+  });
+
+  test('words that cannot be measured keep the column its width: never cut', () => {
+    vi.mocked(HTMLCanvasElement.prototype.getContext).mockReturnValue(null);
+    renderTable(400, { label: 'Test the connection', shortLabel: 'Test' });
+
+    expect(says(cells()[0].querySelector('.reqore-button'))).toBe('Test');
+    expect(cellWidths()).toEqual([UNFOLDED_PX, UNFOLDED_PX]);
+  });
+
+  test('wide, nothing folds and nothing is measured', () => {
+    renderTable(900, { label: 'Test the connection', shortLabel: 'Test' });
+
+    expect(says(cells()[0].querySelector('.reqore-button'))).toBe('Test the connection');
+    expect(document.querySelector('.reqore-table-folded-probe')).toBeNull();
+    expect(cellWidths()).toEqual([UNFOLDED_PX, UNFOLDED_PX]);
   });
 });

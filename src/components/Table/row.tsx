@@ -365,12 +365,13 @@ const ReqoreTableRow = memo(
             >
               {(actions ?? cell.actions(data)).map(({ label, shortLabel, ...action }, index) => {
                 /* An action's label is drawn in its button, as a button's is. Only where the
-                   column is folded to the menu button's width (a narrow table, a row with one
-                   action) does an action with an icon show the icon alone: its label is then its
+                   column is folded (a narrow table, a row with one action) does an action with an
+                   icon show the icon alone, in the menu button's square: its label is then its
                    tooltip, unless it has one. A button that draws no label is named by its label
                    or tooltip text, which a screen reader would not read from the icon. Folded, an
                    action with no icon says its short label where it has one, its label then its
-                   tooltip and its name (`getCompactRowAction`, qorus#646). */
+                   tooltip and its name (`getCompactRowAction`, qorus#646), and the column is as
+                   wide as those words (`getFoldedActionText`, `useFoldedActionWidths`). */
                 const drawLabel = hasRowActionLabel(label) && !(folded && action.icon);
                 const compact =
                   folded && !action.icon && shortLabel?.trim()
