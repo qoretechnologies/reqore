@@ -992,10 +992,10 @@ export const LoneActionSpansTheRowOnAPhone: Story = {
   },
 };
 
-/* Rows of one action each, with a short label, with an icon and a tooltip but no short label, and with neither.
+/* Rows of one action each: with a short label, with an icon and a tooltip but no short label, and with neither.
    An entity row is narrow only where its container is a phone's width or narrower, where its one action is a line
-   of its own under the label, saying its label: it draws a short label nowhere (qorus#646). */
-const SHORT_LABEL_ROWS: Array<Pick<IReqoreEntityRowProps, 'label' | 'actions'>> = [
+   of its own under the label, the row's width, saying its full label: it draws a short label nowhere (qorus#646). */
+const ONE_ACTION_ROWS: Array<Pick<IReqoreEntityRowProps, 'label' | 'actions'>> = [
   {
     label: 'orders-db · PostgreSQL',
     actions: NARROW_CONNECTION_ACTIONS.slice(0, 1),
@@ -1017,7 +1017,7 @@ const SHORT_LABEL_ROWS: Array<Pick<IReqoreEntityRowProps, 'label' | 'actions'>> 
   },
 ];
 
-const ShortLabelRows = () => (
+const OneActionRows = () => (
   <ReqoreControlGroup vertical gapSize='big'>
     {[720, 400].map((width) => (
       <StoryRowBox
@@ -1027,7 +1027,7 @@ const ShortLabelRows = () => (
         caption={`A ${width}px container: one action each`}
       >
         <ReqoreControlGroup vertical fluid>
-          {SHORT_LABEL_ROWS.map(({ label, actions }, index) => (
+          {ONE_ACTION_ROWS.map(({ label, actions }, index) => (
             <ReqoreEntityRow
               key={index}
               label={label}
@@ -1043,16 +1043,16 @@ const ShortLabelRows = () => (
   </ReqoreControlGroup>
 );
 
-export const NarrowContainerLoneActionShortLabel: Story = {
+export const NarrowContainerLoneActionSpansTheRowWithItsFullLabel: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          "Renders three rows (`narrowActions='menu'`), each with one action, in a 720px container and a 400px one. Wide, each action says its label: Test the connection, Open its settings, Run. In the 400px container, a phone's width or narrower, each goes under the label on a line of its own, the row's width, and says its label too: an entity row is narrow only at a phone's width, so it draws its actions' short labels nowhere (a severity row draws them in a container between 480 and 640px).",
+          "Renders three rows (`narrowActions='menu'`), each with one action - Test the connection, which has a short label (Test); Open its settings, which has an icon and a tooltip; and Run, which has neither - in a 720px container and a 400px one. In the 720px container each action is at the end of the row, beside the label, as wide as its label. In the 400px container, a phone's width or narrower, each goes under the label, on a line of its own the row's width, and says its full label: not its short label, not its icon alone. An entity row is narrow only at a phone's width, so it draws its actions' short labels nowhere (a severity row draws them in a container between 480 and 640px).",
       },
     },
   },
-  render: () => <ShortLabelRows />,
+  render: () => <OneActionRows />,
   play: async ({ canvasElement }) => {
     const rowsIn = (box: string) =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>(`.${box} .reqore-entity-row`));
@@ -1060,12 +1060,14 @@ export const NarrowContainerLoneActionShortLabel: Story = {
       expect(
         rowsIn('narrow-row-box').every((row) => row.getAttribute('data-narrow') === 'true')
       ).toBe(true);
-      expect(rowsIn('narrow-row-box')).toHaveLength(SHORT_LABEL_ROWS.length);
+      expect(rowsIn('narrow-row-box')).toHaveLength(ONE_ACTION_ROWS.length);
     });
+    // the first row's action has a short label it could say: the story shows it is not said
+    expect(ONE_ACTION_ROWS[0].actions![0].shortLabel).toBe('Test');
 
     const wide = rowsIn('wide-row-box');
     const narrow = rowsIn('narrow-row-box');
-    for (const [index, { actions }] of SHORT_LABEL_ROWS.entries()) {
+    for (const [index, { actions }] of ONE_ACTION_ROWS.entries()) {
       const wideButton = wide[index].querySelector<HTMLElement>(
         '.reqore-entity-row-actions .reqore-button'
       )!;
@@ -1073,10 +1075,19 @@ export const NarrowContainerLoneActionShortLabel: Story = {
         '.reqore-entity-row-actions .reqore-button'
       )!;
       expect(wide[index].getAttribute('data-narrow')).toBeNull();
+      expect(rowContainerIsPhoneWidth(wide[index])).toBe(false);
+      // wide: at the end of the row, beside the label, as wide as its label
+      const wideLabel = (
+        wide[index].querySelector('.reqore-entity-row-label') as HTMLElement
+      ).getBoundingClientRect();
+      const wideBox = wideButton.getBoundingClientRect();
+      expect(wideBox.left).toBeGreaterThanOrEqual(wideLabel.right - 0.5);
+      expect(wideBox.width).toBeLessThan(wide[index].getBoundingClientRect().width / 3);
       expect(buttonSays(wideButton)).toBe(actions![0].label);
+      // narrow: under the label, the row's width, its full label
+      await expectLoneActionSpansTheRow(narrow[index], 'entity');
       expect(buttonSays(narrowButton)).toBe(actions![0].label);
       expect(narrowButton).toHaveAccessibleName(actions![0].label as string);
-      await expectLoneActionSpansTheRow(narrow[index], 'entity');
     }
     expectRowsFillTheirBoxes(canvasElement, '.reqore-entity-row');
   },
