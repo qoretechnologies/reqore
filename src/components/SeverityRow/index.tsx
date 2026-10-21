@@ -382,7 +382,8 @@ const ReqoreSeverityRow = memo(
       /* Narrow, a row that folds two or more into a menu keeps its one action where the menu would be - only
          while its container is wider than a phone. As narrow as a phone, the action goes under the label and
          spans the row like any lone action there (David and Foxhoundn, qorus#646). */
-      const loneActionAtLineEnd = isNarrow && !isPhoneWidth && narrowActions === 'menu' && loneAction;
+      const loneActionAtLineEnd =
+        isNarrow && !isPhoneWidth && narrowActions === 'menu' && loneAction;
       /* Stacked (the default), one to a line, only where the container is a phone's width or narrower. Narrow
          but wider than a phone, they sit side by side under the label at their labels' widths, onto another line
          only where they do not fit, as with `'row'`: actions that answer one callout belong together (Foxhoundn:
