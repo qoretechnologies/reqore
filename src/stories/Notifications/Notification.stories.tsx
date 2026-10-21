@@ -92,6 +92,48 @@ export const Surfaces: Story = {
   },
 };
 
+export const Inline: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A notification that sits in the page rather than over it: `lift={false}` keeps the glass, the icon tile, the ring and the raised edge and throws no drop shadow and no coloured light, so a card in a ticket thread or a banner in a panel does not hover, and a stack of them does not pile up glows. Every intent, lifted beside inline, long form and compact.',
+      },
+    },
+  },
+  render: () => (
+    <Grid columns={2}>
+      {SAMPLES.map((sample) => (
+        <Row key={sample.key} label={`${sample.intent ?? 'no intent'} · lifted (default)`}>
+          <ReqoreNotification {...STATIC} duration={90000} {...sampleProps(sample)} />
+          <ReqoreNotification {...STATIC} {...sampleProps(sample, true)} />
+        </Row>
+      ))}
+      {SAMPLES.map((sample) => (
+        <Row key={`${sample.key}-inline`} label={`${sample.intent ?? 'no intent'} · lift false`}>
+          <ReqoreNotification {...STATIC} duration={90000} {...sampleProps(sample)} lift={false} />
+          <ReqoreNotification {...STATIC} {...sampleProps(sample, true)} lift={false} />
+        </Row>
+      ))}
+    </Grid>
+  ),
+  play: async () => {
+    await waitFor(() => expect(countNotifications()).toBe(SAMPLES.length * 4));
+    const all = Array.from(document.querySelectorAll<HTMLElement>('.reqore-notification'));
+    const lifted = all.slice(0, SAMPLES.length * 2);
+    const inline = all.slice(SAMPLES.length * 2);
+    for (const el of lifted) {
+      expect(getComputedStyle(el).boxShadow).toContain('0px 2px 6px -1px');
+    }
+    for (const el of inline) {
+      const shadow = getComputedStyle(el).boxShadow;
+      expect(shadow).not.toContain('0px 2px 6px -1px');
+      expect(shadow).not.toContain('0px 18px 36px -12px');
+      expect(shadow).toContain('inset');
+    }
+  },
+};
+
 export const Content: Story = {
   parameters: {
     docs: {
