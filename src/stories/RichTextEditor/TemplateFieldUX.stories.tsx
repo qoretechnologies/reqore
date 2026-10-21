@@ -618,7 +618,36 @@ const expectTheListOpensBelowTheFieldInView = async (
     await expect(drawnBottom(list)).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
     await expect(rect.height).toBeGreaterThan(90);
   });
+  await expectTheListKeepsItsFrame(doc);
 };
+
+/**
+ * The list keeps its frame, and scrolls in one place (qorus#646, Foxhoundn on build #412: "Where is the bottom border
+ * of the popover?"). Capped to the room below the field, the surface scrolled its whole content: the list's panel stayed
+ * as tall as it was (382px in a 297px surface), its bottom border scrolled out of sight under the surface's edge, and
+ * its rows scrolled inside that again. The panel is held to the cap instead: its whole frame, bottom border included,
+ * is inside the surface and the window, and only its rows scroll.
+ */
+const expectTheListKeepsItsFrame = async (doc: Document) =>
+  waitFor(async () => {
+    const list = requiredElement('.reqore-popover-content', 'the list, which stays open,', doc);
+    const panel = requiredElement('.reqore-panel', "the list's panel", list);
+    const surface = panel.parentElement as HTMLElement;
+    const frame = panel.getBoundingClientRect();
+    // its whole frame, the bottom border included, inside what shows it and inside the window
+    await expect(frame.bottom).toBeLessThanOrEqual(surface.getBoundingClientRect().bottom + 0.5);
+    await expect(frame.bottom).toBeLessThanOrEqual(doc.documentElement.clientHeight + 0.5);
+    await expect(getComputedStyle(panel).borderBottomWidth).not.toBe('0px');
+    // one place scrolls: the rows
+    const view = doc.defaultView ?? window;
+    const scrolling = [list, ...Array.from(list.querySelectorAll<HTMLElement>('*'))].filter(
+      (element) =>
+        /(auto|scroll)/.test(view.getComputedStyle(element).overflowY) &&
+        element.scrollHeight > element.clientHeight + 1
+    );
+    await expect(scrolling.map((element) => element.className.toString())).toHaveLength(1);
+    await expect(scrolling[0]).toHaveClass('reqore-menu');
+  });
 
 /**
  * The window made shorter while the list is open - a phone turned, its keyboard coming up, a window resized: the list
@@ -636,6 +665,7 @@ const expectTheListFollowsAShorterWindow = async (doc: Document, width: number, 
       await expect(drawnBottom(list)).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
       await expect(list.getBoundingClientRect().height).toBeGreaterThan(90);
     });
+    await expectTheListKeepsItsFrame(doc);
   });
 };
 

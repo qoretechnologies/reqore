@@ -212,15 +212,32 @@ export const StyledPopoverContent = styled.div<{ $capped?: boolean }>`
   overflow: hidden;
 
   /* A surface with a height cap (maxHeight, or the room held below its target) keeps what it holds inside the
-     cap and scrolls it there. The cap was on the surface alone, and the content - 100% of a height the surface
-     never sets - kept its own: a 382px list in a surface capped at 297px ran off the bottom of the window,
-     past the surface's edge (qorus#646). The arrow is drawn outside the surface, so the surface itself does
-     not clip. (No backticks in here: this comment lives inside a template literal.) */
+     cap. The cap was on the surface alone, and the content - 100% of a height the surface never sets - kept
+     its own: a 382px list in a surface capped at 297px ran off the bottom of the window, past the surface's
+     edge (qorus#646). The arrow is drawn outside the surface, so the surface itself does not clip.
+     What can scroll its own content - a panel (its body scrolls) or a menu - is held to the cap: it shrinks
+     to it and keeps its whole frame, its bottom border too, and only its own content scrolls. Scrolling the
+     whole surface instead left the panel as tall as before, its bottom border scrolled out of sight under the
+     surface's edge, and its rows scrolling inside that again (Foxhoundn on qorus#646). Anything else keeps
+     its height, and the surface scrolls it, as before.
+     (No backticks in here: this comment lives inside a template literal.) */
   ${({ $capped }) =>
     $capped &&
     css`
+      display: flex;
+      flex-direction: column;
       max-height: inherit;
       overflow-y: auto;
+
+      > * {
+        flex-shrink: 0;
+      }
+
+      > .reqore-panel,
+      > .reqore-menu {
+        flex-shrink: 1;
+        min-height: 0;
+      }
     `}
 `;
 
