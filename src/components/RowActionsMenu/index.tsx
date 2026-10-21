@@ -17,14 +17,18 @@ export const DEFAULT_ACTIONS_MENU_LABEL = 'Actions';
  * How a row shows two or more actions where it is narrow.
  * - `'row'`: under the label, a row of buttons each as wide as what it says, onto another line where they do
  *   not fit. Every action stays in sight as it is at full width.
- * - `'stack'`: under the label, one to a line, its label whole: each the row's width on a phone, and as wide
- *   as its label on a wider screen (a control spans its row only on a phone). For a callout whose actions
- *   are what it is there for ("Try again"), which a menu would hide.
+ * - `'stack'`: under the label, one to a line, its label whole: each the row's width where the row's container
+ *   is a phone's width or narrower (on a phone, or as narrow a container on any screen), and as wide as its
+ *   label in a wider one. For a callout whose actions are what it is there for ("Try again"), which a menu
+ *   would hide.
  * - `'menu'`: one menu button, at the end of the label's line, opening a menu that names each action.
  *   The content keeps its width, and a list of rows does not grow by a line per action. Opted into, never a
- *   row's default: it hides what a row offers behind a button (qorus#646, Foxhoundn). An entity row or a
- *   severity row of this mode with one action keeps it as a button there, at the end of the label's line
- *   (David, qorus#646).
+ *   row's default: it hides what a row offers behind a button (qorus#646, Foxhoundn). A row of this mode
+ *   with one action keeps it as a button there, at the end of the label's line, while its container is
+ *   wider than a phone.
+ *
+ * In every mode, a lone action under the label is the row's width where the container is a phone's width or
+ * narrower: the easiest target there is (Fitts's law; David and Foxhoundn, qorus#646).
  */
 export type TReqoreNarrowRowActions = 'row' | 'stack' | 'menu';
 
@@ -83,8 +87,9 @@ export const getRowActionLabel = (action: {
 export interface IReqoreRowActionShortLabel {
   /**
    * What the action says where reqore draws it compactly, on a line it shares with the row's label: the one
-   * action of a narrow `narrowActions='menu'` row (`ReqoreEntityRow`, `ReqoreSeverityRow`) and a narrow table's
-   * folded column - `'Test'` for `'Test the connection'`. Its label is then its tooltip (unless it has one) and
+   * action of a narrow `narrowActions='menu'` row whose container is wider than a phone (`ReqoreSeverityRow`
+   * between 480 and 640px; an entity row is narrow only at a phone's width, where the action goes under its
+   * label) and a narrow table's folded column - `'Test'` for `'Test the connection'`. Its label is then its tooltip (unless it has one) and
    * its accessible name (unless it has one), so write it as words of its label: what a screen reader says holds
    * what is seen. Wide, and on a line of its own (stacked, or in a row under the label), the action says its
    * label.

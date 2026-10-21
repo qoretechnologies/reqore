@@ -537,7 +537,7 @@ test('Keeps every action inline in a wide container, and a single one a button w
   expect(document.querySelectorAll('.reqore-row-actions-menu-button')).toHaveLength(0);
 });
 
-test('With narrowActions="menu", keeps one action a button at the end of the label\'s line (data-actions="end")', () => {
+test('With narrowActions="menu" in a container wider than a phone, keeps one action a button at the end of the label\'s line (data-actions="end")', () => {
   renderMeasured(600, { actions: [{ label: 'Investigate' }], narrowActions: 'menu' });
 
   const row = document.querySelector('.reqore-severity-row')!;
@@ -551,7 +551,7 @@ test('With narrowActions="menu", keeps one action a button at the end of the lab
 
   // an icon-only action stays its icon, as at full width and as the menu button is: it is not stacked, so its
   // tooltip is not written out as its label
-  renderMeasured(400, {
+  renderMeasured(560, {
     actions: [{ icon: 'CloseLine', tooltip: 'Dismiss' }],
     narrowActions: 'menu',
   });
@@ -560,6 +560,21 @@ test('With narrowActions="menu", keeps one action a button at the end of the lab
   expect(
     iconOnly.querySelector('.reqore-severity-row-actions .reqore-button')?.textContent
   ).not.toContain('Dismiss');
+});
+
+test('With narrowActions="menu" in a container a phone\'s width or narrower, puts one action under the label, written out', () => {
+  // as narrow as a phone, the one action is a line of its own (the row's width, checked in the stories): Fitts's law
+  renderMeasured(400, {
+    actions: [{ icon: 'CloseLine', tooltip: 'Dismiss' }],
+    narrowActions: 'menu',
+  });
+
+  const row = document.querySelector('.reqore-severity-row')!;
+  expect(row.getAttribute('data-narrow')).toBe('true');
+  expect(row.getAttribute('data-actions')).toBe('stack');
+  expect(row.querySelector('.reqore-severity-row-actions .reqore-button')?.textContent).toContain(
+    'Dismiss'
+  );
 });
 
 test('Leaves one action as it was by default, with "stack" and with "row", and wide with "menu"', () => {

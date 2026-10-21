@@ -497,7 +497,7 @@ export const FoldedTrailOpensAtATap: Story = {
     docs: {
       description: {
         story:
-          'Renders two chat trails in a phone\'s header (390 px). In the first the 150px header is so narrow that the whole trail folds into one dropdown labelled with the current chat, its name cut; in the second the chat fits and its ancestors fold into the "…" menu. Both are menu buttons that say whether they are open. A finger taps each: the folded current crumb opens its menu, which names the chat in full and offers "Back to chats", which a tap then reaches, and the "…" menu opens and its "Back to chats" is reached by a tap too.',
+          'Renders two chat trails in a phone\'s header (390 px). In the first the 150px header is so narrow that the whole trail folds into one dropdown labelled with the current chat, its name cut; in the second the chat fits and its ancestors fold into the "…" menu. Both are menu buttons that say whether they are open. A finger taps each: the folded current crumb opens its menu, which names the chat in full and offers "Back to chats", which a tap then reaches, and the "…" menu opens and its "Back to chats" is reached by a tap too. It ends with the folded current crumb\'s menu open again: Workspace, "Back to chats" and the chat named in full.',
       },
     },
   },
@@ -572,6 +572,18 @@ export const FoldedTrailOpensAtATap: Story = {
       await waitFor(() => expect(more).toHaveAttribute('aria-expanded', 'false'));
       // only "Back to chats" was chosen
       await expect(onWorkspace).not.toHaveBeenCalled();
+
+      // the frame: the folded current crumb's menu open again, with "Back to chats" and the chat named in full
+      await touch.tap(current);
+      await waitFor(() =>
+        expect(openMenuRows().map((row) => row.textContent)).toEqual(
+          expect.arrayContaining([
+            expect.stringContaining('Back to chats'),
+            expect.stringContaining('Invoice sync for the northern region'),
+          ])
+        )
+      );
+      await expect(current).toHaveAttribute('aria-expanded', 'true');
     });
   },
 };

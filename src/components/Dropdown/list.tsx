@@ -1,6 +1,6 @@
 import { TReqoreFilterRanking, asSearchText, rankByQuery } from '../../helpers/search';
 import { size } from 'lodash';
-import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IReqoreDropdownProps } from '.';
 import { TReqorePaginationType } from '../../constants/paging';
 import { ReqorePaginationContainer } from '../../containers/Paging';
@@ -426,6 +426,25 @@ const ReqoreDropdownList = memo(
     // list of the level above it, which kept its own listener: each key was handled twice,
     // and Enter in an opened level also selected the row the level above had highlighted.
     const showsItsOwnRows = !currentSelectedItem;
+
+    /* Back at this level from the level it showed, the row that level came from is highlighted, as the
+       keys left it: the right arrow opens it again and Enter acts on it. Opening it cleared the
+       highlight, and it showed again on the way back only while this level also heard the keys pressed
+       in the level it showed (qorus#646, Foxhoundn). The same holds for a lone row the list opened by
+       itself. */
+    const levelItShowed = useRef<IReqoreDropdownItem | undefined>(undefined);
+    useEffect(() => {
+      const cameFrom = levelItShowed.current;
+      levelItShowed.current = currentSelectedItem;
+      if (!cameFrom || currentSelectedItem) {
+        return;
+      }
+      const index = selectableItems.findIndex(
+        (item) =>
+          item === cameFrom || (item.value === cameFrom.value && item.label === cameFrom.label)
+      );
+      setFocusedItemIndex(index === -1 ? null : index);
+    }, [currentSelectedItem, selectableItems]);
 
     useEffect(() => {
       if (!keyboardNavigation || !showsItsOwnRows) {
