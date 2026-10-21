@@ -338,13 +338,13 @@ export const getActionsMenuColumnIds = (
 export const getFoldedActionText = (
   actions: TReqoreTableCellAction[] | undefined
 ): ReactNode | undefined => {
-  if (actions?.length !== 1 || actions[0].icon) {
+  const [action, ...others] = actions ?? [];
+
+  if (!action || others.length || action.icon) {
     return undefined;
   }
 
-  const [{ label, shortLabel }] = actions;
-
-  return shortLabel?.trim() || (hasRowActionLabel(label) ? label : undefined);
+  return action.shortLabel?.trim() || (hasRowActionLabel(action.label) ? action.label : undefined);
 };
 
 /**

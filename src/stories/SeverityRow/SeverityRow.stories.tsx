@@ -21,6 +21,7 @@ import {
   StoryRowBox,
 } from '../utils/rowBoxes';
 import { buttonSays } from '../utils/buttonSays';
+import { requiredElement } from '../utils/required';
 import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import { withViewport } from '../utils/viewport';
 
@@ -1184,7 +1185,11 @@ const expectActionsSideBySide = async (root: ParentNode, lines: number) => {
   expect(rowContainerIsPhoneWidth(row)).toBe(false);
   await expectControlsInside(row);
   await waitFor(() => {
-    const column = row.querySelector('.reqore-severity-row-actions')!.getBoundingClientRect();
+    const column = requiredElement(
+      '.reqore-severity-row-actions',
+      "the row's actions",
+      row
+    ).getBoundingClientRect();
     const buttons = stackedActions(row);
     expect(actionLines(row)).toBe(lines);
     // fewer lines than actions: side by side, not one to a line
@@ -1236,9 +1241,15 @@ export const ActionsKeepTheirWidthJustWiderThanAPhone: Story = {
     </ReqoreControlGroup>
   ),
   play: async ({ canvasElement }) => {
-    await expectActionsSideBySide(canvasElement.querySelector('.side-by-side-box')!, 1);
-    await expectActionsSideBySide(canvasElement.querySelector('.wrapping-box')!, 2);
-    await expectActionsStacked(canvasElement.querySelector('.stacked-box')!);
+    await expectActionsSideBySide(
+      requiredElement('.side-by-side-box', 'the 560px box', canvasElement),
+      1
+    );
+    await expectActionsSideBySide(
+      requiredElement('.wrapping-box', 'the 500px box', canvasElement),
+      2
+    );
+    await expectActionsStacked(requiredElement('.stacked-box', 'the 480px box', canvasElement));
     expectRowsFillTheirBoxes(canvasElement, '.reqore-severity-row');
   },
 };

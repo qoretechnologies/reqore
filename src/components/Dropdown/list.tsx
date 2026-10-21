@@ -52,6 +52,12 @@ export interface IDropdownKeyboardControls {
   focusedItemId: string | null;
 }
 
+/**
+ * The list's own style: it may shrink in its panel's column (qorus#646). One object for every render, as the control
+ * group it is handed to is memoised (a new object each render would draw it again for nothing).
+ */
+const SHRINKABLE_LIST_STYLE: React.CSSProperties = { minHeight: 0 };
+
 export interface IReqoreDropdownListProps
   extends IReqoreComponent,
     Pick<IReqoreDropdownProps, 'customElements'>,
@@ -588,7 +594,7 @@ const ReqoreDropdownList = memo(
     return (
       // In a popover held to the room below its field, the list shrinks to it (min-height 0 in the panel's
       // column) and its rows, the menu, take what its search and tags leave: one place scrolls (qorus#646).
-      <ReqoreControlGroup vertical fluid style={{ minHeight: 0 }}>
+      <ReqoreControlGroup vertical fluid style={SHRINKABLE_LIST_STYLE}>
         {/* An array prop: keyed here, so a caller passing elements without keys draws no warning.
             `toArray` keeps the keys a caller gave rather than putting keys by position over them,
             and takes a single node too, which `map` threw on. */}

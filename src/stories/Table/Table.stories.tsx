@@ -50,6 +50,7 @@ import {
   stickyHeaderOf,
 } from '../utils/stickyStacking';
 import { buttonSays } from '../utils/buttonSays';
+import { requiredElement } from '../utils/required';
 import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import { withViewport } from '../utils/viewport';
 
@@ -3025,8 +3026,8 @@ const expectFoldedActionsSay = async (
 ) => {
   onTestConnectionClick.mockClear();
   const buttonsIn = (width: number) =>
-    actionCells(canvasElement.querySelector(`.table-box-${width}`) as HTMLElement).map(
-      (cell) => cell.querySelector('.reqore-button') as HTMLElement
+    actionCells(requiredElement(`.table-box-${width}`, `the ${width}px box`, canvasElement)).map(
+      (cell) => requiredElement('.reqore-button', "the cell's action", cell)
     );
   await waitFor(() => {
     for (const width of ONE_ACTION_TABLE_WIDTHS) {
@@ -3042,8 +3043,10 @@ const expectFoldedActionsSay = async (
   const wideWidth = wideButton.getBoundingClientRect().width;
 
   for (const width of [480, NARROW_TABLE_WIDTH]) {
-    const tableBox = (
-      canvasElement.querySelector(`.table-box-${width}`) as HTMLElement
+    const tableBox = requiredElement(
+      `.table-box-${width}`,
+      `the ${width}px box`,
+      canvasElement
     ).getBoundingClientRect();
     for (const button of buttonsIn(width)) {
       await waitFor(() => expect(buttonSays(button)).toBe(folded));

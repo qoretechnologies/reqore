@@ -387,9 +387,9 @@ const ReqoreSeverityRow = memo(
       /* Stacked (the default), one to a line, only where the container is a phone's width or narrower. Narrow
          but wider than a phone, they sit side by side under the label at their labels' widths, onto another line
          only where they do not fit, as with `'row'`: actions that answer one callout belong together (Foxhoundn:
-         the law of proximity; David, qorus#646). */
-      const actionsStacked =
-        isNarrow && isPhoneWidth && narrowActions !== 'row' && !loneActionAtLineEnd;
+         the law of proximity; David, qorus#646). A lone action at the end of the label's line is never stacked:
+         it is there only while the container is wider than a phone. */
+      const actionsStacked = isNarrow && isPhoneWidth && narrowActions !== 'row';
       /* Under the label, stacked actions and a lone action are the row's width where the row's container is a
          phone's width or narrower - on a phone, or in as narrow a container on any screen - where a full-width
          row is the easiest target there is (Fitts's law). In a container wider than a phone, each is as wide as
