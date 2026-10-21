@@ -503,7 +503,8 @@ const ReqoreEntityRow = memo(
       /* Narrow, a row that folds two or more into a menu keeps its one action where the menu would be - only
          while its container is wider than a phone. As narrow as a phone, the action goes under the label and
          spans the row like any lone action there (David and Foxhoundn, qorus#646). */
-      const loneActionAtLineEnd = isNarrow && !isPhoneWidth && narrowActions === 'menu' && loneAction;
+      const loneActionAtLineEnd =
+        isNarrow && !isPhoneWidth && narrowActions === 'menu' && loneAction;
       // Narrow and stacked: one to a line. Otherwise narrow, they are a row of buttons under the label.
       const actionsStacked = isNarrow && narrowActions === 'stack';
       /* Under the label, stacked actions and a lone action are the row's width where the row's container is a

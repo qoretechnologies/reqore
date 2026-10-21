@@ -515,14 +515,23 @@ test('Folds two or more actions into one menu button below 640px of its containe
   expect(buttons[0].getAttribute('aria-label')).toBe('Actions: Issue');
 });
 
-test('Keeps a callout\'s actions in sight, stacked, by default and with narrowActions="stack"', () => {
+test('Keeps a callout\'s actions in sight by default and with narrowActions="stack": side by side above a phone\'s width, stacked at it', () => {
   for (const props of [{}, { narrowActions: 'stack' as const }]) {
+    // narrow but wider than a phone: side by side under the label, wrapping where they do not fit (Foxhoundn:
+    // law of proximity; David, qorus#646)
     renderMeasured(600, { actions: TWO_ACTIONS, ...props });
 
     const row = document.querySelector('.reqore-severity-row')!;
-    expect(row.getAttribute('data-actions')).toBe('stack');
+    expect(row.getAttribute('data-actions')).toBe('row');
     expect(document.querySelectorAll('.reqore-row-actions-menu-button')).toHaveLength(0);
     expect(row.querySelectorAll('.reqore-severity-row-actions .reqore-button')).toHaveLength(2);
+    cleanup();
+
+    // as narrow as a phone (480px, the breakpoint itself): stacked, one to a line
+    renderMeasured(480, { actions: TWO_ACTIONS, ...props });
+    expect(document.querySelector('.reqore-severity-row')!.getAttribute('data-actions')).toBe(
+      'stack'
+    );
     cleanup();
   }
 });
@@ -578,12 +587,17 @@ test('With narrowActions="menu" in a container a phone\'s width or narrower, put
 });
 
 test('Leaves one action as it was by default, with "stack" and with "row", and wide with "menu"', () => {
-  for (const [props, expected] of [
-    [{}, 'stack'],
-    [{ narrowActions: 'stack' as const }, 'stack'],
-    [{ narrowActions: 'row' as const }, 'row'],
+  for (const [width, props, expected] of [
+    // wider than a phone: under the label in a row, in every mode but 'menu'
+    [600, {}, 'row'],
+    [600, { narrowActions: 'stack' as const }, 'row'],
+    [600, { narrowActions: 'row' as const }, 'row'],
+    // a phone's width: a line of its own with 'stack', the default
+    [400, {}, 'stack'],
+    [400, { narrowActions: 'stack' as const }, 'stack'],
+    [400, { narrowActions: 'row' as const }, 'row'],
   ] as const) {
-    renderMeasured(600, { actions: [{ icon: 'CloseLine', tooltip: 'Dismiss' }], ...props });
+    renderMeasured(width, { actions: [{ icon: 'CloseLine', tooltip: 'Dismiss' }], ...props });
     const row = document.querySelector('.reqore-severity-row')!;
     expect(row.getAttribute('data-actions')).toBe(expected);
     cleanup();

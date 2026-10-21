@@ -76,9 +76,10 @@ export interface IReqoreSeverityRowProps
   actions?: IReqoreSeverityRowAction[];
   /**
    * How two or more actions are shown when the row is narrow (below 640px of its container):
-   * `'stack'` (default) puts them under the label, one to a line - each the row's width where the container
-   * is a phone's width or narrower (480px), as wide as its label in a wider one - a severity row is a callout,
-   * and its actions (Investigate, Try again) are the response it asks for, so they stay in sight; `'row'`
+   * `'stack'` (default) keeps them under the label: side by side, each as wide as its label and onto another
+   * line only where they do not fit, while the container is wider than a phone; one to a line, each the row's
+   * width, where it is a phone's width or narrower (480px). A severity row is a callout, and its actions
+   * (Investigate, Try again) are the response it asks for, so they stay in sight, together; `'row'`
    * keeps them under the label as a row of buttons; `'menu'`, opted into, folds them into one menu button at
    * the end of the label's line, for a list of rows that should not grow by a line per action. See
    * `TReqoreNarrowRowActions`. A single action is a button under the label, the row's width where the
@@ -381,9 +382,14 @@ const ReqoreSeverityRow = memo(
       /* Narrow, a row that folds two or more into a menu keeps its one action where the menu would be - only
          while its container is wider than a phone. As narrow as a phone, the action goes under the label and
          spans the row like any lone action there (David and Foxhoundn, qorus#646). */
-      const loneActionAtLineEnd = isNarrow && !isPhoneWidth && narrowActions === 'menu' && loneAction;
-      // Narrow and stacked (the default): one to a line. With `'row'`, a row of buttons under the label.
-      const actionsStacked = isNarrow && narrowActions !== 'row' && !loneActionAtLineEnd;
+      const loneActionAtLineEnd =
+        isNarrow && !isPhoneWidth && narrowActions === 'menu' && loneAction;
+      /* Stacked (the default), one to a line, only where the container is a phone's width or narrower. Narrow
+         but wider than a phone, they sit side by side under the label at their labels' widths, onto another line
+         only where they do not fit, as with `'row'`: actions that answer one callout belong together (Foxhoundn:
+         the law of proximity; David, qorus#646). */
+      const actionsStacked =
+        isNarrow && isPhoneWidth && narrowActions !== 'row' && !loneActionAtLineEnd;
       /* Under the label, stacked actions and a lone action are the row's width where the row's container is a
          phone's width or narrower - on a phone, or in as narrow a container on any screen - where a full-width
          row is the easiest target there is (Fitts's law). In a container wider than a phone, each is as wide as

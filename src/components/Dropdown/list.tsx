@@ -608,7 +608,9 @@ const ReqoreDropdownList = memo(
     }
 
     return (
-      <ReqoreControlGroup vertical fluid>
+      // In a popover held to the room below its field, the list shrinks to it (min-height 0 in the panel's
+      // column) and its rows, the menu, take what its search and tags leave: one place scrolls (qorus#646).
+      <ReqoreControlGroup vertical fluid style={{ minHeight: 0 }}>
         {/* An array prop: keyed here, so a caller passing elements without keys draws no warning.
             `toArray` keeps the keys a caller gave rather than putting keys by position over them,
             and takes a single node too, which `map` threw on. */}
