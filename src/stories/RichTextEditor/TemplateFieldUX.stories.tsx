@@ -4,6 +4,21 @@ import { useState } from 'react';
 import { IReqoreRichTextEditorProps, ReqoreRichTextEditor } from '../../components/RichTextEditor';
 import { sleep } from '../../helpers/utils';
 import { StoryMeta } from '../utils';
+import { withTouchScreen } from '../utils/touchScreen';
+import { requiredElement } from '../utils/required';
+import { withViewport } from '../utils/viewport';
+
+/**
+ * The bottom of what the list draws: the surface's content, which held its own height under a surface capped
+ * shorter and ran past it, so the surface's box alone said it fitted while the list ran off the screen.
+ */
+const drawnBottom = (list: HTMLElement) =>
+  Math.max(
+    list.getBoundingClientRect().bottom,
+    ...Array.from(list.children)
+      .filter((child) => !child.hasAttribute('data-popper-arrow'))
+      .map((child) => child.getBoundingClientRect().bottom)
+  );
 
 /**
  * The interactions an author actually performs on a reference field.
@@ -382,9 +397,7 @@ export const TheListOpensBelowAFieldNearTheBottom: Story = {
       // Below the field — not over the form above it.
       await expect(Math.round(listTop)).toBeGreaterThanOrEqual(Math.round(fieldBottom) - 1);
       // And on screen, rather than hanging off the bottom.
-      await expect(list.getBoundingClientRect().bottom).toBeLessThanOrEqual(
-        doc.documentElement.clientHeight + 1
-      );
+      await expect(drawnBottom(list)).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
     });
   },
 };
@@ -445,8 +458,8 @@ export const TheListFlipsRatherThanVanishWithNoRoomBelow: Story = {
       await expect(getComputedStyle(list).maxHeight).not.toBe('0px');
       // And it went UP, because down was not a place.
       await expect(rect.top).toBeLessThan(control.getBoundingClientRect().top);
-      // Still on screen.
-      await expect(rect.bottom).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
+      // Still on screen, all of what it draws.
+      await expect(drawnBottom(list)).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
     });
   },
 };
@@ -550,5 +563,167 @@ export const ClickingAChipLeavesAnOpenListOpen: Story = {
 
     await expect(listIsOpen(doc)).toBe(true);
     await expect(scroller.scrollTop).toBe(scrollTop);
+  },
+};
+
+/** Templates enough that their list is taller than a short window: twenty fields of a record. */
+const MANY_TAGS = {
+  template: {
+    label: 'Templates',
+    items: Array.from({ length: 20 }, (_, index) => ({
+      label: `field_${index + 1}`,
+      value: `$.field_${index + 1}`,
+    })),
+  },
+};
+
+/** A scrolling page with the field 200px down it, and room below to scroll into. */
+const aShortWayDown = (Story: any) => (
+  <div style={{ height: '100vh', overflowY: 'auto' }} className='story-scroller'>
+    <div style={{ height: 200 }} />
+    <Story />
+    <div style={{ height: '150vh' }} />
+  </div>
+);
+
+/**
+ * In a window shorter than the list, clicking the field opens the list, and it stays open: the field is scrolled
+ * at most to the top of the page, never out of it, and the list takes the room under it.
+ */
+const expectTheListOpensBelowTheFieldInView = async (
+  doc: Document,
+  open: (editor: HTMLElement) => Promise<void>
+) => {
+  const editor = await editorIn(doc);
+  const control = editor.closest<HTMLElement>('.reqore-control-wrapper') ?? editor;
+  const scroller = requiredElement('.story-scroller', 'the scrolling page', doc);
+  const view = doc.defaultView ?? window;
+
+  await open(editor);
+  await waitFor(() => expect(listIsOpen(doc)).toBe(true));
+  // what the click put in motion - the page scrolled to make room - has been drawn, and the list is still open
+  await afterTwoFrames(view);
+  await afterTwoFrames(view);
+
+  await waitFor(async () => {
+    const list = requiredElement('.reqore-popover-content', 'the list, which stays open,', doc);
+    const field = control.getBoundingClientRect();
+    const shownFrom = Math.max(scroller.getBoundingClientRect().top, 0);
+    // the field is in view: not scrolled above the top of the page
+    await expect(field.top).toBeGreaterThanOrEqual(shownFrom - 0.5);
+    await expect(field.bottom).toBeLessThanOrEqual(doc.documentElement.clientHeight + 0.5);
+    const rect = list.getBoundingClientRect();
+    // below the field, on screen - all of what it draws - and tall enough to read
+    await expect(Math.round(rect.top)).toBeGreaterThanOrEqual(Math.round(field.bottom) - 1);
+    await expect(drawnBottom(list)).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
+    await expect(rect.height).toBeGreaterThan(90);
+  });
+  await expectTheListKeepsItsFrame(doc);
+};
+
+/**
+ * The list keeps its frame, and scrolls in one place (qorus#646, Foxhoundn on build #412: "Where is the bottom border
+ * of the popover?"). Capped to the room below the field, the surface scrolled its whole content: the list's panel stayed
+ * as tall as it was (382px in a 297px surface), its bottom border scrolled out of sight under the surface's edge, and
+ * its rows scrolled inside that again. The panel is held to the cap instead: its whole frame, bottom border included,
+ * is inside the surface and the window, and only its rows scroll.
+ */
+const expectTheListKeepsItsFrame = async (doc: Document) =>
+  waitFor(async () => {
+    const list = requiredElement('.reqore-popover-content', 'the list, which stays open,', doc);
+    const panel = requiredElement('.reqore-panel', "the list's panel", list);
+    const surface = panel.parentElement as HTMLElement;
+    const frame = panel.getBoundingClientRect();
+    // its whole frame, the bottom border included, inside what shows it and inside the window
+    await expect(frame.bottom).toBeLessThanOrEqual(surface.getBoundingClientRect().bottom + 0.5);
+    await expect(frame.bottom).toBeLessThanOrEqual(doc.documentElement.clientHeight + 0.5);
+    await expect(getComputedStyle(panel).borderBottomWidth).not.toBe('0px');
+    // one place scrolls: the rows
+    const view = doc.defaultView ?? window;
+    const scrolling = [list, ...Array.from(list.querySelectorAll<HTMLElement>('*'))].filter(
+      (element) =>
+        /(auto|scroll)/.test(view.getComputedStyle(element).overflowY) &&
+        element.scrollHeight > element.clientHeight + 1
+    );
+    await expect(scrolling.map((element) => element.className.toString())).toHaveLength(1);
+    await expect(scrolling[0]).toHaveClass('reqore-menu');
+  });
+
+/**
+ * The window made shorter while the list is open - a phone turned, its keyboard coming up, a window resized: the list
+ * follows the room left below the field, and never runs off the bottom of the screen. Only where the story can resize
+ * its window (the story run); a served Storybook leaves the window as it is.
+ */
+const expectTheListFollowsAShorterWindow = async (doc: Document, width: number, height: number) => {
+  await withViewport(width, height, async (narrowed) => {
+    if (!narrowed) {
+      return;
+    }
+    await afterTwoFrames(doc.defaultView ?? window);
+    await waitFor(async () => {
+      const list = requiredElement('.reqore-popover-content', 'the list, which stays open,', doc);
+      await expect(drawnBottom(list)).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
+      await expect(list.getBoundingClientRect().height).toBeGreaterThan(90);
+    });
+    await expectTheListKeepsItsFrame(doc);
+  });
+};
+
+export const TheListOpensInAShortWindow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a reference field 200px down a scrolling page, in a window 380px high, shorter than its list of twenty templates. When it is clicked, the list opens below the field and stays open: the page is scrolled until the field is at its top, never past it, and the list takes the room left under the field. The window made shorter with the list open, the list follows and still ends inside it. Before, the page was scrolled by the whole list, the field went out of view, and the list closed as it opened (qorus#646).',
+      },
+    },
+    qlip: { viewport: { width: 980, height: 380 } },
+  },
+  args: {
+    value: [{ type: 'paragraph', children: [{ text: '' }] }],
+    tags: MANY_TAGS,
+    onChange: fn(),
+  },
+  decorators: [aShortWayDown],
+  play: async ({ canvasElement }) => {
+    await withViewport(980, 380, async () => {
+      await expectTheListOpensBelowTheFieldInView(canvasElement.ownerDocument, (editor) =>
+        userEvent.click(editor)
+      );
+      // the window made 80px shorter with the list open
+      await expectTheListFollowsAShorterWindow(canvasElement.ownerDocument, 980, 300);
+    });
+  },
+};
+
+export const TheListOpensOnAPhoneInLandscape: Story = {
+  tags: ['touch'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same field on a phone turned on its side (844 × 390): a tap on the field opens its list of twenty templates below it, and it stays open, the field still in view at the top of the page and the list ending inside the screen, also when the keyboard takes 80px of it.',
+      },
+    },
+    qlip: { viewport: { width: 844, height: 390 } },
+  },
+  args: {
+    value: [{ type: 'paragraph', children: [{ text: '' }] }],
+    tags: MANY_TAGS,
+    onChange: fn(),
+  },
+  decorators: [aShortWayDown],
+  play: async ({ canvasElement }) => {
+    // a phone on its side: the touch screen at 844 x 390
+    await withTouchScreen(
+      async (touch) => {
+        await expectTheListOpensBelowTheFieldInView(canvasElement.ownerDocument, (editor) =>
+          touch.tap(editor)
+        );
+        // the keyboard coming up takes 80px with the list open
+        await expectTheListFollowsAShorterWindow(canvasElement.ownerDocument, 844, 310);
+      },
+      { width: 844, height: 390 }
+    );
   },
 };

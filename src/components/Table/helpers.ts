@@ -1,7 +1,14 @@
+import type { ReactNode } from 'react';
 import { getQueryMatchScore, rankByQuery } from '../../helpers/search';
 import { size } from 'lodash';
 import { firstBy } from 'thenby';
-import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowData, IReqoreTableSort } from '.';
+import {
+  IReqoreTableColumn,
+  IReqoreTableData,
+  IReqoreTableRowData,
+  IReqoreTableSort,
+  TReqoreTableCellAction,
+} from '.';
 import {
   ICON_FROM_SIZE,
   SIZES,
@@ -13,6 +20,10 @@ import {
 import { NARROW_CONTAINER_BREAKPOINT_PX } from '../../hooks/useNarrowContainer';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqorePanelSubAction } from '../Panel';
+import { hasRowActionLabel } from '../RowActionsMenu/hasRowActionLabel';
+
+/** A padded cell's space on each side of what it holds (`cell.padded` 'both' or 'horizontal'). */
+export const TABLE_CELL_HORIZONTAL_PADDING_PX = 10;
 
 export const flipSortDirection = (direction: 'asc' | 'desc'): 'asc' | 'desc' =>
   direction === 'asc' ? 'desc' : 'asc';
@@ -320,22 +331,101 @@ export const getActionsMenuColumnIds = (
     .map((column) => column.dataId);
 
 /**
- * The columns with the folded ones narrowed to the menu button: as wide as a button of the table's
- * size is tall (it is square), and a finger's width where the pointer is one. No wider than the column
- * was, and no longer resizable - the width is the button's, not the reader's.
+ * What a folded actions cell says, where it says something: a cell with two or more actions is the menu
+ * button, and one action with an icon is its icon alone - both the square. One action with no icon says its
+ * `shortLabel`, or its label where it has none, as the row draws it (`renderContent` in `row.tsx`).
+ */
+export const getFoldedActionText = (
+  actions: TReqoreTableCellAction[] | undefined
+): ReactNode | undefined => {
+  const [action, ...others] = actions ?? [];
+
+  if (!action || others.length || action.icon) {
+    return undefined;
+  }
+
+  return action.shortLabel?.trim() || (hasRowActionLabel(action.label) ? action.label : undefined);
+};
+
+/**
+ * What a folded column's cells say in words, over the rows given, for each folded column with any: the
+ * distinct words, and whether a cell says something that is not words (an element, which only the column's
+ * own width is known to hold).
+ */
+export interface IFoldedActionTexts {
+  texts: string[];
+  /** The first action that says words: its button's style is what the words are measured in. */
+  action?: TReqoreTableCellAction;
+  /** A cell says an element: the column keeps its width. */
+  unmeasurable: boolean;
+}
+
+export const getFoldedActionTexts = (
+  columns: IReqoreTableColumn[],
+  foldedIds: readonly string[],
+  rows: IReqoreTableRowData[]
+): Record<string, IFoldedActionTexts> => {
+  const result: Record<string, IFoldedActionTexts> = {};
+
+  if (!foldedIds.length) {
+    return result;
+  }
+
+  const folded = new Set(foldedIds);
+
+  for (const column of flattenColumns(columns)) {
+    if (!folded.has(column.dataId) || !column.cell?.actions) {
+      continue;
+    }
+
+    const texts = new Set<string>();
+    let action: TReqoreTableCellAction | undefined;
+    let unmeasurable = false;
+
+    for (const row of rows) {
+      const actions = column.cell.actions(row);
+      const text = getFoldedActionText(actions);
+
+      if (text === undefined) {
+        continue;
+      }
+      if (typeof text === 'string' || typeof text === 'number') {
+        texts.add(String(text));
+        action = action ?? actions[0];
+      } else {
+        unmeasurable = true;
+      }
+    }
+
+    if (texts.size || unmeasurable) {
+      result[column.dataId] = { texts: Array.from(texts), action, unmeasurable };
+    }
+  }
+
+  return result;
+};
+
+/**
+ * The columns with the folded ones narrowed to what their cells draw: the menu button, or an action's
+ * icon alone, is as wide as a button of the table's size is tall (it is square), and a finger's width
+ * where the pointer is one. A column whose cells say words is as wide as the widest of them takes in its
+ * button (`textWidths`, measured by the table: `Infinity` where a cell says an element), so none is cut
+ * short. No wider than the column was, and no longer resizable - the width is the button's, not the
+ * reader's.
  */
 export const foldActionsColumns = (
   columns: IReqoreTableColumn[],
   foldedIds: readonly string[],
   size: TSizes,
-  touch: boolean
+  touch: boolean,
+  textWidths: Readonly<Record<string, number>> = {}
 ): IReqoreTableColumn[] => {
   if (!foldedIds.length) {
     return columns;
   }
 
   const folded = new Set(foldedIds);
-  const width = Math.max(SIZE_TO_PX[size], touch ? TOUCH_TARGET_PX : 0);
+  const square = Math.max(SIZE_TO_PX[size], touch ? TOUCH_TARGET_PX : 0);
   const fold = (column: IReqoreTableColumn): IReqoreTableColumn => {
     if (column.header?.columns) {
       return { ...column, header: { ...column.header, columns: column.header.columns.map(fold) } };
@@ -345,9 +435,22 @@ export const foldActionsColumns = (
       return column;
     }
 
+    const textWidth = textWidths[column.dataId];
+    const padded = column.cell?.padded === 'both' || column.cell?.padded === 'horizontal';
+    const needed = Math.max(
+      square,
+      textWidth === undefined ? 0 : textWidth + (padded ? 2 * TABLE_CELL_HORIZONTAL_PADDING_PX : 0)
+    );
+    const unfolded = column.resizedWidth || column.width;
+
+    // what a cell says is not known to fit anything narrower than the column's own width
+    if (needed === Infinity && !unfolded) {
+      return column;
+    }
+
     return {
       ...column,
-      width: Math.min(column.resizedWidth || column.width || width, width),
+      width: Math.min(unfolded || needed, needed),
       resizedWidth: undefined,
       minWidth: undefined,
       maxWidth: undefined,

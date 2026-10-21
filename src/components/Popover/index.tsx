@@ -221,7 +221,7 @@ export const ReqorePopover = memo(
       const tooltips = useReqoreProperty('tooltips');
       const closePopoversOnEscPress = useReqoreProperty('closePopoversOnEscPress');
 
-      const { targetRef } = useCombinedRefs(ref);
+      const { setRef } = useCombinedRefs(ref);
       const [componentRef, setComponentRef] = React.useState(null);
       const popperRef = useRef(null);
 
@@ -354,7 +354,7 @@ export const ReqorePopover = memo(
       /* `atOnce` skips the delay: a hover's delay waits to see that the pointer stays, and a tap
          has already said what it wants. */
       const open = useCallback(
-        (e?: MouseEvent | KeyboardEvent, atOnce?: boolean) => {
+        (e?: MouseEvent | KeyboardEvent, atOnce?: boolean, asItIsNow?: boolean) => {
           if (onBeforeOpen) {
             const shouldOpen = onBeforeOpen({ content }, e);
 
@@ -378,8 +378,14 @@ export const ReqorePopover = memo(
              click on the trigger is heard twice - first by the document's capture listener
              (`handleClick`), which closes the popover when `closeOnTargetClick` asks it to, then
              here - and read as it is now, the popover that click had just closed was opened again
-             at once (a dropdown's trigger could not close its list). */
-          if (isOpen) {
+             at once (a dropdown's trigger could not close its list).
+
+             A holder's `open()` (`asItIsNow`, from the controls `passPopoverData` hands out) is no
+             trigger's event: it asks for the popover as it is now, as their `isOpen()` answers. Read as
+             the render saw it, a popover that had closed itself before it rendered again (Popper found
+             its target out of sight) was still open to it, and `open()` did nothing while `isOpen()`
+             said it was closed: a field that asked for its list again, with a key typed, got none. */
+          if (asItIsNow ? isOpenNow.current : isOpen) {
             if (handler !== 'hoverStay' && handler !== 'focus') {
               if (closeOnInsideClick) {
                 close();
@@ -637,7 +643,7 @@ export const ReqorePopover = memo(
       const latestControls = useRef({ open, close });
       latestControls.current = { open, close };
       const openNow = useCallback((e?: MouseEvent | KeyboardEvent) => {
-        latestControls.current.open(e);
+        latestControls.current.open(e, false, true);
       }, []);
       const closeNow = useCallback(
         (e?: MouseEvent | KeyboardEvent) => latestControls.current.close(e),
@@ -845,10 +851,13 @@ export const ReqorePopover = memo(
         hoverGate,
       ]);
 
-      const handleRef = useCallback((r) => {
-        setComponentRef(r);
-        targetRef.current = r;
-      }, []);
+      const handleRef = useCallback(
+        (r) => {
+          setComponentRef(r);
+          setRef(r);
+        },
+        [setRef]
+      );
 
       // Theme props are meaningful to Reqore/custom components, but React
       // warns if they are forwarded to a native trigger such as `span`.

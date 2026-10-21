@@ -241,7 +241,7 @@ const ReqoreTabsListItem = memo(
       const [isPending, startTransition] = useTransition();
       const [isStillPending, setStillPending] = useState(false);
       const [loadingTimer, setLoadingTimer] = useState(null);
-      const { targetRef } = useCombinedRefs(ref);
+      const { setRef } = useCombinedRefs(ref);
       const theme = useReqoreTheme('main', customTheme, undefined);
       // Marker colour, most specific first: an explicit colour, then the active
       // intent's, and failing both the tab's own text colour via `currentColor`.
@@ -313,7 +313,7 @@ const ReqoreTabsListItem = memo(
 
       return (
         <StyledTabListItem
-          ref={targetRef}
+          ref={setRef}
           {...props}
           className={className}
           intent={intent}

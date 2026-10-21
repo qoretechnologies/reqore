@@ -1,7 +1,8 @@
 // Copyright 2026 Qore Technologies, s.r.o.
 import { ReactNode } from 'react';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import { ReqoreP } from '../../components/Paragraph';
+import { NARROW_CONTAINER_BREAKPOINT_PX } from '../../hooks/useNarrowContainer';
 
 export interface IStoryRowBoxProps {
   /** What the box is, written above it: its width and what that width shows. */
@@ -70,4 +71,47 @@ export const expectEqualBoxesEqualRows = (root: ParentNode, rowSelector: string)
   }
   const rowWidths = new Set(widths.flatMap(({ rows }) => rows));
   expect(rowWidths.size).toBe(1);
+};
+
+/**
+ * Whether a row's container is a phone's width or narrower, measured as the row measures it: the content box of
+ * the container it is drawn in (`.reqore-entity-row-container`, `.reqore-severity-row-container`), against Reqore's
+ * phone width. Where it is - on a phone, or in as narrow a container on any screen - a lone or stacked action under
+ * the label is the row's width (Fitts's law); where it is wider, each is as wide as its label (qorus#646).
+ */
+export const rowContainerIsPhoneWidth = (row: HTMLElement) => {
+  const container = (row.closest('.reqore-entity-row-container, .reqore-severity-row-container') ??
+    row) as HTMLElement;
+  const style = getComputedStyle(container);
+  const width =
+    container.clientWidth -
+    (parseFloat(style.paddingLeft) || 0) -
+    (parseFloat(style.paddingRight) || 0);
+
+  return width > 0 && width <= NARROW_CONTAINER_BREAKPOINT_PX;
+};
+
+/** A row's one action, under its label on a line of its own, the row's width. */
+export const expectLoneActionSpansTheRow = async (
+  row: HTMLElement,
+  kind: 'entity' | 'severity'
+) => {
+  const prefix = `.reqore-${kind}-row`;
+
+  expect(rowContainerIsPhoneWidth(row)).toBe(true);
+  await waitFor(() => {
+    const label = (row.querySelector(`${prefix}-label`) as HTMLElement).getBoundingClientRect();
+    const column = (row.querySelector(`${prefix}-actions`) as HTMLElement).getBoundingClientRect();
+    const buttons = Array.from(
+      row.querySelectorAll<HTMLElement>(
+        `${prefix}-actions > .reqore-button, ${prefix}-actions > .reqore-dropdown`
+      )
+    );
+    expect(buttons).toHaveLength(1);
+    const box = buttons[0].getBoundingClientRect();
+    // under the label, not at the end of its line
+    expect(box.top).toBeGreaterThanOrEqual(label.bottom - 0.5);
+    // the row's width: the actions column spans the row there
+    expect(Math.abs(box.width - column.width)).toBeLessThan(1);
+  });
 };

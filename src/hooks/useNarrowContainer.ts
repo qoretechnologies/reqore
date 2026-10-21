@@ -44,9 +44,17 @@ export const SEVERITY_ROW_NARROW_BREAKPOINT_PX = 640;
  */
 export const useNarrowContainer = <T extends HTMLElement = HTMLDivElement>(
   breakpoint: number = NARROW_CONTAINER_BREAKPOINT_PX
-): [React.MutableRefObject<T | null>, boolean] => {
+): [React.MutableRefObject<T | null>, boolean, boolean] => {
   const containerRef = useRef<T | null>(null);
   const [isNarrow, setIsNarrow] = useState(false);
+  /* Whether the container is a phone's width or narrower (NARROW_CONTAINER_BREAKPOINT_PX, Reqore's phone
+     breakpoint), whatever `breakpoint` is: where a lone or stacked control spans its row, on a phone or in a
+     container as narrow as one on any screen (qorus#646, David and Foxhoundn: Fitts's law). */
+  const [isPhoneWidth, setIsPhoneWidth] = useState(false);
+  const read = (width: number) => {
+    setIsNarrow(width > 0 && width <= breakpoint);
+    setIsPhoneWidth(width > 0 && width <= NARROW_CONTAINER_BREAKPOINT_PX);
+  };
 
   useLayoutEffect(() => {
     const node = containerRef.current;
@@ -62,7 +70,7 @@ export const useNarrowContainer = <T extends HTMLElement = HTMLDivElement>(
       (parseFloat(style.paddingLeft) || 0) -
       (parseFloat(style.paddingRight) || 0);
 
-    setIsNarrow(width > 0 && width <= breakpoint);
+    read(width);
   }, [breakpoint]);
 
   useEffect(() => {
@@ -81,7 +89,7 @@ export const useNarrowContainer = <T extends HTMLElement = HTMLDivElement>(
           ? entry.contentBoxSize[0]?.inlineSize ?? entry.contentRect.width
           : entry.contentRect.width;
 
-        setIsNarrow(width > 0 && width <= breakpoint);
+        read(width);
       }
     });
 
@@ -90,5 +98,5 @@ export const useNarrowContainer = <T extends HTMLElement = HTMLDivElement>(
     return () => observer.disconnect();
   }, [breakpoint]);
 
-  return [containerRef, isNarrow];
+  return [containerRef, isNarrow, isPhoneWidth];
 };

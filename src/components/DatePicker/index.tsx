@@ -21,7 +21,7 @@ import {
 } from 'react-aria-components';
 import { ReqoreErrorBoundary, ReqorePanel, ReqorePopover } from '../..';
 import { changeLightness } from '../../helpers/colors';
-import { formatDateToType, TDateFormat, toDate } from '../../helpers/dates';
+import { formatDateToType, isUnreadableDate, TDateFormat, toDate } from '../../helpers/dates';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -341,7 +341,12 @@ export const DatePicker = <T extends TDateValue>({
   monthLabel = 'Month',
   ...props
 }: IDatePickerProps<T>) => {
-  const value = useMemo(() => (_value ? toDate(_value) : null), [_value]);
+  /* What the field shows: the date as `readDate` reads it - with no zone, as local time - or nothing for a value it
+     cannot read, which never throws from the render. Such a value is said the way the field says one out of its
+     bounds: it is invalid (and drawn in the danger intent). */
+  const value = useMemo(() => (_value ? (toDate(_value) ?? null) : null), [_value]);
+  const unreadable = useMemo(() => isUnreadableDate(_value), [_value]);
+  const fieldIntent = unreadable ? 'danger' : intent;
   // save time in separate state because date can be cleared and equals to null
   const [time, setTime] = useState<Time>(() => {
     if (!value) return undefined;
@@ -463,9 +468,11 @@ export const DatePicker = <T extends TDateValue>({
       hourCycle,
       'data-fluid': fluid,
       'aria-label': dateAriaLabel,
+      // a bound it cannot read is no bound
       minValue: toDate(minValue),
       maxValue: toDate(maxValue),
       ...props,
+      isInvalid: unreadable || props.isInvalid,
     },
     StyledRADatePicker,
     ref
@@ -615,7 +622,7 @@ export const DatePicker = <T extends TDateValue>({
       buttonProps: {
         fluid,
         size,
-        intent,
+        intent: fieldIntent,
         flat,
         minimal,
         rounded,
@@ -623,7 +630,7 @@ export const DatePicker = <T extends TDateValue>({
       },
       fluid,
       size,
-      intent,
+      intent: fieldIntent,
       flat,
       minimal,
       pill,
@@ -680,7 +687,7 @@ export const DatePicker = <T extends TDateValue>({
               size,
               pill,
               minimal,
-              intent,
+              intent: fieldIntent,
               flat,
               customTheme: theme,
               icon: 'CalendarLine',

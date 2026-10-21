@@ -377,6 +377,10 @@ export const reqoreFormatScalar = (
   }
 
   if (value instanceof Date) {
+    // an invalid Date has no ISO form (it threw from the render): it is shown as what it is
+    if (Number.isNaN(value.getTime())) {
+      return { display: String(value), isDate: false, kind: 'string' };
+    }
     const iso = value.toISOString();
     return { display: formatDate(iso), raw: iso, isDate: true, kind: 'date' };
   }

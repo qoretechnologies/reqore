@@ -34,10 +34,11 @@ export const YearMonthDropdowns = ({
   monthLabel = 'Month',
   ...rest
 }: IYearMonthDropdownsProps) => {
-  const value = _value ?? toDate(new Date());
+  const value = _value ?? toDate(new Date())!;
 
-  const minValue = toDate(_minValue);
-  const maxValue = toDate(_maxValue);
+  // a bound it cannot read is the default one
+  const minValue = toDate(_minValue) ?? toDate(new Date(1970, 0, 1))!;
+  const maxValue = toDate(_maxValue) ?? toDate(new Date(new Date().getFullYear() + 5, 11, 31))!;
   const currentYear = new Date().getFullYear();
   const years = getPreviousYears(minValue.year, maxValue.year);
   const resolvedMonthNames = monthNames && monthNames.length === 12 ? monthNames : months;

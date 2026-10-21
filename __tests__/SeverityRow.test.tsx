@@ -512,17 +512,26 @@ test('Folds two or more actions into one menu button below 640px of its containe
   const buttons = row.querySelectorAll('.reqore-severity-row-actions .reqore-button');
   expect(buttons).toHaveLength(1);
   expect(buttons[0].classList.contains('reqore-row-actions-menu-button')).toBe(true);
-  expect(buttons[0].getAttribute('aria-label')).toBe('Actions');
+  expect(buttons[0].getAttribute('aria-label')).toBe('Actions: Issue');
 });
 
-test('Keeps a callout\'s actions in sight, stacked, by default and with narrowActions="stack"', () => {
+test('Keeps a callout\'s actions in sight by default and with narrowActions="stack": side by side above a phone\'s width, stacked at it', () => {
   for (const props of [{}, { narrowActions: 'stack' as const }]) {
+    // narrow but wider than a phone: side by side under the label, wrapping where they do not fit (Foxhoundn:
+    // law of proximity; David, qorus#646)
     renderMeasured(600, { actions: TWO_ACTIONS, ...props });
 
     const row = document.querySelector('.reqore-severity-row')!;
-    expect(row.getAttribute('data-actions')).toBeNull();
+    expect(row.getAttribute('data-actions')).toBe('row');
     expect(document.querySelectorAll('.reqore-row-actions-menu-button')).toHaveLength(0);
     expect(row.querySelectorAll('.reqore-severity-row-actions .reqore-button')).toHaveLength(2);
+    cleanup();
+
+    // as narrow as a phone (480px, the breakpoint itself): stacked, one to a line
+    renderMeasured(480, { actions: TWO_ACTIONS, ...props });
+    expect(document.querySelector('.reqore-severity-row')!.getAttribute('data-actions')).toBe(
+      'stack'
+    );
     cleanup();
   }
 });
@@ -535,6 +544,69 @@ test('Keeps every action inline in a wide container, and a single one a button w
 
   renderMeasured(400, { actions: [{ label: 'Investigate' }] });
   expect(document.querySelectorAll('.reqore-row-actions-menu-button')).toHaveLength(0);
+});
+
+test('With narrowActions="menu" in a container wider than a phone, keeps one action a button at the end of the label\'s line (data-actions="end")', () => {
+  renderMeasured(600, { actions: [{ label: 'Investigate' }], narrowActions: 'menu' });
+
+  const row = document.querySelector('.reqore-severity-row')!;
+  expect(row.getAttribute('data-narrow')).toBe('true');
+  expect(row.getAttribute('data-actions')).toBe('end');
+  const buttons = row.querySelectorAll('.reqore-severity-row-actions .reqore-button');
+  expect(buttons).toHaveLength(1);
+  expect(buttons[0].classList.contains('reqore-row-actions-menu-button')).toBe(false);
+  expect(buttons[0].textContent).toContain('Investigate');
+  cleanup();
+
+  // an icon-only action stays its icon, as at full width and as the menu button is: it is not stacked, so its
+  // tooltip is not written out as its label
+  renderMeasured(560, {
+    actions: [{ icon: 'CloseLine', tooltip: 'Dismiss' }],
+    narrowActions: 'menu',
+  });
+  const iconOnly = document.querySelector('.reqore-severity-row')!;
+  expect(iconOnly.getAttribute('data-actions')).toBe('end');
+  expect(
+    iconOnly.querySelector('.reqore-severity-row-actions .reqore-button')?.textContent
+  ).not.toContain('Dismiss');
+});
+
+test('With narrowActions="menu" in a container a phone\'s width or narrower, puts one action under the label, written out', () => {
+  // as narrow as a phone, the one action is a line of its own (the row's width, checked in the stories): Fitts's law
+  renderMeasured(400, {
+    actions: [{ icon: 'CloseLine', tooltip: 'Dismiss' }],
+    narrowActions: 'menu',
+  });
+
+  const row = document.querySelector('.reqore-severity-row')!;
+  expect(row.getAttribute('data-narrow')).toBe('true');
+  expect(row.getAttribute('data-actions')).toBe('stack');
+  expect(row.querySelector('.reqore-severity-row-actions .reqore-button')?.textContent).toContain(
+    'Dismiss'
+  );
+});
+
+test('Leaves one action as it was by default, with "stack" and with "row", and wide with "menu"', () => {
+  for (const [width, props, expected] of [
+    // wider than a phone: under the label in a row, in every mode but 'menu'
+    [600, {}, 'row'],
+    [600, { narrowActions: 'stack' as const }, 'row'],
+    [600, { narrowActions: 'row' as const }, 'row'],
+    // a phone's width: a line of its own with 'stack', the default
+    [400, {}, 'stack'],
+    [400, { narrowActions: 'stack' as const }, 'stack'],
+    [400, { narrowActions: 'row' as const }, 'row'],
+  ] as const) {
+    renderMeasured(width, { actions: [{ icon: 'CloseLine', tooltip: 'Dismiss' }], ...props });
+    const row = document.querySelector('.reqore-severity-row')!;
+    expect(row.getAttribute('data-actions')).toBe(expected);
+    cleanup();
+  }
+
+  renderMeasured(800, { actions: [{ label: 'Investigate' }], narrowActions: 'menu' });
+  const wide = document.querySelector('.reqore-severity-row')!;
+  expect(wide.getAttribute('data-narrow')).toBeNull();
+  expect(wide.getAttribute('data-actions')).toBeNull();
 });
 
 test('Stacked, labels an action whose label is empty with its tooltip', () => {

@@ -449,12 +449,16 @@ export const StyledButton = styled(StyledEffect).withConfig({
           CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2}px;
         `
       : null}
-  max-width: ${({ square, maxWidth, fluid, fixed, size, verticalPadding = 'normal' }) =>
+  /* A button is never wider than its container, unless it sets its own maxWidth: fixed means it does not
+     stretch, not that it may run past what holds it. A fixed button saying a value and its description stayed as
+     wide as both on one line, 487-712px in a 346px card on a phone (qorus#646); capped, its label is clipped as any
+     button's is, and its description takes as many lines as it needs. */
+  max-width: ${({ square, maxWidth, size, verticalPadding = 'normal' }) =>
     square
       ? `${
           SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2
         }px`
-      : maxWidth || (fluid && !fixed ? '100%' : undefined)};
+      : maxWidth || '100%'};
 
   ${({ wrap, description }) =>
     !wrap && !description
@@ -816,7 +820,7 @@ const ReqoreButton = memo(
       const shortcutHintsEnabled = useReqoreProperty('shortcutHints');
       const theme = useReqoreTheme('main', customTheme, intent);
       const fixedEffect = useReqoreEffect('buttons', theme, effect);
-      const { targetRef } = useCombinedRefs(ref);
+      const { targetRef, setRef } = useCombinedRefs(ref);
 
       // Square chips have no horizontal padding, so the content would
       // stick to the left edge if we kept `textAlign`'s usual `'left'`
@@ -875,6 +879,18 @@ const ReqoreButton = memo(
       );
       const _flat = minimal ? flat : flat === true;
       const _children = useMemo(() => label || children, [label, children]);
+      /* An icon alone names nothing: a button with no label of its own and no `aria-label` was read as
+         "button", and a test that finds buttons by name found nothing to test (qorus#646). Its tooltip, when
+         that is a string, is the words it would say, so it names it. A tooltip that is a node or an object is
+         left to the caller, and a button that has a label, or is named already, is not named twice. */
+      const tooltipName =
+        !_children &&
+        !rest['aria-label'] &&
+        !rest['aria-labelledby'] &&
+        typeof tooltip === 'string' &&
+        tooltip.trim()
+          ? tooltip
+          : undefined;
       const _compact = compact ?? theme.buttons?.compact ?? !children;
       const hasLeftIcon = icon || leftIconProps?.image;
       const hasRightIcon = rightIcon || rightIconProps?.image;
@@ -924,6 +940,7 @@ const ReqoreButton = memo(
         <ReqoreTooltipComponent
           {...{
             ...rest,
+            ...(tooltipName ? { 'aria-label': tooltipName } : {}),
             effect: memoEffect,
             // The caller's tab stop wins — a grid or a diagram keeps one of its
             // buttons in the tab order and moves it — except that a disabled
@@ -956,7 +973,7 @@ const ReqoreButton = memo(
             ...REQORE_MARQUEE_HOST,
           }}
           Component={StyledButton}
-          ref={targetRef}
+          ref={setRef}
         >
           <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
             {hasLeftIcon ? (

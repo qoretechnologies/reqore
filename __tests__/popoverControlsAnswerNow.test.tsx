@@ -86,6 +86,33 @@ describe("a popover's controls", () => {
     act(() => first.close());
     expect(isOpen()).toBe(true);
   });
+
+  it('open it when it is closed now, though it closed itself before it rendered again', () => {
+    const handed: IPopoverControls[] = [];
+    render(
+      wrap(
+        <ReqoreDropdown
+          items={items}
+          label='Fields'
+          passPopoverData={(data) => handed.push(data)}
+        />
+      )
+    );
+    const first = handed[0];
+    act(() => first.open());
+    expect(isOpen()).toBe(true);
+    /* A close and an open before the popover renders again: a list that closed itself (Popper found its
+       field out of sight) and the field asking for it again with a key typed (qorus#646, reqraft's
+       creatable value field). `open()` read the render's "open" and did nothing, while `isOpen()` said
+       it was closed. */
+    act(() => {
+      first.close();
+      expect(first.isOpen()).toBe(false);
+      first.open();
+    });
+    expect(isOpen()).toBe(true);
+    expect(first.isOpen()).toBe(true);
+  });
 });
 
 describe('a template list', () => {

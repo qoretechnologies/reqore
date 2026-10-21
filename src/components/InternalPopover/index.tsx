@@ -204,12 +204,41 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   }
 `;
 
-export const StyledPopoverContent = styled.div`
+export const StyledPopoverContent = styled.div<{ $capped?: boolean }>`
   width: 100%;
   height: 100%;
   z-index: 20;
   position: relative;
   overflow: hidden;
+
+  /* A surface with a height cap (maxHeight, or the room held below its target) keeps what it holds inside the
+     cap. The cap was on the surface alone, and the content - 100% of a height the surface never sets - kept
+     its own: a 382px list in a surface capped at 297px ran off the bottom of the window, past the surface's
+     edge (qorus#646). The arrow is drawn outside the surface, so the surface itself does not clip.
+     What can scroll its own content - a panel (its body scrolls) or a menu - is held to the cap: it shrinks
+     to it and keeps its whole frame, its bottom border too, and only its own content scrolls. Scrolling the
+     whole surface instead left the panel as tall as before, its bottom border scrolled out of sight under the
+     surface's edge, and its rows scrolling inside that again (Foxhoundn on qorus#646). Anything else keeps
+     its height, and the surface scrolls it, as before.
+     (No backticks in here: this comment lives inside a template literal.) */
+  ${({ $capped }) =>
+    $capped &&
+    css`
+      display: flex;
+      flex-direction: column;
+      max-height: inherit;
+      overflow-y: auto;
+
+      > * {
+        flex-shrink: 0;
+      }
+
+      > .reqore-panel,
+      > .reqore-menu {
+        flex-shrink: 1;
+        min-height: 0;
+      }
+    `}
 `;
 
 export interface IReqoreInternalPopoverProps extends IPopoverData {
@@ -315,58 +344,150 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
        a short list that scrolls is still readable, whereas one running off the
        bottom of the window is not.
 
-       Once per opening, guarded by the ref: scrolling moves the target, which
-       re-runs Popper, which would otherwise bring us straight back here. */
+       The scroll is made once per opening, guarded by the ref: scrolling moves
+       the target, which re-runs Popper, which would otherwise bring us straight
+       back here. The clamp is not: it follows the room below as it changes
+       while the surface is open (see `clamp`). */
     const madeRoomFor = useRef<HTMLElement | null>(null);
     const [roomBelow, setRoomBelow] = useState<string | undefined>(undefined);
 
     useEffect(() => {
-      if (!keepPlacement || !targetElement || !popperElement) return;
-      if (!String(placement ?? 'bottom').startsWith('bottom')) return;
-      if (madeRoomFor.current === popperElement) return;
-
-      madeRoomFor.current = popperElement;
+      if (!keepPlacement || !targetElement || !popperElement) return undefined;
+      if (!String(placement ?? 'bottom').startsWith('bottom')) return undefined;
 
       const gap = baseOffsetY + offsetY + VIEWPORT_EDGE_GUTTER;
-      const spaceBelow = () =>
-        window.innerHeight - targetElement.getBoundingClientRect().bottom - gap;
+      /* What can be seen: the visual viewport where there is one (a phone's on-screen keyboard or a pinch zoom
+         takes its share), else the window. */
+      const visibleTop = () => Math.max(window.visualViewport?.offsetTop ?? 0, 0);
+      const visibleBottom = () => {
+        const visual = window.visualViewport;
 
-      const deficit = popperElement.offsetHeight - spaceBelow();
+        return visual
+          ? Math.min(window.innerHeight, visual.offsetTop + visual.height)
+          : window.innerHeight;
+      };
+      const spaceBelow = () => visibleBottom() - targetElement.getBoundingClientRect().bottom - gap;
+      const spaceAbove = () => targetElement.getBoundingClientRect().top - visibleTop() - gap;
 
-      if (deficit > 0) {
-        const scroller = scrollableAncestor(targetElement);
+      /* Room is made by scrolling the nearest scrollable ancestor until the surface fits under its target -
+         when the surface opens, and again when the window changes size under it (a phone turned, the
+         keyboard coming up, a window resized): the same choice, made for the window as it now is. A scroll
+         of the reader's own is never answered with another one. */
+      const makeRoom = () => {
+        const deficit = popperElement.offsetHeight - spaceBelow();
 
-        if (scroller) {
-          const left = scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop;
-          scroller.scrollTop += Math.min(deficit, Math.max(left, 0));
-          forceUpdate?.();
+        if (deficit > 0) {
+          const scroller = scrollableAncestor(targetElement);
+
+          if (scroller) {
+            const left = scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop;
+            /* The field never leaves view: it is scrolled up at most to the top of what shows it (its
+               scroller, or the window where the scroller starts above it). Scrolled by the whole deficit, a
+               list taller than a short window took the field out of sight - from y=209 to y=-59 in a 380px
+               canvas - Popper marked it hidden, and the list closed as it opened (qorus#646). What is still
+               missing then is taken from the list's height below, or it flips. */
+            const shownFrom = Math.max(scroller.getBoundingClientRect().top, visibleTop());
+            const toTheTop = Math.max(targetElement.getBoundingClientRect().top - shownFrom, 0);
+            const by = Math.min(deficit, Math.max(left, 0), toTheTop);
+
+            if (by > 0) {
+              scroller.scrollTop += by;
+              forceUpdate?.();
+            }
+          }
         }
+      };
+
+      if (madeRoomFor.current !== popperElement) {
+        madeRoomFor.current = popperElement;
+        makeRoom();
       }
 
-      const remaining = spaceBelow();
+      /* The surface is never taller than the room on the side it is drawn: its height is capped at that
+         room, which caps nothing while it fits. Made once, the cap stayed what it was at the opening: a
+         window made shorter, a phone turned on its side, the keyboard coming up or the page scrolled while
+         the list was open, and the list ran off the bottom of the screen (qorus#646, Foxhoundn: a popover
+         should never outgrow the viewport). So it follows the room as it changes, on the events that change
+         it: the window's and the visual viewport's size, any scroll, the target's size - at most once a
+         frame. */
+      const clamp = () => {
+        const below = spaceBelow();
 
-      /* Below is only a place if something can be READ there.
-         Clamping to whatever is left is right while "whatever is left" is a
-         few rows; it stops being right as it approaches nothing, and at the
-         bottom of that slope sits `max-height: 0px` — a list that is mounted,
-         open, and invisible, with `flip` switched off so there is nowhere else
-         for it to go. Measured on a field pinned to the foot of the viewport
-         with no scrollable ancestor: computed max-height 0px, rendered height
-         0, at y=885 of a 900px window. Nothing tells the author the list even
-         opened.
+        /* Below is only a place if something can be READ there.
+           Clamping to whatever is left is right while "whatever is left" is a
+           few rows; it stops being right as it approaches nothing, and at the
+           bottom of that slope sits `max-height: 0px` — a list that is mounted,
+           open, and invisible, with `flip` switched off so there is nowhere else
+           for it to go. Measured on a field pinned to the foot of the viewport
+           with no scrollable ancestor: computed max-height 0px, rendered height
+           0, at y=885 of a 900px window. Nothing tells the author the list even
+           opened.
 
-         So there is a floor, and under it the preference yields: let Popper
-         flip. Covering the form is the cost this prop exists to avoid, and it
-         is still cheaper than showing nothing at all. */
-      if (remaining < MIN_USABLE_SPACE_BELOW) {
-        setMustFlip(true);
-        setRoomBelow(undefined);
+           So there is a floor, and under it the preference yields: the surface
+           goes above its target where there is more room there, capped at that
+           room, so Popper's flip finds it fits there and nowhere else. Covering
+           the form is the cost this prop exists to avoid, and it is still
+           cheaper than showing nothing at all. */
+        if (below < MIN_USABLE_SPACE_BELOW) {
+          const above = spaceAbove();
 
-        return;
-      }
+          if (above > below) {
+            setMustFlip(true);
+            setRoomBelow(`${above}px`);
 
-      setMustFlip(false);
-      setRoomBelow(popperElement.offsetHeight > remaining ? `${remaining}px` : undefined);
+            return;
+          }
+        }
+
+        setMustFlip(false);
+        setRoomBelow(`${Math.max(below, 0)}px`);
+      };
+
+      clamp();
+
+      // one frame's events are answered once, after them; a resize also makes room again
+      let frame: number | null = null;
+      let resized = false;
+      const followTheRoom = () => {
+        if (frame === null) {
+          frame = window.requestAnimationFrame(() => {
+            frame = null;
+
+            if (resized) {
+              resized = false;
+              makeRoom();
+            }
+
+            clamp();
+          });
+        }
+      };
+      const followTheWindow = () => {
+        resized = true;
+        followTheRoom();
+      };
+      const visual = window.visualViewport;
+      const targetResized =
+        typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(followTheRoom);
+
+      window.addEventListener('resize', followTheWindow);
+      // a scroll anywhere moves the target: scroll events do not bubble, so they are heard on the way down
+      window.addEventListener('scroll', followTheRoom, true);
+      visual?.addEventListener('resize', followTheWindow);
+      visual?.addEventListener('scroll', followTheRoom);
+      targetResized?.observe(targetElement);
+
+      return () => {
+        window.removeEventListener('resize', followTheWindow);
+        window.removeEventListener('scroll', followTheRoom, true);
+        visual?.removeEventListener('resize', followTheWindow);
+        visual?.removeEventListener('scroll', followTheRoom);
+        targetResized?.disconnect();
+
+        if (frame !== null) {
+          window.cancelAnimationFrame(frame);
+        }
+      };
     }, [keepPlacement, targetElement, popperElement, placement, baseOffsetY, offsetY, forceUpdate]);
 
     useUpdateEffect(() => {
@@ -590,7 +711,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           {!noArrow && !transparent ? (
             <StyledPopoverArrow ref={setArrowElement} style={arrowStyle} data-popper-arrow />
           ) : null}
-          <StyledPopoverContent>
+          <StyledPopoverContent $capped={!!(maxHeight ?? roomBelow)}>
             {!noWrapper || isString(content) ? (
               <ReqoreMessage
                 opaque={!transparent && !minimal}
