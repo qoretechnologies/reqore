@@ -1109,15 +1109,29 @@ const ALLOWANCE_ACTIONS: IReqoreSeverityRowProps['actions'] = [
   { label: 'Try again', icon: 'RefreshLine', onClick: onTryAgain },
 ];
 
-const AllowanceRow = ({ width = 320 }: { width?: number }) => (
-  <div className='narrow-row-box' style={{ width, maxWidth: '100%' }}>
+/** One more answer, long enough that the three do not fit side by side in a 500px container. */
+const ALLOWANCE_ACTIONS_AND_OWNER: IReqoreSeverityRowProps['actions'] = [
+  ...ALLOWANCE_ACTIONS!,
+  { label: 'Ask your workspace owner for more', icon: 'UserLine' },
+];
+
+const AllowanceRow = ({
+  width = 320,
+  className = 'narrow-row-box',
+  actions = ALLOWANCE_ACTIONS,
+}: {
+  width?: number;
+  className?: string;
+  actions?: IReqoreSeverityRowProps['actions'];
+}) => (
+  <div className={className} style={{ width, maxWidth: '100%' }}>
     <ReqoreSeverityRow
       label="This month's AI allowance is used up"
       description='The design stopped at its last step. It can go on when the allowance renews, or now with a larger plan.'
       intent='warning'
       fluid
-      // no `narrowActions`: a severity row stacks its actions by default
-      actions={ALLOWANCE_ACTIONS}
+      // no `narrowActions`: a severity row keeps its actions in sight by default ('stack')
+      actions={actions}
     />
   </div>
 );
@@ -1125,37 +1139,62 @@ const AllowanceRow = ({ width = 320 }: { width?: number }) => (
 const stackedActions = (row: HTMLElement) =>
   Array.from(row.querySelectorAll<HTMLElement>('.reqore-severity-row-actions > .reqore-button'));
 
-/** The row's actions, stacked one to a line inside the row, labels whole: each the row's width where its container
- *  is a phone's width or narrower (on a phone, or as narrow a container on any screen), and as wide as its label
- *  in a wider one. */
-const expectActionsStacked = async (canvasElement: HTMLElement) => {
-  const row = await narrowRow(canvasElement);
+/** Each action's label whole, not cut. */
+const expectActionLabelsWhole = (row: HTMLElement) => {
+  for (const label of Array.from(
+    row.querySelectorAll<HTMLElement>('.reqore-severity-row-actions .reqore-button-text-content')
+  )) {
+    expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
+  }
+};
+
+/** The row's actions, stacked one to a line inside the row, labels whole, each the row's width: they stack only
+ *  where the row's container is a phone's width or narrower (on a phone, or as narrow a container on any screen). */
+const expectActionsStacked = async (root: ParentNode) => {
+  const row = await narrowRow(root);
   expect(row.getAttribute('data-actions')).toBe('stack');
   expect(rowActionsMenuButtons(row)).toHaveLength(0);
+  expect(rowContainerIsPhoneWidth(row)).toBe(true);
   await expectControlsInside(row);
-  // the row's container a phone's width or narrower, as the row measures it
-  const atPhoneWidth = rowContainerIsPhoneWidth(row);
   await waitFor(() => {
     const column = row.querySelector('.reqore-severity-row-actions')!.getBoundingClientRect();
     const [first, second] = stackedActions(row).map((button) => button.getBoundingClientRect());
     // one to a line
     expect(second.top).toBeGreaterThanOrEqual(first.bottom - 0.5);
     for (const button of [first, second]) {
-      if (atPhoneWidth) {
-        // the row's width: a finger's target
-        expect(Math.abs(button.width - column.width)).toBeLessThan(1);
-      } else {
-        // as wide as its label, not the row
-        expect(button.width).toBeLessThan(column.width - 1);
-      }
+      // the row's width: a finger's target
+      expect(Math.abs(button.width - column.width)).toBeLessThan(1);
     }
   });
-  // each label whole, not cut
-  for (const label of Array.from(
-    row.querySelectorAll<HTMLElement>('.reqore-severity-row-actions .reqore-button-text-content')
-  )) {
-    expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
-  }
+  expectActionLabelsWhole(row);
+  return row;
+};
+
+/** The lines the row's actions are on, by their tops. */
+const actionLines = (row: HTMLElement) =>
+  new Set(stackedActions(row).map((button) => Math.round(button.getBoundingClientRect().top))).size;
+
+/** Narrow but wider than a phone: the row's actions side by side under the label, each as wide as its label, onto
+ *  `lines` lines - another only where they do not fit - inside the row (Foxhoundn: the law of proximity; David,
+ *  qorus#646). */
+const expectActionsSideBySide = async (root: ParentNode, lines: number) => {
+  const row = await narrowRow(root);
+  expect(row.getAttribute('data-actions')).toBe('row');
+  expect(rowActionsMenuButtons(row)).toHaveLength(0);
+  expect(rowContainerIsPhoneWidth(row)).toBe(false);
+  await expectControlsInside(row);
+  await waitFor(() => {
+    const column = row.querySelector('.reqore-severity-row-actions')!.getBoundingClientRect();
+    const buttons = stackedActions(row);
+    expect(actionLines(row)).toBe(lines);
+    // fewer lines than actions: side by side, not one to a line
+    expect(lines).toBeLessThan(buttons.length);
+    for (const button of buttons) {
+      // as wide as its label, not the row
+      expect(button.getBoundingClientRect().width).toBeLessThan(column.width - 1);
+    }
+  });
+  expectActionLabelsWhole(row);
   return row;
 };
 
@@ -1179,14 +1218,28 @@ export const ActionsKeepTheirWidthJustWiderThanAPhone: Story = {
     docs: {
       description: {
         story:
-          "Renders the same callout row in a 560px container on a wide screen: narrow for a severity row (under 640px), so its actions stack under the label, but just wider than a phone, so each is as wide as its label, not the row's width. A control spans its row only where its container is a phone's width or narrower.",
+          "Renders the same callout row with its default `narrowActions` (`'stack'`) in three containers on a wide screen, each narrow for a severity row (under 640px). In the 560px one, wider than a phone, See your subscription and Try again sit side by side under the label, each as wide as its label. In the 500px one, with a third action, Ask your workspace owner for more, the three do not fit on one line, so the third goes onto the next, still as wide as its label. In the 480px one, a phone's width, they stack one to a line, each the row's width. Actions that answer one callout stay together, and stack only where the container is a phone's width or narrower (Foxhoundn: the law of proximity; David, qorus#646).",
       },
     },
   },
-  render: () => <AllowanceRow width={560} />,
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <StoryRowBox width={560} caption='A 560px container: side by side'>
+        <AllowanceRow width={560} className='side-by-side-box' />
+      </StoryRowBox>
+      <StoryRowBox width={500} caption='A 500px container, three actions: side by side, wrapping'>
+        <AllowanceRow width={500} className='wrapping-box' actions={ALLOWANCE_ACTIONS_AND_OWNER} />
+      </StoryRowBox>
+      <StoryRowBox width={480} caption="A 480px container, a phone's width: stacked">
+        <AllowanceRow width={480} className='stacked-box' />
+      </StoryRowBox>
+    </ReqoreControlGroup>
+  ),
   play: async ({ canvasElement }) => {
-    const row = await expectActionsStacked(canvasElement);
-    expect(rowContainerIsPhoneWidth(row)).toBe(false);
+    await expectActionsSideBySide(canvasElement.querySelector('.side-by-side-box')!, 1);
+    await expectActionsSideBySide(canvasElement.querySelector('.wrapping-box')!, 2);
+    await expectActionsStacked(canvasElement.querySelector('.stacked-box')!);
+    expectRowsFillTheirBoxes(canvasElement, '.reqore-severity-row');
   },
 };
 

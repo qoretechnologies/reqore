@@ -17,10 +17,12 @@ export const DEFAULT_ACTIONS_MENU_LABEL = 'Actions';
  * How a row shows two or more actions where it is narrow.
  * - `'row'`: under the label, a row of buttons each as wide as what it says, onto another line where they do
  *   not fit. Every action stays in sight as it is at full width.
- * - `'stack'`: under the label, one to a line, its label whole: each the row's width where the row's container
- *   is a phone's width or narrower (on a phone, or as narrow a container on any screen), and as wide as its
- *   label in a wider one. For a callout whose actions are what it is there for ("Try again"), which a menu
- *   would hide.
+ * - `'stack'`: under the label, its labels whole. One to a line, each the row's width, where the row's container
+ *   is a phone's width or narrower (on a phone, or as narrow a container on any screen). In a wider container
+ *   (a narrow `ReqoreSeverityRow`, between 480 and 640px) side by side, each as wide as its label, onto another
+ *   line only where they do not fit, as with `'row'`: actions that answer one callout stay together (the law
+ *   of proximity; Foxhoundn and David, qorus#646). For a callout whose actions are what it is there for
+ *   ("Try again"), which a menu would hide.
  * - `'menu'`: one menu button, at the end of the label's line, opening a menu that names each action.
  *   The content keeps its width, and a list of rows does not grow by a line per action. Opted into, never a
  *   row's default: it hides what a row offers behind a button (qorus#646, Foxhoundn). A row of this mode
