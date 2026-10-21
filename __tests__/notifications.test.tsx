@@ -389,3 +389,41 @@ test('an intent tints the shadow the toast throws, so it reads as lifted', () =>
   expect(colouredLayers(dangerShadow)).toHaveLength(1);
   expect(colouredLayers(dangerShadow)[0]).toContain('168,42,42');
 });
+
+test('a notification with lift={false} keeps its surface and throws no shadow', () => {
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <AddButton id='lifted' intent='danger' />
+        <AddButton id='inline' intent='danger' lift={false} />
+      </ReqoreUIProvider>
+    );
+  });
+
+  const buttons = screen.getAllByText('Add Notification');
+  fireEvent.click(buttons[0]);
+  fireEvent.click(buttons[1]);
+
+  act(() => vi.advanceTimersByTime(500));
+
+  const [lifted, inline] = Array.from(
+    document.querySelectorAll('.reqore-notification')
+  ) as HTMLElement[];
+
+  const liftedShadow = getComputedStyle(lifted).boxShadow;
+  const inlineShadow = getComputedStyle(inline).boxShadow;
+
+  // the toast floats: contact + ambient + the light its intent casts
+  expect(liftedShadow).toContain('0 2px 6px -1px');
+  expect(liftedShadow).toContain('0 18px 36px -12px');
+  expect(liftedShadow).toContain('168,42,42');
+
+  // the inline one sits on the page: no drop shadow, no cast light...
+  expect(inlineShadow).not.toContain('0 2px 6px -1px');
+  expect(inlineShadow).not.toContain('0 18px 36px -12px');
+  expect(inlineShadow).not.toContain('168,42,42');
+  // ...but the raised edge, which is chrome, stays
+  expect(inlineShadow).toContain('inset');
+  // and the surface itself is untouched
+  expect(getComputedStyle(inline).backgroundColor).toBe(getComputedStyle(lifted).backgroundColor);
+});
