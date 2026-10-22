@@ -361,6 +361,71 @@ export const WithCustomTags: Story = {
   },
 };
 
+/** One line holding a chip, for the editors below. */
+const A_LINE_WITH_A_CHIP = [
+  {
+    type: 'paragraph' as const,
+    children: [
+      { text: 'Send to ' },
+      {
+        type: 'tag' as const,
+        value: '$data:{id:1}',
+        label: 'Customer name',
+        children: [{ text: '' }],
+      },
+      { text: ' when the order ships' },
+    ],
+  },
+];
+
+const CHIP_SAYS_SMALL = (): IReqoreTagProps => ({ size: 'small', intent: 'info' });
+const CHIP_SAYS_NO_SIZE = (): IReqoreTagProps => ({ intent: 'info' });
+
+/**
+ * A chip that says its own size is that size; one that does not is a size less than its editor. The editor's
+ * size used to win: a chip that has to be `small` for a finger to press it was `tiny` in a `small` editor, its
+ * label taller than its box (reqraft's reference chips, qorus#646).
+ */
+export const AChipKeepsTheSizeItAsksFor: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders two small editors holding the same line and chip, "Customer name". The first chip asks to be small and is small, 20px tall; the second asks for no size and is a size less than its editor, tiny, 17px tall (the editor draws its chips as badges).',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 480 }}>
+      <div className='story-chip-asks-small'>
+        <ReqoreRichTextEditor
+          size='small'
+          value={A_LINE_WITH_A_CHIP}
+          onChange={() => undefined}
+          getTagProps={CHIP_SAYS_SMALL}
+        />
+      </div>
+      <div className='story-chip-asks-no-size'>
+        <ReqoreRichTextEditor
+          size='small'
+          value={A_LINE_WITH_A_CHIP}
+          onChange={() => undefined}
+          getTagProps={CHIP_SAYS_NO_SIZE}
+        />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const chipIn = (editor: string) =>
+      canvasElement.querySelector<HTMLElement>(`.${editor} .reqore-tag`);
+    await waitFor(() => expect(chipIn('story-chip-asks-small')).toBeTruthy());
+    // asked to be small: small, whatever the editor's size
+    await expect(chipIn('story-chip-asks-small')!.getBoundingClientRect().height).toBe(20);
+    // asked for no size: a size less than the small editor
+    await expect(chipIn('story-chip-asks-no-size')!.getBoundingClientRect().height).toBe(17);
+  },
+};
+
 export const ListWithCustomTheme: Story = {
   parameters: {
     docs: {
