@@ -339,7 +339,16 @@ const StyledTierGroupViewport = styled.div<{
           /* Hidden where clip is not supported (which also clips the front tier's shadow). */
           overflow-x: hidden;
           overflow-x: clip;
-          touch-action: pan-y;
+          /* The swipe is the stack's; a vertical move stays the page's, and a pinch zooms. Set on
+             every element inside too: the browser resolves touch-action only up to the nearest
+             scroll container, and a tier's panel is one (its content scrolls), so on the frame alone
+             it never reached a finger on a tier: the browser took the horizontal pan and cancelled
+             the pointer, and on a phone no swipe moved the stack. */
+          touch-action: pan-y pinch-zoom;
+
+          & * {
+            touch-action: pan-y pinch-zoom;
+          }
 
           ${
             $dragging &&
