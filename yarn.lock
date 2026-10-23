@@ -4698,9 +4698,9 @@
     "@storybook/global" "^5.0.0"
 
 "@storybook/addon-vitest@^10.4.3":
-  version "10.4.3"
-  resolved "https://registry.yarnpkg.com/@storybook/addon-vitest/-/addon-vitest-10.4.3.tgz#188b993930d06b6574df0f014df895f18008b8e0"
-  integrity sha512-np5qbyc/A7bZTvRlap9eaNmp9ix9yBBhMc3ClF4u2NkyI9MNLRH2xh66mI9lsShTyUZ6NAD8Uj72YJXkcigP6w==
+  version "10.6.2"
+  resolved "https://registry.yarnpkg.com/@storybook/addon-vitest/-/addon-vitest-10.6.2.tgz#0539b5a763e826497d77b5a7a4893afbe5298849"
+  integrity sha512-gyyBzncvUyEgWQR3LinnGuI4UsWIUYLyw1u8i244aTxmY4uxCYjsDmUNkaSr8xQzNz8nh2Ckh3G4bO4SvJ6nJQ==
   dependencies:
     "@storybook/global" "^5.0.0"
     "@storybook/icons" "^2.0.2"
