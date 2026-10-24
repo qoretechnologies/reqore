@@ -226,14 +226,17 @@ release on npm.
   means a resize callback changed the layout it observes in the same frame, often by setting state
   synchronously (react-popper's `forceUpdate` renders with `flushSync`). Defer that change to the next
   frame (`requestAnimationFrame`, once per frame), or measure without changing the layout.
-- **No warnings:** a story fails when React warns, or when anything else warns on the console
-  (`src/stories/utils/reactWarningGate.ts`): a library given a state it cannot use as given (a field
-  that turns from uncontrolled to controlled), a control given a value of another type,
-  styled-components making "Over 200 classes" for a component (a color or length written into its
-  styles: set it in a CSS variable on the element instead, as Button, Tag and the table cell do),
-  or a Reqore component saying a prop has no effect. A story that does on purpose what a component
-  warns about checks the warning instead: `expectedWarning(/…/)` (`src/stories/utils/expectedWarning.ts`)
-  is its `beforeEach`, and its play calls `expectWarned()`. An error on the console is not a warning.
+- **No warnings or errors:** a story fails when React warns, when anything else warns on the console,
+  or when anything logs an error there (`src/stories/utils/reactWarningGate.ts`): a library given a
+  state it cannot use as given (a field that turns from uncontrolled to controlled), a control given
+  a value of another type, styled-components making "Over 200 classes" for a component (a color or
+  length written into its styles: set it in a CSS variable on the element instead, as Button, Tag
+  and the table cell do), a Reqore component saying a prop has no effect, an error boundary logging
+  what it caught, or an error the page did not handle (the story run logs it). A story that does on
+  purpose what a component warns about, or shows what an error does, checks it instead
+  (`src/stories/utils/expectedConsole.ts`): `expectedWarning(/…/)` or `expectedError(/…/, …)` is its
+  `beforeEach`, and its play calls `expectWarned()` or `expectErrored()`, which check each was given
+  once and keep it off the console.
 - **CSS variables in unit tests:** jsdom gives a property that reads a CSS variable as written;
   `__tests__/setup.ts` installs `__tests__/cssVariables.ts`, so `getComputedStyle` computes it to
   the variable's value as a browser does. A test that reads a stylesheet rule itself computes the

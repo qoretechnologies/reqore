@@ -5,6 +5,7 @@ import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreButton from '../../components/Button';
 import { ReqoreErrorBoundary } from '../../components/ErrorBoundary';
 import { StoryMeta } from '../utils';
+import { expectedError } from '../utils/expectedConsole';
 
 const ThrowsError = () => {
   const [error, setError] = useState(false);
@@ -17,6 +18,17 @@ const ThrowsError = () => {
 
   return <ReqoreButton onClick={() => setError(true)}>Throw error</ReqoreButton>;
 };
+
+/**
+ * What a story logs when ThrowsError throws, each once: React, in development, reports the error it hands to the
+ * boundary as uncaught too (the story run logs that report), then says which component threw it; and the boundary
+ * logs what it caught, as it does in production.
+ */
+const THROWN = expectedError(
+  /^Error: Uncaught Error: This is a test error$/,
+  /^The above error occurred in the <ThrowsError> component:/,
+  /^ReqoreErrorBoundary caught an error: Error: This is a test error/
+);
 
 const meta = {
   title: 'Utilities/Error Boundary',
@@ -56,11 +68,13 @@ export const Throws: Story = {
     children: <ThrowsError />,
     doNotCatch: false,
   },
+  beforeEach: THROWN.beforeEach,
   play: async ({ args }) => {
     await _testsClickButton({ label: 'Throw error' });
     await _testsWaitForText('Something went wrong');
 
     await expect(args.onError).toHaveBeenCalled();
+    await THROWN.expectErrored();
   },
 };
 
@@ -94,11 +108,13 @@ export const WithCustomMessage: Story = {
     children: <ThrowsError />,
     errorMessage: 'Ooooopsie doopsie, something went wrong!',
   },
+  beforeEach: THROWN.beforeEach,
   play: async ({ args }) => {
     await _testsClickButton({ label: 'Throw error' });
     await _testsWaitForText('Ooooopsie doopsie, something went wrong!');
 
     await expect(args.onError).toHaveBeenCalled();
+    await THROWN.expectErrored();
   },
 };
 
@@ -119,11 +135,13 @@ export const WithCustomGlobalMessage: Story = {
       },
     },
   },
+  beforeEach: THROWN.beforeEach,
   play: async ({ args }) => {
     await _testsClickButton({ label: 'Throw error' });
     await _testsWaitForText('Ha! You thought you could break me! And you did! :D');
 
     await expect(args.onError).toHaveBeenCalled();
+    await THROWN.expectErrored();
   },
 };
 

@@ -30,7 +30,7 @@ import {
 } from '../../index';
 import tableData from '../../mock/tableData';
 import { StoryMeta } from '../utils';
-import { expectedWarning } from '../utils/expectedWarning';
+import { expectedWarning } from '../utils/expectedConsole';
 import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 import { expectTableContentWithinItsRows } from '../utils/tableGeometry';
 import {

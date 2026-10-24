@@ -1,8 +1,10 @@
 // Copyright 2026 Qore Technologies, s.r.o.
 import { describe, expect, it } from 'vitest';
 import {
+  CONSOLE_ERROR_RULE,
   CONSOLE_WARNING_RULE,
   REACT_WARNING_RULES,
+  consoleError,
   consoleWarning,
   reactWarning,
   reactWarningsFailure,
@@ -206,6 +208,7 @@ describe('a watch on the console', () => {
     expect(watch.take().map((warning) => warning.rule.name)).toEqual([
       "React's validateDOMNesting",
       "React's deprecation warning",
+      'a console error',
     ]);
     expect(watch.take()).toEqual([]);
     expect(printed).toEqual([
@@ -215,7 +218,7 @@ describe('a watch on the console', () => {
     ]);
   });
 
-  it("keeps every other warning under its own rule, and no error that is not React's", () => {
+  it("keeps every other warning and error under its own rule, React's under React's", () => {
     const { printed, console } = printing();
     const watch = watchReactWarnings(console);
     console.warn(
@@ -225,7 +228,8 @@ describe('a watch on the console', () => {
       'sc-a'
     );
     console.warn('WARN: A component changed from uncontrolled to controlled.');
-    console.error('Request failed', 404);
+    console.error(new Error('Uncaught Error: This is a test error'));
+    console.error('ReqoreErrorBoundary caught an error:', new Error('boom'), '\n    at Thrower');
     const kept = watch.take();
     expect(kept.map(({ rule, text }) => [rule.name, text.split('\n')[0]])).toEqual([
       [
@@ -233,12 +237,14 @@ describe('a watch on the console', () => {
         'Over 200 classes were generated for component styled.span with the id of "sc-a".',
       ],
       ['a console warning', 'WARN: A component changed from uncontrolled to controlled.'],
+      ['a console error', 'Error: Uncaught Error: This is a test error'],
+      ['a console error', 'ReqoreErrorBoundary caught an error: Error: boom'],
     ]);
     // the frames it names are where the warning was given, never the watch's own, which every call's stack starts with
     expect(kept.filter(({ text }) => text.includes('stories/utils/reactWarningGate.ts'))).toEqual(
       []
     );
-    expect(printed).toHaveLength(3);
+    expect(printed).toHaveLength(4);
   });
 
   it('passes on a call it cannot read as text, unread', () => {
@@ -293,6 +299,23 @@ describe('a console warning', () => {
   });
 });
 
+describe('a console error', () => {
+  it("is what the call says, with the frames that name reqore's source, under its own rule", () => {
+    expect(
+      consoleError(
+        ['ReqoreErrorBoundary caught an error:', new Error('boom'), '\n    at Thrower'],
+        LOADING_STACK
+      )
+    ).toEqual({
+      rule: CONSOLE_ERROR_RULE,
+      text: [
+        'ReqoreErrorBoundary caught an error: Error: boom',
+        'at src/components/Date/index.tsx:9:16',
+      ].join('\n    '),
+    });
+  });
+});
+
 describe('the failure a story is given', () => {
   const nesting = reactWarning(NESTED_PARAGRAPH)!;
   const factory = reactWarning(CREATE_FACTORY, LOADING_STACK)!;
@@ -311,8 +334,9 @@ describe('the failure a story is given', () => {
     );
   });
 
-  it("names a console warning after React's, under its own rule", () => {
-    expect(reactWarningsFailure({ during: [classes, nesting] })?.message).toBe(
+  it("names a console warning and then a console error after React's, each under its own rule", () => {
+    const uncaught = consoleError([new Error('Uncaught Error: This is a test error')]);
+    expect(reactWarningsFailure({ during: [uncaught, classes, nesting] })?.message).toBe(
       [
         "The story renders markup a browser does not build as written (React's validateDOMNesting): put the inner " +
           'element where its parent may hold it, or make it one that can be there.',
@@ -320,6 +344,9 @@ describe('the failure a story is given', () => {
         'Something the story renders or does warned on the console (a console warning): give what warned what it ' +
           'asks for, or stop doing what it says has no effect.',
         '  - Over 200 classes were generated for component styled.span',
+        'Something the story renders or does logged an error on the console (a console error): fix what threw ' +
+          'it; a story that shows what an error does checks it with `expectedError` instead.',
+        '  - Error: Uncaught Error: This is a test error',
       ].join('\n')
     );
   });
