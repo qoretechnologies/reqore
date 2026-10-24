@@ -821,3 +821,59 @@ export const ScaledToItsTextOnAPhone: Story = {
     await expectScaledFieldsHoldTheirText();
   },
 };
+
+const FieldsThatChangeWidth = () => {
+  const [narrowed, setNarrowed] = useState(false);
+  const [shown, setShown] = useState(false);
+
+  return (
+    <div style={{ display: 'flex', flexFlow: 'column', gap: 12, alignItems: 'flex-start' }}>
+      <ReqoreButton className='story-narrow-the-note' onClick={() => setNarrowed(true)}>
+        Narrow the note
+      </ReqoreButton>
+      <div style={{ width: narrowed ? 200 : 520, maxWidth: '100%' }}>
+        <ReqoreTextarea
+          className='story-scaled-narrowed'
+          fluid
+          scaleWithContent
+          value={LONG_NOTE}
+        />
+      </div>
+      <ReqoreButton className='story-show-the-note' onClick={() => setShown(true)}>
+        Show the hidden note
+      </ReqoreButton>
+      <div style={{ display: shown ? 'block' : 'none', width: 360, maxWidth: '100%' }}>
+        <ReqoreTextarea className='story-scaled-shown' fluid scaleWithContent value={LONG_NOTE} />
+      </div>
+    </div>
+  );
+};
+
+export const ScaledToItsTextWhenItsWidthChanges: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a long note in a field that scales with its content, and another one hidden. "Narrow the note" narrows the first from 520px to 200px, and "Show the hidden note" shows the second: each then wraps the note to its new width and grows with it, so all of it shows, with nothing to scroll.',
+      },
+    },
+  },
+  render: () => <FieldsThatChangeWidth />,
+  play: async () => {
+    const narrowed = await waitFor(() =>
+      requiredElement<HTMLTextAreaElement>('textarea.story-scaled-narrowed', 'the field to narrow')
+    );
+    await expectFieldsHoldTheirText([{ textarea: narrowed, what: 'the field at 520px' }]);
+    await userEvent.click(requiredElement('.story-narrow-the-note', 'the narrowing button'));
+    await waitFor(() => expect(narrowed.getBoundingClientRect().width).toBe(200));
+    await expectFieldsHoldTheirText([{ textarea: narrowed, what: 'the field narrowed to 200px' }]);
+
+    await userEvent.click(requiredElement('.story-show-the-note', 'the showing button'));
+    const shown = requiredElement<HTMLTextAreaElement>(
+      'textarea.story-scaled-shown',
+      'the shown field'
+    );
+    await waitFor(() => expect(shown.getBoundingClientRect().width).toBe(360));
+    await expectFieldsHoldTheirText([{ textarea: shown, what: 'the field shown' }]);
+  },
+};
