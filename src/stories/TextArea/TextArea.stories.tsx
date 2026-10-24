@@ -6,6 +6,8 @@ import { sleep } from '../../helpers/utils';
 import { ReqoreButton, ReqoreControlGroup, ReqoreTextarea } from '../../index';
 import { StoryMeta } from '../utils';
 import { StoryForm, storyFormText } from '../utils/formPreview';
+import { requiredElement } from '../utils/required';
+import { PHONE_STORY, PHONE_VIEWPORT } from '../utils/touchScreen';
 import { ALL_SIZES, DisabledArg, MinimalArg, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTextareaProps>();
@@ -693,5 +695,129 @@ export const EscapeClosesTheListNotTheEditorAroundIt: Story = {
     await expect(document.activeElement).toBe(field);
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(heard()).toBe(1));
+  },
+};
+
+/* -------------------------------------------------------------------------------------------
+ * Scaled to its text: a field that scales with its content is as high as its text, padding and
+ * border, whatever its border, size and box-sizing, and at whatever width it is drawn.
+ * ----------------------------------------------------------------------------------------- */
+
+const LONG_NOTE =
+  'Orders are exported once all of their lines are picked. A line that is short is held back, ' +
+  'and the order waits for it, so that the customer gets one delivery and one invoice.';
+
+/** The scaled-to-its-text fields: each border, a size each way, and a content box. */
+const SCALED_FIELDS: { name: string; props: IReqoreTextareaProps }[] = [
+  { name: 'bordered', props: {} },
+  { name: 'minimal', props: { minimal: true } },
+  { name: 'flat', props: { flat: true } },
+  { name: 'small', props: { size: 'small' } },
+  { name: 'big', props: { size: 'big' } },
+  // a content box's padding (6px) and border (1px) are outside its width, so it leaves room for them
+  {
+    name: 'content-box',
+    props: { style: { boxSizing: 'content-box', width: 'calc(100% - 14px)' } },
+  },
+];
+
+/**
+ * Whether `textarea` has text past its box: something to scroll, and a scrollbar where the
+ * platform draws them.
+ */
+const textPastItsBox = (textarea: HTMLTextAreaElement, what: string): string[] => {
+  const { scrollHeight: text, clientHeight: box } = textarea;
+
+  return text > box ? [`${what}: ${text}px of text and padding in a ${box}px box`] : [];
+};
+
+/**
+ * Whether `textarea`'s box is higher than its text and padding. What the text needs is read with
+ * the field's height and min-height set aside for the reading, and put back before anything is
+ * drawn. It writes to the page, so it is read once the field has settled, never in a `waitFor`:
+ * each write would run the `waitFor` again.
+ */
+const boxPastItsText = (textarea: HTMLTextAreaElement, what: string): string[] => {
+  const box = textarea.clientHeight;
+  const { height, minHeight } = textarea.style;
+  textarea.style.minHeight = '0';
+  textarea.style.height = '0';
+  const needed = textarea.scrollHeight;
+  textarea.style.height = height;
+  textarea.style.minHeight = minHeight;
+
+  return box - needed > 1 ? [`${what}: a ${box}px box for ${needed}px of text and padding`] : [];
+};
+
+/** The fields show all of their text and no more: no text past its box, no box past its text. */
+const expectFieldsHoldTheirText = async (
+  fields: { textarea: HTMLTextAreaElement; what: string }[]
+) => {
+  const expectNone = (misses: string[]) => expect(misses, misses.join('; ')).toEqual([]);
+
+  await waitFor(() =>
+    expectNone(fields.flatMap(({ textarea, what }) => textPastItsBox(textarea, what)))
+  );
+  expectNone(fields.flatMap(({ textarea, what }) => boxPastItsText(textarea, what)));
+};
+
+const ScaledFields = ({ width }: { width?: number }) => (
+  <div className='story-scaled-fields' style={{ display: 'flex', flexFlow: 'column', gap: 12 }}>
+    {SCALED_FIELDS.map(({ name, props }) => (
+      <div key={name} style={{ width, maxWidth: '100%' }}>
+        <ReqoreTextarea
+          {...props}
+          className={`story-scaled-${name}`}
+          fluid
+          scaleWithContent
+          value={LONG_NOTE}
+        />
+      </div>
+    ))}
+  </div>
+);
+
+const expectScaledFieldsHoldTheirText = async () => {
+  const fields = await waitFor(() =>
+    SCALED_FIELDS.map(({ name }) => ({
+      what: `the ${name} field`,
+      textarea: requiredElement<HTMLTextAreaElement>(
+        `textarea.story-scaled-${name}`,
+        `the ${name} field`
+      ),
+    }))
+  );
+  await expectFieldsHoldTheirText(fields);
+};
+
+export const ScaledToItsTextInsideItsBorder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a long note in fields that scale with their content, 360px wide: bordered, minimal, flat, small, big and one laid out in a content box. Each is as high as its text, padding and border: all of the note shows, with nothing to scroll and no empty line under it.',
+      },
+    },
+  },
+  render: () => <ScaledFields width={360} />,
+  play: expectScaledFieldsHoldTheirText,
+};
+
+export const ScaledToItsTextOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders the same fields across a phone (390px). Each wraps the note to the screen and is as high as its text, padding and border: all of it shows, with nothing to scroll and no empty line under it.',
+      },
+    },
+  },
+  render: () => <ScaledFields />,
+  play: async () => {
+    await expect(document.documentElement.clientWidth).toBeLessThanOrEqual(PHONE_VIEWPORT.width);
+    await expectScaledFieldsHoldTheirText();
   },
 };
