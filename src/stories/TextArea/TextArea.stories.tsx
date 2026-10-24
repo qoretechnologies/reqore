@@ -798,6 +798,8 @@ const expectScaledFieldsHoldTheirText = async () => {
 };
 
 export const ScaledToItsTextInsideItsBorder: Story = {
+  // run again where scrollbars take room: a field is measured while its text overflows
+  tags: ['scrollbars'],
   parameters: {
     docs: {
       description: {
@@ -811,6 +813,7 @@ export const ScaledToItsTextInsideItsBorder: Story = {
 };
 
 export const ScaledToItsTextOnAPhone: Story = {
+  // not `scrollbars`: a phone draws its scrollbars over the content
   tags: ['touch'],
   globals: PHONE_STORY.globals,
   parameters: {
@@ -867,6 +870,8 @@ const FieldsAtEveryWidth = () => (
 );
 
 export const ScaledToItsTextAtEveryWidth: Story = {
+  // run again where scrollbars take room: a field is measured while its text overflows
+  tags: ['scrollbars'],
   parameters: {
     docs: {
       description: {
@@ -915,6 +920,8 @@ const FieldsThatChangeWidth = () => {
 };
 
 export const ScaledToItsTextWhenItsWidthChanges: Story = {
+  // run again where scrollbars take room: a field is measured while its text overflows
+  tags: ['scrollbars'],
   parameters: {
     docs: {
       description: {
