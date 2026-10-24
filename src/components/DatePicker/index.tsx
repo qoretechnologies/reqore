@@ -1,6 +1,7 @@
 import {
   getLocalTimeZone,
   isSameDay,
+  now,
   Time,
   toCalendarDateTime,
   toZoned,
@@ -516,7 +517,10 @@ export const DatePicker = <T extends TDateValue>({
       <Calendar<ZonedDateTime>
         defaultFocusedValue={value}
         onChange={handleCalendarDateChange}
-        focusedValue={focusedValue}
+        /* always a date: react-aria reads a focused value of null as none given, so the calendar was
+           uncontrolled until the first date was focused and then controlled, and warned. With none
+           focused yet, it is the date the calendar opens on: the value's, or today's. */
+        focusedValue={focusedValue ?? value ?? now(getLocalTimeZone())}
         onFocusChange={(date) => setFocusedValue(toZoned(date, getLocalTimeZone()))}
         minValue={toDate(minValue)}
         maxValue={toDate(maxValue)}
@@ -596,7 +600,10 @@ export const DatePicker = <T extends TDateValue>({
           {showTime && (
             <ReqoreControlGroup fluid>
               <StyledTimeField
-                value={time}
+                /* controlled from the first render: with no time yet it is `null`, not `undefined`, which
+                   react-aria reads as uncontrolled, so picking the first date switched the field over and
+                   it warned */
+                value={time ?? null}
                 onChange={onTimeChange}
                 granularity={granularity}
                 hideTimeZone={hideTimeZone}
