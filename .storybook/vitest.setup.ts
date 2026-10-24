@@ -44,8 +44,18 @@ const annotations = setProjectAnnotations([
        how to tag it. */
     beforeEach: async ({ tags, title, name }) => {
       /* A story runs with the motion the user would see, unless it is about reduced motion (tagged
-         `reduced-motion`): the contrast gate after the story before it asked for reduced motion. */
-      await commands.emulateReducedMotion(tags.includes('reduced-motion'));
+         `reduced-motion`): the contrast gate after the story before it asked for reduced motion.
+
+         The projects that run stories a second time only to check them (with scrollbars, in the POSIX
+         locale) run them under reduced motion from the start. They make no captures, and qlip's
+         capture is what let a fade finish before the contrast gate measured it: without it the gate
+         measured a field's clear button 5% into its fade-in, at 1.3:1. Under reduced motion it is
+         drawn at its settled opacity from its first paint. */
+      await commands.emulateReducedMotion(
+        tags.includes('reduced-motion') ||
+          inProject(SCROLLBARS_STORY_PROJECT) ||
+          inProject(POSIX_LOCALE_STORY_PROJECT)
+      );
 
       if (tags.includes('touch') && !onThePhone()) {
         throw new Error(
