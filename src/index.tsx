@@ -26,10 +26,12 @@ export { default as ReqoreControlGroupItem } from './components/ControlGroup/ite
 export type {
   IReqoreDataViewEmbedded,
   IReqoreDataViewEnvelope,
+  IReqoreDataViewLabels,
   IReqoreDataViewProps,
 } from './components/DataView';
 export {
   DEFAULT_ENVELOPE as ReqoreDataViewDefaultEnvelope,
+  REQORE_DATA_VIEW_DEFAULT_LABELS,
   ReqoreDataView,
   reqoreDataValueIntent,
   reqoreDataValueKind,
