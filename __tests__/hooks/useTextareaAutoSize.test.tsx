@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
 import { ReqoreContent, ReqoreLayoutContent, ReqoreTextarea, ReqoreUIProvider } from '../../src';
 import { getTextareaHeightForText } from '../../src/hooks/useTextareaAutoSize';
@@ -108,6 +108,36 @@ describe('<ReqoreTextarea scaleWithContent />', () => {
     expect(
       document.querySelector<HTMLTextAreaElement>('textarea.reqore-textarea').style.height
     ).toBe('');
+  });
+
+  it('is measured with no scrollbar, at the width it is drawn at, and keeps its own style', () => {
+    /* Where the platform draws classic scrollbars, a field whose text overflows draws one, and
+       its text wraps narrower, onto more lines: 24px more here. And a field as wide as its
+       columns is narrower with no scrollbar unless its width is held: 24px more again. */
+    const measuredAt: { overflowY: string; width: string }[] = [];
+    let drawnWidth = '';
+    vi.spyOn(HTMLTextAreaElement.prototype, 'scrollHeight', 'get').mockImplementation(function (
+      this: HTMLTextAreaElement
+    ) {
+      const { overflowY, width } = this.style;
+      measuredAt.push({ overflowY, width });
+
+      return TEXT_AND_PADDING + (overflowY === 'hidden' ? 0 : 24) + (width === drawnWidth ? 0 : 24);
+    });
+
+    renderTextarea({ style: { overflowY: 'scroll' } });
+    const textarea = document.querySelector<HTMLTextAreaElement>('textarea.reqore-textarea');
+    drawnWidth = getComputedStyle(textarea).width;
+    expect(drawnWidth).not.toBe('');
+    measuredAt.length = 0;
+    // a new text is fitted again
+    fireEvent.change(textarea, { target: { value: 'A longer note' } });
+
+    expect(measuredAt).toEqual([{ overflowY: 'hidden', width: drawnWidth }]);
+    expect(textarea.style.height).toBe(`${TEXT_AND_PADDING + 2}px`);
+    // the caller's overflow is put back, and the width is the field's own again
+    expect(textarea.style.overflowY).toBe('scroll');
+    expect(textarea.style.width).toBe('');
   });
 });
 

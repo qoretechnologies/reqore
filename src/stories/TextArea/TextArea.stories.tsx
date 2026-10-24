@@ -714,7 +714,7 @@ const SCALED_FIELDS: { name: string; props: IReqoreTextareaProps }[] = [
   { name: 'flat', props: { flat: true } },
   { name: 'small', props: { size: 'small' } },
   { name: 'big', props: { size: 'big' } },
-  // a content box's padding (6px) and border (1px) are outside its width, so it leaves room for them
+  // a content box's padding (6px) and border (1px) are outside its width: it leaves room for them
   {
     name: 'content-box',
     props: { style: { boxSizing: 'content-box', width: 'calc(100% - 14px)' } },
@@ -733,18 +733,25 @@ const textPastItsBox = (textarea: HTMLTextAreaElement, what: string): string[] =
 
 /**
  * Whether `textarea`'s box is higher than its text and padding. What the text needs is read with
- * the field's height and min-height set aside for the reading, and put back before anything is
- * drawn. It writes to the page, so it is read once the field has settled, never in a `waitFor`:
- * each write would run the `waitFor` again.
+ * the field's height and min-height set aside for the reading, with no scrollbar and at the width
+ * the field is drawn at: where the platform draws classic scrollbars, a field too low for its text
+ * keeps room for one even at no height, and its text wraps narrower than it is drawn; and a field
+ * as wide as its columns is narrower with no scrollbar, which it counts in its width while it may
+ * scroll. All of it is put back before anything is drawn. It writes to the page, so it is read
+ * once the field has settled, never in a `waitFor`: each write would run the `waitFor` again.
  */
 const boxPastItsText = (textarea: HTMLTextAreaElement, what: string): string[] => {
   const box = textarea.clientHeight;
-  const { height, minHeight } = textarea.style;
+  const { height, minHeight, overflowY, width } = textarea.style;
+  textarea.style.width = getComputedStyle(textarea).width;
   textarea.style.minHeight = '0';
   textarea.style.height = '0';
+  textarea.style.overflowY = 'hidden';
   const needed = textarea.scrollHeight;
+  textarea.style.overflowY = overflowY;
   textarea.style.height = height;
   textarea.style.minHeight = minHeight;
+  textarea.style.width = width;
 
   return box - needed > 1 ? [`${what}: a ${box}px box for ${needed}px of text and padding`] : [];
 };
@@ -818,6 +825,66 @@ export const ScaledToItsTextOnAPhone: Story = {
   render: () => <ScaledFields />,
   // run on the phone by its `touch` tag (vitest.config.ts); it holds at any width it is opened at
   play: expectScaledFieldsHoldTheirText,
+};
+
+/** Every 20px from 200px to 600px: the widths of the at-every-width story's fluid fields. */
+const EVERY_WIDTH = Array.from({ length: 21 }, (_, index) => 200 + index * 20);
+
+/** Every 2 columns from 16 to 40: the columns of the at-every-width story's other fields. */
+const EVERY_COLS = Array.from({ length: 13 }, (_, index) => 16 + index * 2);
+
+const AT_EVERY_WIDTH = [
+  ...EVERY_WIDTH.map((width) => ({ name: `at-${width}`, what: `the field ${width}px wide` })),
+  ...EVERY_COLS.map((cols) => ({ name: `cols-${cols}`, what: `the field ${cols} columns wide` })),
+];
+
+const FieldsAtEveryWidth = () => (
+  <div style={{ display: 'flex', flexFlow: 'column', gap: 12 }}>
+    <div style={{ display: 'flex', flexFlow: 'row wrap', gap: 12, alignItems: 'flex-start' }}>
+      {EVERY_WIDTH.map((width) => (
+        <div key={width} style={{ width, maxWidth: '100%' }}>
+          <ReqoreTextarea
+            className={`story-scaled-at-${width}`}
+            fluid
+            scaleWithContent
+            value={LONG_NOTE}
+          />
+        </div>
+      ))}
+    </div>
+    <div style={{ display: 'flex', flexFlow: 'row wrap', gap: 12, alignItems: 'flex-start' }}>
+      {EVERY_COLS.map((cols) => (
+        <ReqoreTextarea
+          key={cols}
+          className={`story-scaled-cols-${cols}`}
+          cols={cols}
+          scaleWithContent
+          value={LONG_NOTE}
+        />
+      ))}
+    </div>
+  </div>
+);
+
+export const ScaledToItsTextAtEveryWidth: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the long note in fields that scale with their content: fluid ones from 200px to 600px wide, 20px apart, and ones as wide as their columns, from 16 to 40. Each is as high as its text, padding and border at its width, with nothing to scroll and no empty line under it, also where the platform draws scrollbars, which take room from the text.',
+      },
+    },
+  },
+  render: () => <FieldsAtEveryWidth />,
+  play: async () => {
+    const fields = await waitFor(() =>
+      AT_EVERY_WIDTH.map(({ name, what }) => ({
+        what,
+        textarea: requiredElement<HTMLTextAreaElement>(`textarea.story-scaled-${name}`, what),
+      }))
+    );
+    await expectFieldsHoldTheirText(fields);
+  },
 };
 
 const FieldsThatChangeWidth = () => {
