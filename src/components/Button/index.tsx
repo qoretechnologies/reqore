@@ -576,6 +576,113 @@ const getStyledButtonPaint = (props: IReqoreButtonStyle): IReqoreButtonPaint =>
   props.$paint ??
   getButtonPaint(props, getButtonStateColors(props, props.active), !!props.description);
 
+/** The CSS variable each color of a button's paint is set in, on the button. */
+const BUTTON_PAINT_VARIABLES: Record<keyof IReqoreButtonPaint, `--${string}`> = {
+  background: '--reqore-button-background',
+  text: '--reqore-button-text',
+  edge: '--reqore-button-edge',
+  ring: '--reqore-button-ring',
+  hoverBackground: '--reqore-button-hover-background',
+  hoverText: '--reqore-button-hover-text',
+  activeText: '--reqore-button-active-text',
+  activeEdge: '--reqore-button-active-edge',
+  activeHoverEdge: '--reqore-button-active-hover-edge',
+  description: '--reqore-button-description',
+  hoverDescription: '--reqore-button-hover-description',
+};
+
+/**
+ * A button's paint as CSS variables on the button, which its styles read (`paintOf`). Written into the styles, every
+ * color a button is drawn in made a class of its own - a page of buttons in each intent, minimal, flat and active
+ * made hundreds, and styled-components warned - where the styles now differ only in what the button is.
+ */
+const getButtonPaintVariables = (props: IReqoreButtonStyle): Record<`--${string}`, string> => {
+  const paint = getStyledButtonPaint(props);
+
+  return Object.fromEntries(
+    (Object.keys(BUTTON_PAINT_VARIABLES) as (keyof IReqoreButtonPaint)[])
+      .filter((color) => paint[color])
+      .map((color) => [BUTTON_PAINT_VARIABLES[color], paint[color] as string])
+  );
+};
+
+/**
+ * The value a button's styles give a property for one of its paint's colors: the variable it is set in, or - a color
+ * the paint has none for - nothing, as the color itself was, so the declaration is dropped as before.
+ */
+const paintOf = (props: IReqoreButtonStyle, color: keyof IReqoreButtonPaint) => {
+  const value = getStyledButtonPaint(props)[color];
+
+  return value ? `var(${BUTTON_PAINT_VARIABLES[color]})` : value;
+};
+
+/** A button's height (and a square one's width): its size's, with its vertical padding's change on both sides. */
+const getButtonBoxPx = ({ size, verticalPadding = 'normal' }: IReqoreButtonStyle) =>
+  SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2;
+
+/**
+ * The lengths a button is drawn at, as its styles wrote them: from its size, vertical padding and shape, and its own
+ * `maxWidth`. `undefined` where it has none (a radius when it is not rounded).
+ */
+const BUTTON_LENGTHS = {
+  '--reqore-button-padding': ({ size, compact, verticalPadding = 'normal', square }) =>
+    `${
+      CONTROL_VERTICAL_PADDING_FROM_SIZE[size] +
+      CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding]
+    }px ${
+      square
+        ? 0
+        : compact
+        ? CONTROL_VERTICAL_PADDING_FROM_SIZE[size]
+        : CONTROL_HORIZONTAL_PADDING_FROM_SIZE[size]
+    }px`,
+  '--reqore-button-font-size': ({ size }) => `${CONTROL_TEXT_FROM_SIZE[size]}px`,
+  '--reqore-button-min-height': (props) => `${getButtonBoxPx(props)}px`,
+  '--reqore-button-min-width': (props) =>
+    `${props.square ? getButtonBoxPx(props) : SIZE_TO_PX[props.size]}px`,
+  '--reqore-button-width': (props) => `${getButtonBoxPx(props)}px`,
+  '--reqore-button-max-width': (props) =>
+    props.square ? `${getButtonBoxPx(props)}px` : props.maxWidth || '100%',
+  '--reqore-button-max-height': (props) => `${getButtonBoxPx(props)}px`,
+  '--reqore-button-radius': ({ size, radiusSize, rounded, pill, circle }) =>
+    rounded === false
+      ? undefined
+      : circle
+      ? '9999px'
+      : `${resolveRadius(size, radiusSize) * (pill ? PILL_RADIUS_MODIFIER : 1)}px`,
+  '--reqore-button-description-padding': ({ size }) => `${PADDING_FROM_SIZE[size] / 2}px`,
+} satisfies Record<`--${string}`, (props: IReqoreButtonStyle) => string | undefined>;
+
+/** Whether a length the styles wrote is one CSS takes: not missing, and not made of a size the button lacks. */
+const isUsableLength = (length?: string): length is string =>
+  !!length && !/NaN|undefined/.test(length);
+
+/**
+ * The value a button's styles give a property for one of its lengths: the variable it is set in, or - a length that
+ * is not one - what the styles wrote before, which CSS drops as it did.
+ */
+const lengthOf = (props: IReqoreButtonStyle, variable: keyof typeof BUTTON_LENGTHS) => {
+  const length = BUTTON_LENGTHS[variable](props);
+
+  return isUsableLength(length) ? `var(${variable})` : length;
+};
+
+/**
+ * What a button is drawn with as CSS variables on the button, which its styles read: its paint's colors and its
+ * lengths. Written into the styles, each color and length made a class of its own - a page of buttons in each
+ * intent, size and shape made hundreds, and styled-components warned - where the styles now differ only in what the
+ * button is (flat, square, active, read only, ...).
+ */
+const getButtonVariables = (props: IReqoreButtonStyle): Record<`--${string}`, string> => {
+  const lengths = (Object.keys(BUTTON_LENGTHS) as (keyof typeof BUTTON_LENGTHS)[])
+    .map((variable) => [variable, BUTTON_LENGTHS[variable](props)] as const)
+    .filter((entry): entry is readonly [keyof typeof BUTTON_LENGTHS, string] =>
+      isUsableLength(entry[1])
+    );
+
+  return { ...getButtonPaintVariables(props), ...Object.fromEntries(lengths) };
+};
+
 export const StyledAnimatedTextWrapper = styled.span`
   min-width: 5px;
   overflow: hidden;
@@ -648,15 +755,19 @@ export const REQORE_BUTTON_STYLE_PROPS = listReqoreStyleProps<
   wrap: true,
 });
 
-export const StyledButton = styled(StyledEffect).withConfig({
-  // Its own styling props, and the layout flags a containing ControlGroup hands it (`fill`, its
-  // place in a stack, ...); `color` is the button's colour, read by its styles.
-  shouldForwardProp: omitStyleProps(
-    ...REQORE_BUTTON_STYLE_PROPS,
-    ...REQORE_CONTROL_GROUP_CHILD_PROPS,
-    'color'
-  ),
-})<IReqoreButtonStyle>`
+export const StyledButton = styled(StyledEffect)
+  .withConfig({
+    // Its own styling props, and the layout flags a containing ControlGroup hands it (`fill`, its
+    // place in a stack, ...); `color` is the button's colour, read by its styles.
+    shouldForwardProp: omitStyleProps(
+      ...REQORE_BUTTON_STYLE_PROPS,
+      ...REQORE_CONTROL_GROUP_CHILD_PROPS,
+      'color'
+    ),
+  })
+  .attrs((props: IReqoreButtonStyle) => ({
+    style: getButtonVariables(props) as React.CSSProperties,
+  }))<IReqoreButtonStyle>`
   display: flex;
   flex-flow: column;
   justify-content: center;
@@ -669,50 +780,30 @@ export const StyledButton = styled(StyledEffect).withConfig({
   overflow: hidden;
   vertical-align: middle;
   border: ${(props: IReqoreButtonStyle) =>
-    !props.flat ? `1px solid ${getStyledButtonPaint(props).edge}` : 0};
-  padding: ${({ size, compact, verticalPadding = 'normal', square }) =>
-    `${
-      CONTROL_VERTICAL_PADDING_FROM_SIZE[size] +
-      CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding]
-    }px ${
-      square
-        ? 0
-        : compact
-        ? CONTROL_VERTICAL_PADDING_FROM_SIZE[size]
-        : CONTROL_HORIZONTAL_PADDING_FROM_SIZE[size]
-    }px`};
-  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+    !props.flat ? `1px solid ${paintOf(props, 'edge')}` : 0};
+  padding: ${(props: IReqoreButtonStyle) => lengthOf(props, '--reqore-button-padding')};
+  font-size: ${(props: IReqoreButtonStyle) => lengthOf(props, '--reqore-button-font-size')};
   outline-offset: -2px;
 
-  min-height: ${({ size, verticalPadding = 'normal' }) =>
-    SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2}px;
-  min-width: ${({ size, square, verticalPadding = 'normal' }) =>
-    square
-      ? SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2
-      : SIZE_TO_PX[size]}px;
-  ${({ square, size, verticalPadding = 'normal' }) =>
-    square
+  min-height: ${(props: IReqoreButtonStyle) => lengthOf(props, '--reqore-button-min-height')};
+  min-width: ${(props: IReqoreButtonStyle) => lengthOf(props, '--reqore-button-min-width')};
+  ${(props: IReqoreButtonStyle) =>
+    props.square
       ? css`
-          width: ${SIZE_TO_PX[size] +
-          CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2}px;
+          width: ${lengthOf(props, '--reqore-button-width')};
         `
       : null}
   /* A button is never wider than its container, unless it sets its own maxWidth: fixed means it does not
      stretch, not that it may run past what holds it. A fixed button saying a value and its description stayed as
      wide as both on one line, 487-712px in a 346px card on a phone (qorus#646); capped, its label is clipped as any
      button's is, and its description takes as many lines as it needs. */
-  max-width: ${({ square, maxWidth, size, verticalPadding = 'normal' }) =>
-    square
-      ? `${
-          SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2
-        }px`
-      : maxWidth || '100%'};
+  max-width: ${(props: IReqoreButtonStyle) => lengthOf(props, '--reqore-button-max-width')};
 
   ${({ wrap, description }) =>
     !wrap && !description
       ? css`
-          max-height: ${({ size, verticalPadding = 'normal' }) =>
-            SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2}px;
+          max-height: ${(props: IReqoreButtonStyle) =>
+            lengthOf(props, '--reqore-button-max-height')};
         `
       : null}
 
@@ -722,16 +813,11 @@ export const StyledButton = styled(StyledEffect).withConfig({
   align-self: ${({ alignSelf, fixed, fluid }) =>
     alignSelf ?? (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
 
-  border-radius: ${({ size, radiusSize, rounded, pill, circle }) =>
-    rounded === false
-      ? undefined
-      : circle
-      ? '9999px'
-      : `${resolveRadius(size, radiusSize) * (pill ? PILL_RADIUS_MODIFIER : 1)}px`};
+  border-radius: ${(props: IReqoreButtonStyle) => lengthOf(props, '--reqore-button-radius')};
 
-  background-color: ${(props: IReqoreButtonStyle) => getStyledButtonPaint(props).background};
+  background-color: ${(props: IReqoreButtonStyle) => paintOf(props, 'background')};
 
-  color: ${(props: IReqoreButtonStyle) => getStyledButtonPaint(props).text};
+  color: ${(props: IReqoreButtonStyle) => paintOf(props, 'text')};
 
   ${InactiveIconScale};
 
@@ -748,7 +834,10 @@ export const StyledButton = styled(StyledEffect).withConfig({
         : undefined;
     }
 
-    const { ring, hoverBackground, hoverText, hoverDescription } = getStyledButtonPaint(props);
+    const ring = paintOf(props, 'ring');
+    const hoverBackground = paintOf(props, 'hoverBackground');
+    const hoverText = paintOf(props, 'hoverText');
+    const hoverDescription = paintOf(props, 'hoverDescription');
 
     return css`
       &:not(:disabled) {
@@ -805,7 +894,10 @@ export const StyledButton = styled(StyledEffect).withConfig({
   ${(props: IReqoreButtonStyle) => {
     if (props.active) {
       const { flat } = props;
-      const { edge, activeText, activeEdge, activeHoverEdge } = getStyledButtonPaint(props);
+      const edge = paintOf(props, 'edge');
+      const activeText = paintOf(props, 'activeText');
+      const activeEdge = paintOf(props, 'activeEdge');
+      const activeHoverEdge = paintOf(props, 'activeHoverEdge');
 
       return css`
         cursor: pointer;
@@ -842,15 +934,16 @@ export const StyledButton = styled(StyledEffect).withConfig({
 
   &:focus,
   &:active {
-    outline: 2px solid ${(props: IReqoreButtonStyle) => getStyledButtonPaint(props).edge};
+    outline: 2px solid ${(props: IReqoreButtonStyle) => paintOf(props, 'edge')};
     border-color: ${(props: IReqoreButtonStyle) =>
-      props.minimal ? undefined : getStyledButtonPaint(props).edge};
+      props.minimal ? undefined : paintOf(props, 'edge')};
   }
 
   .reqore-button-description {
-    padding-top: ${({ size }) => PADDING_FROM_SIZE[size] / 2}px;
+    padding-top: ${(props: IReqoreButtonStyle) =>
+      lengthOf(props, '--reqore-button-description-padding')};
     /* on the button as it is drawn: at rest, or filled when active (a selected menu item) */
-    color: ${(props: IReqoreButtonStyle) => getStyledButtonPaint(props).description};
+    color: ${(props: IReqoreButtonStyle) => paintOf(props, 'description')};
   }
 `;
 

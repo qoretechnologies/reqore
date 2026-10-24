@@ -13,6 +13,7 @@ import {
 } from '../src';
 import { getContrastRatio, READABLE_TEXT_CONTRAST } from '../src/helpers/colors';
 import { drawnOpacity, fromHex, hex, over, parse } from './shared/colorMath';
+import { computedValueAt } from './cssVariables';
 
 /** The background color the stylesheet gives `element` while hovered. */
 const hoverBackgroundOf = (element: HTMLElement): string => {
@@ -26,7 +27,7 @@ const hoverBackgroundOf = (element: HTMLElement): string => {
       // the rule's own selector, without its state: the element it is written for
       const base = selectorText.split(',').map((part) => part.replace(/:hover/g, '').trim());
       if (base.some((selector) => selector && element.matches(selector))) {
-        found = style.backgroundColor;
+        found = computedValueAt(element, 'background-color', style.backgroundColor);
       }
     }
   }
@@ -116,7 +117,7 @@ const hoverColorOf = (element: HTMLElement): string => {
       }
       const base = selectorText.split(',').map((part) => part.replace(/:hover/g, '').trim());
       if (base.some((selector) => selector && element.matches(selector))) {
-        found = style.color;
+        found = computedValueAt(element, 'color', style.color);
       }
     }
   }
