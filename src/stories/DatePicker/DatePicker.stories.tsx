@@ -6,6 +6,7 @@ import ReqoreControlGroup from '../../components/ControlGroup';
 import { DatePicker } from '../../components/DatePicker';
 import { DEFAULT_INTENTS, TReqoreIntent } from '../../constants/theme';
 import { StoryMeta } from '../utils';
+import { requiredElement } from '../utils/required';
 import { FlatArg, IntentArg, MinimalArg, SizeArg } from '../utils/args';
 
 const meta = {
@@ -619,6 +620,68 @@ export const LocaleComparison: Story = {
         <DatePicker {...args} value={valueCs} onChange={setValueCs} locale='cs' fluid={false} />
       </ReqoreControlGroup>
     );
+  },
+};
+
+/** Locales given as POSIX names (`cs_CZ.UTF-8`, `C.UTF-8`), beside the tags they stand for. */
+const POSIX_LOCALE_PAIRS = [
+  { name: 'cs_CZ.UTF-8', tag: 'cs-CZ' },
+  { name: 'C.UTF-8', tag: 'en-US' },
+];
+
+const DIRECTIONAL_FORMATTING_CHARACTERS = /[\u200e\u200f\u2066-\u2069]/g;
+
+/** The date a picker shows in its typed segments, from its day segment. */
+const shownDate = (day: Element): string =>
+  (day.parentElement?.textContent ?? '').replace(DIRECTIONAL_FORMATTING_CHARACTERS, '');
+
+export const LocalesGivenAsPosixNames: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker with locales given as POSIX names, as a Linux environment or a server names them (`cs_CZ.UTF-8`, `C.UTF-8`), each beside the tag it stands for (`cs-CZ`, `en-US`). Each shows the date as its tag does: a POSIX name is no BCP 47 tag, and the picker used to throw on one and show nothing.',
+      },
+    },
+  },
+  args: {
+    granularity: 'day',
+    value: new Date(2024, 3, 10),
+    popoverProps: {},
+  },
+  render(args) {
+    return (
+      <ReqoreControlGroup vertical gapSize='big'>
+        {POSIX_LOCALE_PAIRS.map(({ name, tag }) => (
+          <ReqoreControlGroup key={name} gapSize='big'>
+            <div className={`story-locale-${name.replace(/[._]/g, '-')}`}>
+              <DatePicker {...args} locale={name} fluid={false} />
+            </div>
+            <div className={`story-locale-${tag}`}>
+              <DatePicker {...args} locale={tag} fluid={false} />
+            </div>
+          </ReqoreControlGroup>
+        ))}
+      </ReqoreControlGroup>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    for (const { name, tag } of POSIX_LOCALE_PAIRS) {
+      const named = requiredElement(
+        `.story-locale-${name.replace(/[._]/g, '-')} [data-type="day"]`,
+        `the date the picker given ${name} shows`,
+        canvasElement
+      );
+      const tagged = requiredElement(
+        `.story-locale-${tag} [data-type="day"]`,
+        `the date the picker given ${tag} shows`,
+        canvasElement
+      );
+      await expect(shownDate(tagged)).toMatch(/2024/);
+      await expect(shownDate(named), `${name} shows the date as ${tag} does`).toBe(
+        shownDate(tagged)
+      );
+    }
   },
 };
 
