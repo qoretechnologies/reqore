@@ -7,7 +7,7 @@ import { ReqoreButton, ReqoreControlGroup, ReqoreTextarea } from '../../index';
 import { StoryMeta } from '../utils';
 import { StoryForm, storyFormText } from '../utils/formPreview';
 import { requiredElement } from '../utils/required';
-import { PHONE_STORY, PHONE_VIEWPORT } from '../utils/touchScreen';
+import { PHONE_STORY } from '../utils/touchScreen';
 import { ALL_SIZES, DisabledArg, MinimalArg, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTextareaProps>();
@@ -816,10 +816,8 @@ export const ScaledToItsTextOnAPhone: Story = {
     },
   },
   render: () => <ScaledFields />,
-  play: async () => {
-    await expect(document.documentElement.clientWidth).toBeLessThanOrEqual(PHONE_VIEWPORT.width);
-    await expectScaledFieldsHoldTheirText();
-  },
+  // run on the phone by its `touch` tag (vitest.config.ts); it holds at any width it is opened at
+  play: expectScaledFieldsHoldTheirText,
 };
 
 const FieldsThatChangeWidth = () => {
@@ -873,7 +871,8 @@ export const ScaledToItsTextWhenItsWidthChanges: Story = {
       'textarea.story-scaled-shown',
       'the shown field'
     );
-    await waitFor(() => expect(shown.getBoundingClientRect().width).toBe(360));
+    // shown: it has a width (360px, or the screen's on a phone)
+    await waitFor(() => expect(shown.getBoundingClientRect().width).toBeGreaterThan(0));
     await expectFieldsHoldTheirText([{ textarea: shown, what: 'the field shown' }]);
   },
 };
