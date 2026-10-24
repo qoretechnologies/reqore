@@ -9,6 +9,7 @@ import {
 } from '../../components/DataView';
 import { StoryMeta } from '../utils';
 import { SizeArg, IntentArg, argManager } from '../utils/args';
+import { PHONE_STORY } from '../utils/touchScreen';
 
 const { createArg } = argManager<IReqoreDataViewProps>();
 
@@ -900,5 +901,80 @@ export const EditableKeyRename: Story = {
       | undefined;
     await expect(Object.keys(last ?? {})).toEqual(['label', 'retries']);
     await expect(last?.label).toBe('Customer');
+  },
+};
+
+/* -------------------------------------------------------------------------------------------
+ * Labels: every word the view draws is the consumer's, here in plain words for readers who are
+ * not programmers, with "Yes" / "No" for a yes/no value.
+ * ----------------------------------------------------------------------------------------- */
+
+const PLAIN_LABELS: IReqoreDataViewProps['labels'] = {
+  objectSection: (count) => (count === 1 ? '1 field' : `${count} fields`),
+  listSection: (count) => (count === 1 ? '1 entry' : `${count} entries`),
+  addPropertyLabel: 'New field',
+  addItemLabel: 'New entry',
+  booleanTrue: 'Yes',
+  booleanFalse: 'No',
+};
+
+/** The order with a yes as its first field, so the first screen shows a "Yes" and a "No". */
+const LABELLED_ORDER = { express: true, ...sampleOrder };
+
+/** What the labelled stories draw: the summaries, a yes/no in its words, and the add affordances. */
+const expectPlainLabels = async (canvasElement: HTMLElement) => {
+  await _testsWaitForText('workflow_instanceid');
+  const summaries = Array.from(canvasElement.querySelectorAll('summary')).map((summary) =>
+    (summary.textContent ?? '').trim()
+  );
+  const values = Array.from(canvasElement.querySelectorAll('.reqore-data-view-value')).map(
+    (value) => (value.textContent ?? '').trim()
+  );
+
+  await expect(summaries.some((summary) => summary.endsWith('9 fields'))).toBe(true);
+  await expect(summaries.some((summary) => summary.endsWith('3 entries'))).toBe(true);
+  await expect(summaries.some((summary) => /Object ·|List ·/.test(summary))).toBe(false);
+  await expect(values).toEqual(expect.arrayContaining(['Yes', 'No']));
+  await expect(values).not.toEqual(expect.arrayContaining(['true']));
+  await expect(canvasElement.textContent).toContain('New field');
+  await expect(canvasElement.textContent).toContain('New entry');
+};
+
+export const CustomLabels: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an editable DataView whose labels are plain words: "9 fields" and "3 entries" in its section summaries, "Yes" and "No" for its yes/no values in their usual colour, and "New field" / "New entry" on its add buttons.',
+      },
+    },
+  },
+  args: {
+    label: 'Order, in plain words',
+    data: LABELLED_ORDER,
+    labels: PLAIN_LABELS,
+    defaultExpandDepth: 99,
+  },
+  render: (args) => <EditableHarness {...args} />,
+  play: async ({ canvasElement }) => expectPlainLabels(canvasElement),
+};
+
+export const CustomLabelsOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders the same editable DataView with plain-word labels on a phone (390px): the summaries, "Yes" / "No" and the add buttons in its words, all of it inside the screen.',
+      },
+    },
+  },
+  args: CustomLabels.args,
+  render: (args) => <EditableHarness {...args} />,
+  play: async ({ canvasElement }) => {
+    await expectPlainLabels(canvasElement);
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
   },
 };
