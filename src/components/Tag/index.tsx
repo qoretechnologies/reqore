@@ -533,6 +533,75 @@ const getStyledTagPaint = (props: IReqoreTagStyle): IReqoreTagPaint =>
   ).paint;
 
 /**
+ * The colors and lengths a tag is drawn with, each set in a CSS variable on the tag: its paint (a solid tag's fill
+ * and text, at rest and hovered, and its key's), a soft or text tag's own colors, its widths, and its size's font,
+ * height and radius, as its styles wrote them. `undefined` where the tag has none.
+ */
+const TAG_VARIABLES = {
+  '--reqore-tag-edge': (props) => getStyledTagPaint(props).edge,
+  '--reqore-tag-outline': (props) => getStyledTagPaint(props).outline,
+  '--reqore-tag-background': (props) => getStyledTagPaint(props).rest?.background,
+  '--reqore-tag-text': (props) => getStyledTagPaint(props).rest?.text,
+  '--reqore-tag-key-shade': (props) => getStyledTagPaint(props).rest?.keyShade,
+  '--reqore-tag-key-text': (props) => getStyledTagPaint(props).rest?.keyText,
+  '--reqore-tag-hover-background': (props) => getStyledTagPaint(props).hover?.background,
+  '--reqore-tag-hover-text': (props) => getStyledTagPaint(props).hover?.text,
+  '--reqore-tag-hover-key-text': (props) => getStyledTagPaint(props).hover?.keyText,
+  '--reqore-tag-appearance-background': ({ $appearanceColors }) => $appearanceColors?.background,
+  '--reqore-tag-appearance-text': ({ $appearanceColors }) => $appearanceColors?.text,
+  '--reqore-tag-appearance-border': ({ $appearanceColors }) => $appearanceColors?.border,
+  '--reqore-tag-appearance-key-background': ({ $appearanceColors }) =>
+    $appearanceColors?.keyBackground,
+  '--reqore-tag-appearance-key-text': ({ $appearanceColors }) => $appearanceColors?.keyText,
+  '--reqore-tag-appearance-hover-background': ({ $appearanceColors }) =>
+    $appearanceColors?.hoverBackground,
+  '--reqore-tag-appearance-outline': ({ $appearance, $appearanceColors }) =>
+    $appearanceColors &&
+    ($appearance === 'soft'
+      ? $appearanceColors.border
+      : getColorAtAlpha($appearanceColors.text, 0.5)),
+  '--reqore-tag-max-width': ({ $maxWidth, fixed }) =>
+    $maxWidth ?? (fixed !== true ? '100%' : undefined),
+  '--reqore-tag-width': ({ width }) => width || undefined,
+  '--reqore-tag-font-size': ({ size }) => `${TAG_TEXT_FROM_SIZE[size]}px`,
+  '--reqore-tag-height': ({ size, asBadge }) =>
+    `${asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size]}px`,
+  '--reqore-tag-radius': ({ asBadge, size, radiusSize, rounded }) =>
+    rounded === false
+      ? undefined
+      : asBadge
+        ? `${resolveRadius(size, radiusSize, BADGE_RADIUS_FROM_SIZE, BADGE_RADIUS_FROM_RADIUS_SIZE)}px`
+        : `${resolveRadius(size, radiusSize, TAG_RADIUS_FROM_SIZE, TAG_RADIUS_FROM_RADIUS_SIZE)}px`,
+} satisfies Record<`--${string}`, (props: IReqoreTagStyle) => string | undefined>;
+
+type TReqoreTagVariable = keyof typeof TAG_VARIABLES;
+
+/** Whether a value is one CSS takes: not missing, and not a length made of a size the tag lacks. */
+const isUsableValue = (value?: string): value is string => !!value && !/NaN|undefined/.test(value);
+
+/**
+ * What a tag is drawn with as CSS variables on the tag, which its styles read (`tagValueOf`). Written into the
+ * styles, each color and length made a class of its own - a page of tags in each color, appearance, size and width
+ * made hundreds, and styled-components warned - where the styles now differ only in what the tag is.
+ */
+const getTagVariables = (props: IReqoreTagStyle): Record<`--${string}`, string> =>
+  Object.fromEntries(
+    (Object.keys(TAG_VARIABLES) as TReqoreTagVariable[])
+      .map((variable) => [variable, TAG_VARIABLES[variable](props)] as const)
+      .filter((entry): entry is readonly [TReqoreTagVariable, string] => isUsableValue(entry[1]))
+  );
+
+/**
+ * The value a tag's styles give a property: the variable it is set in, or - a value the tag has none for, or a length
+ * of a size it lacks - what the styles wrote before, which CSS drops as it did.
+ */
+const tagValueOf = (props: IReqoreTagStyle, variable: TReqoreTagVariable) => {
+  const value = TAG_VARIABLES[variable](props);
+
+  return isUsableValue(value) ? `var(${variable})` : value;
+};
+
+/**
  * Every tag prop that only styles or configures the tag. None of them reaches the rendered
  * element — the `span`, or a component given as `as`. The compiler checks the record against
  * `IReqoreTagStyle`, so a new prop that is not added here fails the build instead of leaking.
@@ -591,9 +660,16 @@ export const REQORE_TAG_STYLE_PROPS = listReqoreStyleProps<
 
 // The layout flags a containing `ReqoreControlGroup` hands the tag are not the element's either
 // (`fill` is an SVG attribute, so a `span` would keep it).
-export const StyledTag = styled(StyledEffect).withConfig({
-  shouldForwardProp: omitStyleProps(...REQORE_TAG_STYLE_PROPS, ...REQORE_CONTROL_GROUP_CHILD_PROPS),
-})<IReqoreTagStyle>`
+export const StyledTag = styled(StyledEffect)
+  .withConfig({
+    shouldForwardProp: omitStyleProps(
+      ...REQORE_TAG_STYLE_PROPS,
+      ...REQORE_CONTROL_GROUP_CHILD_PROPS
+    ),
+  })
+  .attrs((props: IReqoreTagStyle) => ({
+    style: getTagVariables(props) as React.CSSProperties,
+  }))<IReqoreTagStyle>`
   display: inline-flex;
   justify-content: center;
   flex-shrink: 0;
@@ -610,30 +686,24 @@ export const StyledTag = styled(StyledEffect).withConfig({
     `}
   overflow: hidden;
   vertical-align: ${({ verticalAlign = 'middle' }) => verticalAlign};
-  font-size: ${({ size }) => TAG_TEXT_FROM_SIZE[size]}px;
+  font-size: ${(props: IReqoreTagStyle) => tagValueOf(props, '--reqore-tag-font-size')};
   line-height: 1.1;
 
-  min-width: ${({ size, asBadge }) => (asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size])}px;
+  min-width: ${(props: IReqoreTagStyle) => tagValueOf(props, '--reqore-tag-height')};
   /* An explicit cap wins over the implicit one: a caller asking for 30ch means 30ch
      even inside a container wider than that, and 100% would let the tag grow past it. */
-  max-width: ${({ $maxWidth, fixed }) =>
-    $maxWidth ?? (fixed !== true ? '100%' : undefined)};
+  max-width: ${(props: IReqoreTagStyle) => tagValueOf(props, '--reqore-tag-max-width')};
   flex: ${({ fluid, fixed }) => (fixed === true ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
   justify-self: ${({ fixed, fluid }) =>
     fixed === true ? 'flex-start' : fluid ? 'stretch' : undefined};
   border: ${(props: IReqoreTagStyle) =>
-    !(props.flat ?? true) ? `1px solid ${getStyledTagPaint(props).edge}` : 0};
+    !(props.flat ?? true) ? `1px solid ${tagValueOf(props, '--reqore-tag-edge')}` : 0};
   /* Same flat !== false guard as EntityRow / FeatureCard / Callout: the inset
      highlight and the border are two ways of drawing the same edge, so a tag that
      already has a border does not also get the raised shading. */
   ${({ raised, flat = true }) => raised && flat !== false && RaisedElement}
-  border-radius: ${({ asBadge, size, radiusSize, rounded }) =>
-    rounded === false
-      ? undefined
-      : asBadge
-        ? `${resolveRadius(size, radiusSize, BADGE_RADIUS_FROM_SIZE, BADGE_RADIUS_FROM_RADIUS_SIZE)}px`
-        : `${resolveRadius(size, radiusSize, TAG_RADIUS_FROM_SIZE, TAG_RADIUS_FROM_RADIUS_SIZE)}px`};
-  width: ${({ width }) => width || undefined};
+  border-radius: ${(props: IReqoreTagStyle) => tagValueOf(props, '--reqore-tag-radius')};
+  width: ${(props: IReqoreTagStyle) => tagValueOf(props, '--reqore-tag-width')};
   transition: all 0.2s ease-out;
 
   ${({ align }) => {
@@ -661,12 +731,10 @@ export const StyledTag = styled(StyledEffect).withConfig({
   ${({ $wrap, $hasWidth }) =>
     $wrap || $hasWidth
       ? css`
-          min-height: ${({ size, asBadge }) =>
-            asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size]}px;
+          min-height: ${(props: IReqoreTagStyle) => tagValueOf(props, '--reqore-tag-height')};
         `
       : css`
-          height: ${({ size, asBadge }) =>
-            asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size]}px;
+          height: ${(props: IReqoreTagStyle) => tagValueOf(props, '--reqore-tag-height')};
         `}
 
   /* How a solid tag colours its label: against what it is actually drawn on
@@ -692,12 +760,12 @@ export const StyledTag = styled(StyledEffect).withConfig({
     }
 
     return css`
-      background-color: ${rest.background};
-      color: ${rest.text};
+      background-color: ${tagValueOf(props, '--reqore-tag-background')};
+      color: ${tagValueOf(props, '--reqore-tag-text')};
 
       ${StyledTagKeyWrapper} {
-        background-color: ${props.labelKey ? rest.keyShade : undefined};
-        color: ${props.labelKey ? rest.keyText : undefined};
+        background-color: ${props.labelKey ? tagValueOf(props, '--reqore-tag-key-shade') : undefined};
+        color: ${props.labelKey ? tagValueOf(props, '--reqore-tag-key-text') : undefined};
       }
     `;
   }}
@@ -718,11 +786,11 @@ export const StyledTag = styled(StyledEffect).withConfig({
             ${!effect?.gradient &&
             hover &&
             css`
-              background-color: ${hover.background};
-              color: ${hover.text};
+              background-color: ${tagValueOf(props, '--reqore-tag-hover-background')};
+              color: ${tagValueOf(props, '--reqore-tag-hover-text')};
 
               ${StyledTagKeyWrapper} {
-                color: ${labelKey ? hover.keyText : undefined};
+                color: ${labelKey ? tagValueOf(props, '--reqore-tag-hover-key-text') : undefined};
               }
             `}
           }
@@ -734,19 +802,24 @@ export const StyledTag = styled(StyledEffect).withConfig({
      instead of filling the tag. The ring is an inset shadow rather than a border so a
      soft tag keeps the exact box of a solid one — side by side in a group they line
      up — and it replaces any flat={false} border and the raised shading. */
-  ${({ $appearance, $appearanceColors, labelKey, interactive, effect }: IReqoreTagStyle) =>
-    $appearanceColors &&
-    css`
-      background-color: ${$appearanceColors.background};
-      color: ${$appearanceColors.text};
+  ${(props: IReqoreTagStyle) => {
+    const { $appearanceColors, labelKey, interactive, effect } = props;
+
+    return (
+      $appearanceColors &&
+      css`
+      background-color: ${tagValueOf(props, '--reqore-tag-appearance-background')};
+      color: ${tagValueOf(props, '--reqore-tag-appearance-text')};
       border: 0;
       box-shadow: ${$appearanceColors.border
-        ? `inset 0 0 0 1px ${$appearanceColors.border}`
+        ? `inset 0 0 0 1px ${tagValueOf(props, '--reqore-tag-appearance-border')}`
         : 'none'};
 
       ${StyledTagKeyWrapper} {
-        background-color: ${labelKey ? $appearanceColors.keyBackground : undefined};
-        color: ${labelKey ? $appearanceColors.keyText : undefined};
+        background-color: ${labelKey
+          ? tagValueOf(props, '--reqore-tag-appearance-key-background')
+          : undefined};
+        color: ${labelKey ? tagValueOf(props, '--reqore-tag-appearance-key-text') : undefined};
       }
 
       ${interactive &&
@@ -760,18 +833,18 @@ export const StyledTag = styled(StyledEffect).withConfig({
 
           ${!effect?.gradient &&
           css`
-            background-color: ${$appearanceColors.hoverBackground};
+            background-color: ${tagValueOf(props, '--reqore-tag-appearance-hover-background')};
           `}
         }
       `}
 
       &:focus,
       &:active {
-        outline-color: ${$appearance === 'soft'
-          ? $appearanceColors.border
-          : getColorAtAlpha($appearanceColors.text, 0.5)};
+        outline-color: ${tagValueOf(props, '--reqore-tag-appearance-outline')};
       }
-    `}
+    `
+    );
+  }}
 
   ${({ disabled }) =>
     disabled &&
@@ -804,7 +877,7 @@ export const StyledTag = styled(StyledEffect).withConfig({
 
   &:focus,
   &:active {
-    outline: 2px solid ${(props: IReqoreTagStyle) => getStyledTagPaint(props).outline};
+    outline: 2px solid ${(props: IReqoreTagStyle) => tagValueOf(props, '--reqore-tag-outline')};
     outline-offset: -2px;
   }
 `;
