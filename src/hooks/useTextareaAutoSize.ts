@@ -22,16 +22,33 @@ export const getTextareaHeightForText = (textarea: HTMLTextAreaElement): number 
 
 /** Sizes `textarea` to its text, never lower than the height its `rows` give it. */
 const fitTextareaToText = (textarea: HTMLTextAreaElement) => {
+  /* Measured with no scrollbar, at the width the field is drawn at, as it is drawn once it
+     fits. At the height the measurement starts from, the text overflows, and where the
+     platform draws classic scrollbars (Linux, Windows, a Mac set to always show them) the
+     field drew one: the text wrapped 15px narrower, onto more lines than it takes without
+     it, and the field kept the empty lines under its text once the scrollbar had gone.
+
+     The width is held for the measurement: a field as wide as its columns (not fluid, in a
+     box as wide as what it holds) counts a scrollbar's width in its own only while it may
+     scroll, so measured with its overflow hidden it would be 15px narrower, on every
+     platform. Both are put back before anything is drawn. */
+  const { overflowY, width } = textarea.style;
+  textarea.style.width = window.getComputedStyle(textarea).width;
+  textarea.style.overflowY = 'hidden';
+
   // Reset to the intrinsic (auto) height momentarily so scrollHeight is
   // measured against the `rows` attribute: scrollHeight = max(rows height,
   // content height), which makes `rows` the floor the textarea never
   // shrinks below. (A '0px' reset measured content alone, so a consumer's
   // `rows` was ignored the moment scaleWithContent was on.)
   textarea.style.height = '';
+  const height = getTextareaHeightForText(textarea);
 
   // We then set the height directly, outside of the render loop
   // Trying to set this with state or a ref will product an incorrect value.
-  textarea.style.height = `${getTextareaHeightForText(textarea)}px`;
+  textarea.style.height = `${height}px`;
+  textarea.style.overflowY = overflowY;
+  textarea.style.width = width;
 };
 
 /**
