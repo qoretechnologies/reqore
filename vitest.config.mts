@@ -123,6 +123,12 @@ const storyTest = {
 export default mergeConfig(
   viteConfig,
   defineConfig({
+    /* The story run prints what its browsers log the same way whoever runs it. Vite forwards a browser's console
+       and its unhandled errors to the terminal by default only when an AI agent runs it (std-env's isAgent), so an
+       agent's run printed what CI's never did - an Error Boundary story's error, which React in development reports
+       as uncaught after the boundary caught it. What a story logs is the warning gate's to judge, and it fails a
+       story for any warning or error it did not expect (`.storybook/vitest.setup.ts`). */
+    server: { forwardConsole: false },
     test: {
       projects: [
         // Component/interaction tests: run every story in a real browser via Playwright.
