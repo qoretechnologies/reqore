@@ -47,3 +47,9 @@ afterEach(() => {
 
 /* A property that reads a CSS variable is computed as a browser computes it (`cssVariables.ts`). */
 installComputedVariables();
+
+/* jsdom has no canvas: getContext printed "Not implemented" on the test run's output and gave nothing. A canvas here
+   has no 2D context, which the code that measures text with one already handles (it measures nothing). A test that
+   measures text gives the canvas a context of its own (vi.spyOn). */
+HTMLCanvasElement.prototype.getContext = (() =>
+  null) as typeof HTMLCanvasElement.prototype.getContext;
