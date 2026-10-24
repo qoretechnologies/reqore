@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { configDefaults, defineConfig, mergeConfig } from 'vitest/config';
 import type { BrowserCommand } from 'vitest/node';
+import { POSIX_LANGUAGE } from './src/stories/utils/posixLocale';
 import viteConfig from './vite.config';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -80,23 +81,24 @@ const storyBrowser = (kind: 'desktop' | 'phone' | 'scrollbars' | 'posix-locale' 
   // leave room for one (a field measured while it draws one, qorus#646) is only seen there. A Mac
   // that shows its scrollbars as it scrolls draws them over the content, so there they take no room.
   //
-  // The browser takes its language from the locale it is launched in (LC_ALL, then LANG), and on
-  // Linux one that is C or POSIX (LANG=C.UTF-8, LANG=C, or none, as in most Linux containers) makes
-  // Chromium report `navigator.language` as `en-US@posix`, which is no BCP 47 tag: `Intl` throws on
-  // it (qorus#646). The other projects run in the locale of the machine they run on (the CI runner's
-  // is a real one); the `posix-locale` project's browser is launched in the POSIX locale, wherever it
-  // runs. On a Mac, Chromium takes its language from the system instead, so there it is the system's.
+  // A Chromium that takes its language from the POSIX locale (LC_ALL, then LANG: C, C.UTF-8, POSIX
+  // or none, as in most Linux containers) reports `navigator.language` as `en-US@posix`, which is
+  // no BCP 47 tag: `Intl` throws on it (qorus#646). Not every build does: the arm64 Linux one does,
+  // and the amd64 Linux one the CI runs reports `en-US` whatever the locale or `--lang` says, as a
+  // Mac's takes the system's. So the `posix-locale` project does not ask the platform for it: its
+  // context is given the language itself (`locale`), which Chromium then reports as it is, Intl's
+  // default locale following it, on every platform and build.
   provider: playwright({
     ...(kind === 'scrollbars'
       ? { launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } }
       : {}),
-    ...(kind === 'posix-locale'
-      ? { launchOptions: { env: { ...process.env, LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8' } } }
-      : {}),
     contextOptions:
       kind === 'phone'
         ? { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }
-        : { viewport: { width: 1920, height: 1080 } },
+        : {
+            viewport: { width: 1920, height: 1080 },
+            ...(kind === 'posix-locale' ? { locale: POSIX_LANGUAGE } : {}),
+          },
   }),
   /* Asks for reduced motion (`prefers-reduced-motion: reduce`) or stops asking, in the page the stories run in.
      Reqore honours it: its springs settle at once and its transitions take no time. The contrast gate asks for it

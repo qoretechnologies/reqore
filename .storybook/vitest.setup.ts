@@ -8,7 +8,7 @@ import * as previewAnnotations from './preview';
 import { lowContrastIn } from '../src/stories/utils/contrastGate';
 import { motionSettled } from '../src/stories/utils/motion';
 import { reactWarningsFailure, type IReactWarning } from '../src/stories/utils/reactWarningGate';
-import { POSIX_LOCALE_STORY_PROJECT } from '../src/stories/utils/posixLocale';
+import { POSIX_LANGUAGE, POSIX_LOCALE_STORY_PROJECT } from '../src/stories/utils/posixLocale';
 import { SCROLLBARS_STORY_PROJECT, scrollbarWidth } from '../src/stories/utils/scrollbars';
 import { TOUCH_STORY_PROJECT } from '../src/stories/utils/touchScreen';
 
@@ -113,10 +113,10 @@ afterEach(async () => {
    (a Playwright that hides them another way) would pass those stories without checking anything. On a Mac
    they take room only when it is set to always show them, so there it is not asked.
 
-   And the browser of the stories tagged `posix-locale` is in the POSIX locale. On Linux, where the CI
-   runs, it reports its language as the POSIX one (`en-US@posix`): a browser launched in another locale
-   (a Playwright that dropped the launch's environment) would pass those stories without checking
-   anything. On a Mac, Chromium takes its language from the system, so there it is not asked. */
+   And the browser of the stories tagged `posix-locale` reports the POSIX locale's language
+   (`POSIX_LANGUAGE`), on every platform: given it another way (the platform's locale, which the
+   amd64 Chromium the CI runs does not follow), it reported `en-US` there and passed those stories
+   without checking anything. */
 beforeEach(() => {
   const project = server.config.name ?? '';
   const promised = onThePhone()
@@ -134,11 +134,11 @@ beforeEach(() => {
     ).toBeGreaterThan(0);
   }
 
-  if (inProject(POSIX_LOCALE_STORY_PROJECT) && server.platform === 'linux') {
+  if (inProject(POSIX_LOCALE_STORY_PROJECT)) {
     expect(
-      navigator.language,
+      [navigator.language, ...navigator.languages],
       `the "${project}" project's browser reports the POSIX locale's language`
-    ).toMatch(/posix/i);
+    ).toEqual([POSIX_LANGUAGE, POSIX_LANGUAGE]);
   }
 });
 

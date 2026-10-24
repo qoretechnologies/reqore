@@ -207,21 +207,20 @@ release on npm.
   and that on Linux they do in this one. On a Mac that shows scrollbars only while scrolling they
   take no room, so this project checks nothing there: run it on Linux (CI, or the Playwright image
   in a container) to see it fail.
-- **POSIX-locale stories:** a browser takes its language from the locale it is launched in
-  (`LC_ALL`, then `LANG`). On Linux a C or POSIX locale (`LANG=C.UTF-8`, `LANG=C`, or none, as in
-  most containers) makes Chromium report `navigator.language` as `en-US@posix`, which is no BCP 47
-  tag, and `Intl` throws on it. The other story projects run in the locale of the machine they run
-  on (the CI runner's is a real one), so they never see it. A story tagged `posix-locale` runs a
-  second time in the `storybook-posix-locale` project, a desktop browser launched with
-  `LANG=C.UTF-8` and `LC_ALL=C.UTF-8`. Tag a story `posix-locale` when what it draws hands the
-  browser's language (or a locale a host passes) to `Intl` or a date library, as `ReqoreDatePicker`
-  does (its stories are tagged in their meta). Pass a locale on through `resolveLocale` /
-  `toLanguageTag` (`src/helpers/locale.ts`), never raw. A touch story is not run there. Write the
-  tag in the story file, as `touch` is written: the projects read it from the source. The project
-  has no qlip plugin, so it makes no captures. `.storybook/vitest.setup.ts` checks that on Linux its
-  browser reports the POSIX locale's language. On a Mac, Chromium takes its language from the
-  system, so there the project checks nothing: run it on Linux (CI, or the Playwright image in a
-  container) to see it fail.
+- **POSIX-locale stories:** a Chromium that takes its language from the POSIX locale (`LC_ALL`, then
+  `LANG`: C, C.UTF-8, POSIX, or none, as in most Linux containers) reports `navigator.language` as
+  `en-US@posix`, which is no BCP 47 tag, and `Intl` throws on it. Not every build takes it from the
+  platform: the arm64 Linux one does, but the amd64 Linux one the CI runs reports `en-US` whatever
+  the locale or `--lang` says, as a Mac's takes the system's. So the other story projects never see
+  it, and a story tagged `posix-locale` runs a second time in the `storybook-posix-locale` project,
+  whose browser context is given that language itself (Playwright's `locale: 'en-US@posix'`,
+  `POSIX_LANGUAGE`): Chromium then reports it as it is, and Intl's default locale follows, on every
+  platform. Tag a story `posix-locale` when what it draws hands the browser's language (or a locale
+  a host passes) to `Intl` or a date library, as `ReqoreDatePicker` does (its stories are tagged in
+  their meta). Pass a locale on through `resolveLocale` / `toLanguageTag` (`src/helpers/locale.ts`),
+  never raw. A touch story is not run there. Write the tag in the story file, as `touch` is written:
+  the projects read it from the source. The project has no qlip plugin, so it makes no captures.
+  `.storybook/vitest.setup.ts` checks that its browser reports `en-US@posix`, on every platform.
 - **No layout change inside a ResizeObserver callback:** a story fails when the browser reports
   "ResizeObserver loop completed with undelivered notifications" (`.storybook/vitest.setup.ts`). It
   means a resize callback changed the layout it observes in the same frame, often by setting state
