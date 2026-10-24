@@ -1,7 +1,7 @@
 // Copyright 2026 Qore Technologies, s.r.o.
 
 /**
- * The Vitest project the stories tagged `scrollbars` run in a second time (vitest.config.ts): a
+ * The Vitest project the stories tagged `scrollbars` run in a second time (vitest.config.mts): a
  * desktop whose Chromium draws its scrollbars, which Playwright otherwise hides. Where the platform
  * draws classic scrollbars (Linux, the CI runner; Windows; a Mac set to always show them), a
  * scrollbar takes room from what it scrolls, so a story there sees a layout that has to leave room

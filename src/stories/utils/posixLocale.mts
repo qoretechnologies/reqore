@@ -1,7 +1,7 @@
 // Copyright 2026 Qore Technologies, s.r.o.
 
 /**
- * The Vitest project the stories tagged `posix-locale` run in a second time (vitest.config.ts): a
+ * The Vitest project the stories tagged `posix-locale` run in a second time (vitest.config.mts): a
  * desktop whose browser reports its language as Chromium does in the POSIX locale
  * (`POSIX_LANGUAGE`), as it does for a Linux user whose locale is C or POSIX, or who has none.
  * Tag a story `posix-locale` when what it draws hands the browser's language to `Intl` or a date
