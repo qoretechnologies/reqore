@@ -9,7 +9,16 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeLightness, getMainBackgroundColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getMainBackgroundColor,
+  getReadableAlpha,
+  getReadableColor,
+  getReadableIntentColor,
+  getThemeSurface,
+} from '../../helpers/colors';
+import { useReqoreSurface } from '../../context/SurfaceContext';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { getOneHigherSize, getOneLessSize } from '../../helpers/utils';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
@@ -137,6 +146,8 @@ interface IStyledRowProps {
 interface IStyledLabelProps {
   $width: string;
   $uppercase: boolean;
+  /** How faint an uppercase label is: 0.55, or as much more as it needs to stay readable. */
+  $opacity?: number;
 }
 
 interface IStyledIconSlotProps {
@@ -192,16 +203,76 @@ const StyledLabel = styled.div<IStyledLabelProps>`
   align-items: center;
 
   & > * {
-    ${({ $uppercase }) =>
+    ${({ $uppercase, $opacity = UPPERCASE_LABEL_OPACITY }) =>
       $uppercase &&
       css`
         text-transform: uppercase;
         letter-spacing: 0.06em;
         font-weight: 600;
-        opacity: 0.55;
+        opacity: ${$opacity};
       `}
   }
+
+  /* The intent's icon is not faded with the label: it is drawn in a shade of the intent
+     that stands out by 3:1 already, and fading it took that away. */
+  & > .reqore-description-list-intent-icon {
+    opacity: 1;
+  }
 `;
+
+const UPPERCASE_LABEL_OPACITY = 0.55;
+
+/**
+ * A row's label: an uppercase one fainter than the content, as far as it stays readable on what
+ * the list is drawn on (it is rendered inside the list's panel, whose surface it reads), in the
+ * color it is written in: its intent's readable shade when it has one (`labelIntent`), else the text
+ * color the list's panel writes it in - its own theme's (`customTheme`), not the provider's. Not a
+ * memo component: what it holds is new on every render of the list.
+ */
+const DescriptionListLabel = ({
+  width,
+  uppercase,
+  intent,
+  customTheme,
+  inheritCustomTheme,
+  children,
+}: {
+  width: string;
+  uppercase: boolean;
+  intent?: TReqoreIntent;
+  customTheme?: IReqorePanelProps['customTheme'];
+  inheritCustomTheme?: boolean;
+  children?: ReactNode;
+}) => {
+  const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
+  const around = useReqoreSurface();
+  // faded only when uppercase: a label in the content's case is drawn at full strength
+  const opacity = useMemo(() => {
+    if (!uppercase) {
+      return undefined;
+    }
+    const surface = getThemeSurface(theme, around);
+
+    return getReadableAlpha(
+      intent
+        ? getReadableIntentColor(theme, intent, undefined, around)
+        : getReadableColor(theme, undefined, undefined, true, surface),
+      surface,
+      UPPERCASE_LABEL_OPACITY
+    );
+  }, [theme, around, uppercase, intent]);
+
+  return (
+    <StyledLabel
+      $width={width}
+      $uppercase={uppercase}
+      $opacity={opacity}
+      className='reqore-description-list-label'
+    >
+      {children}
+    </StyledLabel>
+  );
+};
 
 const StyledContent = styled.div<IStyledContentProps>`
   flex: 1 1 auto;
@@ -335,10 +406,12 @@ export const ReqoreDescriptionList = memo(
                   data-key={row.key}
                 >
                   {row.label !== undefined ? (
-                    <StyledLabel
-                      $width={labelWidth}
-                      $uppercase={labelUppercase}
-                      className='reqore-description-list-label'
+                    <DescriptionListLabel
+                      width={labelWidth}
+                      uppercase={labelUppercase}
+                      intent={row.labelIntent}
+                      customTheme={panelRest.customTheme}
+                      inheritCustomTheme={panelRest.inheritCustomTheme}
                     >
                       {anyRowHasIntent ? (
                         <StyledIconSlot
@@ -359,7 +432,7 @@ export const ReqoreDescriptionList = memo(
                       <ReqoreP size={resolvedLabelSize} intent={row.labelIntent}>
                         {row.label}
                       </ReqoreP>
-                    </StyledLabel>
+                    </DescriptionListLabel>
                   ) : null}
                   <StyledContent
                     $controlSize={contentSize}

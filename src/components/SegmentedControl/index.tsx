@@ -3,6 +3,7 @@ import React, {
   forwardRef,
   memo,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -21,7 +22,13 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
+import {
+  changeLightness,
+  getDrawnColor,
+  getReadableColorFrom,
+  getThemeSurface,
+} from '../../helpers/colors';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -41,7 +48,7 @@ import { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreButton from '../Button';
 import { IReqoreEffect } from '../Effect';
 import ReqoreMenu from '../Menu';
-import ReqoreMenuItem from '../Menu/item';
+import ReqoreMenuItem, { TReqoreMenuItemEventHandler } from '../Menu/item';
 import { ReqorePopover } from '../Popover';
 
 export interface IReqoreSegmentedControlItem {
@@ -137,13 +144,16 @@ interface IStyledIndicatorProps {
 
 const CONTAINER_PADDING = 3;
 
+/** The track the items sit on: what its styled rule paints and what the items are read on. */
+const getSegmentedTrackFill = (theme: IReqoreTheme) => changeLightness(theme.main, 0.03);
+
 const StyledSegmentedControl = styled.div<IStyledSegmentedControlProps>`
   display: inline-flex;
   align-items: center;
   position: relative;
   box-sizing: border-box;
   padding: ${CONTAINER_PADDING}px;
-  background-color: ${({ theme }) => changeLightness(theme.main, 0.03)};
+  background-color: ${({ theme }) => getSegmentedTrackFill(theme)};
   border: ${({ theme, flat }) =>
     !flat ? `1px solid ${changeLightness(theme.main, 0.07)}` : 'none'};
   border-radius: ${({ size, pill }) =>
@@ -331,13 +341,56 @@ const ReqoreSegmentedControl = memo(
     ) => {
       const animations = useReqoreProperty('animations');
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+      // What the items are drawn on: the track, over what the control is drawn on; the selected one on the
+      // indicator, which is drawn in the theme's own colour.
+      const surroundingSurface = useReqoreSurface();
+      const trackSurface = useMemo(
+        () =>
+          getDrawnColor(getSegmentedTrackFill(theme), getThemeSurface(theme, surroundingSurface)),
+        [theme, surroundingSurface]
+      );
+      const indicatorSurface = useMemo(
+        () => getDrawnColor(theme.main, trackSurface),
+        [theme, trackSurface]
+      );
 
       const [_value, _setValue] = useState<string | undefined>(
         value ?? defaultValue ?? items[0]?.value
       );
 
       const itemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+      /* One ref callback and one click handler per item for as long as the item is there: an item's button is a
+         memo component, and a new function with every render was a new prop each time. The handler selects
+         through the latest `handleSelect` (below). */
+      const itemHandlers = useRef(
+        new Map<string, { ref: (el: HTMLButtonElement | null) => void; onClick: () => void }>()
+      );
+      const latestSelect = useRef<(itemValue: string) => void>();
+      const itemHandlersFor = (value: string) => {
+        let handlers = itemHandlers.current.get(value);
+        if (!handlers) {
+          handlers = {
+            ref: (el) => {
+              itemRefs.current[value] = el;
+            },
+            onClick: () => latestSelect.current?.(value),
+          };
+          itemHandlers.current.set(value, handlers);
+        }
+        return handlers;
+      };
       const wrapperRefs = useRef<Record<string, HTMLDivElement | null>>({});
+      // an item that is gone takes what was kept for it along
+      useEffect(() => {
+        const values = new Set(items.map((item) => item.value));
+        itemHandlers.current.forEach((_handlers, value) => {
+          if (!values.has(value)) {
+            itemHandlers.current.delete(value);
+            delete itemRefs.current[value];
+            delete wrapperRefs.current[value];
+          }
+        });
+      }, [items]);
       const containerRef = useRef<HTMLDivElement>(null);
       const [measureRef, { width: measuredWidth }] = useMeasure();
       const [indicatorStyle, setIndicatorStyle] = useState<{
@@ -440,6 +493,14 @@ const ReqoreSegmentedControl = memo(
         },
         [_value, onChange, allowDeselect, disabled, readOnly]
       );
+      useEffect(() => {
+        latestSelect.current = handleSelect;
+      }, [handleSelect]);
+      // the selected item without an intent of its own is written in what reads on the indicator
+      const selectedItemTheme = useMemo(
+        () => ({ main: getReadableColorFrom(theme.main) }),
+        [theme.main]
+      );
 
       const enabledItems = useMemo(
         () => items.filter((item) => !item.disabled),
@@ -488,6 +549,63 @@ const ReqoreSegmentedControl = memo(
       const selectedVisibleIndex = useMemo(
         () => visibleItems.findIndex((item) => item.value === _value),
         [visibleItems, _value]
+      );
+
+      // The overflow "More" button and its menu keep their props while what they show holds: the popover and the
+      // menu items are memo components.
+      const moreButtonProps = useMemo(
+        () => ({
+          icon: 'ArrowDownSLine' as IReqoreIconName,
+          flat: true,
+          transparent: true,
+          size,
+          pill,
+          fluid,
+          active: isSelectedHidden,
+          intent: isSelectedHidden ? activeIntent : undefined,
+          customTheme: isSelectedHidden ? { main: getReadableColorFrom(theme.main) } : customTheme,
+          className: 'reqore-segmented-control-item reqore-segmented-control-more',
+          label: moreLabel,
+        }),
+        [size, pill, fluid, isSelectedHidden, activeIntent, theme.main, customTheme, moreLabel]
+      );
+      const overflowClickHandlers = useMemo(
+        () =>
+          hiddenItems.map(
+            (overflowItem): TReqoreMenuItemEventHandler =>
+              (_event, _itemId, closePopover) => {
+                handleSelect(overflowItem.value);
+                closePopover?.();
+              }
+          ),
+        [hiddenItems, handleSelect]
+      );
+      const moreMenu = useMemo(
+        () => (
+          <ReqoreMenu customTheme={customTheme}>
+            {hiddenItems.map((overflowItem, index) => (
+              <ReqoreMenuItem
+                {...overflowItem.props}
+                key={overflowItem.value}
+                {...omitBy(
+                  { icon: overflowItem.icon, rightIcon: overflowItem.rightIcon },
+                  isUndefined
+                )}
+                disabled={overflowItem.disabled}
+                selected={overflowItem.value === _value}
+                intent={
+                  overflowItem.value === _value
+                    ? overflowItem.activeIntent || activeIntent
+                    : undefined
+                }
+                onClick={overflowClickHandlers[index]}
+              >
+                {overflowItem.label}
+              </ReqoreMenuItem>
+            ))}
+          </ReqoreMenu>
+        ),
+        [customTheme, hiddenItems, _value, activeIntent, overflowClickHandlers]
       );
 
       if (!items || items.length === 0) {
@@ -551,54 +669,48 @@ const ReqoreSegmentedControl = memo(
                 theme={theme}
                 fluid={fluid}
               >
-                <ReqoreButton
-                  {...item.props}
-                  ref={(el) => {
-                    itemRefs.current[item.value] = el;
-                  }}
-                  flat
-                  transparent
-                  // The item's own fields win over its props, but only where they are set.
-                  {...omitBy(
-                    {
-                      icon: item.icon,
-                      rightIcon: item.rightIcon,
-                      badge: item.badge,
-                      tooltip: item.tooltip,
-                      effect: item.effect,
-                    },
-                    isUndefined
-                  )}
-                  disabled={itemDisabled}
-                  size={size}
-                  fluid={fluid}
-                  intent={
-                    isSelected && selectedItemIntent
-                      ? selectedItemIntent
-                      : undefined
-                  }
-                  customTheme={
-                    isSelected && !selectedItemIntent
-                      ? {
-                          main: getReadableColorFrom(theme.main),
-                        }
-                      : customTheme
-                  }
-                  onClick={() => handleSelect(item.value)}
-                  role='radio'
-                  aria-checked={isSelected}
-                  tabIndex={
-                    isSelected
-                      ? 0
-                      : selectedVisibleIndex < 0 && index === 0
-                      ? 0
-                      : -1
-                  }
-                  className={`${item.props?.className || ''} reqore-segmented-control-item`}
-                  pill={pill}
-                >
-                  {item.label}
-                </ReqoreButton>
+                <ReqoreSurfaceProvider color={isSelected ? indicatorSurface : trackSurface}>
+                  <ReqoreButton
+                    {...item.props}
+                    ref={itemHandlersFor(item.value).ref}
+                    flat
+                    transparent
+                    // The item's own fields win over its props, but only where they are set.
+                    {...omitBy(
+                      {
+                        icon: item.icon,
+                        rightIcon: item.rightIcon,
+                        badge: item.badge,
+                        tooltip: item.tooltip,
+                        effect: item.effect,
+                      },
+                      isUndefined
+                    )}
+                    disabled={itemDisabled}
+                    size={size}
+                    fluid={fluid}
+                    intent={
+                      isSelected && selectedItemIntent
+                        ? selectedItemIntent
+                        : undefined
+                    }
+                    customTheme={isSelected && !selectedItemIntent ? selectedItemTheme : customTheme}
+                    onClick={itemHandlersFor(item.value).onClick}
+                    role='radio'
+                    aria-checked={isSelected}
+                    tabIndex={
+                      isSelected
+                        ? 0
+                        : selectedVisibleIndex < 0 && index === 0
+                        ? 0
+                        : -1
+                    }
+                    className={`${item.props?.className || ''} reqore-segmented-control-item`}
+                    pill={pill}
+                  >
+                    {item.label}
+                  </ReqoreButton>
+                </ReqoreSurfaceProvider>
               </StyledItemWrapper>
             );
           })}
@@ -611,58 +723,20 @@ const ReqoreSegmentedControl = memo(
               theme={theme}
               fluid={fluid}
             >
-              <ReqorePopover
-                component={ReqoreButton}
-                componentProps={{
-                  icon: 'ArrowDownSLine' as IReqoreIconName,
-                  flat: true,
-                  transparent: true,
-                  size,
-                  pill,
-                  fluid,
-                  active: isSelectedHidden,
-                  intent: isSelectedHidden ? activeIntent : undefined,
-                  customTheme: isSelectedHidden
-                    ? { main: getReadableColorFrom(theme.main) }
-                    : customTheme,
-                  className:
-                    'reqore-segmented-control-item reqore-segmented-control-more',
-                  label: moreLabel,
-                }}
-                closeOnOutsideClick
-                isReqoreComponent
-                noWrapper
-                handler='hoverStay'
-                // the hidden segments' only way in: a tap opens it too
-                opensOnTap
-                content={
-                  <ReqoreMenu customTheme={customTheme}>
-                    {hiddenItems.map((overflowItem) => (
-                      <ReqoreMenuItem
-                        {...overflowItem.props}
-                        key={overflowItem.value}
-                        {...omitBy(
-                          { icon: overflowItem.icon, rightIcon: overflowItem.rightIcon },
-                          isUndefined
-                        )}
-                        disabled={overflowItem.disabled}
-                        selected={overflowItem.value === _value}
-                        intent={
-                          overflowItem.value === _value
-                            ? overflowItem.activeIntent || activeIntent
-                            : undefined
-                        }
-                        onClick={(_event, _itemId, closePopover) => {
-                          handleSelect(overflowItem.value);
-                          closePopover?.();
-                        }}
-                      >
-                        {overflowItem.label}
-                      </ReqoreMenuItem>
-                    ))}
-                  </ReqoreMenu>
-                }
-              />
+              {/* drawn on the track, as the items beside it are: it reads against the track */}
+              <ReqoreSurfaceProvider color={trackSurface}>
+                <ReqorePopover
+                  component={ReqoreButton}
+                  componentProps={moreButtonProps}
+                  closeOnOutsideClick
+                  isReqoreComponent
+                  noWrapper
+                  handler='hoverStay'
+                  // the hidden segments' only way in: a tap opens it too
+                  opensOnTap
+                  content={moreMenu}
+                />
+              </ReqoreSurfaceProvider>
             </StyledItemWrapper>
           )}
         </StyledSegmentedControl>

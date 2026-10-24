@@ -107,6 +107,7 @@ export type { TReqoreKeyboardShortcut } from './helpers/shortcuts';
 /* The swipe judgement the library's own gestures share (a sheet pushed away, the tier stack),
    so a consumer's gesture can feel the same under the finger. */
 export { getSwipeStep, SWIPE } from './helpers/gestures';
+export { POSIX_LOCALE, resolveLocale, toLanguageTag } from './helpers/locale';
 export type { ISwipeThresholds } from './helpers/gestures';
 export {
   createHoverGate,
@@ -209,6 +210,8 @@ export { default as ReqoreNotifications, modalStore } from './containers/ReqoreP
 export { default as ReqoreUIProvider } from './containers/UIProvider';
 export { default as ReqoreContext } from './context/ReqoreContext';
 export { default as ReqoreThemeContext } from './context/ThemeContext';
+export { ReqoreSurfaceProvider, useReqoreSurface } from './context/SurfaceContext';
+export type { TReqoreSurface } from './helpers/colors';
 export { useCloneThroughFragments } from './hooks/useCloneThroughFragments';
 export { default as useLatestZIndex } from './hooks/useLatestZIndex';
 export { useReqorePaging } from './hooks/usePaging';
