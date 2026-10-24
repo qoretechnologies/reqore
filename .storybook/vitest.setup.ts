@@ -8,11 +8,11 @@ import * as previewAnnotations from './preview';
 import { lowContrastIn } from '../src/stories/utils/contrastGate';
 import { motionSettled } from '../src/stories/utils/motion';
 import { reactWarningsFailure, type IReactWarning } from '../src/stories/utils/reactWarningGate';
-import { POSIX_LANGUAGE, POSIX_LOCALE_STORY_PROJECT } from '../src/stories/utils/posixLocale';
+import { POSIX_LANGUAGE, POSIX_LOCALE_STORY_PROJECT } from '../src/stories/utils/posixLocale.mts';
 import { SCROLLBARS_STORY_PROJECT, scrollbarWidth } from '../src/stories/utils/scrollbars';
 import { TOUCH_STORY_PROJECT } from '../src/stories/utils/touchScreen';
 
-/** Whether this run's browser is the one of the story project `name` (vitest.config.ts). */
+/** Whether this run's browser is the one of the story project `name` (vitest.config.mts). */
 const inProject = (name: string): boolean => {
   // a project's browser runs as a project of its own, named after both:
   // "storybook-touch (chromium)"
@@ -21,7 +21,7 @@ const inProject = (name: string): boolean => {
   return project === name || project.startsWith(`${name} (`);
 };
 
-/** Whether this run's browser is the phone the stories tagged `touch` run on (vitest.config.ts). */
+/** Whether this run's browser is the phone the stories tagged `touch` run on (vitest.config.mts). */
 const onThePhone = (): boolean => inProject(TOUCH_STORY_PROJECT);
 
 // Registers the React renderer (renderToCanvas) plus the project's global
@@ -39,7 +39,7 @@ const annotations = setProjectAnnotations([
       (Story: any) => createElement('div', { style: { height: '100vh' } }, createElement(Story)),
     ],
     /* A story tagged `touch` runs on the phone. The two story projects tell those stories from the
-       others by the tags Storybook reads from the story file before it runs it (vitest.config.ts);
+       others by the tags Storybook reads from the story file before it runs it (vitest.config.mts);
        a tag the story only has once it runs - spread into it from a shared object - is not one of
        them, and the story would run here, on the desktop, with a mouse. It fails instead, saying
        how to tag it. */
@@ -103,7 +103,7 @@ afterEach(async () => {
   ).toEqual([]);
 });
 
-/* Each story's browser is the one its project promises (vitest.config.ts): a desktop with a mouse, or, for
+/* Each story's browser is the one its project promises (vitest.config.mts): a desktop with a mouse, or, for
    the stories tagged `touch`, a phone. The phone's stories run first, so every desktop story checks, after
    them, that it still has its mouse: a touch screen that left a desktop page without one (qorus#646) fails
    the next story here.
@@ -189,7 +189,7 @@ afterEach(async () => {
 
 declare module 'vitest/browser' {
   interface BrowserCommands {
-    /** Asks for reduced motion, or stops asking (vitest.config.ts). */
+    /** Asks for reduced motion, or stops asking (vitest.config.mts). */
     emulateReducedMotion: (reduce: boolean) => Promise<void>;
   }
 }

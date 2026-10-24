@@ -826,7 +826,7 @@ export const ScaledToItsTextOnAPhone: Story = {
     },
   },
   render: () => <ScaledFields />,
-  // run on the phone by its `touch` tag (vitest.config.ts); it holds at any width it is opened at
+  // run on the phone by its `touch` tag (vitest.config.mts); it holds at any width it is opened at
   play: expectScaledFieldsHoldTheirText,
 };
 

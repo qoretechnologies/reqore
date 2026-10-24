@@ -6,8 +6,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { configDefaults, defineConfig, mergeConfig } from 'vitest/config';
 import type { BrowserCommand } from 'vitest/node';
-import { POSIX_LANGUAGE } from './src/stories/utils/posixLocale';
-import viteConfig from './vite.config';
+import { POSIX_LANGUAGE } from './src/stories/utils/posixLocale.mts';
+import viteConfig from './vite.config.mts';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const qlipUploadToken = process.env.QLIP_UPLOAD_TOKEN;
@@ -53,7 +53,7 @@ const qlip = qlipVitestPlugin({
  * The browser a story project runs in: a desktop with a mouse; the phone the stories tagged `touch`
  * run on (`src/stories/utils/touchScreen.ts`); a desktop that draws its scrollbars, which the
  * stories tagged `scrollbars` run on (`src/stories/utils/scrollbars.ts`); or a desktop whose locale
- * is POSIX, which the stories tagged `posix-locale` run on (`src/stories/utils/posixLocale.ts`). A
+ * is POSIX, which the stories tagged `posix-locale` run on (`src/stories/utils/posixLocale.mts`). A
  * new object for each project: Vitest names a project's browser instances on the objects themselves.
  */
 const storyBrowser = (kind: 'desktop' | 'phone' | 'scrollbars' | 'posix-locale' = 'desktop') => ({

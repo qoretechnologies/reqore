@@ -242,7 +242,7 @@ To prove the fix moved the pixels, compare the `md5` of that PNG against the sam
 the previous capture directory — identical hashes mean the render did not change.
 
 **Guardrails:**
-- **NEVER set `QLIP_UPLOAD_TOKEN` locally.** `vitest.config.ts` attaches qlip's `upload`
+- **NEVER set `QLIP_UPLOAD_TOKEN` locally.** `vitest.config.mts` attaches qlip's `upload`
   block only when that variable is present, and CI supplies it from the repo secret in
   `.github/workflows/tests.yml`. With it set, **every** `yarn test:stories` publishes a
   build the whole team then sees in review (the token was hardcoded here until July 2026 and

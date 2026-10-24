@@ -62,7 +62,7 @@ interface IVitestBrowser {
 }
 
 /**
- * The Vitest project the stories tagged `touch` run in (vitest.config.ts), and the only one `withTouchScreen`
+ * The Vitest project the stories tagged `touch` run in (vitest.config.mts), and the only one `withTouchScreen`
  * runs in: its browser is a phone from the start - Playwright's `isMobile` and `hasTouch` on the context it
  * makes, so `(pointer: coarse)` and `(hover: none)` match and the touches are a finger's - and nothing turns
  * that on or off. Turning Chromium's touch emulation off over the DevTools protocol does not give a page back
