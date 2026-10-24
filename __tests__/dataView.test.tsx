@@ -14,6 +14,8 @@ import {
   reqoreRenameKeyAtPath,
   reqoreSetAtPath,
   reqoreUnwrapEnvelope,
+  REQORE_DATA_VIEW_DEFAULT_LABELS,
+  type IReqoreDataViewLabels,
 } from '../src';
 
 const wrap = (children: React.ReactNode) => (
@@ -1197,6 +1199,17 @@ describe('ReqoreDataView labels', () => {
     );
 
     expect(values(container)).toEqual(['Yes', 'No']);
+
+    // in its boolean colour: drawn as the built-in words are
+    const plain = render(
+      wrap(<ReqoreDataView data={{ enabled: true, archived: false }} />)
+    );
+    const colours = (root: HTMLElement) =>
+      Array.from(root.querySelectorAll('.reqore-data-view-value')).map(
+        (value) => getComputedStyle(value).color
+      );
+    expect(colours(container)).toEqual(colours(plain.container));
+    expect(colours(container).every((colour) => colour !== '')).toBe(true);
   });
 
   it('keeps the built-in words when no labels are given', () => {
@@ -1206,6 +1219,40 @@ describe('ReqoreDataView labels', () => {
 
     expect(summaries(container)).toContain('Object · 2 fields');
     expect(values(container)).toContain('true');
+  });
+
+  it('falls back to the built-in word for a label given as undefined', () => {
+    /* A consumer that builds its labels from its own translations passes the
+       ones it has none for as undefined. Spread over the defaults, they
+       replaced them: the view called undefined for its summary and threw. */
+    const partial: IReqoreDataViewLabels = {
+      objectSection: undefined,
+      listSection: undefined,
+      booleanTrue: undefined,
+      booleanFalse: 'No',
+    };
+    const { container } = render(
+      wrap(
+        <ReqoreDataView
+          data={{ owner: { name: 'Jane' }, tags: ['a'], on: true, off: false }}
+          labels={partial}
+        />
+      )
+    );
+
+    expect(summaries(container)).toContain('Object · 4 fields');
+    expect(values(container)).toEqual(expect.arrayContaining(['true', 'No']));
+  });
+
+  it('publishes its built-in words', () => {
+    expect(REQORE_DATA_VIEW_DEFAULT_LABELS.objectSection(1)).toBe(
+      'Object · 1 field'
+    );
+    expect(REQORE_DATA_VIEW_DEFAULT_LABELS.listSection(3)).toBe(
+      'List · 3 items'
+    );
+    expect(REQORE_DATA_VIEW_DEFAULT_LABELS.booleanTrue).toBe('true');
+    expect(REQORE_DATA_VIEW_DEFAULT_LABELS.booleanFalse).toBe('false');
   });
 
   it('names the edit affordances by the labels', () => {

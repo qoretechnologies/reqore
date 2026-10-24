@@ -29,11 +29,13 @@
  *     so the operator doesn't lose their place when expanding deep
  *     trees.
  */
+import { isUndefined, omitBy } from 'lodash';
 import {
   forwardRef,
   memo,
   useCallback,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -187,6 +189,19 @@ export const REQORE_DATA_VIEW_DEFAULT_LABELS: Required<IReqoreDataViewLabels> = 
   booleanTrue: 'true',
   booleanFalse: 'false',
 };
+
+/**
+ * The consumer's labels over the defaults. A label given as `undefined` keeps its default: a
+ * consumer that builds its labels from its own translations passes the ones it has none for that
+ * way, and spread over the defaults they replaced them, so the view called `undefined` for a
+ * summary and threw.
+ */
+const resolveDataViewLabels = (
+  labels?: IReqoreDataViewLabels
+): Required<IReqoreDataViewLabels> => ({
+  ...REQORE_DATA_VIEW_DEFAULT_LABELS,
+  ...omitBy(labels, isUndefined),
+});
 
 export interface IReqoreDataViewProps
   extends Omit<IReqorePanelProps, 'children'>,
@@ -2113,9 +2128,11 @@ export const ReqoreDataView = memo(
         [onChangeType, onDataChange]
       );
 
+      const resolvedLabels = useMemo(() => resolveDataViewLabels(labels), [labels]);
+
       const ctx: TRenderContext = {
         theme,
-        labels: { ...REQORE_DATA_VIEW_DEFAULT_LABELS, ...labels },
+        labels: resolvedLabels,
         envelope,
         parseEmbedded,
         showTypes,
