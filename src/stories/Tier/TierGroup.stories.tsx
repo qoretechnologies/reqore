@@ -4,7 +4,7 @@ import { ReqoreTier, ReqoreTierGroup } from '../..';
 import { IReqoreTierGroupProps } from '../../components/Tier/group';
 import { StoryMeta } from '../utils';
 import { dragPointer } from '../utils/pointer';
-import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
+import { PHONE_STORY, PHONE_VIEWPORT, withTouchScreen } from '../utils/touchScreen';
 import {
   expectModernRow,
   expectNoHorizontalOverflow,
@@ -36,18 +36,45 @@ const Plans = ({
   </ReqoreTierGroup>
 );
 
+/**
+ * The plans in a column no wider than a phone's screen (`width`, 360px unless given). The group
+ * takes its phone layout (`mobileLayout`) from its own width, not the window's, so the story is
+ * the phone's at whatever width it is opened at: on its phone viewport, as the story runs it, the
+ * column is the screen, and opened in a desktop-wide frame it is the column.
+ */
+const PlansOnAPhone = ({
+  width = 360,
+  ...props
+}: Partial<IReqoreTierGroupProps> & { plans?: typeof THREE_PLANS; width?: number }) => (
+  <div style={{ maxWidth: width }}>
+    <Plans {...props} />
+  </div>
+);
+
 /* ------------------------------------------------------------------------------------------------
  * Play helpers
  * ---------------------------------------------------------------------------------------------- */
 
-const findGroup = (root: HTMLElement, layout: 'row' | 'stack') =>
-  waitFor(() => {
-    const group = root.querySelector('.reqore-tier-group') as HTMLElement;
+/**
+ * The group, once it is in `layout` and has settled there. A group laid out in a column narrower
+ * than its breakpoint is a row for its first frame, until it has measured itself, and then moves
+ * into its stack: what the play reads of it is read after that move, not in the middle of it.
+ */
+const findGroup = async (root: HTMLElement, layout: 'row' | 'stack') => {
+  const group = await waitFor(() => {
+    const element = root.querySelector('.reqore-tier-group') as HTMLElement;
 
-    expect(group?.getAttribute('data-layout')).toBe(layout);
+    expect(element?.getAttribute('data-layout')).toBe(layout);
 
-    return group;
+    return element;
   });
+
+  // the move starts in the frame after the layout changed
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  await settled(group);
+
+  return group;
+};
 
 const frontName = (group: HTMLElement) =>
   group.querySelector('.reqore-tier-group-item-front .reqore-tier-name')?.textContent;
@@ -154,7 +181,7 @@ export const Stack: Story = {
       },
     },
   },
-  render: (args) => <Plans {...args} />,
+  render: (args) => <PlansOnAPhone {...args} />,
   play: async ({ canvasElement }) => {
     const group = await findGroup(canvasElement, 'stack');
 
@@ -185,7 +212,7 @@ export const StackLight: Story = {
       },
     },
   },
-  render: (args) => <Plans {...args} />,
+  render: (args) => <PlansOnAPhone {...args} />,
   play: async ({ canvasElement }) => {
     const group = await findGroup(canvasElement, 'stack');
 
@@ -205,7 +232,7 @@ export const StackSwipe: Story = {
       },
     },
   },
-  render: (args) => <Plans {...args} />,
+  render: (args) => <PlansOnAPhone {...args} />,
   play: async ({ canvasElement }) => {
     const group = await findGroup(canvasElement, 'stack');
 
@@ -243,7 +270,7 @@ export const StackFingerSwipe: Story = {
       },
     },
   },
-  render: (args) => <Plans {...args} />,
+  render: (args) => <PlansOnAPhone {...args} width={PHONE_VIEWPORT.width} />,
   play: async ({ canvasElement }) => {
     await withTouchScreen(async (touch) => {
       const group = await findGroup(canvasElement, 'stack');
@@ -272,7 +299,7 @@ export const StackKeyboard: Story = {
       },
     },
   },
-  render: (args) => <Plans {...args} />,
+  render: (args) => <PlansOnAPhone {...args} />,
   play: async ({ canvasElement }) => {
     const group = await findGroup(canvasElement, 'stack');
 
@@ -336,7 +363,7 @@ export const StackReducedMotion: Story = {
       window.matchMedia = matchMedia;
     };
   },
-  render: (args) => <Plans {...args} />,
+  render: (args) => <PlansOnAPhone {...args} />,
   play: async ({ canvasElement }) => {
     const group = await findGroup(canvasElement, 'stack');
     const items = () =>
@@ -368,7 +395,7 @@ export const StackLoop: Story = {
       },
     },
   },
-  render: (args) => <Plans {...args} plans={FOUR_PLANS} />,
+  render: (args) => <PlansOnAPhone {...args} plans={FOUR_PLANS} />,
   play: async ({ canvasElement }) => {
     const group = await findGroup(canvasElement, 'stack');
 
@@ -407,7 +434,7 @@ export const StackThemed: Story = {
       },
     },
   },
-  render: (args) => <Plans {...args} />,
+  render: (args) => <PlansOnAPhone {...args} />,
   play: async ({ canvasElement }) => {
     const group = await findGroup(canvasElement, 'stack');
     const front = group.querySelector('.reqore-tier-group-item-front .reqore-tier') as HTMLElement;
@@ -449,7 +476,7 @@ export const NarrowColumns: Story = {
       },
     },
   },
-  render: (args) => <Plans {...args} />,
+  render: (args) => <PlansOnAPhone {...args} />,
   play: async ({ canvasElement }) => {
     const group = await findGroup(canvasElement, 'row');
     const tiers = Array.from(group.querySelectorAll('.reqore-tier')).map((tier) =>
