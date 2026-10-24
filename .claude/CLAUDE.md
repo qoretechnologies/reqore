@@ -193,6 +193,20 @@ release on npm.
   runner has none, so every later story in the page finds `(hover: none)` (it never shows on a Mac,
   which always reports a mouse). `.storybook/vitest.setup.ts` checks every story's browser is its
   project's: `(hover: hover) and (pointer: fine)`, or on the phone `(hover: none) and (pointer: coarse)`.
+- **Scrollbar stories:** Playwright launches Chromium with `--hide-scrollbars`, so in the
+  `storybook` and `storybook-touch` projects a scrollbar takes no room. A story tagged `scrollbars`
+  runs a second time in the `storybook-scrollbars` project, a desktop browser that draws its
+  scrollbars. On Linux (the CI runner) they are classic 15px scrollbars that take room from what
+  they scroll, as on Windows and on a Mac set to always show them. Tag a story `scrollbars` when
+  what its play checks depends on that room: a box sized to its content, a measurement taken while
+  the content overflows, or a width a scrollbar would narrow (`Form/TextArea · Scaled To Its Text
+  …`). A touch story is not tagged, because a phone draws its scrollbars over the content. Write the
+  tag in the story file, as `touch` is written: the projects read it from the source. The project
+  has no qlip plugin, so it makes no captures; the frames stay the desktop project's.
+  `.storybook/vitest.setup.ts` checks that scrollbars take no room in the other projects, and that
+  on Linux they do in this one. On a Mac that shows scrollbars only while scrolling they take no
+  room, so this project checks nothing there: run it on Linux (CI, or the Playwright image in a
+  container) to see it fail.
 - **No layout change inside a ResizeObserver callback:** a story fails when the browser reports
   "ResizeObserver loop completed with undelivered notifications" (`.storybook/vitest.setup.ts`). It
   means a resize callback changed the layout it observes in the same frame, often by setting state

@@ -7,16 +7,20 @@ import { commands, server } from 'vitest/browser';
 import * as previewAnnotations from './preview';
 import { lowContrastIn } from '../src/stories/utils/contrastGate';
 import { reactWarningsFailure, type IReactWarning } from '../src/stories/utils/reactWarningGate';
+import { SCROLLBARS_STORY_PROJECT, scrollbarWidth } from '../src/stories/utils/scrollbars';
 import { TOUCH_STORY_PROJECT } from '../src/stories/utils/touchScreen';
 
-/** Whether this run's browser is the phone the stories tagged `touch` run on (vitest.config.ts). */
-const onThePhone = (): boolean => {
+/** Whether this run's browser is the one of the story project `name` (vitest.config.ts). */
+const inProject = (name: string): boolean => {
   // a project's browser runs as a project of its own, named after both:
   // "storybook-touch (chromium)"
   const project = server.config.name ?? '';
 
-  return project === TOUCH_STORY_PROJECT || project.startsWith(`${TOUCH_STORY_PROJECT} (`);
+  return project === name || project.startsWith(`${name} (`);
 };
+
+/** Whether this run's browser is the phone the stories tagged `touch` run on (vitest.config.ts). */
+const onThePhone = (): boolean => inProject(TOUCH_STORY_PROJECT);
 
 // Registers the React renderer (renderToCanvas) plus the project's global
 // decorators/parameters from .storybook/preview for the Storybook Vitest project.
@@ -100,7 +104,12 @@ afterEach(async () => {
 /* Each story's browser is the one its project promises (vitest.config.ts): a desktop with a mouse, or, for
    the stories tagged `touch`, a phone. The phone's stories run first, so every desktop story checks, after
    them, that it still has its mouse: a touch screen that left a desktop page without one (qorus#646) fails
-   the next story here. */
+   the next story here.
+
+   And its scrollbars: hidden, taking no room, but in the project of the stories tagged `scrollbars`, whose
+   browser draws them. On Linux, where the CI runs, they take room there: a browser that hid them again
+   (a Playwright that hides them another way) would pass those stories without checking anything. On a Mac
+   they take room only when it is set to always show them, so there it is not asked. */
 beforeEach(() => {
   const project = server.config.name ?? '';
   const promised = onThePhone()
@@ -108,6 +117,15 @@ beforeEach(() => {
     : '(hover: hover) and (pointer: fine)';
 
   expect(matchMedia(promised).matches, `the "${project}" project's browser matches ${promised}`).toBe(true);
+
+  if (!inProject(SCROLLBARS_STORY_PROJECT)) {
+    expect(scrollbarWidth(), `the "${project}" project's browser hides its scrollbars`).toBe(0);
+  } else if (server.platform === 'linux') {
+    expect(
+      scrollbarWidth(),
+      `the "${project}" project's browser draws scrollbars that take room`
+    ).toBeGreaterThan(0);
+  }
 });
 
 // No story makes React warn (`src/stories/utils/reactWarningGate.ts`): each warning fails the story it was given in.
