@@ -107,6 +107,7 @@ export type { TReqoreKeyboardShortcut } from './helpers/shortcuts';
 /* The swipe judgement the library's own gestures share (a sheet pushed away, the tier stack),
    so a consumer's gesture can feel the same under the finger. */
 export { getSwipeStep, SWIPE } from './helpers/gestures';
+export { POSIX_LOCALE, resolveLocale, toLanguageTag } from './helpers/locale';
 export type { ISwipeThresholds } from './helpers/gestures';
 export {
   createHoverGate,
