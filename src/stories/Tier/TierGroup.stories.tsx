@@ -4,6 +4,7 @@ import { ReqoreTier, ReqoreTierGroup } from '../..';
 import { IReqoreTierGroupProps } from '../../components/Tier/group';
 import { StoryMeta } from '../utils';
 import { dragPointer } from '../utils/pointer';
+import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import {
   expectModernRow,
   expectNoHorizontalOverflow,
@@ -200,7 +201,7 @@ export const StackSwipe: Story = {
     docs: {
       description: {
         story:
-          'Renders the plan stack on a 360px phone after a swipe to the left: Enterprise has come to the front with Pro behind it on the left, its dot is the pill and the next button is disabled. A second swipe to the left, past the last plan, gives a little and springs back.',
+          'Renders the plan stack on a 360px phone after a swipe to the left: Enterprise has come to the front with Pro behind it on the left, its dot is the pill and the next button is disabled. A second swipe to the left, past the last plan, gives a little and springs back. The play test also checks that every element inside the stack leaves horizontal moves to it (`touch-action: pan-y pinch-zoom`): the browser resolves touch-action only up to the nearest scroll container, and a tier\'s panel is one, so a real finger on a tier was otherwise taken by the browser and the swipe cancelled.',
       },
     },
   },
@@ -209,6 +210,12 @@ export const StackSwipe: Story = {
     const group = await findGroup(canvasElement, 'stack');
 
     await expectFront(group, 'Pro');
+
+    // A finger on any part of a tier: the swipe is the stack's, not the browser's pan.
+    const frame = group.querySelector<HTMLElement>('.reqore-tier-group-viewport')!;
+    for (const el of [frame, ...frame.querySelectorAll<HTMLElement>('*')]) {
+      await expect(getComputedStyle(el).touchAction).toBe('pan-y pinch-zoom');
+    }
 
     await swipe(group, -160);
     await expectFront(group, 'Enterprise');
@@ -220,6 +227,37 @@ export const StackSwipe: Story = {
     await expectFront(group, 'Enterprise');
     await expect(group.getAttribute('data-active-index')).toBe('2');
     await expectStack(group);
+  },
+};
+
+export const StackFingerSwipe: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  args: { mobileLayout: 'stack' },
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders the plan stack on a phone (390px, a touch screen) and swipes it with a finger that lands on the front tier's description, inside the tier's panel: Enterprise comes to the front. The touches are the browser's own (its input pipeline, which cancels what it takes for a pan), so this is the swipe a phone makes: before every element inside the stack had `touch-action: pan-y pinch-zoom`, the browser took this move for the page's pan, cancelled the pointer and the stack never moved.",
+      },
+    },
+  },
+  render: (args) => <Plans {...args} />,
+  play: async ({ canvasElement }) => {
+    await withTouchScreen(async (touch) => {
+      const group = await findGroup(canvasElement, 'stack');
+
+      await expectFront(group, 'Pro');
+
+      const front = group.querySelector<HTMLElement>('.reqore-tier-group-item-front')!;
+      const description = front.querySelector<HTMLElement>('.reqore-tier-description') ?? front;
+      const box = description.getBoundingClientRect();
+      const from = { x: box.left + box.width * 0.7, y: box.top + box.height / 2 };
+
+      await touch.drag(from, { x: from.x - 200, y: from.y }, 12);
+      await expectFront(group, 'Enterprise');
+    });
   },
 };
 
