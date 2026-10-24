@@ -234,9 +234,12 @@ release on npm.
   and the table cell do), a Reqore component saying a prop has no effect, an error boundary logging
   what it caught, or an error the page did not handle (the story run logs it). A story that does on
   purpose what a component warns about, or shows what an error does, checks it instead
-  (`src/stories/utils/expectedConsole.ts`): `expectedWarning(/…/)` or `expectedError(/…/, …)` is its
-  `beforeEach`, and its play calls `expectWarned()` or `expectErrored()`, which check each was given
-  once and keep it off the console.
+  (`src/stories/utils/expectedConsole.ts`): `expectedWarning(/…/)` or `expectedError({ uncaught,
+  logged })` is its `beforeEach`, and its play calls `expectWarned()` or `expectErrored()`, which
+  check each was given once and keep it off the console. `uncaught` is the error a boundary catches,
+  which React in development also reports to the window: the story cancels that report and checks
+  there is no other, so it spreads `expectedError(...).parameters` into its own, which leaves
+  Storybook's check (any error the window reports marks the story errored) to it.
 - **CSS variables in unit tests:** jsdom gives a property that reads a CSS variable as written;
   `__tests__/setup.ts` installs `__tests__/cssVariables.ts`, so `getComputedStyle` computes it to
   the variable's value as a browser does. A test that reads a stylesheet rule itself computes the
