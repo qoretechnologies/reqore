@@ -1133,3 +1133,104 @@ describe('the fonts of an editable DataView', () => {
       .forEach((button) => expect(fontOf(button)).not.toContain('monospace'));
   });
 });
+
+/*
+ * The labels a consumer gives are the words the view draws (qorus#646).
+ * `labels` was declared, documented and passed by consumers, and never read:
+ * every summary, affordance and type name was the built-in English, and a
+ * consumer translating the view (or naming a hash in plain words) changed
+ * nothing.
+ */
+describe('ReqoreDataView labels', () => {
+  const PLAIN = {
+    objectSection: (count: number) =>
+      count === 1 ? '1 field' : `${count} fields`,
+    listSection: (count: number) => (count === 1 ? '1 item' : `${count} items`),
+    scalarSection: 'Single value',
+    booleanTrue: 'Yes',
+    booleanFalse: 'No',
+  };
+  const summaries = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll('summary')).map((summary) =>
+      (summary.textContent ?? '').replace(/^▸\s*/, '').trim()
+    );
+  const values = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll('.reqore-data-view-value')).map(
+      (value) => (value.textContent ?? '').trim()
+    );
+
+  it('names a hash and a list by the labels', () => {
+    const { container } = render(
+      wrap(
+        <ReqoreDataView
+          data={{
+            owner: { name: 'Jane' },
+            approvals: [{ level: 1 }, { level: 2 }],
+          }}
+          labels={PLAIN}
+        />
+      )
+    );
+
+    const names = summaries(container);
+    expect(names).toContain('2 fields');
+    expect(names).toContain('1 field');
+    expect(names).toContain('2 items');
+    expect(names.filter((name) => /Object|List/.test(name))).toEqual([]);
+  });
+
+  it('names a single value at the root by the label', () => {
+    const { container } = render(
+      wrap(<ReqoreDataView data='a single value' labels={PLAIN} />)
+    );
+    expect(summaries(container)).toContain('Single value');
+  });
+
+  it('writes a yes/no value in the labels words, in its boolean colour', () => {
+    const { container } = render(
+      wrap(
+        <ReqoreDataView
+          data={{ enabled: true, archived: false }}
+          labels={PLAIN}
+        />
+      )
+    );
+
+    expect(values(container)).toEqual(['Yes', 'No']);
+  });
+
+  it('keeps the built-in words when no labels are given', () => {
+    const { container } = render(
+      wrap(<ReqoreDataView data={{ owner: { name: 'Jane' }, enabled: true }} />)
+    );
+
+    expect(summaries(container)).toContain('Object · 2 fields');
+    expect(values(container)).toContain('true');
+  });
+
+  it('names the edit affordances by the labels', () => {
+    const { container } = render(
+      wrap(
+        <ReqoreDataView
+          data={{ name: 'Jane' }}
+          editable
+          onDataChange={vi.fn()}
+          labels={{
+            editValue: 'Change the value',
+            renameKey: 'Change the name',
+            addPropertyLabel: 'New field',
+          }}
+        />
+      )
+    );
+
+    expect(
+      container.querySelector('[aria-label="Change the value"]')
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[aria-label="Change the name"]')
+    ).toBeTruthy();
+    expect(container.textContent).toContain('New field');
+    expect(container.querySelector('[aria-label="Edit value"]')).toBeNull();
+  });
+});
