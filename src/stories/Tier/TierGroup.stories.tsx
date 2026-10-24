@@ -1,7 +1,7 @@
 import { StoryObj } from '@storybook/react';
 import { expect, waitFor } from 'storybook/test';
 import { ReqoreTier, ReqoreTierGroup } from '../..';
-import { IReqoreTierGroupProps } from '../../components/Tier/group';
+import { IReqoreTierGroupProps, TIER_GROUP_MIN_COLUMN_WIDTH } from '../../components/Tier/group';
 import { StoryMeta } from '../utils';
 import { dragPointer } from '../utils/pointer';
 import { PHONE_STORY, PHONE_VIEWPORT, withTouchScreen } from '../utils/touchScreen';
@@ -155,14 +155,12 @@ export const Row: Story = {
   play: async ({ canvasElement }) => {
     const group = await findGroup(canvasElement, 'row');
 
-    await expectModernRow(canvasElement, 4);
+    // one row where the group has room for it (a wide screen), one plan under the other on a phone
+    await expectModernRow(canvasElement, 4, {
+      grid: '.reqore-tier-group',
+      minColumnWidth: TIER_GROUP_MIN_COLUMN_WIDTH,
+    });
     await expect(group.querySelector('.reqore-tier-group-controls')).toBeNull();
-
-    // One row: every card starts on the same line.
-    const tops = Array.from(group.querySelectorAll('.reqore-tier')).map(
-      (tier) => tier.getBoundingClientRect().top
-    );
-    await expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(1);
   },
 };
 
