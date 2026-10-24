@@ -6,6 +6,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, expect } from 'vitest';
 import { commands, server } from 'vitest/browser';
 import * as previewAnnotations from './preview';
 import { lowContrastIn } from '../src/stories/utils/contrastGate';
+import { motionSettled } from '../src/stories/utils/motion';
 import { reactWarningsFailure, type IReactWarning } from '../src/stories/utils/reactWarningGate';
 import { POSIX_LOCALE_STORY_PROJECT } from '../src/stories/utils/posixLocale';
 import { SCROLLBARS_STORY_PROJECT, scrollbarWidth } from '../src/stories/utils/scrollbars';
@@ -44,18 +45,8 @@ const annotations = setProjectAnnotations([
        how to tag it. */
     beforeEach: async ({ tags, title, name }) => {
       /* A story runs with the motion the user would see, unless it is about reduced motion (tagged
-         `reduced-motion`): the contrast gate after the story before it asked for reduced motion.
-
-         The projects that run stories a second time only to check them (with scrollbars, in the POSIX
-         locale) run them under reduced motion from the start. They make no captures, and qlip's
-         capture is what let a fade finish before the contrast gate measured it: without it the gate
-         measured a field's clear button 5% into its fade-in, at 1.3:1. Under reduced motion it is
-         drawn at its settled opacity from its first paint. */
-      await commands.emulateReducedMotion(
-        tags.includes('reduced-motion') ||
-          inProject(SCROLLBARS_STORY_PROJECT) ||
-          inProject(POSIX_LOCALE_STORY_PROJECT)
-      );
+         `reduced-motion`): the contrast gate after the story before it asked for reduced motion. */
+      await commands.emulateReducedMotion(tags.includes('reduced-motion'));
 
       if (tags.includes('touch') && !onThePhone()) {
         throw new Error(
@@ -185,9 +176,11 @@ afterAll(() => {
    under reduced motion, which Reqore honours: what stays on screen, never a frame of a fade or a spring. */
 afterEach(async () => {
   await commands.emulateReducedMotion(true);
-  await new Promise<void>((resolve) =>
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-  );
+  /* Settled on its own, not on another plugin's timing: a fade already running when reduced motion is
+     asked for runs on to its end, and in the projects that make captures qlip's capture used to be
+     what waited for it. Without one, the gate measured a date field's clear button 5% into its
+     fade-in, at 1.3:1 (`motionSettled`). */
+  await motionSettled();
   expect(
     await lowContrastIn(document.body),
     'text (4.5:1, large 3:1) or icons (3:1) too close to what they are drawn on'
