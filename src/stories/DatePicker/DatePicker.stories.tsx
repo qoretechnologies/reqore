@@ -12,6 +12,8 @@ import { FlatArg, IntentArg, MinimalArg, SizeArg } from '../utils/args';
 const meta = {
   title: 'Form/DatePicker',
   component: DatePicker,
+  // run again in a browser whose locale is POSIX: the picker hands the browser's language to Intl
+  tags: ['posix-locale'],
   argTypes: {
     ...MinimalArg,
     ...FlatArg,

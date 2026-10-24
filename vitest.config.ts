@@ -12,10 +12,11 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const qlipUploadToken = process.env.QLIP_UPLOAD_TOKEN;
 
 /**
- * Story files that cannot hold a story tagged `tag` (`touch`, `scrollbars`), relative to the project
- * root. The project that runs the stories with that tag leaves them out, so it does not load every
- * story module only to skip it. Read from the files themselves: tagging a story is all it takes to
- * run it on a touch screen, or with classic scrollbars.
+ * Story files that cannot hold a story tagged `tag` (`touch`, `scrollbars`, `posix-locale`),
+ * relative to the project root. The project that runs the stories with that tag leaves them out, so
+ * it does not load every story module only to skip it. Read from the files themselves: tagging a
+ * story is all it takes to run it on a touch screen, with classic scrollbars, or in a browser whose
+ * locale is POSIX.
  *
  * The story projects split the stories by the tags Storybook reads from a story file's source
  * before it runs it (`tags` below): string literals, in a `tags` array on a story or its meta, or
@@ -49,11 +50,12 @@ const qlip = qlipVitestPlugin({
 
 /**
  * The browser a story project runs in: a desktop with a mouse; the phone the stories tagged `touch`
- * run on (`src/stories/utils/touchScreen.ts`); or a desktop that draws its scrollbars, which the
- * stories tagged `scrollbars` run on (`src/stories/utils/scrollbars.ts`). A new object for each
- * project: Vitest names a project's browser instances on the objects themselves.
+ * run on (`src/stories/utils/touchScreen.ts`); a desktop that draws its scrollbars, which the
+ * stories tagged `scrollbars` run on (`src/stories/utils/scrollbars.ts`); or a desktop whose locale
+ * is POSIX, which the stories tagged `posix-locale` run on (`src/stories/utils/posixLocale.ts`). A
+ * new object for each project: Vitest names a project's browser instances on the objects themselves.
  */
-const storyBrowser = (kind: 'desktop' | 'phone' | 'scrollbars' = 'desktop') => ({
+const storyBrowser = (kind: 'desktop' | 'phone' | 'scrollbars' | 'posix-locale' = 'desktop') => ({
   enabled: true,
   // Vitest 4's @vitest/browser-playwright no longer applies
   // `browser.viewport` to the Playwright context (the line is
@@ -77,9 +79,19 @@ const storyBrowser = (kind: 'desktop' | 'phone' | 'scrollbars' = 'desktop') => (
   // 15px scrollbars, as Linux, Windows and a Mac set to always show them do: a layout that has to
   // leave room for one (a field measured while it draws one, qorus#646) is only seen there. A Mac
   // that shows its scrollbars as it scrolls draws them over the content, so there they take no room.
+  //
+  // The browser takes its language from the locale it is launched in (LC_ALL, then LANG), and on
+  // Linux one that is C or POSIX (LANG=C.UTF-8, LANG=C, or none, as in most Linux containers) makes
+  // Chromium report `navigator.language` as `en-US@posix`, which is no BCP 47 tag: `Intl` throws on
+  // it (qorus#646). The other projects run in the locale of the machine they run on (the CI runner's
+  // is a real one); the `posix-locale` project's browser is launched in the POSIX locale, wherever it
+  // runs. On a Mac, Chromium takes its language from the system instead, so there it is the system's.
   provider: playwright({
     ...(kind === 'scrollbars'
       ? { launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } }
+      : {}),
+    ...(kind === 'posix-locale'
+      ? { launchOptions: { env: { ...process.env, LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8' } } }
       : {}),
     contextOptions:
       kind === 'phone'
@@ -114,10 +126,11 @@ export default mergeConfig(
         // Component/interaction tests: run every story in a real browser via Playwright.
         // Replaces the former @storybook/test-runner.
         //
-        // Stories run in three projects, each in a browser of its own kind (see `storyBrowser`): every story
-        // on a desktop with a mouse, but those tagged `touch`, which run on a phone; and those tagged
-        // `scrollbars` run again on a desktop that draws its scrollbars. `.storybook/vitest.setup.ts` checks
-        // each story's browser is the one its project promises.
+        // Stories run in four projects, each in a browser of its own kind (see `storyBrowser`): every story
+        // on a desktop with a mouse, but those tagged `touch`, which run on a phone; those tagged
+        // `scrollbars` run again on a desktop that draws its scrollbars, and those tagged `posix-locale` on a
+        // desktop whose locale is POSIX. `.storybook/vitest.setup.ts` checks each story's browser is the one
+        // its project promises.
         {
           extends: true,
           plugins: [
@@ -176,6 +189,27 @@ export default mergeConfig(
             exclude: [...configDefaults.exclude, ...storyFilesWithoutTag('scrollbars')],
             sequence: { groupOrder: 2 },
             browser: storyBrowser('scrollbars'),
+            ...storyTest,
+          },
+        },
+        // The stories tagged `posix-locale` again, on a desktop whose locale is POSIX: those that hand
+        // the browser's language to `Intl`. After the others, for the same dependency cache. No qlip:
+        // their frames are the desktop project's.
+        {
+          extends: true,
+          plugins: [
+            storybookTest({
+              configDir: path.join(dirname, '.storybook'),
+              storybookScript: 'yarn storybook --no-open',
+              // a touch story runs on the phone only (`.storybook/vitest.setup.ts`)
+              tags: { include: ['posix-locale'], exclude: ['touch'] },
+            }),
+          ],
+          test: {
+            name: 'storybook-posix-locale',
+            exclude: [...configDefaults.exclude, ...storyFilesWithoutTag('posix-locale')],
+            sequence: { groupOrder: 3 },
+            browser: storyBrowser('posix-locale'),
             ...storyTest,
           },
         },

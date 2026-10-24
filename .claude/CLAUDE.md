@@ -194,18 +194,33 @@ release on npm.
   which always reports a mouse). `.storybook/vitest.setup.ts` checks every story's browser is its
   project's: `(hover: hover) and (pointer: fine)`, or on the phone `(hover: none) and (pointer: coarse)`.
 - **Scrollbar stories:** Playwright launches Chromium with `--hide-scrollbars`, so in the
-  `storybook` and `storybook-touch` projects a scrollbar takes no room. A story tagged `scrollbars`
-  runs a second time in the `storybook-scrollbars` project, a desktop browser that draws its
-  scrollbars. On Linux (the CI runner) they are classic 15px scrollbars that take room from what
-  they scroll, as on Windows and on a Mac set to always show them. Tag a story `scrollbars` when
-  what its play checks depends on that room: a box sized to its content, a measurement taken while
-  the content overflows, or a width a scrollbar would narrow (`Form/TextArea · Scaled To Its Text
-  …`). A touch story is not tagged, because a phone draws its scrollbars over the content. Write the
+  `storybook`, `storybook-touch` and `storybook-posix-locale` projects a scrollbar takes no room. A
+  story tagged `scrollbars` runs a second time in the `storybook-scrollbars` project, a desktop
+  browser that draws its scrollbars. On Linux (the CI runner) they are classic 15px scrollbars that
+  take room from what they scroll, as on Windows and on a Mac set to always show them. Tag a story
+  `scrollbars` when what its play checks depends on that room: a box sized to its content, a
+  measurement taken while the content overflows, or a width a scrollbar would narrow (`Form/TextArea
+  · Scaled To Its Text …`). A touch story is not tagged, because a phone draws its scrollbars over
+  the content. Write the tag in the story file, as `touch` is written: the projects read it from the
+  source. The project has no qlip plugin, so it makes no captures; the frames stay the desktop
+  project's. `.storybook/vitest.setup.ts` checks that scrollbars take no room in the other projects,
+  and that on Linux they do in this one. On a Mac that shows scrollbars only while scrolling they
+  take no room, so this project checks nothing there: run it on Linux (CI, or the Playwright image
+  in a container) to see it fail.
+- **POSIX-locale stories:** a browser takes its language from the locale it is launched in
+  (`LC_ALL`, then `LANG`). On Linux a C or POSIX locale (`LANG=C.UTF-8`, `LANG=C`, or none, as in
+  most containers) makes Chromium report `navigator.language` as `en-US@posix`, which is no BCP 47
+  tag, and `Intl` throws on it. The other story projects run in the locale of the machine they run
+  on (the CI runner's is a real one), so they never see it. A story tagged `posix-locale` runs a
+  second time in the `storybook-posix-locale` project, a desktop browser launched with
+  `LANG=C.UTF-8` and `LC_ALL=C.UTF-8`. Tag a story `posix-locale` when what it draws hands the
+  browser's language (or a locale a host passes) to `Intl` or a date library, as `ReqoreDatePicker`
+  does (its stories are tagged in their meta). Pass a locale on through `resolveLocale` /
+  `toLanguageTag` (`src/helpers/locale.ts`), never raw. A touch story is not run there. Write the
   tag in the story file, as `touch` is written: the projects read it from the source. The project
-  has no qlip plugin, so it makes no captures; the frames stay the desktop project's.
-  `.storybook/vitest.setup.ts` checks that scrollbars take no room in the other projects, and that
-  on Linux they do in this one. On a Mac that shows scrollbars only while scrolling they take no
-  room, so this project checks nothing there: run it on Linux (CI, or the Playwright image in a
+  has no qlip plugin, so it makes no captures. `.storybook/vitest.setup.ts` checks that on Linux its
+  browser reports the POSIX locale's language. On a Mac, Chromium takes its language from the
+  system, so there the project checks nothing: run it on Linux (CI, or the Playwright image in a
   container) to see it fail.
 - **No layout change inside a ResizeObserver callback:** a story fails when the browser reports
   "ResizeObserver loop completed with undelivered notifications" (`.storybook/vitest.setup.ts`). It

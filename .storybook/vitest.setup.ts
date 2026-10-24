@@ -7,6 +7,7 @@ import { commands, server } from 'vitest/browser';
 import * as previewAnnotations from './preview';
 import { lowContrastIn } from '../src/stories/utils/contrastGate';
 import { reactWarningsFailure, type IReactWarning } from '../src/stories/utils/reactWarningGate';
+import { POSIX_LOCALE_STORY_PROJECT } from '../src/stories/utils/posixLocale';
 import { SCROLLBARS_STORY_PROJECT, scrollbarWidth } from '../src/stories/utils/scrollbars';
 import { TOUCH_STORY_PROJECT } from '../src/stories/utils/touchScreen';
 
@@ -109,7 +110,12 @@ afterEach(async () => {
    And its scrollbars: hidden, taking no room, but in the project of the stories tagged `scrollbars`, whose
    browser draws them. On Linux, where the CI runs, they take room there: a browser that hid them again
    (a Playwright that hides them another way) would pass those stories without checking anything. On a Mac
-   they take room only when it is set to always show them, so there it is not asked. */
+   they take room only when it is set to always show them, so there it is not asked.
+
+   And the browser of the stories tagged `posix-locale` is in the POSIX locale. On Linux, where the CI
+   runs, it reports its language as the POSIX one (`en-US@posix`): a browser launched in another locale
+   (a Playwright that dropped the launch's environment) would pass those stories without checking
+   anything. On a Mac, Chromium takes its language from the system, so there it is not asked. */
 beforeEach(() => {
   const project = server.config.name ?? '';
   const promised = onThePhone()
@@ -125,6 +131,13 @@ beforeEach(() => {
       scrollbarWidth(),
       `the "${project}" project's browser draws scrollbars that take room`
     ).toBeGreaterThan(0);
+  }
+
+  if (inProject(POSIX_LOCALE_STORY_PROJECT) && server.platform === 'linux') {
+    expect(
+      navigator.language,
+      `the "${project}" project's browser reports the POSIX locale's language`
+    ).toMatch(/posix/i);
   }
 });
 
