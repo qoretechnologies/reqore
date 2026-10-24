@@ -20,7 +20,24 @@ export const getTextareaHeightForText = (textarea: HTMLTextAreaElement): number 
     : textarea.scrollHeight - px(style.paddingTop) - px(style.paddingBottom);
 };
 
-// Updates the height of a <textarea> when the value changes.
+/** Sizes `textarea` to its text, never lower than the height its `rows` give it. */
+const fitTextareaToText = (textarea: HTMLTextAreaElement) => {
+  // Reset to the intrinsic (auto) height momentarily so scrollHeight is
+  // measured against the `rows` attribute: scrollHeight = max(rows height,
+  // content height), which makes `rows` the floor the textarea never
+  // shrinks below. (A '0px' reset measured content alone, so a consumer's
+  // `rows` was ignored the moment scaleWithContent was on.)
+  textarea.style.height = '';
+
+  // We then set the height directly, outside of the render loop
+  // Trying to set this with state or a ref will product an incorrect value.
+  textarea.style.height = `${getTextareaHeightForText(textarea)}px`;
+};
+
+/**
+ * Keeps a `<textarea>` that scales with its content as high as its text: when the text changes,
+ * and when the field's width does.
+ */
 const useAutosizeTextArea = (
   textAreaRef: HTMLTextAreaElement | null,
   value: string,
@@ -28,18 +45,50 @@ const useAutosizeTextArea = (
 ) => {
   useEffect(() => {
     if (textAreaRef && scaleWithContent) {
-      // Reset to the intrinsic (auto) height momentarily so scrollHeight is
-      // measured against the `rows` attribute: scrollHeight = max(rows height,
-      // content height), which makes `rows` the floor the textarea never
-      // shrinks below. (A '0px' reset measured content alone, so a consumer's
-      // `rows` was ignored the moment scaleWithContent was on.)
-      textAreaRef.style.height = '';
-
-      // We then set the height directly, outside of the render loop
-      // Trying to set this with state or a ref will product an incorrect value.
-      textAreaRef.style.height = `${getTextareaHeightForText(textAreaRef)}px`;
+      fitTextareaToText(textAreaRef);
     }
-  }, [textAreaRef, value]);
+  }, [textAreaRef, value, scaleWithContent]);
+
+  /* The text wraps to the field's width, so a new width is a new height. Fitted only when the text
+     changed, a field kept the height of the width it had then: narrowed (a narrower window or
+     container), it held more lines than its box and scrolled; widened, it kept empty lines; and a
+     field drawn while hidden (a closed tab or section, where it has no width and its text no height)
+     was one line high once shown. A height alone changing (a drag of the grip, or the fit itself)
+     fits nothing.
+
+     The fit waits for the next frame: made in the observer's callback, it would change the size the
+     observer is reporting, in the same frame. */
+  useEffect(() => {
+    if (!textAreaRef || !scaleWithContent) {
+      return undefined;
+    }
+
+    let width: number | undefined;
+    let frame = 0;
+    const observer =
+      typeof ResizeObserver === 'undefined'
+        ? undefined
+        : new ResizeObserver(([entry]) => {
+            if (entry.contentRect.width === width) {
+              return;
+            }
+            width = entry.contentRect.width;
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(() => {
+              frame = 0;
+              fitTextareaToText(textAreaRef);
+            });
+          });
+
+    observer?.observe(textAreaRef);
+
+    return () => {
+      observer?.disconnect();
+      cancelAnimationFrame(frame);
+      // a field that no longer scales with its content goes back to the height its rows give it
+      textAreaRef.style.height = '';
+    };
+  }, [textAreaRef, scaleWithContent]);
 };
 
 export default useAutosizeTextArea;

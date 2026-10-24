@@ -110,3 +110,146 @@ describe('<ReqoreTextarea scaleWithContent />', () => {
     ).toBe('');
   });
 });
+
+describe('<ReqoreTextarea scaleWithContent /> when its width changes', () => {
+  /* jsdom has no ResizeObserver and runs no frames: the test stands in for both, and says when the
+     field's size changes and when the next frame comes. */
+  let observers: { callback: ResizeObserverCallback; disconnected: boolean }[];
+  let frames: Map<number, FrameRequestCallback>;
+  let scrollHeight: number;
+
+  beforeEach(() => {
+    observers = [];
+    frames = new Map();
+    scrollHeight = TEXT_AND_PADDING;
+    vi.spyOn(HTMLTextAreaElement.prototype, 'scrollHeight', 'get').mockImplementation(
+      () => scrollHeight
+    );
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        private readonly entry: { callback: ResizeObserverCallback; disconnected: boolean };
+
+        constructor(callback: ResizeObserverCallback) {
+          this.entry = { callback, disconnected: false };
+          observers.push(this.entry);
+        }
+
+        observe() {}
+
+        unobserve() {}
+
+        disconnect() {
+          this.entry.disconnected = true;
+        }
+      }
+    );
+    let nextFrame = 0;
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      nextFrame += 1;
+      frames.set(nextFrame, callback);
+      return nextFrame;
+    });
+    vi.stubGlobal('cancelAnimationFrame', (id: number) => frames.delete(id));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const resizeTo = (width: number, height: number) => {
+    const live = observers.filter(({ disconnected }) => !disconnected);
+    expect(live).toHaveLength(1);
+    live[0].callback(
+      [{ contentRect: { width, height } } as ResizeObserverEntry],
+      {} as ResizeObserver
+    );
+  };
+
+  const nextFrame = () => {
+    const due = Array.from(frames.values());
+    frames.clear();
+    due.forEach((callback) => callback(0));
+  };
+
+  const Field = ({ scaleWithContent = true }: { scaleWithContent?: boolean }) => (
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTextarea scaleWithContent={scaleWithContent} value='A note' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const field = () => document.querySelector<HTMLTextAreaElement>('textarea.reqore-textarea');
+
+  it('fits its text again in the frame after its width changes', () => {
+    render(<Field />);
+    expect(field().style.height).toBe(`${TEXT_AND_PADDING + 2}px`);
+
+    resizeTo(300, 120);
+    nextFrame();
+
+    // narrowed, the text wraps onto more lines
+    scrollHeight = 200;
+    resizeTo(200, 120);
+    // not in the observer's callback: that would change what it observes in the same frame
+    expect(field().style.height).toBe(`${TEXT_AND_PADDING + 2}px`);
+    nextFrame();
+    expect(field().style.height).toBe('202px');
+  });
+
+  it('keeps its height when only its height changes', () => {
+    render(<Field />);
+    resizeTo(300, 120);
+    nextFrame();
+
+    // a drag of the grip: the text is the same, the box is higher
+    field().style.height = '300px';
+    scrollHeight = 298;
+    resizeTo(300, 300);
+
+    expect(frames.size).toBe(0);
+    expect(field().style.height).toBe('300px');
+  });
+
+  it('is fitted once shown, after it was drawn hidden with no width', () => {
+    // hidden, its text has no height
+    scrollHeight = 0;
+    render(<Field />);
+    resizeTo(0, 0);
+    nextFrame();
+    expect(field().style.height).toBe('2px');
+
+    scrollHeight = TEXT_AND_PADDING;
+    resizeTo(360, 0);
+    nextFrame();
+    expect(field().style.height).toBe(`${TEXT_AND_PADDING + 2}px`);
+  });
+
+  it('stops following its width, and goes back to its rows, when it stops scaling', () => {
+    const { rerender, unmount } = render(<Field />);
+    resizeTo(300, 120);
+    scrollHeight = 200;
+
+    rerender(<Field scaleWithContent={false} />);
+
+    expect(observers.every(({ disconnected }) => disconnected)).toBe(true);
+    // the frame the width change asked for is not drawn for it
+    expect(frames.size).toBe(0);
+    expect(field().style.height).toBe('');
+
+    unmount();
+  });
+
+  it('lets go of the observer and the frame when it is unmounted', () => {
+    const { unmount } = render(<Field />);
+    resizeTo(300, 120);
+
+    unmount();
+
+    expect(observers.every(({ disconnected }) => disconnected)).toBe(true);
+    expect(frames.size).toBe(0);
+  });
+});
