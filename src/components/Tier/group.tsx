@@ -100,6 +100,9 @@ export interface IReqoreTierGroupProps
 }
 
 /** How far a neighbour shows past the front tier, on either side, in px. */
+/** The narrowest a tier's column gets in the group's row, unless `minColumnWidth` says otherwise. */
+export const TIER_GROUP_MIN_COLUMN_WIDTH = '240px';
+
 export const TIER_GROUP_PEEK_FROM_SIZE: Record<TSizes, number> = {
   micro: 8,
   tiny: 10,
@@ -482,7 +485,7 @@ export const ReqoreTierGroup = memo(
         inheritCustomTheme,
         tooltip,
         className,
-        minColumnWidth = '240px',
+        minColumnWidth = TIER_GROUP_MIN_COLUMN_WIDTH,
         maxColumnWidth = '1fr',
         gapSize = 'big',
         mobileLayout = 'columns',

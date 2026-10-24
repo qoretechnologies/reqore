@@ -116,11 +116,44 @@ export const contrastRatio = (foreground: string, background: string) => {
 };
 
 /**
- * What every row of modern tiers promises: one height, the buttons on one line at the bottom,
- * the period on the price's line and as written, the name a heading and the price not one, no
- * tier scaled, and the muted lines readable (4.5:1) on a plain tier's surface.
+ * How many cards a grid of `auto-fit` columns puts on a line `width` px wide, each column at least
+ * `minimum` px (`min(minimum, 100%)`, as `ReqoreColumns` and `ReqoreTierGroup` size theirs) with
+ * `gap` px between them: as many as fit, never more than there are, and at least one.
  */
-export const expectModernRow = async (root: HTMLElement, count: number) => {
+const cardsPerLine = (width: number, minimum: number, gap: number, count: number) =>
+  Math.max(1, Math.min(count, Math.floor((width + gap) / (minimum + gap))));
+
+/** `tiers` by the line of the grid they are on, top to bottom. */
+const linesOf = (tiers: HTMLElement[]) =>
+  tiers.reduce<HTMLElement[][]>((lines, tier) => {
+    const top = tier.getBoundingClientRect().top;
+    const line = lines.find((found) => Math.abs(found[0].getBoundingClientRect().top - top) <= 1);
+
+    if (line) {
+      line.push(tier);
+    } else {
+      lines.push([tier]);
+    }
+
+    return lines;
+  }, []);
+
+/**
+ * What every row of modern tiers promises: the tiers on as many lines as their grid's width gives
+ * them (one row where they all fit, one under another on a phone), on each line one height and
+ * the buttons on one line at the bottom, the period on the price's line and as written, the name
+ * a heading and the price not one, no tier scaled, and the muted lines readable (4.5:1) on a plain
+ * tier's surface.
+ *
+ * `grid` is the element that lays the tiers out, and `minColumnWidth` the narrowest it makes a
+ * column: the line count is the grid's own rule, read off its width and gap, so the play holds at
+ * whatever width the story is opened at.
+ */
+export const expectModernRow = async (
+  root: HTMLElement,
+  count: number,
+  { grid: gridSelector, minColumnWidth }: { grid: string; minColumnWidth: string }
+) => {
   const tiers = await waitFor(() => {
     const found = modernTiers(root);
 
@@ -129,14 +162,38 @@ export const expectModernRow = async (root: HTMLElement, count: number) => {
     return found;
   });
 
-  const heights = tiers.map((tier) => tier.getBoundingClientRect().height);
-  const buttons = tiers.map(
-    (tier) => tier.querySelector('.reqore-tier-action .reqore-button') as HTMLElement
+  const grid = root.querySelector(gridSelector) as HTMLElement;
+  const gridStyle = getComputedStyle(grid);
+  const width =
+    grid.clientWidth -
+    (parseFloat(gridStyle.paddingLeft) || 0) -
+    (parseFloat(gridStyle.paddingRight) || 0);
+  const perLine = cardsPerLine(
+    width,
+    parseFloat(minColumnWidth),
+    parseFloat(gridStyle.columnGap) || 0,
+    count
   );
-  const bottoms = buttons.map((button) => button.getBoundingClientRect().bottom);
+  const lines = linesOf(tiers);
 
-  await expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(1);
-  await expect(Math.max(...bottoms) - Math.min(...bottoms)).toBeLessThanOrEqual(1);
+  await expect(lines.map((line) => line.length)).toEqual(
+    Array.from({ length: Math.ceil(count / perLine) }, (_, index) =>
+      Math.min(perLine, count - index * perLine)
+    )
+  );
+
+  for (const line of lines) {
+    const heights = line.map((tier) => tier.getBoundingClientRect().height);
+    const bottoms = line.map(
+      (tier) =>
+        (
+          tier.querySelector('.reqore-tier-action .reqore-button') as HTMLElement
+        ).getBoundingClientRect().bottom
+    );
+
+    await expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(1);
+    await expect(Math.max(...bottoms) - Math.min(...bottoms)).toBeLessThanOrEqual(1);
+  }
 
   for (const tier of tiers) {
     await expect(tier.querySelector('h3.reqore-tier-name')).toBeTruthy();
