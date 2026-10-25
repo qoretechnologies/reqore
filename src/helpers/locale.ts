@@ -14,11 +14,13 @@ export const POSIX_LOCALE = 'en-US';
  * is still not one `Intl` accepts, or names a locale it has no data for, is `undefined`.
  */
 export const toLanguageTag = (tag: string | null | undefined): string | undefined => {
-  // no BCP 47 tag holds a `.` or an `@`: from the first one on, it is a POSIX codeset or modifier
-  const name = tag
-    ?.trim()
-    .replace(/[.@].*$/, '')
-    .replace(/_/g, '-');
+  // No BCP 47 tag holds a `.` or an `@`: from the first one on, it is a POSIX codeset or modifier. It is cut off
+  // there by position. `/[.@].*$/` did not reach past a line break (`.` stops at one, and `$` is only the end), so it
+  // left a codeset in place when one followed it, and for every `.` before the break it tried again: quadratic in
+  // the length of what a browser or host hands over (CodeQL js/polynomial-redos).
+  const trimmed = tag?.trim() ?? '';
+  const end = trimmed.search(/[.@]/);
+  const name = (end < 0 ? trimmed : trimmed.slice(0, end)).replace(/_/g, '-');
 
   if (!name) {
     return undefined;
