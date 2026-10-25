@@ -68,6 +68,7 @@ import ReqoreMenuItem, { TReqoreMenuItemEventHandler } from '../Menu/item';
 import { ReqorePopover } from '../Popover';
 import { ReqoreVerticalSpacer } from '../Spacer';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { smoothScrollBehavior } from '../../hooks/usePrefersReducedMotion';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -1116,7 +1117,7 @@ export const ReqoreNavRail = memo(
         if (sub.scrollTargetId) {
           document
             .getElementById(sub.scrollTargetId)
-            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            ?.scrollIntoView({ behavior: smoothScrollBehavior(), block: 'start' });
         }
         if (activeSubId === undefined) setInternalSubId(sub.id);
         sub.onClick?.();
