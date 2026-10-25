@@ -216,8 +216,14 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
   ) => {
     const { targetRef } = useCombinedRefs(ref);
 
-    const pinOffsets = useMemo(() => calculatePinOffsets(columns), [columns]);
-    const totalColumnsWidth = useMemo(() => getTotalColumnsWidth(columns), [columns]);
+    const pinOffsets = useMemo(
+      () => calculatePinOffsets(columns, tableWidth),
+      [columns, tableWidth]
+    );
+    const totalColumnsWidth = useMemo(
+      () => getTotalColumnsWidth(columns, tableWidth),
+      [columns, tableWidth]
+    );
 
     useEffect(() => {
       const el = targetRef.current;

@@ -21,6 +21,7 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { useDragToScroll } from '../../hooks/useDragToScroll';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
+import { getTableColumnsPickerItems } from './helpers';
 import { IReqoreIntent, IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps, TReqoreBadge } from '../Button';
@@ -778,6 +779,14 @@ const ReqoreTable = ({
     300,
     onFilterChange
   );
+  // `filter` is the query whenever the caller changes it. It used to seed the query once,
+  // so a page that set or cleared the search from outside (a figure, a link, "Clear
+  // filters") changed nothing after the first render.
+  useUpdateEffect(() => {
+    const next = filter.toString();
+    setPreQuery(next);
+    setQuery(next);
+  }, [filter]);
   const normalizedQuery = useMemo(() => query.toString().toLowerCase(), [query]);
 
   // Column filters live in `columnModifiers` once the user edits them, and on the column
@@ -1267,43 +1276,15 @@ const ReqoreTable = ({
     }
   }, [searchShown, searchToggleId, searchFieldId, preQuery]);
 
-  const columnsList = useMemo(() => {
-    const _columnsList: IReqorePanelSubAction[] = [];
-
-    const addColumn = (column: IReqoreTableColumn) => {
-      _columnsList.push({
-        label: typeof column.header?.label === 'string' ? column.header.label : column.dataId,
-        selected: column.show !== false,
-        onClick: () =>
-          handleColumnsUpdate(column.dataId, 'show', column.show !== false ? false : true),
-        intent: column.show !== false ? 'info' : undefined,
-      });
-    };
-
-    finalColumns.forEach((column) => {
-      if (column.hideable === false || column.enabled === false) {
-        // If the column is not hideable or enabled, we skip it
-        return;
-      }
-
-      if (column.header?.columns) {
-        column.header?.columns.forEach((subColumn) => {
-          addColumn(subColumn);
-        });
-      } else {
-        addColumn(column);
-      }
-    });
-
-    if (count(_columnsList)) {
-      _columnsList.unshift({
-        divider: true,
-        label: columnsToggleLabel,
-      });
-    }
-
-    return _columnsList;
-  }, [finalColumns, columnsToggleLabel]);
+  const columnsList = useMemo(
+    () =>
+      getTableColumnsPickerItems(
+        finalColumns,
+        (dataId, show) => handleColumnsUpdate(dataId, 'show', show),
+        columnsToggleLabel
+      ),
+    [finalColumns, columnsToggleLabel, handleColumnsUpdate]
+  );
 
   const handleScrollToTop = useCallback(() => {
     mainTableRef.current?.scrollTo({

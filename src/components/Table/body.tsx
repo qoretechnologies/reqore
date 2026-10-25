@@ -121,7 +121,10 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
 
     const itemCount = useMemo(() => count(data), [data]);
 
-    const totalColumnsWidth = useMemo(() => getTotalColumnsWidth(rest.columns), [rest.columns]);
+    const totalColumnsWidth = useMemo(
+      () => getTotalColumnsWidth(rest.columns, rest.tableWidth),
+      [rest.columns, rest.tableWidth]
+    );
 
     const expandable = !!rest.renderExpandedRow;
 

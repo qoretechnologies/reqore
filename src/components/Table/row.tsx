@@ -324,8 +324,14 @@ const ReqoreTableRow = memo(
     const CellComponent = cellComponent || ReqoreTableBodyCell;
     const RowComponent = rowComponent || StyledTableRow;
 
-    const pinOffsets = useMemo(() => calculatePinOffsets(columns), [columns]);
-    const totalColumnsWidth = useMemo(() => getTotalColumnsWidth(columns), [columns]);
+    const pinOffsets = useMemo(
+      () => calculatePinOffsets(columns, tableWidth),
+      [columns, tableWidth]
+    );
+    const totalColumnsWidth = useMemo(
+      () => getTotalColumnsWidth(columns, tableWidth),
+      [columns, tableWidth]
+    );
     const rowWrap = useMemo(() => {
       if (wrap) {
         return true;

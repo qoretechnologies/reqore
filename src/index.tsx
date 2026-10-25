@@ -175,6 +175,8 @@ export { ReqoreTableBodyCell } from './components/Table/cell';
 export { ReqoreTableHeaderCell } from './components/Table/headerCell';
 export { default as ReqoreTableRow } from './components/Table/row';
 export { ReqoreTableValue } from './components/Table/value';
+// The column picker's entries, for a page that draws its own toolbar beside the table.
+export { getTableColumnsPickerItems } from './components/Table/helpers';
 /* The geometric guard for tables — what a consumer's own tests assert so that
    "a row's box contains its content" keeps holding in THEIR tables too — is
    NOT here. It is published as `@qoretechnologies/reqore/testing`, because

@@ -475,9 +475,13 @@ export const getColumnsMaxWidth = (columns: IReqoreTableColumn[]): number | unde
 };
 
 export const calculatePinOffsets = (
-  columns: IReqoreTableColumn[]
+  columns: IReqoreTableColumn[],
+  tableWidth?: number
 ): Record<string, IColumnPinInfo> => {
-  const leaves = flattenColumns(columns).filter(
+  // A pinned column hidden at this width takes no place on the edge.
+  const leaves = flattenColumns(
+    tableWidth === undefined ? columns : getOnlyShownColumns(columns, tableWidth)
+  ).filter(
     (column) => column.show !== false && column.enabled !== false
   );
   const map: Record<string, IColumnPinInfo> = {};
@@ -512,8 +516,18 @@ export const calculatePinOffsets = (
   return map;
 };
 
-export const getTotalColumnsWidth = (columns: IReqoreTableColumn[]): number => {
-  return getColumnsRenderedWidth(columns);
+/**
+ * The width the columns take. Given the table's width, a column `hideBelowWidth` hides at
+ * that width takes none: it is not drawn, so reserving its width made the row wider than
+ * its cells and pushed a column beside it off a narrow table.
+ */
+export const getTotalColumnsWidth = (
+  columns: IReqoreTableColumn[],
+  tableWidth?: number
+): number => {
+  return getColumnsRenderedWidth(
+    tableWidth === undefined ? columns : getOnlyShownColumns(columns, tableWidth)
+  );
 };
 
 export const getOnlyShownColumns = (
@@ -628,4 +642,46 @@ export const getRowExpandId = (row: IReqoreTableRowData, fallbackIndex?: number)
   if (row?._selectId !== undefined && row._selectId !== null) return `${row._selectId}`;
 
   return `${EXPAND_ID_POSITION_PREFIX}${row?._reqoreIndex ?? fallbackIndex ?? ''}`;
+};
+
+/**
+ * The column picker's entries: one per column a person may hide (a group lists its
+ * columns), selected while it is shown, under a divider titled `label`. The table's own
+ * header uses it, and so can a page that draws its own toolbar: keep the hidden columns,
+ * pass the table those columns with `show: false`, and put these entries in a
+ * `multiSelect` action of the toolbar.
+ */
+export const getTableColumnsPickerItems = (
+  columns: IReqoreTableColumn[],
+  onToggle: (dataId: string, show: boolean) => void,
+  label?: string
+): IReqorePanelSubAction[] => {
+  const items: IReqorePanelSubAction[] = [];
+
+  const addColumn = (column: IReqoreTableColumn) => {
+    items.push({
+      label: typeof column.header?.label === 'string' ? column.header.label : column.dataId,
+      selected: column.show !== false,
+      onClick: () => onToggle(column.dataId, column.show === false),
+      intent: column.show !== false ? 'info' : undefined,
+    });
+  };
+
+  columns.forEach((column) => {
+    // A column that is not hideable, or not enabled, is not the person's to choose.
+    if (column.hideable === false || column.enabled === false) {
+      return;
+    }
+    if (column.header?.columns) {
+      column.header.columns.forEach(addColumn);
+    } else {
+      addColumn(column);
+    }
+  });
+
+  if (items.length && label !== undefined) {
+    items.unshift({ divider: true, label });
+  }
+
+  return items;
 };
