@@ -2,6 +2,7 @@ import { IReqoreMarqueeOptions } from '../hooks/useMarqueeOnHover';
 import { createContext } from 'use-context-selector';
 import { IReqoreErrorBoundaryProps } from '../components/ErrorBoundary';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
+import { scheduleOnTimer, TReqoreSchedule } from '../helpers/schedule';
 import type {
   IReqoreConfirmationModal,
   IReqoreModal,
@@ -92,6 +93,11 @@ export interface IReqoreContext {
   ) => void;
   readonly latestZIndex?: number;
   readonly errorBoundaryOptions?: Partial<IReqoreErrorBoundaryProps>;
+  /**
+   * How Reqore does something after a while (a rail's label dwell): the machine's clock by default. An app's tests
+   * and stories give their own clock, so it happens when they say (`TReqoreSchedule`).
+   */
+  readonly schedule?: TReqoreSchedule;
   theme: IReqoreTheme;
 }
 
@@ -114,4 +120,5 @@ export default createContext<IReqoreContext>({
   removeEscClosableModal: null,
   theme: DEFAULT_THEME,
   uiScale: 1,
+  schedule: scheduleOnTimer,
 });

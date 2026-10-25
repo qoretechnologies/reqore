@@ -27,6 +27,7 @@ export interface IReqoreOptions
     | 'errorBoundaryOptions'
     | 'glowingIcons'
     | 'shortcutHints'
+    | 'schedule'
   > {
   withSidebar?: boolean;
   uiScale?: number;
