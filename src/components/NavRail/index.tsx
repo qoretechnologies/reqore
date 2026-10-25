@@ -32,6 +32,7 @@ import {
   READABLE_ICON_CONTRAST,
 } from '../../helpers/colors';
 import { createHoverGate, watchHoverGate } from '../../helpers/hoveringPointer';
+import { scheduleOnTimer } from '../../helpers/schedule';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import styled, { omitStyleProps } from '../../helpers/styled';
@@ -933,6 +934,7 @@ export const ReqoreNavRail = memo(
     // active group's tint (see `activeIntent` / `renderActiveGroup`).
     const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
     const isHoverCapable = useReqoreProperty('isHoverCapable');
+    const schedule = useReqoreProperty('schedule') ?? scheduleOnTimer;
     const subSize = getOneLessSize(size);
     const tipSide: 'left' | 'right' = position === 'right' ? 'left' : 'right';
     const activeIntent: TReqoreIntent = intent ?? 'info';
@@ -1011,7 +1013,8 @@ export const ReqoreNavRail = memo(
       if (!idleReveal && !hoverLabels) return undefined;
       const el = railRef.current;
       if (!el) return undefined;
-      let dwell: ReturnType<typeof setTimeout> | undefined;
+      // the dwell waits on the app's clock (`options.schedule`), the machine's by default
+      let cancelDwell: (() => void) | undefined;
       /* Approached by a pointer that hovers: a finger's tap - and the `mouseenter` a browser emulates after it -
          is no approach (see `createHoverGate`), and on a touch laptop it revealed the rail, and dwelled its
          labels open, until the next tap elsewhere. */
@@ -1024,13 +1027,13 @@ export const ReqoreNavRail = memo(
         hoveredRef.current = true;
         if (idleReveal) setHovered(true);
         if (hoverLabels) {
-          clearTimeout(dwell);
-          dwell = setTimeout(() => setDwellLabels(true), showLabelsDelay);
+          cancelDwell?.();
+          cancelDwell = schedule(showLabelsDelay, () => setDwellLabels(true));
         }
       };
       const leave = () => {
         hoveredRef.current = false;
-        clearTimeout(dwell);
+        cancelDwell?.();
         if (idleReveal) setHovered(false);
         // While a flyout opened from the rail is up the pointer is in the menu,
         // and narrowing the rail would move the menu's anchor: keep the labels
@@ -1040,12 +1043,12 @@ export const ReqoreNavRail = memo(
       el.addEventListener('mouseenter', enter);
       el.addEventListener('mouseleave', leave);
       return () => {
-        clearTimeout(dwell);
+        cancelDwell?.();
         stopGate();
         el.removeEventListener('mouseenter', enter);
         el.removeEventListener('mouseleave', leave);
       };
-    }, [idleReveal, hoverLabels, showLabelsDelay]);
+    }, [idleReveal, hoverLabels, showLabelsDelay, schedule]);
 
     // The last menu closing with the pointer already gone is the deferred
     // "leave" from above.

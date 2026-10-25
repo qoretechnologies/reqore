@@ -110,6 +110,8 @@ export type { TReqoreKeyboardShortcut } from './helpers/shortcuts';
    so a consumer's gesture can feel the same under the finger. */
 export { getSwipeStep, SWIPE } from './helpers/gestures';
 export { POSIX_LOCALE, resolveLocale, toLanguageTag } from './helpers/locale';
+export { scheduleOnTimer } from './helpers/schedule';
+export type { TReqoreSchedule } from './helpers/schedule';
 export type { ISwipeThresholds } from './helpers/gestures';
 export {
   createHoverGate,
