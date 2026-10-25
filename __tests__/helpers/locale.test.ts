@@ -31,6 +31,14 @@ describe('toLanguageTag', () => {
     }
   );
 
+  it('drops a codeset or modifier that runs on past a line break', () => {
+    // what is after the first `.` or `@` is never part of the tag, wherever the line ends
+    expect(toLanguageTag('en_US.UTF\n-8')).toBe('en-US');
+    expect(toLanguageTag('sr_RS@lat\rin')).toBe('sr-RS');
+    // a run of dots before a line break names no locale (it used to be read again from every dot)
+    expect(toLanguageTag(`${'.'.repeat(10_000)}\nx`)).toBeUndefined();
+  });
+
   it('reads a well-formed tag Intl has no data for as no tag', () => {
     // a valid BCP 47 tag of a language no runtime has formats for
     expect(Intl.getCanonicalLocales('qaa')).toEqual(['qaa']);
