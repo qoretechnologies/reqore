@@ -70,6 +70,11 @@ export interface IReqorePanelTheme {
   main?: TReqoreHexColor;
   /** The 1px hairline on the panel's edge and between its rows. */
   border?: TReqoreHexColor;
+  /**
+   * The corner radius, in px, of every rounded panel that names no `radiusSize` — one curve
+   * for every card on the page, decided once. Unset, a panel keeps the `normal` radius.
+   */
+  radius?: number;
 }
 
 /**

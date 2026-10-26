@@ -25,6 +25,7 @@ import {
   HEADER_SIZE_TO_NUMBER,
   ICON_FROM_HEADER_SIZE,
   PADDING_FROM_SIZE,
+  resolvePanelRadius,
   resolveRadius,
   SPECIAL_PADDING_FROM_SIZE,
   TSizes,
@@ -793,8 +794,8 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
 })<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(getPanelBackgroundColor(theme), opacity)};
-  border-radius: ${({ rounded, radiusSize }) =>
-    rounded ? resolveRadius('normal', radiusSize) : 0}px;
+  border-radius: ${({ rounded, radiusSize, theme }) =>
+    rounded ? resolvePanelRadius(theme, radiusSize) : 0}px;
   border: ${({ theme, flat, intent, accentPosition }) =>
     hasPanelBorder({ flat, intent, accentPosition })
       ? `1px solid ${getPanelBorderColor(theme, { intent, accentPosition })}`
@@ -829,7 +830,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
       stickyHeader && rounded
         ? Math.max(
             0,
-            resolveRadius('normal', radiusSize) -
+            resolvePanelRadius(theme, radiusSize) -
               (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
           )
         : 0;
@@ -1102,13 +1103,14 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
     accentPosition,
     isStuck,
     $mediaAbove,
+    theme,
   }: IStyledPanel) =>
     stickyHeader && rounded
       ? isStuck || $mediaAbove
         ? '0px'
         : `${Math.max(
             0,
-            resolveRadius('normal', radiusSize) -
+            resolvePanelRadius(theme, radiusSize) -
               (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
           )}px`
       : undefined};
@@ -1121,13 +1123,14 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
     accentPosition,
     isStuck,
     $mediaAbove,
+    theme,
   }: IStyledPanel) =>
     stickyHeader && rounded
       ? isStuck || $mediaAbove
         ? '0px'
         : `${Math.max(
             0,
-            resolveRadius('normal', radiusSize) -
+            resolvePanelRadius(theme, radiusSize) -
               (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
           )}px`
       : undefined};
@@ -2045,7 +2048,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const mediaRadius = rounded
       ? Math.max(
           0,
-          resolveRadius('normal', rest.radiusSize) -
+          resolvePanelRadius(theme, rest.radiusSize) -
             (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
         )
       : 0;

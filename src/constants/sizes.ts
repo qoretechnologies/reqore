@@ -361,6 +361,18 @@ export const resolveRadius = (
   radiusScale: Record<TSizes, number> = RADIUS_FROM_RADIUS_SIZE
 ): number => (radiusSize ? radiusScale[radiusSize] : sizeScale[size]);
 
+/**
+ * A rounded panel's corner radius: its `radiusSize` when it names one, else the theme's
+ * `panel.radius`, else the `normal` radius. Every place a panel draws a curve — its corners,
+ * a sticky header's top, an accent strip, a media frame — reads it here, so the inner curves
+ * stay on the outer one.
+ */
+export const resolvePanelRadius = (
+  theme: { panel?: { radius?: number } } | undefined,
+  radiusSize?: TSizes
+): number =>
+  radiusSize ? resolveRadius('normal', radiusSize) : (theme?.panel?.radius ?? RADIUS_FROM_SIZE.normal);
+
 export const TAG_RADIUS_FROM_SIZE = {
   micro: 1,
   tiny: 2,

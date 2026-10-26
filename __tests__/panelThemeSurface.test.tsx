@@ -235,3 +235,44 @@ describe('theme.buttons.main', () => {
     );
   });
 });
+
+describe('theme.panel.radius', () => {
+  const RADIUS_THEME: Partial<IReqoreTheme> = { ...THEMED, panel: { ...THEMED.panel, radius: 14 } };
+
+  test('a rounded panel takes the theme radius — one curve for every card', () => {
+    render(
+      <Wrapper theme={RADIUS_THEME}>
+        <ReqorePanel label='Card' rounded>
+          Body
+        </ReqorePanel>
+      </Wrapper>
+    );
+    expect(document.querySelector('.reqore-panel')).toHaveStyle('border-radius: 14px');
+  });
+
+  test('a panel that names its radiusSize keeps it', () => {
+    render(
+      <Wrapper theme={RADIUS_THEME}>
+        <ReqorePanel label='Card' rounded radiusSize='big'>
+          Body
+        </ReqorePanel>
+      </Wrapper>
+    );
+    expect(document.querySelector('.reqore-panel')).toHaveStyle('border-radius: 18px');
+  });
+
+  test('without the knob a panel keeps the normal radius, and a square one stays square', () => {
+    render(
+      <Wrapper theme={THEMED}>
+        <ReqorePanel label='Card' rounded className='round'>
+          Body
+        </ReqorePanel>
+        <ReqorePanel label='Square' rounded={false} className='square'>
+          Body
+        </ReqorePanel>
+      </Wrapper>
+    );
+    expect(document.querySelector('.reqore-panel.round')).toHaveStyle('border-radius: 5px');
+    expect(document.querySelector('.reqore-panel.square')).toHaveStyle('border-radius: 0px');
+  });
+});
