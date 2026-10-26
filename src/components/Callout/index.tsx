@@ -2,7 +2,7 @@ import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import { css } from 'styled-components';
 import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
-import { PADDING_FROM_SIZE, resolveRadius, TSizes } from '../../constants/sizes';
+import { PADDING_FROM_SIZE, resolvePanelRadius, TSizes } from '../../constants/sizes';
 import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
 import {
@@ -224,8 +224,8 @@ const StyledCallout = styled(StyledEffect).withConfig({
           intent ? theme.intents[intent] : getMainBackgroundColor(theme),
           0.08
         )}`};
-  border-radius: ${({ rounded, size = 'normal' as TSizes, radiusSize }) =>
-    rounded === false ? 0 : `${resolveRadius(size, radiusSize)}px`};
+  border-radius: ${({ rounded, size = 'normal' as TSizes, radiusSize, theme }) =>
+    rounded === false ? 0 : `${resolvePanelRadius(theme, radiusSize, size)}px`};
   overflow: hidden;
   flex: ${({ fluid }) => (fluid ? '1 auto' : '0 0 auto')};
   transition:

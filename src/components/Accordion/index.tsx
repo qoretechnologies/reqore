@@ -2,7 +2,7 @@ import { rgba } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import { css } from 'styled-components';
 import styled from '../../helpers/styled';
-import { GAP_FROM_SIZE, PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { GAP_FROM_SIZE, PADDING_FROM_SIZE, resolvePanelRadius, TSizes } from '../../constants/sizes';
 import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
@@ -125,7 +125,8 @@ const StyledAccordionWrapper = styled(StyledEffect)<IStyledAccordionWrapper>`
   display: flex;
   flex-direction: column;
   width: ${({ $fluid }) => ($fluid ? '100%' : undefined)};
-  border-radius: ${({ rounded, size }) => (rounded ? RADIUS_FROM_SIZE[size] : 0)}px;
+  border-radius: ${({ rounded, size, theme }) =>
+    rounded ? resolvePanelRadius(theme, undefined, size) : 0}px;
   overflow: hidden;
   border: ${({ flat, theme }) =>
     flat ? undefined : `1px solid ${getPanelHairlineColor(theme)}`};

@@ -1,6 +1,8 @@
 import { render } from '@testing-library/react';
 import {
+  ReqoreAccordion,
   ReqoreButton,
+  ReqoreCallout,
   ReqoreContent,
   ReqoreIcon,
   ReqoreLayoutContent,
@@ -274,5 +276,29 @@ describe('theme.panel.radius', () => {
     );
     expect(document.querySelector('.reqore-panel.round')).toHaveStyle('border-radius: 5px');
     expect(document.querySelector('.reqore-panel.square')).toHaveStyle('border-radius: 0px');
+  });
+});
+
+describe('theme.panel.radius on the other card-like containers', () => {
+  const RADIUS_THEME: Partial<IReqoreTheme> = { ...THEMED, panel: { ...THEMED.panel, radius: 14 } };
+
+  test('a callout and an accordion take the theme radius, so a card is one curve', () => {
+    render(
+      <Wrapper theme={RADIUS_THEME}>
+        <ReqoreCallout>A note</ReqoreCallout>
+        <ReqoreAccordion rounded items={[{ label: 'Facts', content: 'Body' }]} />
+      </Wrapper>
+    );
+    expect(document.querySelector('.reqore-callout')).toHaveStyle('border-radius: 14px');
+    expect(document.querySelector('.reqore-accordion')).toHaveStyle('border-radius: 14px');
+  });
+
+  test('without the knob they keep the radius of their size', () => {
+    render(
+      <Wrapper theme={THEMED}>
+        <ReqoreCallout size='small'>A note</ReqoreCallout>
+      </Wrapper>
+    );
+    expect(document.querySelector('.reqore-callout')).toHaveStyle('border-radius: 4px');
   });
 });
