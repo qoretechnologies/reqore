@@ -1,4 +1,14 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
+
+/** Whether two inline styles say the same: the same properties, each the same value. */
+const isSameStyle = (a: React.CSSProperties, b: React.CSSProperties): boolean => {
+  const keys = Object.keys(a) as Array<keyof React.CSSProperties>;
+
+  return (
+    keys.length === Object.keys(b).length &&
+    keys.every((key) => Object.prototype.hasOwnProperty.call(b, key) && a[key] === b[key])
+  );
+};
 
 export const useCloneThroughFragments = (
   propsMapper: (
@@ -9,6 +19,12 @@ export const useCloneThroughFragments = (
   ) => Record<string | number, any>,
   deps?: any[]
 ) => {
+  /* The style each child was last handed, by its place, kept while it says the same. A mapper makes the
+     style anew on every render - a stacked control group squares the corners that meet and tucks each
+     border under the one before - so it was a prop that always changed, and a memo child (a button, a
+     dropdown) was drawn again with its group each time, whatever else it was handed (qorus#646). */
+  const keptStyles = useRef(new Map<number, React.CSSProperties>());
+
   const clone = useCallback((children: React.ReactNode): React.ReactNode => {
     /* Counted per call, from the first child: the clone is kept between renders (`deps`), and a count kept with
        it went on from where the last render left it - a group re-rendering by itself numbered its first child
@@ -30,7 +46,17 @@ export const useCloneThroughFragments = (
             return cloneLevel(child.props.children);
           }
 
-          const props = propsMapper(child.props, reactIndex, realIndex, child.type);
+          const mapped = propsMapper(child.props, reactIndex, realIndex, child.type);
+          const kept = keptStyles.current.get(realIndex);
+          let props = mapped;
+
+          if (mapped?.style) {
+            if (kept && isSameStyle(kept, mapped.style)) {
+              props = { ...mapped, style: kept };
+            } else {
+              keptStyles.current.set(realIndex, mapped.style);
+            }
+          }
 
           /*
            * Because of the way React.Children.map works, we have to

@@ -9,18 +9,31 @@ import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 import { IDropdownKeyboardControls, IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqorePanelSubAction } from '../Panel';
+import { hasRowActionLabel } from './hasRowActionLabel';
 
 /** What the menu button is called, for a screen reader and in its tooltip, where the host gives no word. */
 export const DEFAULT_ACTIONS_MENU_LABEL = 'Actions';
 
 /**
  * How a row shows two or more actions where it is narrow.
+ * - `'row'`: under the label, a row of buttons each as wide as what it says, onto another line where they do
+ *   not fit. Every action stays in sight as it is at full width.
+ * - `'stack'`: under the label, its labels whole. One to a line, each the row's width, where the row's container
+ *   is a phone's width or narrower (on a phone, or as narrow a container on any screen). In a wider container
+ *   (a narrow `ReqoreSeverityRow`, between 480 and 640px) side by side, each as wide as its label, onto another
+ *   line only where they do not fit, as with `'row'`: actions that answer one callout stay together (the law
+ *   of proximity; Foxhoundn and David, qorus#646). For a callout whose actions are what it is there for
+ *   ("Try again"), which a menu would hide.
  * - `'menu'`: one menu button, at the end of the label's line, opening a menu that names each action.
- *   The content keeps its width, and a list of rows does not grow by a line per action.
- * - `'stack'`: under the label, one to a line, each the row's width with its label whole. For a
- *   callout whose actions are what it is there for ("Try again"), which a menu would hide.
+ *   The content keeps its width, and a list of rows does not grow by a line per action. Opted into, never a
+ *   row's default: it hides what a row offers behind a button (qorus#646, Foxhoundn). A row of this mode
+ *   with one action keeps it as a button there, at the end of the label's line, while its container is
+ *   wider than a phone.
+ *
+ * In every mode, a lone action under the label is the row's width where the container is a phone's width or
+ * narrower: the easiest target there is (Fitts's law; David and Foxhoundn, qorus#646).
  */
-export type TReqoreNarrowRowActions = 'menu' | 'stack';
+export type TReqoreNarrowRowActions = 'row' | 'stack' | 'menu';
 
 /** An action a row offers: a button's props, a label, and - for a menu of its own - sub-actions. */
 export interface IReqoreRowMenuAction
@@ -45,12 +58,7 @@ const tooltipText = (tooltip?: TReqoreTooltipProp): string | undefined => {
   return typeof tooltip?.content === 'string' ? tooltip.content || undefined : undefined;
 };
 
-/** Whether an action's `label` draws anything: not missing, empty or blank text, or a boolean. */
-export const hasRowActionLabel = (label: React.ReactNode): boolean =>
-  label !== undefined &&
-  label !== null &&
-  typeof label !== 'boolean' &&
-  !(typeof label === 'string' && !label.trim());
+export { hasRowActionLabel };
 
 /**
  * The words an action is called by where it has no room for its icon to speak for it - a menu row, a
@@ -73,6 +81,59 @@ export const getRowActionLabel = (action: {
   return tooltipText(action.tooltip) ?? (action['aria-label']?.trim() || undefined);
 };
 
+/** What a row's action says where reqore draws it compactly (`getCompactRowAction`). */
+export interface IReqoreRowActionShortLabel {
+  /**
+   * What the action says where reqore draws it compactly, on a line it shares with the row's label: the one
+   * action of a narrow `narrowActions='menu'` row whose container is wider than a phone (`ReqoreSeverityRow`
+   * between 480 and 640px; an entity row is narrow only at a phone's width, where the action goes under its
+   * label) and a narrow table's folded column - `'Test'` for `'Test the connection'`. Its label is then its tooltip (unless it has one) and
+   * its accessible name (unless it has one), so write it as words of its label: what a screen reader says holds
+   * what is seen. Wide, and on a line of its own (stacked, or in a row under the label), the action says its
+   * label.
+   */
+  shortLabel?: string;
+}
+
+/**
+ * An action as reqore draws it compactly (a row-end action on a narrow screen, qorus#646):
+ * - its `shortLabel`, its label its tooltip and its accessible name;
+ * - with none, an action with an icon and a tooltip is its icon alone, named by its label: one its author gave a
+ *   tooltip reads without its words;
+ * - any other says its label, as it did before (its icon and its label, or its label alone).
+ * The action's own `tooltip` and `aria-label` stand.
+ */
+export const getCompactRowAction = (action: {
+  label?: React.ReactNode;
+  shortLabel?: string;
+  icon?: IReqoreButtonProps['icon'];
+  tooltip?: TReqoreTooltipProp;
+  'aria-label'?: string;
+}): { label?: React.ReactNode; tooltip?: TReqoreTooltipProp; 'aria-label'?: string } => {
+  const { label, icon, tooltip } = action;
+  const shortLabel = action.shortLabel?.trim() || undefined;
+  const ownName = action['aria-label'];
+  // its label in words: what the action is called where it does not say it
+  const named =
+    typeof label === 'number' || (typeof label === 'string' && label.trim())
+      ? String(label)
+      : undefined;
+
+  if (shortLabel) {
+    return { label: shortLabel, tooltip: tooltip ?? named, 'aria-label': ownName ?? named };
+  }
+  if (icon && tooltipText(tooltip) && hasRowActionLabel(label)) {
+    return { label: undefined, tooltip, 'aria-label': ownName ?? named };
+  }
+  return { label: hasRowActionLabel(label) ? label : undefined, tooltip, 'aria-label': ownName };
+};
+
+/** A row's label in words, where it is text: what its actions menu is named for (`rowLabel`). */
+export const rowLabelText = (label: React.ReactNode): string | undefined =>
+  typeof label === 'number' || (typeof label === 'string' && label.trim())
+    ? String(label).trim()
+    : undefined;
+
 /** A row of a menu, to assistive technology; reached with the arrow keys, not Tab. */
 const MENU_ITEM_PROPS = { role: 'menuitem', tabIndex: -1 } as const;
 
@@ -90,8 +151,13 @@ const toMenuItem = (action: IReqoreRowMenuAction, touch: boolean): IReqoreDropdo
   const custom = action.props;
   const onClick = action.onClick ?? custom?.onClick;
 
+  // The action's own accessible name ("Show analytics for Short copy") is the item's too: its words are
+  // what a sighted reader sees, its name what a screen reader says, and folding must not lose it.
+  const ownName = (action['aria-label'] ?? custom?.['aria-label'])?.trim() || undefined;
+
   return {
     label: getRowActionLabel(action) ?? (custom ? getRowActionLabel(custom) : undefined),
+    ...(ownName ? { 'aria-label': ownName } : {}),
     icon: action.icon ?? custom?.icon,
     intent: action.intent ?? custom?.intent,
     // a finger's height, where the pointer is one
@@ -139,6 +205,11 @@ export interface IReqoreRowActionsMenuProps {
   size?: TSizes;
   /** What the menu button is called (its accessible name and tooltip). Defaults to "Actions". */
   label?: string;
+  /**
+   * The row the actions belong to, in words. The button is then called `"<label>: <rowLabel>"`
+   * ("Actions: Short copy"), so a list of rows is not a list of buttons all called "Actions".
+   */
+  rowLabel?: string;
   /** Take the whole box it is drawn in - a table cell - as the inline actions there do. */
   fill?: boolean;
   intent?: IReqoreButtonProps['intent'];
@@ -161,10 +232,13 @@ export const ReqoreRowActionsMenu = memo(
     actions,
     size,
     label = DEFAULT_ACTIONS_MENU_LABEL,
+    rowLabel,
     fill,
     intent,
     className,
   }: IReqoreRowActionsMenuProps) => {
+    // what the button and its menu are called: for the row they are in, where it has words
+    const name = rowLabel?.trim() ? `${label}: ${rowLabel.trim()}` : label;
     const [open, setOpen] = useState(false);
     const touch = useReqoreProperty('isHoverCapable') === false;
     const items = useMemo(
@@ -226,8 +300,8 @@ export const ReqoreRowActionsMenu = memo(
     }, [open, menuId, focusButton]);
 
     const wrapperProps = useMemo(
-      () => ({ id: menuId, role: 'menu', 'aria-label': label }),
-      [menuId, label]
+      () => ({ id: menuId, role: 'menu', 'aria-label': name }),
+      [menuId, name]
     );
 
     const menu = (
@@ -241,8 +315,8 @@ export const ReqoreRowActionsMenu = memo(
         fixed={!fill}
         fluid={fill}
         rounded={fill ? false : undefined}
-        tooltip={label}
-        aria-label={label}
+        tooltip={name}
+        aria-label={name}
         aria-haspopup='menu'
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}

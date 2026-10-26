@@ -1,5 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { expect, fireEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { noop } from 'lodash';
 import { useRef, useState } from 'react';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
@@ -11,6 +11,7 @@ import { sleep } from '../../helpers/utils';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreInput, ReqoreTextarea } from '../../index';
 import { StoryMeta } from '../utils';
 import { argManager } from '../utils/args';
+import { requiredElement } from '../utils/required';
 
 const { createArg, disableArg } = argManager<IReqoreDropdownProps>();
 
@@ -1194,7 +1195,7 @@ export const KeyboardNavigationWithLeftArrowNavigatesBack: Story = {
     docs: {
       description: {
         story:
-          'Renders Dropdown and navigates back using the left-arrow key.',
+          'Renders Dropdown on the level of its lone row, which the list opens by itself, and goes back to the top level with the left arrow. There the row it came from is highlighted, so the right arrow opens it again: the story goes in and back once more and ends on the top level, its row highlighted.',
       },
     },
   },
@@ -1246,6 +1247,28 @@ export const KeyboardNavigationWithLeftArrowNavigatesBack: Story = {
 
     // Menu should still be open
     await expect(document.querySelector('.reqore-popover-content')).toBeTruthy();
+
+    // Back at the top level, the row it came from is highlighted: the right arrow opens it again, and
+    // the left arrow comes back to it. Each level draws its own search field, so the keys go to the
+    // one shown.
+    const press = (key: string) =>
+      fireEvent.keyDown(
+        requiredElement(
+          '.reqore-popover-content .reqore-input',
+          'the search field of the level shown'
+        ),
+        { key }
+      );
+    const rowsShown = () =>
+      Array.from(document.querySelectorAll('.reqore-popover-content .reqore-menu-item')).map(
+        (row) =>
+          row.querySelector('[data-reqore-marquee="text"]:not([aria-hidden])')?.textContent ?? ''
+      );
+    await waitFor(() => expect(rowsShown()).toEqual(['Item with Submenu']));
+    await press('ArrowRight');
+    await waitFor(() => expect(rowsShown()).toEqual(['Submenu Item 1', 'Submenu Item 2']));
+    await press('ArrowLeft');
+    await waitFor(() => expect(rowsShown()).toEqual(['Item with Submenu']));
   },
 };
 
@@ -1374,5 +1397,147 @@ export const EnterOnUnrelatedInputIsNotSwallowed: Story = {
     // The submitted value should NOT exist — Enter was caught by the dropdown
     await expect(canvas.queryByTestId('submitted-value')).toBeFalsy();
     await expect(canvas.queryByTestId('selected-value')).toBeTruthy();
+  },
+};
+
+const openListElement = () => document.querySelector<HTMLElement>('.reqore-popover-content');
+
+/** The labels of the rows the open level shows. */
+const rowLabels = () =>
+  Array.from(openListElement()?.querySelectorAll<HTMLElement>('.reqore-menu-item') ?? []).map(
+    (row) => row.textContent?.trim()
+  );
+
+/** The open level's row that says `label`. */
+const rowNamed = (label: string): HTMLElement => {
+  const row = Array.from(
+    openListElement()?.querySelectorAll<HTMLElement>('.reqore-menu-item') ?? []
+  ).find((element) => element.textContent?.trim() === label);
+
+  if (!row) {
+    throw new Error(`No row says "${label}"; the rows say ${JSON.stringify(rowLabels())}`);
+  }
+
+  return row;
+};
+
+/** The open level's search field. */
+const searchField = () =>
+  requiredElement<HTMLInputElement>('.reqore-popover-content .reqore-input', "the list's search");
+
+export const OnlyTheOpenLevelHearsTheKeys: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a list opened from a text field, which keeps the focus while the list is used. "Group" is opened with a click, then ↓ and Enter pick its first row: only that row is picked. Before, the level above heard the keys too, and Enter also picked the row it had highlighted ("Inner 1 | Plain") (qorus#646).',
+      },
+    },
+  },
+  render: (args) => {
+    const popoverData = useRef<IPopoverControls>(null);
+    const [text, setText] = useState('');
+    const [pickedItems, setPickedItems] = useState<string[]>([]);
+
+    return (
+      <ReqoreControlGroup vertical>
+        <ReqoreInput
+          placeholder='Type here'
+          value={text}
+          onChange={(event: any) => setText(event.target.value)}
+          onFocus={() => popoverData.current?.open()}
+        />
+        <ReqoreDropdown
+          {...args}
+          label='Group list'
+          filterable={false}
+          items={[
+            { label: 'Plain', value: 'plain' },
+            {
+              label: 'Group',
+              value: 'group',
+              items: [
+                { label: 'Inner 1', value: 'inner1' },
+                { label: 'Inner 2', value: 'inner2' },
+              ],
+            },
+          ]}
+          onItemSelect={(item) => setPickedItems((was) => [...was, String(item.label)])}
+          passPopoverData={(data) => {
+            popoverData.current = data;
+          }}
+        />
+        <span data-testid='picked'>{pickedItems.join(' | ')}</span>
+      </ReqoreControlGroup>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    // into the text field from the keyboard: a click on it would be a click outside the list it opens
+    const field = within(canvasElement).getByPlaceholderText('Type here');
+    await userEvent.tab();
+    await expect(field).toHaveFocus();
+    await waitFor(() => expect(rowLabels()).toEqual(['Plain', 'Group']));
+
+    // opened with a click that leaves the focus in the text field
+    await fireEvent.click(rowNamed('Group'));
+    await waitFor(() => expect(rowLabels()).toEqual(['Inner 1', 'Inner 2']));
+    await expect(field).toHaveFocus();
+
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    const picked = within(canvasElement).getByTestId('picked');
+    await waitFor(() => expect(picked).toHaveTextContent('Inner 1'));
+    await waitFor(() => expect(openListElement()).toBeNull());
+    await expect(picked.textContent).toBe('Inner 1');
+  },
+};
+
+export const AnOpenedLevelSaysAndRanksAsTheListDoes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a list in German that ranks its matches by relevance and names its rows for a screen reader (`listId`), with a group of connections. Opened, the group is the same list: its search says "2 Einträge durchsuchen", "telegram" puts Telegram first, the highlighted row has its id, and a search that finds nothing says "Nichts gefunden". Before, an opened level dropped the five options it was not handed, and said "Search 2 items..." and "No items found" (qorus#646).',
+      },
+    },
+  },
+  args: {
+    label: 'Connection',
+    filterable: true,
+    filterRanking: 'relevance',
+    noItemsFoundText: 'Nichts gefunden',
+    filterPlaceholderBuilder: (count) => `${count} Einträge durchsuchen`,
+    listId: 'connections-list',
+    items: [
+      { label: 'Plain', value: 'plain' },
+      {
+        label: 'Connections',
+        value: 'connections',
+        items: [
+          { label: 'Alerts to Telegram', value: 'alerts' },
+          { label: 'Telegram', value: 'telegram' },
+        ],
+      },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByText('Connection'));
+    await waitFor(() => expect(rowLabels()).toEqual(['Plain', 'Connections']));
+    await expect(searchField()).toHaveAttribute('placeholder', '2 Einträge durchsuchen');
+
+    await userEvent.click(rowNamed('Connections'));
+    await waitFor(() => expect(rowLabels()).toEqual(['Alerts to Telegram', 'Telegram']));
+    await expect(searchField()).toHaveAttribute('placeholder', '2 Einträge durchsuchen');
+
+    await userEvent.type(searchField(), 'telegram');
+    await waitFor(() => expect(rowLabels()).toEqual(['Telegram', 'Alerts to Telegram']));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() =>
+      expect(document.getElementById('connections-list-option-0')).toHaveTextContent('Telegram')
+    );
+
+    await userEvent.clear(searchField());
+    await userEvent.type(searchField(), 'zzz');
+    await waitFor(() => expect(openListElement()).toHaveTextContent('Nichts gefunden'));
+    await expect(rowLabels()).toEqual([]);
   },
 };

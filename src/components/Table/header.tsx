@@ -214,7 +214,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
     }: IReqoreTableSectionProps,
     ref
   ) => {
-    const { targetRef } = useCombinedRefs(ref);
+    const { targetRef, setRef } = useCombinedRefs(ref);
 
     const pinOffsets = useMemo(
       () => calculatePinOffsets(columns, tableWidth),
@@ -377,7 +377,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
         heightAsGroup={heightAsGroup}
         size={size}
         minWidth={totalColumnsWidth}
-        ref={targetRef}
+        ref={setRef}
       >
         <StyledTableHeaderRow>{renderColumns(columns)}</StyledTableHeaderRow>
       </StyledTableHeaderWrapper>

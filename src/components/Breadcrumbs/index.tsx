@@ -344,6 +344,10 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
      `getBoundingClientRect()` gives them, as `trailOverflows` measures: the box the observer
      reports is not scaled by a transform on an ancestor, so under one every report would differ. */
   const rowRef = useRef<HTMLDivElement>(null);
+  /* Whether the folded crumbs' menu is open: said on its button (`aria-expanded`), which a menu button
+     announces, as the row actions menu does. A finger opens it with a tap (the dropdown's `opensOnTap`);
+     a mouse, by hovering. */
+  const [foldMenuOpen, setFoldMenuOpen] = useState(false);
   const [fold, setFold] = useState<IReqoreTrailFold>({ items, size, folded: 0, unfolding: false });
   const folded = Math.min(fold.folded, count(items));
   // as the trail last drew it, for the observer: with every crumb folded, none is left to fold
@@ -609,6 +613,9 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           className='reqore-breadcrumbs-overflow-current'
           handler='hoverStay'
           delay={500}
+          aria-haspopup='menu'
+          aria-expanded={foldMenuOpen}
+          onToggleChange={setFoldMenuOpen}
           size={size}
           // This button STANDS IN for the current-page crumb, so it must read as
           // that crumb: adopt the leaf's OWN customTheme + effect (e.g. an
@@ -658,8 +665,12 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       <React.Fragment key='reqore-breadcrumbs-overflow'>
         <ReqoreDropdown
           key='reqore-breadcrumbs-overflow-menu'
+          className='reqore-breadcrumbs-overflow-menu'
           handler='hoverStay'
           delay={500}
+          aria-haspopup='menu'
+          aria-expanded={foldMenuOpen}
+          onToggleChange={setFoldMenuOpen}
           size={size}
           customTheme={customTheme}
           showCaret={false}

@@ -1,6 +1,6 @@
 import { TReqoreFilterRanking, asSearchText, rankByQuery } from '../../helpers/search';
 import { size } from 'lodash';
-import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IReqoreDropdownProps } from '.';
 import { TReqorePaginationType } from '../../constants/paging';
 import { ReqorePaginationContainer } from '../../containers/Paging';
@@ -51,6 +51,12 @@ export interface IDropdownKeyboardControls {
   /** The DOM id of the currently highlighted item, for aria-activedescendant. Null when nothing is highlighted. */
   focusedItemId: string | null;
 }
+
+/**
+ * The list's own style: it may shrink in its panel's column (qorus#646). One object for every render, as the control
+ * group it is handed to is memoised (a new object each render would draw it again for nothing).
+ */
+const SHRINKABLE_LIST_STYLE: React.CSSProperties = { minHeight: 0 };
 
 export interface IReqoreDropdownListProps
   extends IReqoreComponent,
@@ -105,7 +111,9 @@ export interface IReqoreDropdownListProps
   /** Unique ID prefix for dropdown items, used for aria-activedescendant support. */
   listId?: string;
 
-  _onBackClick?: () => void;
+  /** Back to the level above: `true` where the keys went back (the left arrow), so it highlights the row they
+   *  came from. */
+  _onBackClick?: (byKeys?: boolean) => void;
   _onNavigateToLevel?: (level: number) => void;
   _level?: number;
 
@@ -399,7 +407,7 @@ const ReqoreDropdownList = memo(
           }
         } else if (key === 'ArrowLeft' && _onBackClick) {
           event.preventDefault();
-          _onBackClick();
+          _onBackClick(true);
         }
       },
       [
@@ -412,6 +420,9 @@ const ReqoreDropdownList = memo(
       ]
     );
 
+    // the back button: a click, which says nothing of the keys
+    const goBackByClick = useCallback(() => _onBackClick?.(), [_onBackClick]);
+
     // Compute the focused item's DOM id for aria-activedescendant
     const focusedItemDomId = useMemo(() => {
       if (focusedItemIndex === null || !listId) return null;
@@ -421,8 +432,40 @@ const ReqoreDropdownList = memo(
     // Register document-level keyboard listener so arrow keys work
     // regardless of which element has focus (button, external input, etc.)
     // Skip if the event target is already inside the dropdown (handled by input/menu onKeyDown)
+    //
+    // Only the level the list shows hears them. The list of an opened level is drawn by the
+    // list of the level above it, which kept its own listener: each key was handled twice,
+    // and Enter in an opened level also selected the row the level above had highlighted.
+    const showsItsOwnRows = !currentSelectedItem;
+
+    /* Back at this level from the level it showed by the keys (the left arrow), the row that level came
+       from is highlighted, as the keys left it: the right arrow opens it again and Enter acts on it.
+       Opening it cleared the highlight, and it showed again on the way back only while this level also
+       heard the keys pressed in the level it showed (qorus#646, Foxhoundn). The same holds for a lone row
+       the list opened by itself. Back by a click (the back button, a crumb) says nothing of the keys:
+       nothing is highlighted, as before - a highlighted row looks picked to a pointer. */
+    const levelItShowed = useRef<IReqoreDropdownItem | undefined>(undefined);
+    const wentBackByKeys = useRef(false);
     useEffect(() => {
-      if (!keyboardNavigation) {
+      const cameFrom = levelItShowed.current;
+      const byKeys = wentBackByKeys.current;
+      levelItShowed.current = currentSelectedItem;
+      if (!cameFrom || currentSelectedItem) {
+        return;
+      }
+      wentBackByKeys.current = false;
+      if (!byKeys) {
+        return;
+      }
+      const index = selectableItems.findIndex(
+        (item) =>
+          item === cameFrom || (item.value === cameFrom.value && item.label === cameFrom.label)
+      );
+      setFocusedItemIndex(index === -1 ? null : index);
+    }, [currentSelectedItem, selectableItems]);
+
+    useEffect(() => {
+      if (!keyboardNavigation || !showsItsOwnRows) {
         return () => {};
       }
 
@@ -461,14 +504,14 @@ const ReqoreDropdownList = memo(
 
       document.addEventListener('keydown', listener, true);
       return () => document.removeEventListener('keydown', listener, true);
-    }, [keyboardNavigation, handleKeyDown, menuRef]);
+    }, [keyboardNavigation, handleKeyDown, menuRef, showsItsOwnRows]);
 
     // Expose keyboard controls to external components (aria-activedescendant pattern)
     useEffect(() => {
-      if (passKeyHandler && keyboardNavigation) {
+      if (passKeyHandler && keyboardNavigation && showsItsOwnRows) {
         passKeyHandler({ handleKeyDown, focusedItemId: focusedItemDomId });
       }
-    }, [passKeyHandler, handleKeyDown, keyboardNavigation, focusedItemDomId]);
+    }, [passKeyHandler, handleKeyDown, keyboardNavigation, focusedItemDomId, showsItsOwnRows]);
 
     const getAction = useCallback(
       (item: TReqoreDropdownItem, position: 'left' | 'right') => {
@@ -505,6 +548,8 @@ const ReqoreDropdownList = memo(
             multiSelect,
             listStyle,
             filterable,
+            // an opened level is the same list: it ranks, says and is reached as the list does
+            filterRanking,
             closePopover,
             width,
             height,
@@ -514,10 +559,14 @@ const ReqoreDropdownList = memo(
             paging,
             onFilterChange,
             filterPlaceholder,
+            filterPlaceholderBuilder,
+            noItemsFoundText,
             filter,
             customTheme,
             intent,
             keyboardNavigation,
+            passKeyHandler,
+            listId,
             labels: [
               ...labels,
               {
@@ -529,7 +578,10 @@ const ReqoreDropdownList = memo(
                 _levelIndex: _level + 1,
               },
             ],
-            _onBackClick: () => handleSelectItemAtLevel(undefined),
+            _onBackClick: (byKeys?: boolean) => {
+              wentBackByKeys.current = byKeys === true;
+              handleSelectItemAtLevel(undefined);
+            },
             _onNavigateToLevel,
             _level: _level + 1,
             selectedItems,
@@ -540,7 +592,9 @@ const ReqoreDropdownList = memo(
     }
 
     return (
-      <ReqoreControlGroup vertical fluid>
+      // In a popover held to the room below its field, the list shrinks to it (min-height 0 in the panel's
+      // column) and its rows, the menu, take what its search and tags leave: one place scrolls (qorus#646).
+      <ReqoreControlGroup vertical fluid style={SHRINKABLE_LIST_STYLE}>
         {/* An array prop: keyed here, so a caller passing elements without keys draws no warning.
             `toArray` keeps the keys a caller gave rather than putting keys by position over them,
             and takes a single node too, which `map` threw on. */}
@@ -553,7 +607,7 @@ const ReqoreDropdownList = memo(
                   icon='ArrowLeftSLine'
                   fluid={!filterable}
                   fixed={filterable}
-                  onClick={_onBackClick}
+                  onClick={goBackByClick}
                   className='reqore-dropdown-back-button'
                   customTheme={theme}
                   intent={intent}

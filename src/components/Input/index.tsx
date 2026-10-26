@@ -54,6 +54,8 @@ export interface IReqoreInputProps
   fixed?: boolean;
   value?: string | number;
   onClearClick?: () => void;
+  /** What the clear button is called, for a screen reader and a test (`Clear` unless given): a host's own words. */
+  clearLabel?: string;
   maxLength?: number;
   icon?: IReqoreIconName;
   rightIcon?: IReqoreIconName;
@@ -287,6 +289,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       fixed,
       className,
       onClearClick,
+      clearLabel,
       icon,
       rightIcon,
       iconColor,
@@ -312,7 +315,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
     }: IReqoreInputProps,
     ref
   ) => {
-    const { targetRef } = useCombinedRefs(ref);
+    const { setRef } = useCombinedRefs(ref);
     const [inputRef, setInputRef] = useState<HTMLInputElement>(null);
     const [passwordVisible, setPasswordVisible] = useState(false);
     const generatedId = useId();
@@ -386,7 +389,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         radiusSize={radiusSize}
         minimal={minimal}
         _size={size}
-        ref={targetRef}
+        ref={setRef}
         readOnly={readOnly || loading}
         disabled={rest.disabled}
         style={wrapperStyle}
@@ -435,6 +438,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         <ReqoreInputClearButton
           enabled={clearable}
           onClick={onClearClick}
+          label={clearLabel}
           hasRightIcon={!!rightIcon}
           rightOffset={passwordToggleWidth}
           size={size}

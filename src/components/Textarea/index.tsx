@@ -76,6 +76,8 @@ export interface IReqoreTextareaProps
   flat?: boolean;
   fixed?: boolean;
   onClearClick?: () => any;
+  /** What the clear button is called, for a screen reader and a test (`Clear` unless given): a host's own words. */
+  clearLabel?: string;
   wrapperStyle?: React.CSSProperties;
   focusRules?: IReqoreAutoFocusRules;
   /**
@@ -140,6 +142,7 @@ export const StyledTextareaWrapper = styled.div.withConfig({
 export const REQORE_TEXTAREA_STYLE_PROPS = listReqoreStyleProps<
   TReqoreStylePropKeys<IReqoreTextareaStyle, React.TextareaHTMLAttributes<HTMLTextAreaElement>>
 >({
+  clearLabel: true,
   customTheme: true,
   effect: true,
   fixed: true,
@@ -258,6 +261,7 @@ function Textarea<T>(
     size = 'normal',
     className,
     onClearClick,
+    clearLabel,
     fluid,
     tooltip,
     customTheme,
@@ -278,7 +282,7 @@ function Textarea<T>(
   }: T & IReqoreTextareaProps,
   ref
 ) {
-  const { targetRef }: any = useCombinedRefs(ref);
+  const { setRef }: any = useCombinedRefs(ref);
   const [inputRef, setInputRef] = useState<HTMLTextAreaElement>(null);
   const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
   const shortcutHintsEnabled = useReqoreProperty('shortcutHints');
@@ -541,6 +545,7 @@ function Textarea<T>(
           enabled={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
           show={_value && _value !== ''}
           onClick={onClearClick}
+          label={clearLabel}
           size={size}
         />
         {showShortcutHint && (
@@ -567,7 +572,7 @@ function Textarea<T>(
         _size={size}
         theme={theme}
         style={wrapperStyle}
-        ref={targetRef}
+        ref={setRef}
         onItemSelect={handleItemSelect}
         closeOnTargetClick={false}
         /* A template list belongs UNDER the field it writes into. Flipped, it
@@ -602,7 +607,7 @@ function Textarea<T>(
       rounded={rounded}
       theme={theme}
       style={wrapperStyle}
-      ref={targetRef}
+      ref={setRef}
     >
       {renderChildren()}
     </ReqoreTooltipComponent>

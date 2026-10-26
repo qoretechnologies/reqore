@@ -31,7 +31,7 @@ import ReqoreInput, { IReqoreInputProps } from '../Input';
 import { NARROW_CONTAINER_BREAKPOINT_PX } from '../../hooks/useNarrowContainer';
 import { TReqoreKeyValueTableExportMapper } from '../KeyValueTable';
 import { IReqorePanelAction, IReqorePanelProps, IReqorePanelSubAction } from '../Panel';
-import { DEFAULT_ACTIONS_MENU_LABEL } from '../RowActionsMenu';
+import { DEFAULT_ACTIONS_MENU_LABEL, IReqoreRowActionShortLabel } from '../RowActionsMenu';
 import ReqoreTableBody from './body';
 import ReqoreTableHeader, { IReqoreCustomHeaderCellComponent } from './header';
 import { IReqoreTableHeaderCellProps } from './headerCell';
@@ -57,6 +57,7 @@ import {
   TReqoreZoom,
 } from './helpers';
 import { IReqoreTableRowOptions } from './row';
+import { useFoldedActionWidths } from './useFoldedActionWidths';
 
 export type TReqoreTableColumnContent =
   | ((data: IReqoreTableRowData) => any)
@@ -129,15 +130,18 @@ export interface IReqoreTableColumn extends IReqoreIntent {
      * An action's `label` is drawn in its button, as a button's is. Where a narrow table folds the
      * actions into one menu (see `actionsMenuBelowWidth`), it is the action's name in that menu -
      * its text, or a number; otherwise its string `tooltip`, or its `aria-label` - and a row with
-     * only one action keeps it as a button the menu's width, its icon alone, its label then its
-     * tooltip (unless it has one) and its accessible name. A button that draws no label is named
-     * by its tooltip's text.
+     * only one action keeps it as a button: with an icon, its icon alone in the menu button's
+     * square, its label then its tooltip (unless it has one) and its accessible name; with no icon,
+     * its `shortLabel` where it has one, else its label, whole - the column is as wide as those
+     * words in their button, never wider than it was. A button that draws no label is named by its
+     * tooltip's text.
      */
     actions?: (data: IReqoreTableRowData) => TReqoreTableCellAction[];
     /**
      * The table width, in pixels, at or below which a cell with two or more actions shows them as one
      * menu button instead of side by side: the button opens a menu naming each action, and the
-     * column narrows to the button, so the row's content gets the room the buttons took. Measured on
+     * column narrows to what its cells draw - the button, an action's icon, or a row's one action's
+     * words - so the row's content gets the room the buttons took. Measured on
      * the table itself, not the window, so a table in a narrow drawer folds on a wide screen.
      * Defaults to `NARROW_CONTAINER_BREAKPOINT_PX` (480, Reqore's phone width); `0` never folds.
      */
@@ -166,9 +170,10 @@ export interface IReqoreTableColumn extends IReqoreIntent {
  * cells too. In the menu a narrow table folds the actions into, only text or a number names the
  * action; anything else gives way to its string `tooltip`.
  */
-export type TReqoreTableCellAction = Omit<IReqoreButtonProps, 'children' | 'label' | 'rightIcon'> & {
-  label?: React.ReactNode;
-};
+export type TReqoreTableCellAction = Omit<IReqoreButtonProps, 'children' | 'label' | 'rightIcon'> &
+  IReqoreRowActionShortLabel & {
+    label?: React.ReactNode;
+  };
 
 export interface IReqoreTableRowData {
   [key: string]: any;
@@ -1026,7 +1031,7 @@ const ReqoreTable = ({
   );
 
   /* A narrow table folds each row's actions into one menu button (see
-     `cell.actionsMenuBelowWidth`), and the column narrows to the button. Which columns fold
+     `cell.actionsMenuBelowWidth`), and the column narrows to what its cells draw. Which columns fold
      changes only when the table crosses a threshold: the list is kept by its contents - its JSON,
      which no column id can make ambiguous - so a resize does not rebuild the columns on every
      pixel. Read from the caller's columns: the select box and the expander are the table's own,
@@ -1041,6 +1046,16 @@ const ReqoreTable = ({
   );
   // A finger needs a bigger button than a mouse: the column, and the rows, make room for one.
   const touch = useReqoreProperty('isHoverCapable') === false;
+  /* A folded column is as wide as what its cells draw: the square for a menu or an icon, and a row's
+     one action with no icon its words - its short label, or its label - whole in their button
+     (qorus#646). Measured over the table's rows, not the ones on screen, so the width holds as they
+     scroll and page. */
+  const { widths: foldedTextWidths, probe: foldedActionsProbe } = useFoldedActionWidths(
+    _internalColumns,
+    actionsMenuColumnIds,
+    transformedData,
+    zoomSize
+  );
 
   const finalColumns = useMemo(() => {
     const fullColumns = [..._internalColumns];
@@ -1152,7 +1167,8 @@ const ReqoreTable = ({
       prepareColumns(fullColumns, columnModifiers, zoomSize),
       actionsMenuColumnIds,
       zoomSize,
-      touch
+      touch,
+      foldedTextWidths
     );
   }, [
     _internalColumns,
@@ -1160,6 +1176,7 @@ const ReqoreTable = ({
     zoomSize,
     actionsMenuColumnIds,
     touch,
+    foldedTextWidths,
     selectable,
     selectedIcon,
     box,
@@ -1603,6 +1620,7 @@ const ReqoreTable = ({
             tableWidth={sizes.width}
           />
         )}
+        {foldedActionsProbe}
       </StyledTableWrapper>
     );
   };

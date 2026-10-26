@@ -1,5 +1,5 @@
 import { Resizable, ResizableProps } from 're-resizable';
-import React, { forwardRef, memo, useMemo } from 'react';
+import React, { forwardRef, memo, useCallback, useMemo } from 'react';
 import { css } from 'styled-components';
 import { ReqoreErrorBoundary } from '../..';
 import { HALF_PADDING_FROM_SIZE, RADIUS_FROM_SIZE } from '../../constants/sizes';
@@ -132,7 +132,14 @@ const ReqoreMenu = memo(
       ref
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent);
-      const { targetRef } = useCombinedRefs(ref);
+      const { setRef } = useCombinedRefs(ref);
+      // one callback for the menu's life: the element a resizable menu is drawn in is the one handed on
+      const handleMenuRef = useCallback(
+        (curRef) => {
+          setRef(curRef?.resizable ?? curRef);
+        },
+        [setRef]
+      );
       // The menu's props go to the components in it (items, dividers, sections, groups), never to a plain
       // DOM element: a div takes none of them, and React warns about each one that reaches the DOM.
       const { clone } = useCloneThroughFragments((props, _reactIndex, _realIndex, childType) =>
@@ -164,15 +171,7 @@ const ReqoreMenu = memo(
               _size={size}
               className={`${rest.className || ''} reqore-menu`}
               theme={theme}
-              ref={(curRef) => {
-                let _ref = curRef;
-
-                if (curRef?.resizable) {
-                  _ref = curRef.resizable;
-                }
-
-                targetRef.current = _ref;
-              }}
+              ref={handleMenuRef}
             >
               <ReqoreControlGroup vertical gapSize={itemGap} fluid style={style}>
                 {skeleton

@@ -13,7 +13,15 @@ import {
   openRowActionsMenuItems,
   rowActionsMenuButtons,
 } from '../utils/rowActionsMenu';
-import { expectEqualBoxesEqualRows, expectRowsFillTheirBoxes, StoryRowBox } from '../utils/rowBoxes';
+import {
+  expectEqualBoxesEqualRows,
+  expectLoneActionSpansTheRow,
+  expectRowsFillTheirBoxes,
+  rowContainerIsPhoneWidth,
+  StoryRowBox,
+} from '../utils/rowBoxes';
+import { buttonSays } from '../utils/buttonSays';
+import { requiredElement } from '../utils/required';
 import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import { withViewport } from '../utils/viewport';
 
@@ -349,7 +357,7 @@ export const NoWrap: Story = {
     docs: {
       description: {
         story:
-          'Renders SeverityRow with content forced onto a single line.',
+          "Renders SeverityRow with content forced onto a single line. Its one action, Investigate, is under the text, the row's width: its container is a phone's width or narrower.",
       },
     },
   },
@@ -501,7 +509,8 @@ export const CustomPaddingSize: Story = {
 
 /* A narrow row's actions (qorus#646). A row measures its OWN container - a severity row in a 320px drawer
    on a 1920px screen is as narrow as one on a phone - and below 640px of it, its actions stack under the
-   label, one to a line, each the row's width: a severity row is a callout, and its buttons are the response
+   label, one to a line (each the row's width where its container is a phone's width or narrower): a severity row is a
+   callout, and its buttons are the response
    it asks for, so they stay in sight. A list of rows that should not grow by a line per action folds them
    into one menu button at the end of the label's line with `narrowActions='menu'`, as a narrow table does. */
 
@@ -581,7 +590,7 @@ export const NarrowContainerActionsMenu: Story = {
     docs: {
       description: {
         story:
-          "Renders the same row (`narrowActions='menu'`) in two framed containers of different widths, each named above it: in the 720px one its Investigate and Dismiss sit side by side as always; in the 400px one they are one menu button at the end of the label's line. Each row fills its frame exactly. Clicked, the menu names Investigate and Dismiss (the icon's tooltip) with their icons; Escape puts it away with the focus on the button, and Dismiss chosen runs and closes it without opening the row.",
+          "Renders the same row (`narrowActions='menu'`) in two framed containers of different widths, each named above it: in the 720px one its Investigate and Dismiss sit side by side as always; in the 400px one they are one menu button at the end of the label's line, named for its row (\"Actions: Payment Processing · stripe-webhook-receiver\"). Each row fills its frame exactly. Clicked, the menu names Investigate and Dismiss (the icon's tooltip) with their icons; Escape puts it away with the focus on the button, and Dismiss chosen runs and closes it without opening the row.",
       },
     },
   },
@@ -622,7 +631,11 @@ export const NarrowContainerActionsMenu: Story = {
 
     await expectActionsFolded(narrow);
     const [button] = rowActionsMenuButtons(narrow);
-    expect(button).toHaveAttribute('aria-label', 'Actions');
+    // named for its row, so a list of rows is not a list of buttons all called "Actions"
+    expect(button).toHaveAttribute(
+      'aria-label',
+      'Actions: Payment Processing · stripe-webhook-receiver'
+    );
 
     // the keyboard: Enter opens it, Escape puts it away, the focus stays on the button
     button.focus();
@@ -679,7 +692,7 @@ export const NarrowRowsInEqualContainersAreEqual: Story = {
     docs: {
       description: {
         story:
-          'Renders five narrow rows, each in its own framed 400px container: two actions in one menu (`narrowActions=\'menu\'`), one action, two actions stacked (the default), no actions, and a long unbroken name. Each row fills its frame, so all five are the same width; at a phone\'s width (390px) the frames narrow together and the rows stay equal.',
+          'Renders five narrow rows, each in its own framed 400px container: two actions in one menu (`narrowActions=\'menu\'`), one action, two actions stacked (the default), no actions, and a long unbroken name. Each row fills its frame, so all five are the same width; a lone or stacked action is the row\'s width, as a 400px container is a phone\'s width or narrower. At a phone\'s width (390px) the frames narrow together and the rows stay equal.',
       },
     },
   },
@@ -755,6 +768,239 @@ export const NarrowContainerActionsMenuOnATouchScreen: Story = {
         );
       }
     });
+  },
+};
+
+/** The row's one action, at the end of the label's line, inside the row: where a menu of two or more would be. */
+const expectLoneActionAtLineEnd = async (row: HTMLElement) => {
+  await waitFor(() => expect(row.getAttribute('data-actions')).toBe('end'));
+  await waitFor(() => {
+    const buttons = row.querySelectorAll<HTMLElement>(
+      '.reqore-severity-row-actions .reqore-button'
+    );
+    expect(buttons).toHaveLength(1);
+    expect(rowActionsMenuButtons(row)).toHaveLength(0);
+    const label = (
+      row.querySelector('.reqore-severity-row-label') as HTMLElement
+    ).getBoundingClientRect();
+    const box = buttons[0].getBoundingClientRect();
+    // on the label's line, after it - not under the label
+    expect(box.top).toBeLessThan(label.bottom);
+    expect(box.left).toBeGreaterThanOrEqual(label.right - 0.5);
+  });
+  await expectControlsInside(row);
+};
+
+const LONE_INCIDENT_ACTION: IReqoreSeverityRowProps['actions'] = INCIDENT_ACTIONS.slice(0, 1);
+
+const LoneActionRow = ({
+  clickable,
+  narrowActions,
+}: {
+  clickable?: boolean;
+  narrowActions?: IReqoreSeverityRowProps['narrowActions'];
+}) => (
+  <ReqoreSeverityRow
+    {...(narrowActions ? { narrowActions } : {})}
+    label='Payment Processing · stripe-webhook-receiver'
+    description='Avg duration 4.7s exceeded 3.5s threshold · just now'
+    intent='danger'
+    leading={CRITICAL_TAG}
+    fluid
+    onClick={clickable ? onRowClick : undefined}
+    actions={LONE_INCIDENT_ACTION}
+  />
+);
+
+export const NarrowContainerLoneActionInMenuMode: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a row with one action, Investigate, that folds two or more into a menu (`narrowActions='menu'`), in a 560px container and a 400px one, and the same row with no `narrowActions` in a 400px one. Narrow but wider than a phone (560px), the first keeps Investigate at the end of the label's line, where the menu of a row with more actions is. In a container a phone's width or narrower (400px), the action goes under the label on a line of its own, the row's width, the easiest target there is - in 'menu' mode as by default.",
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <StoryRowBox
+        className='menu-wider-row-box'
+        width={560}
+        caption="A 560px container, wider than a phone: 'menu', one action"
+      >
+        <LoneActionRow narrowActions='menu' />
+      </StoryRowBox>
+      <StoryRowBox
+        className='menu-row-box'
+        width={400}
+        caption="A 400px container: 'menu', one action"
+      >
+        <LoneActionRow narrowActions='menu' />
+      </StoryRowBox>
+      <StoryRowBox
+        className='stack-row-box'
+        width={400}
+        caption='A 400px container: the default, one action'
+      >
+        <LoneActionRow />
+      </StoryRowBox>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    // wider than a phone: at the end of the label's line
+    const wider = await narrowRow(canvasElement.querySelector('.menu-wider-row-box')!);
+    expect(rowContainerIsPhoneWidth(wider)).toBe(false);
+    await expectLoneActionAtLineEnd(wider);
+
+    // a phone's width or narrower: under the label, the row's width, in 'menu' mode as by default
+    for (const box of ['.menu-row-box', '.stack-row-box']) {
+      const row = await narrowRow(canvasElement.querySelector(box)!);
+      expect(row.getAttribute('data-actions')).toBe('stack');
+      await expectLoneActionSpansTheRow(row, 'severity');
+    }
+    expectRowsFillTheirBoxes(canvasElement, '.reqore-severity-row');
+  },
+};
+
+export const NarrowContainerLoneActionInMenuModeOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders a row with one action, Investigate, that folds two or more into a menu (`narrowActions='menu'`), in a card on a phone (390 px). On a phone the action goes under the text, on a line of its own the row's width - the easiest target for a finger - and a finger's height (44px); a tap on it runs it without opening the row. Nothing reaches past the screen.",
+      },
+    },
+  },
+  render: () => (
+    <div
+      className='phone-card'
+      style={{ padding: '0 16px', maxWidth: 390, boxSizing: 'border-box' }}
+    >
+      <LoneActionRow narrowActions='menu' clickable />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    clearRowSpies();
+    await withTouchScreen(async (touch) => {
+      const row = await narrowRow(canvasElement);
+      expect(row.getAttribute('data-actions')).toBe('stack');
+      await expectLoneActionSpansTheRow(row, 'severity');
+      const button = row.querySelector<HTMLElement>('.reqore-severity-row-actions .reqore-button')!;
+      if (touch.real) {
+        await waitFor(() => {
+          const box = button.getBoundingClientRect();
+          expect(box.height).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+        });
+      }
+      await touch.tap(button);
+      await waitFor(() => expect(onInvestigate).toHaveBeenCalledTimes(1));
+      expect(onRowClick).not.toHaveBeenCalled();
+
+      if (touch.narrowed) {
+        await waitFor(() =>
+          expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1)
+        );
+      }
+    });
+  },
+};
+
+/* What a row-end action says on a narrow line (David, qorus#646): its short label; with none, its icon alone
+   where it has a tooltip; else its label, as before. Wide, every one says its label. A row-end action is drawn only
+   where the row is narrow but its container wider than a phone: as narrow as a phone, it is under the label. */
+const SHORT_LABEL_SEVERITY_ROWS: Array<
+  Pick<IReqoreSeverityRowProps, 'label' | 'actions'> & { narrow: string }
+> = [
+  {
+    label: 'Payment Processing · stripe-webhook-receiver',
+    actions: [
+      {
+        label: 'Investigate the incident',
+        shortLabel: 'Investigate',
+        icon: 'SearchEyeLine',
+        intent: 'danger',
+        onClick: onInvestigate,
+      },
+    ],
+    narrow: 'Investigate',
+  },
+  {
+    label: 'Order sync lagging · order-sync-workflow',
+    actions: [
+      { label: 'Dismiss this alert', icon: 'CloseLine', tooltip: 'Dismiss', onClick: onDismiss },
+    ],
+    narrow: '',
+  },
+  {
+    label: 'Inventory feed stale · inventory-feed',
+    actions: [{ label: 'Retry', icon: 'RefreshLine' }],
+    narrow: 'Retry',
+  },
+];
+
+const ShortLabelSeverityRows = () => (
+  <ReqoreControlGroup vertical gapSize='big'>
+    {[720, 560].map((width) => (
+      <StoryRowBox
+        key={width}
+        className={width > 640 ? 'wide-row-box' : 'narrow-row-box'}
+        width={width}
+        caption={`A ${width}px container: one action each`}
+      >
+        <ReqoreControlGroup vertical fluid>
+          {SHORT_LABEL_SEVERITY_ROWS.map(({ label, actions }, index) => (
+            <ReqoreSeverityRow
+              key={index}
+              label={label}
+              description='Avg duration 4.7s exceeded 3.5s threshold · just now'
+              intent='danger'
+              leading={CRITICAL_TAG}
+              fluid
+              narrowActions='menu'
+              actions={actions}
+            />
+          ))}
+        </ReqoreControlGroup>
+      </StoryRowBox>
+    ))}
+  </ReqoreControlGroup>
+);
+
+export const NarrowContainerLoneActionShortLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders three rows (`narrowActions='menu'`), each with one action, in a 720px container and a 560px one. Wide, each action says its label: Investigate the incident, Dismiss this alert, Retry. Narrow but wider than a phone (560px), at the end of the label's line, Investigate the incident reads \"Investigate\" (its `shortLabel`); Dismiss this alert, which has no short label but has an icon and a tooltip, is its icon alone; Retry, with neither, says Retry. Each is still called by its label.",
+      },
+    },
+  },
+  render: () => <ShortLabelSeverityRows />,
+  play: async ({ canvasElement }) => {
+    const rowsIn = (box: string) =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>(`.${box} .reqore-severity-row`));
+    await waitFor(() => {
+      expect(rowsIn('narrow-row-box')).toHaveLength(SHORT_LABEL_SEVERITY_ROWS.length);
+      expect(
+        rowsIn('narrow-row-box').every((row) => row.getAttribute('data-actions') === 'end')
+      ).toBe(true);
+    });
+
+    const wide = rowsIn('wide-row-box');
+    const narrow = rowsIn('narrow-row-box');
+    for (const [index, { actions, narrow: says }] of SHORT_LABEL_SEVERITY_ROWS.entries()) {
+      const button = (row: HTMLElement) =>
+        row.querySelector<HTMLElement>('.reqore-severity-row-actions .reqore-button')!;
+      expect(wide[index].getAttribute('data-narrow')).toBeNull();
+      expect(buttonSays(button(wide[index]))).toBe(actions![0].label);
+      expect(buttonSays(button(narrow[index]))).toBe(says);
+      expect(button(narrow[index])).toHaveAccessibleName(actions![0].label as string);
+      await expectLoneActionAtLineEnd(narrow[index]);
+    }
+    expectRowsFillTheirBoxes(canvasElement, '.reqore-severity-row');
   },
 };
 
@@ -849,7 +1095,7 @@ export const NarrowSidebarList: Story = {
 /* A callout's actions (qorus#646): on a phone, a row in a card is narrower than the screen, and its
    actions stayed on one line that does not wrap - "See your subscription" and "Try again" reached past
    the card. Those two are what the row is there for, so a menu would hide its point: with
-   `narrowActions='stack'` they stack under the label, one to a line, each the row's width with its label
+   `narrowActions='stack'` they stack under the label, one to a line (each the row's width on a phone), its label
    whole, and a finger gets a target it can hit. */
 
 const onSeeSubscription = fn();
@@ -865,15 +1111,29 @@ const ALLOWANCE_ACTIONS: IReqoreSeverityRowProps['actions'] = [
   { label: 'Try again', icon: 'RefreshLine', onClick: onTryAgain },
 ];
 
-const AllowanceRow = () => (
-  <div className='narrow-row-box' style={{ width: 320, maxWidth: '100%' }}>
+/** One more answer, long enough that the three do not fit side by side in a 500px container. */
+const ALLOWANCE_ACTIONS_AND_OWNER: IReqoreSeverityRowProps['actions'] = [
+  ...ALLOWANCE_ACTIONS!,
+  { label: 'Ask your workspace owner for more', icon: 'UserLine' },
+];
+
+const AllowanceRow = ({
+  width = 320,
+  className = 'narrow-row-box',
+  actions = ALLOWANCE_ACTIONS,
+}: {
+  width?: number;
+  className?: string;
+  actions?: IReqoreSeverityRowProps['actions'];
+}) => (
+  <div className={className} style={{ width, maxWidth: '100%' }}>
     <ReqoreSeverityRow
       label="This month's AI allowance is used up"
       description='The design stopped at its last step. It can go on when the allowance renews, or now with a larger plan.'
       intent='warning'
       fluid
-      // no `narrowActions`: a severity row stacks its actions by default
-      actions={ALLOWANCE_ACTIONS}
+      // no `narrowActions`: a severity row keeps its actions in sight by default ('stack')
+      actions={actions}
     />
   </div>
 );
@@ -881,25 +1141,66 @@ const AllowanceRow = () => (
 const stackedActions = (row: HTMLElement) =>
   Array.from(row.querySelectorAll<HTMLElement>('.reqore-severity-row-actions > .reqore-button'));
 
-/** The row's actions, stacked one to a line, each the width of the others and inside the row, labels whole. */
-const expectActionsStacked = async (canvasElement: HTMLElement) => {
-  const row = await narrowRow(canvasElement);
-  expect(row.getAttribute('data-actions')).toBeNull();
-  expect(rowActionsMenuButtons(row)).toHaveLength(0);
-  await expectControlsInside(row);
-  await waitFor(() => {
-    const [first, second] = stackedActions(row).map((button) => button.getBoundingClientRect());
-    // one to a line
-    expect(second.top).toBeGreaterThanOrEqual(first.bottom - 0.5);
-    // each the row's width
-    expect(Math.abs(first.width - second.width)).toBeLessThan(1);
-  });
-  // each label whole, not cut
+/** Each action's label whole, not cut. */
+const expectActionLabelsWhole = (row: HTMLElement) => {
   for (const label of Array.from(
     row.querySelectorAll<HTMLElement>('.reqore-severity-row-actions .reqore-button-text-content')
   )) {
     expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
   }
+};
+
+/** The row's actions, stacked one to a line inside the row, labels whole, each the row's width: they stack only
+ *  where the row's container is a phone's width or narrower (on a phone, or as narrow a container on any screen). */
+const expectActionsStacked = async (root: ParentNode) => {
+  const row = await narrowRow(root);
+  expect(row.getAttribute('data-actions')).toBe('stack');
+  expect(rowActionsMenuButtons(row)).toHaveLength(0);
+  expect(rowContainerIsPhoneWidth(row)).toBe(true);
+  await expectControlsInside(row);
+  await waitFor(() => {
+    const column = row.querySelector('.reqore-severity-row-actions')!.getBoundingClientRect();
+    const [first, second] = stackedActions(row).map((button) => button.getBoundingClientRect());
+    // one to a line
+    expect(second.top).toBeGreaterThanOrEqual(first.bottom - 0.5);
+    for (const button of [first, second]) {
+      // the row's width: a finger's target
+      expect(Math.abs(button.width - column.width)).toBeLessThan(1);
+    }
+  });
+  expectActionLabelsWhole(row);
+  return row;
+};
+
+/** The lines the row's actions are on, by their tops. */
+const actionLines = (row: HTMLElement) =>
+  new Set(stackedActions(row).map((button) => Math.round(button.getBoundingClientRect().top))).size;
+
+/** Narrow but wider than a phone: the row's actions side by side under the label, each as wide as its label, onto
+ *  `lines` lines - another only where they do not fit - inside the row (Foxhoundn: the law of proximity; David,
+ *  qorus#646). */
+const expectActionsSideBySide = async (root: ParentNode, lines: number) => {
+  const row = await narrowRow(root);
+  expect(row.getAttribute('data-actions')).toBe('row');
+  expect(rowActionsMenuButtons(row)).toHaveLength(0);
+  expect(rowContainerIsPhoneWidth(row)).toBe(false);
+  await expectControlsInside(row);
+  await waitFor(() => {
+    const column = requiredElement(
+      '.reqore-severity-row-actions',
+      "the row's actions",
+      row
+    ).getBoundingClientRect();
+    const buttons = stackedActions(row);
+    expect(actionLines(row)).toBe(lines);
+    // fewer lines than actions: side by side, not one to a line
+    expect(lines).toBeLessThan(buttons.length);
+    for (const button of buttons) {
+      // as wide as its label, not the row
+      expect(button.getBoundingClientRect().width).toBeLessThan(column.width - 1);
+    }
+  });
+  expectActionLabelsWhole(row);
   return row;
 };
 
@@ -908,13 +1209,49 @@ export const NarrowContainerActionsStack: Story = {
     docs: {
       description: {
         story:
-          "Renders a callout row whose two labelled actions are what it is there for, in a 320px container, as a card on a phone, with no `narrowActions` set: by default its actions stack under the label, one to a line, each the row's width with its label whole, and none reaches past the row.",
+          "Renders a callout row whose two labelled actions are what it is there for, in a 320px container on a wide screen, with no `narrowActions` set: by default its actions stack under the label, one to a line, each the row's width - a 320px container is a phone's width or narrower, where a control spans its row on any screen - and none reaches past the row.",
       },
     },
   },
   render: () => <AllowanceRow />,
   play: async ({ canvasElement }) => {
     await expectActionsStacked(canvasElement);
+  },
+};
+
+export const ActionsKeepTheirWidthJustWiderThanAPhone: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders the same callout row with its default `narrowActions` (`'stack'`) in three containers on a wide screen, each narrow for a severity row (under 640px). In the 560px one, wider than a phone, See your subscription and Try again sit side by side under the label, each as wide as its label. In the 500px one, with a third action, Ask your workspace owner for more, the three do not fit on one line, so the third goes onto the next, still as wide as its label. In the 480px one, a phone's width, they stack one to a line, each the row's width. Actions that answer one callout stay together, and stack only where the container is a phone's width or narrower (Foxhoundn: the law of proximity; David, qorus#646).",
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <StoryRowBox width={560} caption='A 560px container: side by side'>
+        <AllowanceRow width={560} className='side-by-side-box' />
+      </StoryRowBox>
+      <StoryRowBox width={500} caption='A 500px container, three actions: side by side, wrapping'>
+        <AllowanceRow width={500} className='wrapping-box' actions={ALLOWANCE_ACTIONS_AND_OWNER} />
+      </StoryRowBox>
+      <StoryRowBox width={480} caption="A 480px container, a phone's width: stacked">
+        <AllowanceRow width={480} className='stacked-box' />
+      </StoryRowBox>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectActionsSideBySide(
+      requiredElement('.side-by-side-box', 'the 560px box', canvasElement),
+      1
+    );
+    await expectActionsSideBySide(
+      requiredElement('.wrapping-box', 'the 500px box', canvasElement),
+      2
+    );
+    await expectActionsStacked(requiredElement('.stacked-box', 'the 480px box', canvasElement));
+    expectRowsFillTheirBoxes(canvasElement, '.reqore-severity-row');
   },
 };
 
@@ -926,7 +1263,7 @@ export const NarrowContainerActionsStackOnTouch: Story = {
     docs: {
       description: {
         story:
-          "The same callout on a phone with a finger (390 px): the stacked actions are a finger's height (44px) on a touch screen, and a tap on Try again runs it.",
+          "Renders the same callout on a phone with a finger (390 px): the stacked actions are each the row's width and a finger's height (44px), and a tap on Try again runs it.",
       },
     },
   },

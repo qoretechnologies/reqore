@@ -79,8 +79,13 @@ export interface IReqoreRichTextEditorProps
    * mutating it.
    */
   decorate?: EditableProps['decorate'];
+  /**
+   * The props of a tag (a chip) in the text. A `size` given here is the chip's size; without one, a chip is one
+   * size less than the editor, or `small` in an editor given no size.
+   */
   getTagProps?: (tag: CustomElement) => IReqoreTagProps;
   onTagClick?: (tag: CustomElement) => void;
+  /** Props every tag in the text gets, under what `getTagProps` gives it; a `size` here is every chip's size. */
   tagsProps?: IReqoreTagProps;
   tagsListProps?: Omit<IReqoreDropdownProps, 'items'> & EditableProps;
   panelProps?: IReqorePanelProps;
@@ -509,7 +514,10 @@ export const ReqoreRichTextEditor = forwardRef<
         const interactive = !rest.readOnly && !rest.disabled;
         const composed: IReqoreTagProps = {
           ...finalProps,
-          size: rest.size ? getOneLessSize(rest.size) : finalProps.size || 'small',
+          /* A chip is one size less than its editor, unless it says its own size: then it is that size. The
+             editor's size won over the chip's, so a chip that has to be `small` to be pressed by a finger was
+             `tiny` in a `small` editor, its label taller than its box (reqraft's reference chips, qorus#646). */
+          size: finalProps.size ?? (rest.size ? getOneLessSize(rest.size) : 'small'),
           /* Says "not choosable" to the chip itself, which withholding the
              handlers below cannot: `TemplateElement` binds a click of its own to
              place the cursor, so an uninteractive editor still hands the tag a

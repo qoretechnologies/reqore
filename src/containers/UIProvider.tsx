@@ -49,6 +49,14 @@ export interface IReqoreUIProviderProps {
     TReqoreDataAttributes;
 }
 
+/**
+ * The children of a wrapped control group (`ReqoreControlGroup` with `wrap`), which are never wider than the group:
+ * each is capped at the row, and may shrink below its content to fit it. All of it is in `:where()`, so the rule
+ * weighs nothing and a child that sets its own width limits (a button's `maxWidth`) keeps them. It is a global
+ * rule because a group's own styles are scoped to the group's class, which would weigh as much as the child's.
+ */
+export const WRAPPED_CONTROL_GROUP_CHILD_SELECTOR = ':where(.reqore-control-group-wrapped) > *';
+
 const GlobalStyle = createGlobalStyle`
   .reqore-blur-wrapper {
     position: fixed;
@@ -64,6 +72,15 @@ const GlobalStyle = createGlobalStyle`
 
   .reqore-blur-z-index {
     z-index: 8999;
+  }
+
+  /* A wrapped control group's child is never wider than the group (WRAPPED_CONTROL_GROUP_CHILD_SELECTOR). A child
+     as wide as content that does not wrap - a button saying a value and its description, or a group holding one -
+     stayed that wide, past the group and the card it was in: a data provider's path ran 487-712px wide in a 346px
+     card on a phone (qorus#646). */
+  ${WRAPPED_CONTROL_GROUP_CHILD_SELECTOR} {
+    max-width: 100%;
+    min-width: 0;
   }
 `;
 

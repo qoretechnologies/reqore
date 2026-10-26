@@ -1,11 +1,12 @@
 import { StoryObj } from '@storybook/react';
 import { useMemo, useState } from 'react';
-import { expect, fireEvent, userEvent, waitFor } from 'storybook/test';
+import { expect, fireEvent, fn, userEvent, waitFor } from 'storybook/test';
 import { IReqoreBreadcrumbItem } from '../../components/Breadcrumbs';
 import { ReqoreBreadcrumbs, ReqoreButton, ReqoreControlGroup } from '../../index';
 import breadcrumbs, { breadcrumbsTabs, specialbreadcrumbs } from '../../mock/breadcrumbs';
 import { StoryMeta } from '../utils';
 import { SizeArg } from '../utils/args';
+import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 
 const meta = {
   title: 'Navigation/Breadcrumbs',
@@ -464,6 +465,126 @@ export const RemeasuredAfterACrumbsTransition: Story = {
       },
       { timeout: 2000 }
     );
+  },
+};
+
+/** What the folded trail's crumbs do when chosen, so the story can tell a tap reached them. */
+const onBackToChats = fn();
+const onWorkspace = fn();
+
+/** A chat's trail in a phone's header: the chats list (an icon, "Back to chats" in a menu), then the chat. */
+const chatTrail = (current: string): IReqoreBreadcrumbItem[] => [
+  { icon: 'Home4Fill', menuLabel: 'Workspace', minimal: true, flat: true, onClick: onWorkspace },
+  {
+    icon: 'ArrowLeftLine',
+    menuLabel: 'Back to chats',
+    minimal: true,
+    flat: true,
+    onClick: onBackToChats,
+  },
+  { label: current, icon: 'ChatSmile2Line', active: true, minimal: false, flat: false },
+];
+
+/** The rows of the open menu, by their words. */
+const openMenuRows = () =>
+  Array.from(document.querySelectorAll<HTMLElement>('.reqore-popover-content .reqore-menu-item'));
+
+export const FoldedTrailOpensAtATap: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders two chat trails in a phone\'s header (390 px). In the first the 150px header is so narrow that the whole trail folds into one dropdown labelled with the current chat, its name cut; in the second the chat fits and its ancestors fold into the "…" menu. Both are menu buttons that say whether they are open. A finger taps each: the folded current crumb opens its menu, which names the chat in full and offers "Back to chats", which a tap then reaches, and the "…" menu opens and its "Back to chats" is reached by a tap too. It ends with the folded current crumb\'s menu open again: Workspace, "Back to chats" and the chat named in full.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical>
+      <div className='folded-whole' style={{ width: 150 }}>
+        <ReqoreBreadcrumbs
+          flat
+          padded={false}
+          items={chatTrail('Invoice sync for the northern region')}
+          rightElement={<ReqoreButton icon='MoreLine' minimal flat aria-label='Chat actions' />}
+        />
+      </div>
+      <div className='folded-ancestors' style={{ width: 330 }}>
+        <ReqoreBreadcrumbs
+          flat
+          padded={false}
+          items={chatTrail('Invoice sync')}
+          rightElement={<ReqoreButton icon='MoreLine' minimal flat aria-label='Chat actions' />}
+        />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    onBackToChats.mockClear();
+    onWorkspace.mockClear();
+    const current = await waitFor(() => {
+      const button = canvasElement.querySelector<HTMLElement>(
+        '.folded-whole .reqore-breadcrumbs-overflow-current'
+      );
+      expect(button).toBeTruthy();
+      return button!;
+    });
+    const more = await waitFor(() => {
+      const button = canvasElement.querySelector<HTMLElement>(
+        '.folded-ancestors .reqore-breadcrumbs-overflow-menu'
+      );
+      expect(button).toBeTruthy();
+      return button!;
+    });
+    // a menu button, closed
+    await expect(current).toHaveAttribute('aria-haspopup', 'menu');
+    await expect(current).toHaveAttribute('aria-expanded', 'false');
+    await expect(more).toHaveAttribute('aria-haspopup', 'menu');
+    await expect(more).toHaveAttribute('aria-expanded', 'false');
+
+    await withTouchScreen(async (touch) => {
+      // the folded current crumb: its menu names the chat in full, and "Back to chats" is a tap away
+      await touch.tap(current);
+      await waitFor(() =>
+        expect(openMenuRows().map((row) => row.textContent)).toEqual(
+          expect.arrayContaining([
+            expect.stringContaining('Back to chats'),
+            expect.stringContaining('Invoice sync for the northern region'),
+          ])
+        )
+      );
+      await expect(current).toHaveAttribute('aria-expanded', 'true');
+      await touch.tap(openMenuRows().find((row) => row.textContent?.includes('Back to chats'))!);
+      await waitFor(() => expect(onBackToChats).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(openMenuRows()).toHaveLength(0));
+      await expect(current).toHaveAttribute('aria-expanded', 'false');
+
+      // the "…" of folded ancestors: it opens at a tap, and "Back to chats" in it is reached too
+      await touch.tap(more);
+      await waitFor(() =>
+        expect(openMenuRows().some((row) => row.textContent?.includes('Back to chats'))).toBe(true)
+      );
+      await expect(more).toHaveAttribute('aria-expanded', 'true');
+      await touch.tap(openMenuRows().find((row) => row.textContent?.includes('Back to chats'))!);
+      await waitFor(() => expect(onBackToChats).toHaveBeenCalledTimes(2));
+      await waitFor(() => expect(more).toHaveAttribute('aria-expanded', 'false'));
+      // only "Back to chats" was chosen
+      await expect(onWorkspace).not.toHaveBeenCalled();
+
+      // the frame: the folded current crumb's menu open again, with "Back to chats" and the chat named in full
+      await touch.tap(current);
+      await waitFor(() =>
+        expect(openMenuRows().map((row) => row.textContent)).toEqual(
+          expect.arrayContaining([
+            expect.stringContaining('Back to chats'),
+            expect.stringContaining('Invoice sync for the northern region'),
+          ])
+        )
+      );
+      await expect(current).toHaveAttribute('aria-expanded', 'true');
+    });
   },
 };
 

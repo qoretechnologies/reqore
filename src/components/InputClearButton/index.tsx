@@ -11,6 +11,8 @@ export interface IReqoreInputClearButtonProps extends IReqoreButtonProps {
   hasRightIcon?: boolean;
   /** Extra room (px) taken at the field's right edge by something else, e.g. a password toggle. */
   rightOffset?: number;
+  /** What it is called, for a screen reader and a test: `Clear` unless given. */
+  label?: string;
 }
 
 export const StyledInputClearButton = styled(ReqoreIcon).withConfig({
@@ -34,6 +36,7 @@ const ReqoreInputClearButton = ({
   show,
   enabled,
   size = 'normal',
+  label = 'Clear',
   ...rest
 }: IReqoreInputClearButtonProps) => {
   const transitions = useTransition(show && enabled, {
@@ -48,6 +51,9 @@ const ReqoreInputClearButton = ({
       <StyledInputClearButton
         {...rest}
         className='reqore-clear-input-button'
+        // a control, named: an icon with a click on it was nothing a screen reader or a test could find
+        role='button'
+        aria-label={label}
         icon='CloseLine'
         wrapperElement={animated.span}
         size={size}

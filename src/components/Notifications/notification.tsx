@@ -51,7 +51,8 @@ import { IReqoreNotificationType, typeToIcon } from './styles';
  * timer line and the action buttons: a pill answers to a click on itself and
  * to its close, nothing more. Something with a next step is the long form.
  *
- * Every surface floats on a drop shadow. By default it is `flat` (no border)
+ * Every surface floats on a drop shadow — unless `lift={false}`, for a
+ * notification that sits in the page rather than over it. By default it is `flat` (no border)
  * and `raised` (an inset highlight along the top edge). `flat={false}` adds a
  * hairline border and a faint intent ring; `minimal` removes the surface
  * altogether; `opaque` makes it solid.
@@ -108,6 +109,15 @@ export interface IReqoreNotificationProps
   flat?: boolean;
   /** An inset highlight along the top edge. Default `true`; only on a `flat` surface. */
   raised?: boolean;
+  /**
+   * Whether the surface floats: the contact and ambient drop shadows, and the
+   * light an intent casts. Default `true` — a toast hovers over the page.
+   * `false` for a notification that sits IN the page (a card in a thread, a
+   * banner in a panel): it keeps the glass, the icon tile, the ring and the
+   * raised edge, and throws no shadow, so a stack of them does not pile up
+   * six glows on one another.
+   */
+  lift?: boolean;
   size?: TSizes;
   /** Backdrop blur radius in px. Default `18`; `0` turns the frost off. */
   blur?: number;
@@ -162,6 +172,7 @@ export interface IReqoreNotificationDefaults
       | 'size'
       | 'flat'
       | 'raised'
+      | 'lift'
       | 'minimal'
       | 'opaque'
       | 'blur'
@@ -191,6 +202,7 @@ interface IStyledNotificationProps {
   $fluid?: boolean;
   $flat: boolean;
   $raised: boolean;
+  $lift: boolean;
   $minimal?: boolean;
   $opaque?: boolean;
   $blur: number;
@@ -262,7 +274,7 @@ export const StyledNotification = styled(StyledEffect)<IStyledNotificationProps>
   }}
 
   /* ---- surface ---- */
-  ${({ $minimal, $opaque, $blur, $flat, $raised, $surface, $accent, $hasIntent }) => {
+  ${({ $minimal, $opaque, $blur, $flat, $raised, $lift, $surface, $accent, $hasIntent }) => {
     if ($minimal) {
       return css`
         background: transparent;
@@ -286,17 +298,21 @@ export const StyledNotification = styled(StyledEffect)<IStyledNotificationProps>
     // first attempt at the intent layer (`-20px` on a 34px blur) put nothing
     // there at all. Verified by capture, not by arithmetic — on the dark
     // canvas these sit on, the earlier values were invisible.
-    const shadows: string[] = [
-      `0 2px 6px -1px ${rgba(DARK, 0.5)}`,
-      `0 18px 36px -12px ${rgba(DARK, 0.6)}`,
-    ];
+    //
+    // A notification that sits in the page (`lift={false}`) throws none of
+    // this: the shadows and the cast light are what says "hovering", and a card
+    // between two chat bubbles is not hovering. The ring and the raised edge
+    // below are chrome, not height, so they stay.
+    const shadows: string[] = $lift
+      ? [`0 2px 6px -1px ${rgba(DARK, 0.5)}`, `0 18px 36px -12px ${rgba(DARK, 0.6)}`]
+      : [];
 
     // …and a toast that already has something to say says it in the light it
     // casts. Kept low-alpha and wide: at this strength it reads as a tint on
     // the lift rather than as a glow, so a row of stacked toasts does not turn
     // into a row of neon boxes. Independent of `flat`, unlike the ring below —
     // the ring is chrome, this is the shadow the card throws.
-    if ($hasIntent) {
+    if ($lift && $hasIntent) {
       shadows.push(`0 12px 30px -10px ${rgba($accent, 0.5)}`);
     }
 
@@ -317,7 +333,7 @@ export const StyledNotification = styled(StyledEffect)<IStyledNotificationProps>
         -webkit-backdrop-filter: blur(${$blur}px) saturate(1.5);
       `}
       border: ${$flat ? 0 : `1px solid ${rgba(LIGHT, 0.12)}`};
-      box-shadow: ${shadows.join(', ')};
+      box-shadow: ${shadows.length ? shadows.join(', ') : 'none'};
     `;
   }}
 
@@ -481,6 +497,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       onFinish,
       flat = true,
       raised = true,
+      lift = true,
       minimal,
       opaque = false,
       blur = 18,
@@ -766,6 +783,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             $fluid={fluid}
             $flat={flat}
             $raised={raised}
+            $lift={lift}
             $minimal={minimal}
             $opaque={opaque}
             $blur={blur}

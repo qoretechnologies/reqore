@@ -13,6 +13,7 @@ import {
 } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { alignToFlexAlign } from '../../helpers/utils';
+import { TABLE_CELL_HORIZONTAL_PADDING_PX } from './helpers';
 import { IWithReqoreTooltip } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { TABLE_PIN_ATTRIBUTE, pinnedEdgeShadowSelector } from './helpers';
@@ -156,7 +157,11 @@ export const StyledTableCell = styled.div.withConfig({
          \`padding: 10px\`, so a \`padded: 'horizontal'\` cell got 10px top and bottom too and
          clipped its text once the line was taller than the 12px left between them. */
       padding: ${!padded || padded === 'both' || padded === 'vertical' ? (wrap ? '6px' : '0') : '0'}
-        ${!padded || padded === 'both' || padded === 'horizontal' ? '10px' : '0'};
+        ${
+          !padded || padded === 'both' || padded === 'horizontal'
+            ? `${TABLE_CELL_HORIZONTAL_PADDING_PX}px`
+            : '0'
+        };
       font-size: ${getTextSize(theme, size)}px;
       background: ${pinnedBackground ??
       (backgroundColor === 'transparent' ? 'transparent' : displayedBackgroundColor)};

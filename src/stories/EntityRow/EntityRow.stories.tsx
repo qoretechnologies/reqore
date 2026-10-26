@@ -13,7 +13,14 @@ import {
   openRowActionsMenuItems,
   rowActionsMenuButtons,
 } from '../utils/rowActionsMenu';
-import { expectEqualBoxesEqualRows, expectRowsFillTheirBoxes, StoryRowBox } from '../utils/rowBoxes';
+import {
+  expectEqualBoxesEqualRows,
+  expectLoneActionSpansTheRow,
+  expectRowsFillTheirBoxes,
+  rowContainerIsPhoneWidth,
+  StoryRowBox,
+} from '../utils/rowBoxes';
+import { buttonSays } from '../utils/buttonSays';
 import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import { withViewport } from '../utils/viewport';
 
@@ -288,7 +295,7 @@ export const NoWrap: Story = {
     docs: {
       description: {
         story:
-          'The same long content in the same 360px column, with `wrap` off and on, because the truncation only makes sense next to the thing it is opting out of. `wrap` defaults to **true**: description and metadata flow onto as many lines as they need, which is what the second row shows. Passing `wrap={false}` trades that for a fixed row height and an ellipsis — right for a dense list where every row must be the same height, wrong when the text is the point. Nothing else has to change to get the wrapped version; it is the default.',
+          'The same long content in the same 360px column, with `wrap` off and on, because the truncation only makes sense next to the thing it is opting out of. `wrap` defaults to **true**: description and metadata flow onto as many lines as they need, which is what the second row shows. Passing `wrap={false}` trades that for a fixed row height and an ellipsis — right for a dense list where every row must be the same height, wrong when the text is the point. Nothing else has to change to get the wrapped version; it is the default. Each row\'s one action, Run, is under the label and the row\'s width: a 360px column is a phone\'s width or narrower.',
       },
     },
   },
@@ -516,9 +523,10 @@ export const WithOverflowMenu: Story = {
 
 /* A narrow row's actions (qorus#646), as ReqoreSeverityRow's and a narrow table's. The row measures its
    OWN container - not the viewport, because the case this exists for is a narrow drawer / sidebar / split
-   panel on a wide screen - and below 480px of it, two or more actions are one menu button at the end of
-   the label's line: the label keeps the row's width, and a list of rows does not grow by a line per
-   action. An action that is itself a menu becomes a submenu there. */
+   panel on a wide screen - and below 480px of it its actions move under the label, as a row of buttons.
+   A row can opt into `narrowActions='menu'` instead: two or more actions are then one menu button at the
+   end of the label's line, so the label keeps the row's width and a list of rows does not grow by a line
+   per action; an action that is itself a menu becomes a submenu there. */
 
 const onRun = fn();
 const onShowInChat = fn();
@@ -547,6 +555,7 @@ const OrderRow = ({ clickable }: { clickable?: boolean }) => (
     metadata='workflow'
     icon='GitBranchLine'
     fluid
+    narrowActions='menu'
     onClick={clickable ? onEntityRowClick : undefined}
     actions={ORDER_ACTIONS}
   />
@@ -580,7 +589,7 @@ export const NarrowContainerActionsMenu: Story = {
     docs: {
       description: {
         story:
-          "Renders the same row in two framed containers of different widths, each named above it: in the 720px one Run and the More actions menu sit side by side as always; in the 400px one they are one menu button at the end of the label's line. Each row fills its frame exactly. Clicked, the menu names Run and More actions with their icons, More actions holding Show in chat and Copy name; Escape puts it away with the focus on the button, and Run chosen runs and closes it without opening the row.",
+          "Renders the same row (`narrowActions='menu'`) in two framed containers of different widths, each named above it: in the 720px one Run and the More actions menu sit side by side as always; in the 400px one they are one menu button at the end of the label's line, named for its row (\"Actions: Process Incoming Order · order-intake-workflow\"). Each row fills its frame exactly. Clicked, the menu names Run and More actions with their icons, More actions holding Show in chat and Copy name; Escape puts it away with the focus on the button, and Run chosen runs and closes it without opening the row.",
       },
     },
   },
@@ -621,7 +630,11 @@ export const NarrowContainerActionsMenu: Story = {
 
     await expectEntityActionsFolded(narrow);
     const [button] = rowActionsMenuButtons(narrow);
-    expect(button).toHaveAttribute('aria-label', 'Actions');
+    // named for its row, so a list of rows is not a list of buttons all called "Actions"
+    expect(button).toHaveAttribute(
+      'aria-label',
+      'Actions: Process Incoming Order · order-intake-workflow'
+    );
 
     // the keyboard: Enter opens it, Escape puts it away, the focus stays on the button
     button.focus();
@@ -712,7 +725,7 @@ export const ActionDoesNotFireTheRow: Story = {
 
 /* A connection row in a card on a phone: three actions, the last an icon whose tooltip is its name. By
    default they are one menu button; a row whose actions are what it is there for keeps them in sight with
-   `narrowActions='stack'` - under the label, one to a line, each the row's width with its label whole
+   `narrowActions='stack'` - under the label, one to a line (each the row's width on a phone), its label whole
    (kept on one line that does not wrap, they reached past the row). */
 
 const onTestConnection = fn();
@@ -721,7 +734,14 @@ const onRemove = fn();
 
 // One array for every render: the row is memoized.
 const NARROW_CONNECTION_ACTIONS: IReqoreEntityRowProps['actions'] = [
-  { label: 'Test the connection', intent: 'info', icon: 'PulseLine', onClick: onTestConnection },
+  // what it says at the end of a narrow row's label line, where its label takes the line's room
+  {
+    label: 'Test the connection',
+    shortLabel: 'Test',
+    intent: 'info',
+    icon: 'PulseLine',
+    onClick: onTestConnection,
+  },
   { label: 'Open its settings', icon: 'Settings3Line', onClick: onOpenSettings },
   {
     icon: 'DeleteBinLine',
@@ -750,11 +770,15 @@ const clearConnectionSpies = () =>
 
 /** The rows of a narrow list, each different: as many actions as a menu takes, one action, stacked, none, a long name. */
 const EQUAL_BOX_ENTITY_ROWS: Array<Pick<IReqoreEntityRowProps, 'label' | 'actions' | 'narrowActions'>> = [
-  { label: 'Process Incoming Order · order-intake-workflow', actions: ORDER_ACTIONS },
+  { label: 'Process Incoming Order · order-intake-workflow', actions: ORDER_ACTIONS, narrowActions: 'menu' },
   { label: 'Sync Inventory', actions: ORDER_ACTIONS.slice(0, 1) },
   { label: 'Export Ledger', actions: ORDER_ACTIONS, narrowActions: 'stack' },
   { label: 'Nightly Cleanup' },
-  { label: 'process-incoming-order-order-intake-workflow-production-eu-west-1', actions: ORDER_ACTIONS },
+  {
+    label: 'process-incoming-order-order-intake-workflow-production-eu-west-1',
+    actions: ORDER_ACTIONS,
+    narrowActions: 'menu',
+  },
 ];
 
 const EqualBoxEntityRows = () => (
@@ -777,7 +801,7 @@ export const NarrowRowsInEqualContainersAreEqual: Story = {
     docs: {
       description: {
         story:
-          'Renders five narrow rows, each in its own framed 400px container: two actions (one menu), one action, actions stacked, no actions, and a long unbroken name. Each row fills its frame, so all five are the same width; at a phone\'s width (390px) the frames narrow together and the rows stay equal.',
+          'Renders five narrow rows, each in its own framed 400px container: two actions (one menu), one action, actions stacked, no actions, and a long unbroken name. Each row fills its frame, so all five are the same width; a lone or stacked action is the row\'s width, as a 400px container is a phone\'s width or narrower. At a phone\'s width (390px) the frames narrow together and the rows stay equal.',
       },
     },
   },
@@ -801,6 +825,275 @@ export const NarrowRowsInEqualContainersAreEqual: Story = {
   },
 };
 
+/** The row's one action, at the end of the label's line, inside the row: where a menu of two or more would be. */
+const LONE_ACTION: IReqoreEntityRowProps['actions'] = ORDER_ACTIONS.slice(0, 1);
+
+export const NarrowContainerLoneActionInMenuMode: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a row with one action, Run, that folds two or more into a menu (`narrowActions='menu'`), in a 400px container. A 400px container is a phone's width or narrower, so Run is not kept at the end of the label's line: it goes under the label, on a line of its own the row's width, the easiest target there is - on a desktop as on a phone.",
+      },
+    },
+  },
+  render: () => (
+    <StoryRowBox className='narrow-row-box' width={400} caption='A 400px container: one action'>
+      <ReqoreEntityRow
+        label='Sync Inventory · inventory-sync-workflow'
+        description='Last run 9m ago · 312 executions today'
+        icon='GitBranchLine'
+        fluid
+        narrowActions='menu'
+        actions={LONE_ACTION}
+      />
+    </StoryRowBox>
+  ),
+  play: async ({ canvasElement }) => {
+    const row = await narrowEntityRow(canvasElement.querySelector('.narrow-row-box')!);
+    expect(row.getAttribute('data-actions')).not.toBe('end');
+    await expectLoneActionSpansTheRow(row, 'entity');
+    await expectControlsInside(row);
+  },
+};
+
+export const NarrowContainerLoneActionInMenuModeOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders a connection row with one action, Test the connection, that folds two or more into a menu (`narrowActions='menu'`), in a 320px card on a phone (390 px). On a phone the action goes under the label, on a line of its own the row's width, and says its label, “Test the connection”: the easiest target for a finger. It is a finger's height (44px), and a tap on it runs it without opening the row.",
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 320, maxWidth: '100%' }}>
+      <ReqoreEntityRow
+        label='orders-db · PostgreSQL'
+        description='Last checked 2 minutes ago · 14 ms'
+        fluid
+        narrowActions='menu'
+        onClick={onEntityRowClick}
+        actions={NARROW_CONNECTION_ACTIONS.slice(0, 1)}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    clearConnectionSpies();
+    await withTouchScreen(async (touch) => {
+      const row = await narrowEntityRow(canvasElement);
+      expect(row.getAttribute('data-actions')).not.toBe('end');
+      await expectLoneActionSpansTheRow(row, 'entity');
+      const button = row.querySelector<HTMLElement>('.reqore-entity-row-actions .reqore-button')!;
+      // on a line of its own, it says its label
+      expect(buttonSays(button)).toBe('Test the connection');
+      expect(button).toHaveAccessibleName('Test the connection');
+      if (touch.real) {
+        await waitFor(() => {
+          const box = button.getBoundingClientRect();
+          expect(box.width).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+          expect(box.height).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+        });
+      }
+      await touch.tap(button);
+      await waitFor(() => expect(onTestConnection).toHaveBeenCalledTimes(1));
+      expect(onEntityRowClick).not.toHaveBeenCalled();
+    });
+  },
+};
+
+export const LoneActionKeepsItsWidthJustWiderThanAPhone: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a row with one action, Run, in a 500px container on a wide screen, just wider than a phone: the row is not narrow, and Run stays at the end of the row, as wide as its label. A lone action spans its row only where its container is a phone's width or narrower.",
+      },
+    },
+  },
+  render: () => (
+    <StoryRowBox
+      className='just-wider-box'
+      width={500}
+      caption='A 500px container, just wider than a phone: one action'
+    >
+      <ReqoreEntityRow
+        label='Sync Inventory · inventory-sync-workflow'
+        description='Last run 9m ago · 312 executions today'
+        icon='GitBranchLine'
+        fluid
+        actions={LONE_ACTION}
+      />
+    </StoryRowBox>
+  ),
+  play: async ({ canvasElement }) => {
+    const row = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>('.just-wider-box .reqore-entity-row');
+      expect(found).toBeTruthy();
+      return found!;
+    });
+    await waitFor(() => {
+      expect(rowContainerIsPhoneWidth(row)).toBe(false);
+      expect(row.getAttribute('data-narrow')).toBeNull();
+      const label = (row.querySelector('.reqore-entity-row-label') as HTMLElement).getBoundingClientRect();
+      const run = (
+        row.querySelector('.reqore-entity-row-actions .reqore-button') as HTMLElement
+      ).getBoundingClientRect();
+      // at the end of the row, beside the label, as wide as its label
+      expect(run.left).toBeGreaterThanOrEqual(label.right - 0.5);
+      expect(run.width).toBeLessThan(row.getBoundingClientRect().width / 3);
+    });
+    await expectControlsInside(row);
+  },
+};
+
+export const LoneActionSpansTheRowOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders a connection row with one action, Test the connection, in a 320px card on a phone (390 px), with no `narrowActions` set. The action goes under the label, on a line of its own the row's width, the easiest target for a finger, and says its label. A tap on it runs it without opening the row.",
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 320, maxWidth: '100%' }}>
+      <ReqoreEntityRow
+        label='orders-db · PostgreSQL'
+        description='Last checked 2 minutes ago · 14 ms'
+        fluid
+        onClick={onEntityRowClick}
+        actions={NARROW_CONNECTION_ACTIONS.slice(0, 1)}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    clearConnectionSpies();
+    await withTouchScreen(async (touch) => {
+      const row = await narrowEntityRow(canvasElement);
+      expect(row.getAttribute('data-actions')).toBe('row');
+      await expectLoneActionSpansTheRow(row, 'entity');
+      const button = row.querySelector<HTMLElement>('.reqore-entity-row-actions .reqore-button')!;
+      expect(buttonSays(button)).toBe('Test the connection');
+      if (touch.real) {
+        await waitFor(() =>
+          expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(TOUCH_TARGET_PX)
+        );
+      }
+      await touch.tap(button);
+      await waitFor(() => expect(onTestConnection).toHaveBeenCalledTimes(1));
+      expect(onEntityRowClick).not.toHaveBeenCalled();
+    });
+  },
+};
+
+/* Rows of one action each: with a short label, with an icon and a tooltip but no short label, and with neither.
+   An entity row is narrow only where its container is a phone's width or narrower, where its one action is a line
+   of its own under the label, the row's width, saying its full label: it draws a short label nowhere (qorus#646). */
+const ONE_ACTION_ROWS: Array<Pick<IReqoreEntityRowProps, 'label' | 'actions'>> = [
+  {
+    label: 'orders-db · PostgreSQL',
+    actions: NARROW_CONNECTION_ACTIONS.slice(0, 1),
+  },
+  {
+    label: 'billing-db · PostgreSQL',
+    actions: [
+      {
+        label: 'Open its settings',
+        icon: 'Settings3Line',
+        tooltip: 'Settings',
+        onClick: onOpenSettings,
+      },
+    ],
+  },
+  {
+    label: 'Sync Inventory · inventory-sync-workflow',
+    actions: ORDER_ACTIONS.slice(0, 1),
+  },
+];
+
+const OneActionRows = () => (
+  <ReqoreControlGroup vertical gapSize='big'>
+    {[720, 400].map((width) => (
+      <StoryRowBox
+        key={width}
+        className={width > 480 ? 'wide-row-box' : 'narrow-row-box'}
+        width={width}
+        caption={`A ${width}px container: one action each`}
+      >
+        <ReqoreControlGroup vertical fluid>
+          {ONE_ACTION_ROWS.map(({ label, actions }, index) => (
+            <ReqoreEntityRow
+              key={index}
+              label={label}
+              description='Last checked 2 minutes ago · 14 ms'
+              fluid
+              narrowActions='menu'
+              actions={actions}
+            />
+          ))}
+        </ReqoreControlGroup>
+      </StoryRowBox>
+    ))}
+  </ReqoreControlGroup>
+);
+
+export const NarrowContainerLoneActionSpansTheRowWithItsFullLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders three rows (`narrowActions='menu'`), each with one action - Test the connection, which has a short label (Test); Open its settings, which has an icon and a tooltip; and Run, which has neither - in a 720px container and a 400px one. In the 720px container each action is at the end of the row, beside the label, as wide as its label. In the 400px container, a phone's width or narrower, each goes under the label, on a line of its own the row's width, and says its full label: not its short label, not its icon alone. An entity row is narrow only at a phone's width, so it draws its actions' short labels nowhere (a severity row draws them in a container between 480 and 640px).",
+      },
+    },
+  },
+  render: () => <OneActionRows />,
+  play: async ({ canvasElement }) => {
+    const rowsIn = (box: string) =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>(`.${box} .reqore-entity-row`));
+    await waitFor(() => {
+      expect(
+        rowsIn('narrow-row-box').every((row) => row.getAttribute('data-narrow') === 'true')
+      ).toBe(true);
+      expect(rowsIn('narrow-row-box')).toHaveLength(ONE_ACTION_ROWS.length);
+    });
+    // the first row's action has a short label it could say: the story shows it is not said
+    expect(ONE_ACTION_ROWS[0].actions![0].shortLabel).toBe('Test');
+
+    const wide = rowsIn('wide-row-box');
+    const narrow = rowsIn('narrow-row-box');
+    for (const [index, { actions }] of ONE_ACTION_ROWS.entries()) {
+      const wideButton = wide[index].querySelector<HTMLElement>(
+        '.reqore-entity-row-actions .reqore-button'
+      )!;
+      const narrowButton = narrow[index].querySelector<HTMLElement>(
+        '.reqore-entity-row-actions .reqore-button'
+      )!;
+      expect(wide[index].getAttribute('data-narrow')).toBeNull();
+      expect(rowContainerIsPhoneWidth(wide[index])).toBe(false);
+      // wide: at the end of the row, beside the label, as wide as its label
+      const wideLabel = (
+        wide[index].querySelector('.reqore-entity-row-label') as HTMLElement
+      ).getBoundingClientRect();
+      const wideBox = wideButton.getBoundingClientRect();
+      expect(wideBox.left).toBeGreaterThanOrEqual(wideLabel.right - 0.5);
+      expect(wideBox.width).toBeLessThan(wide[index].getBoundingClientRect().width / 3);
+      expect(buttonSays(wideButton)).toBe(actions![0].label);
+      // narrow: under the label, the row's width, its full label
+      await expectLoneActionSpansTheRow(narrow[index], 'entity');
+      expect(buttonSays(narrowButton)).toBe(actions![0].label);
+      expect(narrowButton).toHaveAccessibleName(actions![0].label as string);
+    }
+    expectRowsFillTheirBoxes(canvasElement, '.reqore-entity-row');
+  },
+};
+
 export const NarrowContainerActionsMenuOnATouchScreen: Story = {
   tags: ['touch'],
   globals: PHONE_STORY.globals,
@@ -809,11 +1102,11 @@ export const NarrowContainerActionsMenuOnATouchScreen: Story = {
     docs: {
       description: {
         story:
-          "Renders a connection row with three actions in a 320px card on a phone (390 px): they are one menu button at the end of the label's line. On a touch screen the button is a finger's size (44px each way); a tap opens the menu - Test the connection, Open its settings and Remove (the icon's tooltip), each with its icon and a finger's height - and a tap on Remove runs it and closes the menu without opening the row.",
+          "Renders a connection row with three actions (`narrowActions='menu'`) in a 320px card on a phone (390 px): they are one menu button at the end of the label's line. On a touch screen the button is a finger's size (44px each way); a tap opens the menu - Test the connection, Open its settings and Remove (the icon's tooltip), each with its icon and a finger's height - and a tap on Remove runs it and closes the menu without opening the row.",
       },
     },
   },
-  render: () => <NarrowConnectionRow />,
+  render: () => <NarrowConnectionRow narrowActions='menu' />,
   play: async ({ canvasElement }) => {
     clearConnectionSpies();
     await withTouchScreen(async (touch) => {
@@ -858,21 +1151,69 @@ const stackedEntityActions = (row: HTMLElement) =>
 
 const expectEntityActionsStacked = async (canvasElement: HTMLElement) => {
   const row = await narrowEntityRow(canvasElement);
-  expect(row.getAttribute('data-actions')).toBeNull();
+  expect(row.getAttribute('data-actions')).toBe('stack');
   expect(rowActionsMenuButtons(row)).toHaveLength(0);
   await expectControlsInside(row);
+  // the row's container a phone's width or narrower: on a phone, or as narrow a container on any screen
+  const atPhoneWidth = rowContainerIsPhoneWidth(row);
   await waitFor(() => {
+    const column = row.querySelector('.reqore-entity-row-actions')!.getBoundingClientRect();
     const boxes = stackedEntityActions(row).map((button) => button.getBoundingClientRect());
     expect(boxes).toHaveLength(3);
-    // one to a line, each the row's width
+    // one to a line
     boxes.slice(1).forEach((box, index) => {
       expect(box.top).toBeGreaterThanOrEqual(boxes[index].bottom - 0.5);
-      expect(Math.abs(box.width - boxes[0].width)).toBeLessThan(1);
     });
+    // each the row's width at a phone's width, a finger's target; as wide as its label in a wider container
+    for (const box of boxes) {
+      if (atPhoneWidth) {
+        expect(Math.abs(box.width - column.width)).toBeLessThan(1);
+      } else {
+        expect(box.width).toBeLessThan(column.width - 1);
+      }
+    }
   });
   // the icon-only Remove reads its tooltip as its label
   expect(row.querySelector('.reqore-entity-row-actions')?.textContent).toContain('Remove');
   return row;
+};
+
+/** The row's actions as a row of buttons under the label: none folded, none stretched, all inside the row. */
+const expectEntityActionsInARow = async (canvasElement: HTMLElement) => {
+  const row = await narrowEntityRow(canvasElement);
+  expect(row.getAttribute('data-actions')).toBe('row');
+  expect(rowActionsMenuButtons(row)).toHaveLength(0);
+  await expectControlsInside(row);
+  await waitFor(() => {
+    const label = (row.querySelector('.reqore-entity-row-label') as HTMLElement).getBoundingClientRect();
+    const column = row.querySelector('.reqore-entity-row-actions')!.getBoundingClientRect();
+    const buttons = Array.from(row.querySelectorAll<HTMLElement>('.reqore-entity-row-actions > .reqore-button'));
+    expect(buttons).toHaveLength(3);
+    for (const button of buttons) {
+      const box = button.getBoundingClientRect();
+      // under the label, each as wide as what it says
+      expect(box.top).toBeGreaterThanOrEqual(label.bottom - 0.5);
+      expect(box.width).toBeLessThan(column.width - 1);
+    }
+  });
+  // the icon-only Remove is an icon, as at full width
+  expect(row.querySelector('.reqore-entity-row-actions')?.textContent).not.toContain('Remove');
+  return row;
+};
+
+export const NarrowContainerActionsRow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a connection row with three actions in a 320px container, with no `narrowActions` set: by default its actions move under the label as a row of buttons, each as wide as what it says (the Remove icon an icon), onto another line where they do not fit. None is folded into a menu, and none reaches past the row.",
+      },
+    },
+  },
+  render: () => <NarrowConnectionRow />,
+  play: async ({ canvasElement }) => {
+    await expectEntityActionsInARow(canvasElement);
+  },
 };
 
 export const NarrowContainerActionsStack: Story = {
@@ -880,7 +1221,7 @@ export const NarrowContainerActionsStack: Story = {
     docs: {
       description: {
         story:
-          "Renders a row with three actions kept in sight (`narrowActions='stack'`) in a 320px container, as a card on a phone: they stack under the label, one to a line, each the row's width, the labels whole and the Remove icon labelled with its tooltip; none reaches past the row.",
+          "Renders a row with three actions kept in sight (`narrowActions='stack'`) in a 320px container on a wide screen: they stack under the label, one to a line, each the row's width - a 320px container is a phone's width or narrower, where a control spans its row on any screen - the labels whole and the Remove icon labelled with its tooltip; none reaches past the row.",
       },
     },
   },
@@ -903,7 +1244,7 @@ const StackedOrderRow = () => (
   </StoryRowBox>
 );
 
-/** Run and the More actions menu, stacked: each says what it is and is as wide as the other. */
+/** Run and the More actions menu, stacked: each says what it is; at a phone's width each is the row's width. */
 const expectStackedMenuLabelled = async (canvasElement: HTMLElement) => {
   await waitFor(() => {
     const actions = canvasElement.querySelector('.reqore-entity-row-actions') as HTMLElement;
@@ -911,9 +1252,17 @@ const expectStackedMenuLabelled = async (canvasElement: HTMLElement) => {
     expect(run.textContent).toContain('Run');
     // the icon-only menu reads its tooltip as its label
     expect(more.textContent).toContain('More actions');
-    // one to a line, each the row's width
+    // one to a line; each the row's width at a phone's width, as wide as its label in a wider container
     expect(more.getBoundingClientRect().top).toBeGreaterThanOrEqual(run.getBoundingClientRect().bottom - 0.5);
-    expect(Math.abs(more.getBoundingClientRect().width - run.getBoundingClientRect().width)).toBeLessThan(1);
+    const column = actions.getBoundingClientRect().width;
+    const row = actions.closest('.reqore-entity-row') as HTMLElement;
+    for (const action of [run, more]) {
+      if (rowContainerIsPhoneWidth(row)) {
+        expect(Math.abs(action.getBoundingClientRect().width - column)).toBeLessThan(1);
+      } else {
+        expect(action.getBoundingClientRect().width).toBeLessThan(column - 1);
+      }
+    }
   });
 };
 
@@ -922,7 +1271,7 @@ export const NarrowStackedMenuActionIsLabelled: Story = {
     docs: {
       description: {
         story:
-          "Renders an Export Ledger row whose actions stay in sight (`narrowActions='stack'`) in a 320px container: Run, and More actions, an icon-only action that opens a menu. Stacked, More actions is labelled with its tooltip and is as wide as Run, one to a line; clicked, it opens Show in chat and Copy name. The same holds at a phone's width.",
+          "Renders an Export Ledger row whose actions stay in sight (`narrowActions='stack'`) in a 320px container: Run, and More actions, an icon-only action that opens a menu. Stacked, More actions is labelled with its tooltip, under Run, both the row's width - a 320px container is a phone's width or narrower; clicked, it opens Show in chat and Copy name. The same holds at a phone's width.",
       },
     },
   },

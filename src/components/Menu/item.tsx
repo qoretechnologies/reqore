@@ -113,8 +113,16 @@ const ReqoreMenuItem = memo(
       }: IReqoreMenuItemProps,
       ref
     ) => {
-      const { targetRef } = useCombinedRefs<HTMLButtonElement>(ref);
+      const { setRef } = useCombinedRefs<HTMLButtonElement>(ref);
       const [itemRef, setItemRef] = useState<HTMLButtonElement | null>(null);
+      // one callback for the item's life: a new one each render detached and attached the element each time
+      const handleItemRef = useCallback(
+        (element: HTMLButtonElement | null) => {
+          setRef(element);
+          setItemRef(element);
+        },
+        [setRef]
+      );
 
       // Respect the global animations toggle from `ReqoreUIProvider` (popovers — menus are
       // rendered inside them) and the OS reduced-motion preference.
@@ -255,10 +263,7 @@ const ReqoreMenuItem = memo(
             fluid
             onClick={handleClick}
             active={selected}
-            ref={(ref) => {
-              targetRef.current = ref || undefined;
-              setItemRef(ref);
-            }}
+            ref={handleItemRef}
             disabled={disabled}
             intent={intent}
             icon={icon}

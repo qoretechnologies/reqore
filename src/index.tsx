@@ -154,8 +154,12 @@ export { default as ReqoreRadioGroup } from './components/RadioGroup';
 export { default as ReqoreRating } from './components/Rating';
 export { default as ReqoreSegmentedControl } from './components/SegmentedControl';
 export { default as ReqoreSeverityRow } from './components/SeverityRow';
-// How a narrow `ReqoreEntityRow` / `ReqoreSeverityRow` shows its actions (`narrowActions`).
-export type { TReqoreNarrowRowActions } from './components/RowActionsMenu';
+// How a narrow `ReqoreEntityRow` / `ReqoreSeverityRow` shows its actions (`narrowActions`), and what an action says
+// where it is drawn compactly (`shortLabel`).
+export type {
+  IReqoreRowActionShortLabel,
+  TReqoreNarrowRowActions,
+} from './components/RowActionsMenu';
 export { ReqoreRichTextEditor } from './components/RichTextEditor';
 export type {
   IReqoreRichTextEditorProps,

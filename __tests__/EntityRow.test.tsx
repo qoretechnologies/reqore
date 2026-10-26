@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import {
   ReqoreContent,
   ReqoreEntityRow,
@@ -611,20 +611,39 @@ test('Renders without a ResizeObserver implementation', () => {
 });
 
 /*
- * Narrow, two or more actions are one menu button (qorus#646): the label keeps the row's width.
+ * Narrow, the actions are buttons under the label by default (qorus#646, Foxhoundn: a fold into a menu is
+ * opted into, never a row's default); with `narrowActions='menu'` two or more are one menu button.
  */
 
 const menuButtons = () => document.querySelectorAll('.reqore-row-actions-menu-button');
 
-test('Folds two or more actions into one menu button in a narrow container', () => {
+test('Keeps two or more actions as buttons under the label in a narrow container, by default', () => {
   withResizeObserver(NarrowResizeObserver, () => {
     NarrowResizeObserver.width = 400;
     renderRowWithActions({ actions: [{ label: 'Run' }, { icon: 'DeleteBinLine', tooltip: 'Remove' }] });
 
     const row = document.querySelector('.reqore-entity-row')!;
+    expect(row.getAttribute('data-narrow')).toBe('true');
+    expect(row.getAttribute('data-actions')).toBe('row');
+    expect(menuButtons()).toHaveLength(0);
+    expect(row.querySelectorAll('.reqore-entity-row-actions .reqore-button')).toHaveLength(2);
+    // a row of buttons as they are wide: the icon-only action stays an icon, not a line of its own
+    expect(row.querySelector('.reqore-entity-row-actions')?.textContent).not.toContain('Remove');
+  });
+});
+
+test('Folds two or more actions into one menu button in a narrow container with narrowActions="menu"', () => {
+  withResizeObserver(NarrowResizeObserver, () => {
+    NarrowResizeObserver.width = 400;
+    renderRowWithActions({
+      narrowActions: 'menu',
+      actions: [{ label: 'Run' }, { icon: 'DeleteBinLine', tooltip: 'Remove' }],
+    });
+
+    const row = document.querySelector('.reqore-entity-row')!;
     expect(row.getAttribute('data-actions')).toBe('menu');
     expect(menuButtons()).toHaveLength(1);
-    expect(menuButtons()[0].getAttribute('aria-label')).toBe('Actions');
+    expect(menuButtons()[0].getAttribute('aria-label')).toBe('Actions: Process Incoming Order');
     expect(row.querySelectorAll('.reqore-entity-row-actions .reqore-button')).toHaveLength(1);
   });
 });
@@ -633,12 +652,57 @@ test('Names the menu button with actionsMenuLabel', () => {
   withResizeObserver(NarrowResizeObserver, () => {
     NarrowResizeObserver.width = 400;
     renderRowWithActions({
+      narrowActions: 'menu',
       actionsMenuLabel: 'Akce',
       actions: [{ label: 'Run' }, { label: 'Stop' }],
     });
 
-    expect(menuButtons()[0].getAttribute('aria-label')).toBe('Akce');
+    expect(menuButtons()[0].getAttribute('aria-label')).toBe('Akce: Process Incoming Order');
   });
+});
+
+test('Names the menu button "Actions" for a row whose label is not words', () => {
+  withResizeObserver(NarrowResizeObserver, () => {
+    NarrowResizeObserver.width = 400;
+    renderRowWithActions({
+      narrowActions: 'menu',
+      label: <b>Process Incoming Order</b>,
+      actions: [{ label: 'Run' }, { label: 'Stop' }],
+    });
+
+    expect(menuButtons()[0].getAttribute('aria-label')).toBe('Actions');
+  });
+});
+
+test('Folded, each action keeps its own accessible name', () => {
+  vi.useFakeTimers();
+  try {
+    withResizeObserver(NarrowResizeObserver, () => {
+      NarrowResizeObserver.width = 400;
+      renderRowWithActions({
+        narrowActions: 'menu',
+        actions: [
+          { label: 'Run', 'aria-label': 'Run Process Incoming Order' },
+          {
+            icon: 'DeleteBinLine',
+            tooltip: 'Remove',
+            'aria-label': 'Remove Process Incoming Order',
+          },
+        ],
+      });
+    });
+    fireEvent.click(menuButtons()[0]);
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+
+    const items = Array.from(
+      document.querySelectorAll('.reqore-popover-content [role="menuitem"]')
+    ).map((item) => item.getAttribute('aria-label'));
+    expect(items).toEqual(['Run Process Incoming Order', 'Remove Process Incoming Order']);
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test('Keeps the actions in sight, stacked, with narrowActions="stack"', () => {
@@ -648,7 +712,7 @@ test('Keeps the actions in sight, stacked, with narrowActions="stack"', () => {
 
     const row = document.querySelector('.reqore-entity-row')!;
     expect(row.getAttribute('data-narrow')).toBe('true');
-    expect(row.getAttribute('data-actions')).toBeNull();
+    expect(row.getAttribute('data-actions')).toBe('stack');
     expect(menuButtons()).toHaveLength(0);
     expect(row.querySelectorAll('.reqore-entity-row-actions .reqore-button')).toHaveLength(2);
   });
