@@ -222,6 +222,12 @@ export interface IReqoreDataViewProps
    *  everywhere else it shows. */
   colorValuesByType?: boolean;
 
+  /** Keys and values as plain words, not outlined chips: a key a quieter label, a value its
+   *  text — the look of a description list, for an app that shows the same facts that way
+   *  elsewhere. Default `false` (the outlined chips). Sections, types and editing are
+   *  unchanged. */
+  plain?: boolean;
+
   /** Enable inline editing. When `true`, the view becomes a
    *  click-to-edit tree:
    *    - **Scalars** (string / number / boolean / null) render as
@@ -310,6 +316,8 @@ type TRenderContext = {
   keyIntent?: TReqoreIntent | null;
   /** See `IReqoreDataViewProps.colorValuesByType`. */
   colorValuesByType: boolean;
+  /** See `IReqoreDataViewProps.plain`. */
+  plain: boolean;
   /** When true, scalar leaves render as click-to-edit chips, keys
    *  are renamable, rows expose delete affordances, and containers
    *  expose `+ Add` affordances. */
@@ -825,12 +833,12 @@ const renderScalarChip = (
   return (
     <ReqoreTag
       size={ctx.size}
-      flat={false}
+      flat={ctx.plain}
       minimal
       wrap
       label={scalar.display}
       intent={intent}
-      effect={{ weight: 'bold' }}
+      effect={ctx.plain ? PLAIN_VALUE_EFFECT : { weight: 'bold' }}
       onClick={
         ctx.onItemClick ? () => ctx.onItemClick!(value, path) : undefined
       }
@@ -838,6 +846,11 @@ const renderScalarChip = (
     />
   );
 };
+
+/** A plain value: the text, at normal weight. */
+const PLAIN_VALUE_EFFECT = { weight: 'normal' } as const;
+/** A plain key: a quieter label beside its value. */
+const PLAIN_KEY_EFFECT = { weight: 'normal', opacity: 0.65 } as const;
 
 const EditCellShell = styled.span<{ $editing?: boolean }>`
   display: inline-flex;
@@ -1176,13 +1189,13 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
         >
           <ReqoreTag
             size={ctx.size}
-            flat={false}
+            flat={ctx.plain}
             minimal
             wrap
             intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
             color={ctx.keyColor}
             label={keyName}
-            effect={{ weight: 'bold' }}
+            effect={ctx.plain ? PLAIN_KEY_EFFECT : { weight: 'bold' }}
             className='reqore-data-view-key'
           />
         </EditCellShell>
@@ -1606,7 +1619,7 @@ const renderScalar = (
   const tag = (
     <ReqoreTag
       size={ctx.size}
-      flat={false}
+      flat={ctx.plain}
       minimal
       // `wrap` is critical for the value chip — without it, a long
       // string scalar (an HL7 payload, a stack trace, a UUID-heavy
@@ -1616,9 +1629,7 @@ const renderScalar = (
       wrap
       label={scalar.display}
       intent={intent}
-      effect={{
-        weight: 'bold',
-      }}
+      effect={ctx.plain ? PLAIN_VALUE_EFFECT : { weight: 'bold' }}
       onClick={
         ctx.onItemClick
           ? () => ctx.onItemClick!(value, path)
@@ -1736,13 +1747,13 @@ const RecordTable = memo(
               ) : (
                 <ReqoreTag
                   size={ctx.size}
-                  flat={false}
+                  flat={ctx.plain}
                   minimal
                   wrap
                   intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
                   color={ctx.keyColor}
                   label={key}
-                  effect={{ weight: 'bold' }}
+                  effect={ctx.plain ? PLAIN_KEY_EFFECT : { weight: 'bold' }}
                   className='reqore-data-view-key'
                 />
               )}
@@ -1947,6 +1958,7 @@ export const ReqoreDataView = memo(
         keyColor,
         keyIntent,
         colorValuesByType = true,
+        plain = false,
         editable = false,
         onDataChange,
         onValueChange,
@@ -2084,6 +2096,7 @@ export const ReqoreDataView = memo(
         keyColor,
         keyIntent,
         colorValuesByType,
+        plain,
         editable,
         commitScalar: editable ? commitScalar : undefined,
         commitDelete: editable ? commitDelete : undefined,

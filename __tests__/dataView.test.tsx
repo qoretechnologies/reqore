@@ -1156,3 +1156,20 @@ test('`colorValuesByType={false}` draws a number like any other value', () => {
   );
   expect(chipStyle('42')).toBe(chipStyle('orders'));
 });
+
+test('`plain` draws keys and values as words, not outlined chips', () => {
+  render(wrap(<ReqoreDataView data={{ status: 'COMPLETE' }} collapsibleRoot={false} />));
+  const outlinedKey = document.querySelector('.reqore-data-view-key') as HTMLElement;
+  const outlinedBorder = getComputedStyle(outlinedKey).borderTopWidth;
+  document.body.innerHTML = '';
+
+  render(wrap(<ReqoreDataView data={{ status: 'COMPLETE' }} collapsibleRoot={false} plain />));
+  const key = document.querySelector('.reqore-data-view-key') as HTMLElement;
+  const value = document.querySelector('.reqore-data-view-value') as HTMLElement;
+  expect(outlinedBorder).not.toBe('0px');
+  expect(getComputedStyle(key).borderTopWidth).toBe('0px');
+  expect(getComputedStyle(value).borderTopWidth).toBe('0px');
+  expect(getComputedStyle(value.querySelector('.reqore-tag-content') as HTMLElement).fontWeight).not.toBe(
+    'bold'
+  );
+});
