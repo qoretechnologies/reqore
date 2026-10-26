@@ -14,6 +14,8 @@ import {
   reqoreRenameKeyAtPath,
   reqoreSetAtPath,
   reqoreUnwrapEnvelope,
+  REQORE_DATA_VIEW_DEFAULT_LABELS,
+  type IReqoreDataViewLabels,
 } from '../src';
 
 const wrap = (children: React.ReactNode) => (
@@ -1131,5 +1133,151 @@ describe('the fonts of an editable DataView', () => {
     editor
       .querySelectorAll('.reqore-button')
       .forEach((button) => expect(fontOf(button)).not.toContain('monospace'));
+  });
+});
+
+/*
+ * The labels a consumer gives are the words the view draws (qorus#646).
+ * `labels` was declared, documented and passed by consumers, and never read:
+ * every summary, affordance and type name was the built-in English, and a
+ * consumer translating the view (or naming a hash in plain words) changed
+ * nothing.
+ */
+describe('ReqoreDataView labels', () => {
+  const PLAIN = {
+    objectSection: (count: number) =>
+      count === 1 ? '1 field' : `${count} fields`,
+    listSection: (count: number) => (count === 1 ? '1 item' : `${count} items`),
+    scalarSection: 'Single value',
+    booleanTrue: 'Yes',
+    booleanFalse: 'No',
+  };
+  const summaries = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll('summary')).map((summary) =>
+      (summary.textContent ?? '').replace(/^▸\s*/, '').trim()
+    );
+  const values = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll('.reqore-data-view-value')).map(
+      (value) => (value.textContent ?? '').trim()
+    );
+
+  it('names a hash and a list by the labels', () => {
+    const { container } = render(
+      wrap(
+        <ReqoreDataView
+          data={{
+            owner: { name: 'Jane' },
+            approvals: [{ level: 1 }, { level: 2 }],
+          }}
+          labels={PLAIN}
+        />
+      )
+    );
+
+    const names = summaries(container);
+    expect(names).toContain('2 fields');
+    expect(names).toContain('1 field');
+    expect(names).toContain('2 items');
+    expect(names.filter((name) => /Object|List/.test(name))).toEqual([]);
+  });
+
+  it('names a single value at the root by the label', () => {
+    const { container } = render(
+      wrap(<ReqoreDataView data='a single value' labels={PLAIN} />)
+    );
+    expect(summaries(container)).toContain('Single value');
+  });
+
+  it('writes a yes/no value in the labels words, in its boolean colour', () => {
+    const { container } = render(
+      wrap(
+        <ReqoreDataView
+          data={{ enabled: true, archived: false }}
+          labels={PLAIN}
+        />
+      )
+    );
+
+    expect(values(container)).toEqual(['Yes', 'No']);
+
+    // in its boolean colour: drawn as the built-in words are
+    const plain = render(
+      wrap(<ReqoreDataView data={{ enabled: true, archived: false }} />)
+    );
+    const colours = (root: HTMLElement) =>
+      Array.from(root.querySelectorAll('.reqore-data-view-value')).map(
+        (value) => getComputedStyle(value).color
+      );
+    expect(colours(container)).toEqual(colours(plain.container));
+    expect(colours(container).every((colour) => colour !== '')).toBe(true);
+  });
+
+  it('keeps the built-in words when no labels are given', () => {
+    const { container } = render(
+      wrap(<ReqoreDataView data={{ owner: { name: 'Jane' }, enabled: true }} />)
+    );
+
+    expect(summaries(container)).toContain('Object · 2 fields');
+    expect(values(container)).toContain('true');
+  });
+
+  it('falls back to the built-in word for a label given as undefined', () => {
+    /* A consumer that builds its labels from its own translations passes the
+       ones it has none for as undefined. Spread over the defaults, they
+       replaced them: the view called undefined for its summary and threw. */
+    const partial: IReqoreDataViewLabels = {
+      objectSection: undefined,
+      listSection: undefined,
+      booleanTrue: undefined,
+      booleanFalse: 'No',
+    };
+    const { container } = render(
+      wrap(
+        <ReqoreDataView
+          data={{ owner: { name: 'Jane' }, tags: ['a'], on: true, off: false }}
+          labels={partial}
+        />
+      )
+    );
+
+    expect(summaries(container)).toContain('Object · 4 fields');
+    expect(values(container)).toEqual(expect.arrayContaining(['true', 'No']));
+  });
+
+  it('publishes its built-in words', () => {
+    expect(REQORE_DATA_VIEW_DEFAULT_LABELS.objectSection(1)).toBe(
+      'Object · 1 field'
+    );
+    expect(REQORE_DATA_VIEW_DEFAULT_LABELS.listSection(3)).toBe(
+      'List · 3 items'
+    );
+    expect(REQORE_DATA_VIEW_DEFAULT_LABELS.booleanTrue).toBe('true');
+    expect(REQORE_DATA_VIEW_DEFAULT_LABELS.booleanFalse).toBe('false');
+  });
+
+  it('names the edit affordances by the labels', () => {
+    const { container } = render(
+      wrap(
+        <ReqoreDataView
+          data={{ name: 'Jane' }}
+          editable
+          onDataChange={vi.fn()}
+          labels={{
+            editValue: 'Change the value',
+            renameKey: 'Change the name',
+            addPropertyLabel: 'New field',
+          }}
+        />
+      )
+    );
+
+    expect(
+      container.querySelector('[aria-label="Change the value"]')
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[aria-label="Change the name"]')
+    ).toBeTruthy();
+    expect(container.textContent).toContain('New field');
+    expect(container.querySelector('[aria-label="Edit value"]')).toBeNull();
   });
 });

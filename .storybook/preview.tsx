@@ -24,7 +24,9 @@ export const parameters = {
   },
   controls: {
     matchers: {
-      color: /(background|color)$/i,
+      // a prop named for a color takes a color picker; one that says whether something has a background
+      // (`iconHasBackground`) is a yes or no, and a color control given it warned
+      color: /(?<!has)(background|color)$/i,
       date: /Date$/,
     },
     hideNoControlsWarning: true,

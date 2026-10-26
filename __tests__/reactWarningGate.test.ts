@@ -1,7 +1,11 @@
 // Copyright 2026 Qore Technologies, s.r.o.
 import { describe, expect, it } from 'vitest';
 import {
+  CONSOLE_ERROR_RULE,
+  CONSOLE_WARNING_RULE,
   REACT_WARNING_RULES,
+  consoleError,
+  consoleWarning,
   reactWarning,
   reactWarningsFailure,
   watchReactWarnings,
@@ -204,6 +208,7 @@ describe('a watch on the console', () => {
     expect(watch.take().map((warning) => warning.rule.name)).toEqual([
       "React's validateDOMNesting",
       "React's deprecation warning",
+      'a console error',
     ]);
     expect(watch.take()).toEqual([]);
     expect(printed).toEqual([
@@ -211,6 +216,35 @@ describe('a watch on the console', () => {
       ['warn', CREATE_FACTORY],
       ['error', ['Request failed', 404]],
     ]);
+  });
+
+  it("keeps every other warning and error under its own rule, React's under React's", () => {
+    const { printed, console } = printing();
+    const watch = watchReactWarnings(console);
+    console.warn(
+      'Over %s classes were generated for component %s with the id of "%s".\nConsider attrs',
+      200,
+      'styled.span',
+      'sc-a'
+    );
+    console.warn('WARN: A component changed from uncontrolled to controlled.');
+    console.error(new Error('Uncaught Error: This is a test error'));
+    console.error('ReqoreErrorBoundary caught an error:', new Error('boom'), '\n    at Thrower');
+    const kept = watch.take();
+    expect(kept.map(({ rule, text }) => [rule.name, text.split('\n')[0]])).toEqual([
+      [
+        'a console warning',
+        'Over 200 classes were generated for component styled.span with the id of "sc-a".',
+      ],
+      ['a console warning', 'WARN: A component changed from uncontrolled to controlled.'],
+      ['a console error', 'Error: Uncaught Error: This is a test error'],
+      ['a console error', 'ReqoreErrorBoundary caught an error: Error: boom'],
+    ]);
+    // the frames it names are where the warning was given, never the watch's own, which every call's stack starts with
+    expect(kept.filter(({ text }) => text.includes('stories/utils/reactWarningGate.ts'))).toEqual(
+      []
+    );
+    expect(printed).toHaveLength(4);
   });
 
   it('passes on a call it cannot read as text, unread', () => {
@@ -226,8 +260,9 @@ describe('a watch on the console', () => {
       unreadable,
       'p'
     );
+    console.warn('Failed to insert tag:', unreadable);
     expect(watch.take()).toEqual([]);
-    expect(printed).toHaveLength(1);
+    expect(printed).toHaveLength(2);
   });
 
   it('gives the console back as it was', () => {
@@ -243,9 +278,48 @@ describe('a watch on the console', () => {
   });
 });
 
+describe('a console warning', () => {
+  it("is its first line, with the values its format names, and the frames that name reqore's source", () => {
+    expect(
+      consoleWarning(
+        ['[ReqoreTable] `%s` has no effect.\nDrop it.', 'rowHeight', { rows: 3 }],
+        LOADING_STACK
+      )
+    ).toEqual({
+      rule: CONSOLE_WARNING_RULE,
+      text: [
+        '[ReqoreTable] `rowHeight` has no effect.',
+        'at src/components/Date/index.tsx:9:16',
+      ].join('\n    '),
+    });
+    expect(
+      consoleWarning(['Addon controls:', 'Control of type color only supports string']).text
+    ).toBe('Addon controls: Control of type color only supports string');
+    expect(consoleWarning([new Error('not a string')]).text).toBe('Error: not a string');
+  });
+});
+
+describe('a console error', () => {
+  it("is what the call says, with the frames that name reqore's source, under its own rule", () => {
+    expect(
+      consoleError(
+        ['ReqoreErrorBoundary caught an error:', new Error('boom'), '\n    at Thrower'],
+        LOADING_STACK
+      )
+    ).toEqual({
+      rule: CONSOLE_ERROR_RULE,
+      text: [
+        'ReqoreErrorBoundary caught an error: Error: boom',
+        'at src/components/Date/index.tsx:9:16',
+      ].join('\n    '),
+    });
+  });
+});
+
 describe('the failure a story is given', () => {
   const nesting = reactWarning(NESTED_PARAGRAPH)!;
   const factory = reactWarning(CREATE_FACTORY, LOADING_STACK)!;
+  const classes = consoleWarning(['Over 200 classes were generated for component styled.span']);
 
   it('says what each rule means and what to do, then names its warnings, in the order of the rules', () => {
     expect(reactWarningsFailure({ during: [factory, nesting] })?.message).toBe(
@@ -256,6 +330,23 @@ describe('the failure a story is given', () => {
         "The story uses a React API that React deprecates and a later React removes (React's deprecation warning): " +
           'use what React names in its place.',
         `  - ${factory.text}`,
+      ].join('\n')
+    );
+  });
+
+  it("names a console warning and then a console error after React's, each under its own rule", () => {
+    const uncaught = consoleError([new Error('Uncaught Error: This is a test error')]);
+    expect(reactWarningsFailure({ during: [uncaught, classes, nesting] })?.message).toBe(
+      [
+        "The story renders markup a browser does not build as written (React's validateDOMNesting): put the inner " +
+          'element where its parent may hold it, or make it one that can be there.',
+        `  - ${CRAWL_WARNING}`,
+        'Something the story renders or does warned on the console (a console warning): give what warned what it ' +
+          'asks for, or stop doing what it says has no effect.',
+        '  - Over 200 classes were generated for component styled.span',
+        'Something the story renders or does logged an error on the console (a console error): fix what threw ' +
+          'it; a story that shows what an error does checks it with `expectedError` instead.',
+        '  - Error: Uncaught Error: This is a test error',
       ].join('\n')
     );
   });

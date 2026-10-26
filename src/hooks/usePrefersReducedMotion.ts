@@ -13,6 +13,13 @@ export const prefersReducedMotion = (): boolean =>
   window.matchMedia(REDUCED_MOTION_QUERY).matches;
 
 /**
+ * How a scroll the library starts moves the page: smoothly, or at once for a user who asked for reduced motion
+ * (WCAG 2.3.3), read as the scroll starts. A smooth scroll is motion the user did not start.
+ */
+export const smoothScrollBehavior = (): ScrollBehavior =>
+  prefersReducedMotion() ? 'auto' : 'smooth';
+
+/**
  * `prefersReducedMotion()`, kept current: a component using it re-renders when the preference
  * changes while it is on screen (a user switching "Reduce motion" on with the page open).
  */

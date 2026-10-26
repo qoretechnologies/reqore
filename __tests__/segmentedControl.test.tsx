@@ -1,4 +1,5 @@
 import { fireEvent, render } from '@testing-library/react';
+import { getLuminance } from 'polished';
 import { vi } from 'vitest';
 import {
   ReqoreContent,
@@ -7,6 +8,7 @@ import {
   ReqoreSegmentedControl,
   ReqoreUIProvider,
 } from '../src';
+import { ReqoreSurfaceProvider } from '../src/context/SurfaceContext';
 
 const defaultItems = [
   { value: 'day', label: 'Day' },
@@ -436,4 +438,46 @@ test('A segment folded into the More menu passes its props to its menu item', ()
   const menuItem = document.querySelector('.reqore-menu-item[data-track-label="year"]');
 
   expect(menuItem).toBeTruthy();
+});
+
+test('The "More" button is drawn on the track, and reads on it, as the items beside it do', () => {
+  render(
+    <ReqoreUIProvider>
+      {/* a white page around a track drawn in the dark theme: what reads on the one does not on the other */}
+      <ReqoreSurfaceProvider color='#ffffff'>
+        {/* room for two items and the "More" button, the selected one among the two */}
+        <ReqoreSegmentedControl _testWidth={260} items={defaultItems} value='day' />
+      </ReqoreSurfaceProvider>
+    </ReqoreUIProvider>
+  );
+
+  const more = document.querySelector('.reqore-segmented-control-more') as HTMLElement;
+  const [, beside] = document.querySelectorAll(
+    'button.reqore-segmented-control-item:not(.reqore-segmented-control-more)'
+  );
+
+  // light, as it reads on the dark track; it was dark, as it read on the white page around it
+  expect(getLuminance(getComputedStyle(more).color)).toBeGreaterThan(0.5);
+  expect(getComputedStyle(more).color).toBe(getComputedStyle(beside).color);
+});
+
+test('a click answers to the onChange the control has now, not the one it was first given', () => {
+  const first = vi.fn();
+  const now = vi.fn();
+  const control = (onChange: (value?: string) => void) => (
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSegmentedControl items={defaultItems} value='day' onChange={onChange} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+  const { rerender } = render(control(first));
+
+  rerender(control(now));
+  fireEvent.click(document.querySelectorAll('.reqore-segmented-control-item')[2]);
+
+  expect(now).toHaveBeenCalledWith('month');
+  expect(first).not.toHaveBeenCalled();
 });

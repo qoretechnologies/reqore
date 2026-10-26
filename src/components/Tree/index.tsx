@@ -8,7 +8,7 @@ import {
   set,
   unset,
 } from 'lodash';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from '../../helpers/styled';
 import {
   ReqoreErrorBoundary,
@@ -24,6 +24,7 @@ import { getOneLessSize, getTypeFromValue, parseInputValue } from '../../helpers
 import { IReqoreComponent, IWithReqoreSize, TReqoreTooltipProp } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
+import { IReqoreEffect } from '../Effect';
 import { ReqoreExportModal } from '../ExportModal';
 import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
 import {
@@ -132,6 +133,16 @@ export const StyledTreeWrapper = styled.div<ITreeStyle>`
   cursor: ${({ expandable }) => (expandable ? 'pointer' : 'default')};
 `;
 
+/* One object each for every node of every tree, not one made in each render: a node's key, its
+   type and its arrow are memo components, which a new object re-rendered every time (and the
+   key, written in its intent's readable shade, worked that shade out again). The key is one
+   string for the same reason: `{displayKey}:` is two children, an array made anew. The row's
+   group re-renders whatever it is given: its click handler is the node's own. */
+const TREE_ROW_STYLE: CSSProperties = { cursor: 'pointer' };
+const TREE_KEY_EFFECT: IReqoreEffect = { weight: 'normal' };
+const TREE_LEAF_KEY_STYLE: CSSProperties = { flexShrink: 0 };
+const TREE_TYPE_STYLE: CSSProperties = { whiteSpace: 'nowrap' };
+
 export const ReqoreTree = ({
   data,
   size = 'normal',
@@ -174,6 +185,11 @@ export const ReqoreTree = ({
   // The size the tree paints at — `zoom` is the size as a number, this is it back as a
   // size. `??` and not `||`, so `defaultZoom={0}` means `tiny` rather than "not given".
   const zoomSize = getZoomSize(zoom);
+  // the toggle arrow hangs in the margin a level is indented by: one object per size
+  const arrowStyle = useMemo<CSSProperties>(
+    () => ({ marginLeft: `-${ICON_FROM_SIZE[zoomSize]}px` }),
+    [zoomSize]
+  );
   /* Whether the zoom is the USER's answer or still the one `size` implied. `size`
      keeps speaking for the zoom until somebody zooms by hand — a later `size` then
      moves the tree body with the panel chrome instead of leaving the two at
@@ -332,7 +348,7 @@ export const ReqoreTree = ({
               size={zoomSize}
               verticalAlign='center'
               onClick={() => handleItemClick(stateKey, isExpandable)}
-              style={{ cursor: 'pointer' }}
+              style={TREE_ROW_STYLE}
               gapSize='small'
             >
               <ReqoreIcon
@@ -340,9 +356,7 @@ export const ReqoreTree = ({
                 icon='ArrowDownSFill'
                 rotation={isExpandable ? 0 : -90}
                 intent='muted'
-                style={{
-                  marginLeft: `-${ICON_FROM_SIZE[zoomSize]}px`,
-                }}
+                style={arrowStyle}
               />
 
               {KeyRenderer ? (
@@ -350,13 +364,12 @@ export const ReqoreTree = ({
               ) : (
                 <ReqoreP
                   className='reqore-tree-toggle'
-                  effect={{
-                    weight: 'normal',
-                    color: 'info:lighten:5',
-                  }}
+                  // the info intent, in the shade of it that reads where the tree is drawn
+                  intent='info'
+                  effect={TREE_KEY_EFFECT}
                   tooltip={getItemTooltip?.([...path, key], 'key', _pathWithoutArrayKeys)}
                 >
-                  {displayKey}:
+                  {`${displayKey}:`}
                 </ReqoreP>
               )}
 
@@ -397,7 +410,7 @@ export const ReqoreTree = ({
                   size={getOneLessSize(zoomSize)}
                   intent='muted'
                   inline
-                  style={{ whiteSpace: 'nowrap' }}
+                  style={TREE_TYPE_STYLE}
                 >
                   {dataType}
                 </ReqoreSpan>
@@ -409,14 +422,12 @@ export const ReqoreTree = ({
                 <KeyRenderer value={displayKey} />
               ) : (
                 <ReqoreP
-                  {...{
-                    customTheme: { text: { color: 'info:lighten:5' } },
-                    style: { flexShrink: 0 },
-                    size: zoomSize,
-                  }}
+                  intent='info'
+                  style={TREE_LEAF_KEY_STYLE}
+                  size={zoomSize}
                   tooltip={getItemTooltip?.([...path, key], 'key', _pathWithoutArrayKeys)}
                 >
-                  {displayKey}:
+                  {`${displayKey}:`}
                 </ReqoreP>
               )}
               {ValueRenderer ? (
@@ -426,17 +437,16 @@ export const ReqoreTree = ({
                   flat
                   onClick={() => onItemClick?.(_data[key], [...path, key])}
                   className='reqore-tree-label'
-                  customTheme={{
-                    text: {
-                      color: isBoolean(_data[key])
-                        ? _data[key]
-                          ? 'success:lighten:5'
-                          : 'danger:lighten:10'
-                        : isNumber(_data[key])
-                        ? 'info:lighten:10'
-                        : undefined,
-                    },
-                  }}
+                  // a value's kind by its color, each in the shade of it that reads where the tree is drawn
+                  intent={
+                    isBoolean(_data[key])
+                      ? _data[key]
+                        ? 'success'
+                        : 'danger'
+                      : isNumber(_data[key])
+                      ? 'info'
+                      : undefined
+                  }
                   size={zoomSize}
                   tooltip={getItemTooltip?.([...path, key], 'value', _pathWithoutArrayKeys)}
                 >
@@ -472,7 +482,7 @@ export const ReqoreTree = ({
                   size={getOneLessSize(zoomSize)}
                   intent='muted'
                   inline
-                  style={{ whiteSpace: 'nowrap' }}
+                  style={TREE_TYPE_STYLE}
                 >
                   {dataType}
                 </ReqoreSpan>

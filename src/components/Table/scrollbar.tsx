@@ -3,6 +3,8 @@ import styled from '../../helpers/styled';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { useReqoreProperty } from '../../hooks/useReqoreContext';
+import { scheduleOnTimer } from '../../helpers/schedule';
 
 export interface IReqoreTableScrollbarProps {
   /** The native-scrollable element this thumb mirrors. */
@@ -95,7 +97,12 @@ export const ReqoreTableScrollbar = memo(
     });
     const [dragging, setDragging] = useState(false);
     const [idle, setIdle] = useState(true);
-    const idleTimerRef = useRef<number | null>(null);
+    /** Cancels the pending fade-out, if one is pending. */
+    const idleTimerRef = useRef<(() => void) | null>(null);
+    // the fade-out waits on the app's clock (`options.schedule`), the machine's by default: an app that captures its
+    // pages (a story runner) decides when "after a while" is, and a capture no longer catches the thumb on one run
+    // and not on the next
+    const schedule = useReqoreProperty('schedule') ?? scheduleOnTimer;
     // Mirror the dragging state in a ref so handlers can read it without
     // re-creating themselves on every drag-state change.
     const draggingRef = useRef(false);
@@ -104,18 +111,18 @@ export const ReqoreTableScrollbar = memo(
 
     const clearIdleTimer = useCallback(() => {
       if (idleTimerRef.current !== null) {
-        clearTimeout(idleTimerRef.current);
+        idleTimerRef.current();
         idleTimerRef.current = null;
       }
     }, []);
 
     const scheduleHide = useCallback(() => {
       clearIdleTimer();
-      idleTimerRef.current = window.setTimeout(() => {
+      idleTimerRef.current = schedule(idleTimeoutMs, () => {
         setIdle(true);
         idleTimerRef.current = null;
-      }, idleTimeoutMs);
-    }, [clearIdleTimer, idleTimeoutMs]);
+      });
+    }, [clearIdleTimer, idleTimeoutMs, schedule]);
 
     const wakeUp = useCallback(() => {
       clearIdleTimer();

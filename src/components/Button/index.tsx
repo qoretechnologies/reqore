@@ -1,6 +1,5 @@
 import { REQORE_MARQUEE_HOST, REQORE_MARQUEE_TEXT } from '../../hooks/useMarqueeOnHover';
 import { size } from 'lodash';
-import { rgba, saturate, tint } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { css, keyframes } from 'styled-components';
@@ -21,10 +20,20 @@ import {
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
+  getColorAtAlpha,
+  getDrawnColor,
+  getGradientColorList,
   getGradientMix,
-  getReadableColor,
-  getReadableColorFrom,
+  getReadableAccentColorOn,
+  getReadableAlpha,
+  getReadableColorOn,
+  getReadableFadedColor,
+  getReadableIconLook,
+  getSaturatedTint,
+  getThemeSurfaces,
   isAchromatic,
+  READABLE_ICON_CONTRAST,
+  TReqoreSurface,
 } from '../../helpers/colors';
 import { shortcutHasModifier, TReqoreKeyboardShortcut } from '../../helpers/shortcuts';
 import styled, {
@@ -38,6 +47,7 @@ import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreEffect } from '../../hooks/useReqoreEffect';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import {
   ActiveIconScale,
   DisabledElement,
@@ -61,6 +71,7 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import {
+  getEffectGradientBackgrounds,
   getPrimaryGradient,
   IReqoreEffect,
   ReqoreTextEffect,
@@ -70,6 +81,7 @@ import {
   TReqoreHexColor,
 } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
+import { splitIconColor } from '../../helpers/iconProps';
 import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
 import { ReqoreHorizontalSpacer, ReqoreSpacer } from '../Spacer';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
@@ -298,10 +310,14 @@ export interface IReqoreButtonProps
 
 export interface IReqoreButtonStyle extends IReqoreButtonProps {
   theme: IReqoreTheme;
+  /** What the button is drawn on (`useReqoreSurface`): the theme's surface when not known. */
+  $surface?: TReqoreSurface;
   animate?: boolean;
   color?: TReqoreHexColor;
   /** Rendered as an `<a>`: no underline from the browser's link style. */
   $isLink?: boolean;
+  /** What the button is painted with, worked out once per render (`getButtonPaint`). */
+  $paint?: IReqoreButtonPaint;
 }
 
 const getButtonMainColor = (
@@ -321,12 +337,351 @@ const getButtonMainColor = (
   return theme.main;
 };
 
-const getButtonTextColor = ({ minimal, transparent, color, theme }) =>
+/** A button at rest, under the pointer, or pressed (`active`). */
+type TReqoreButtonState = 'rest' | 'hover' | 'active';
+
+/** What a button's colors are worked out from. */
+type TReqoreButtonColorProps = Pick<
+  IReqoreButtonStyle,
+  'theme' | 'color' | 'minimal' | 'transparent' | 'effect' | '$surface'
+>;
+
+interface IReqoreButtonColors {
+  /** What the button is drawn on, as the browser draws it: one color, or each color of its gradient. */
+  backgrounds: TReqoreHexColor[];
+  /** Its text, which stands out from every one of them. */
+  text: TReqoreHexColor;
+}
+
+/**
+ * What a button is drawn on and in, in a state. The background as it is drawn: a minimal button's wash and a
+ * translucent color (the muted intent) blended over the theme the button sits on, a transparent button as that
+ * theme, a gradient as each of its colors. The text is picked against that, and stands out from all of it by 4.5:1;
+ * a minimal or transparent button with a color of its own keeps the color in its text, in a shade that reads.
+ */
+export const getButtonColors = (
+  { theme, color, minimal, transparent, effect, $surface }: TReqoreButtonColorProps,
+  state: TReqoreButtonState = 'rest'
+): IReqoreButtonColors => {
+  const main = getButtonMainColor(theme, color, effect);
+  // what the button is drawn on: one color, or each color of a gradient
+  const unders = getThemeSurfaces(theme, $surface);
+  const outlined = minimal || transparent;
+  const gradient = getPrimaryGradient(effect?.gradient);
+  // an outlined button's text starts from a light tint of its color, lighter hovered
+  const tintAmount = state === 'hover' ? 0.9 : 0.8;
+  let fills: string[];
+
+  if (gradient && !transparent) {
+    const stops = getGradientColorList(theme, gradient.colors);
+
+    if (minimal) {
+      // as a minimal gradient is painted: a translucent fill over a translucent ring over the button's wash
+      const painted = unders.flatMap((under) =>
+        getEffectGradientBackgrounds(
+          theme,
+          gradient.colors,
+          true,
+          getColorAtAlpha(main, 0.2),
+          under
+        )
+      );
+
+      return {
+        backgrounds: painted,
+        text: isAchromatic(main)
+          ? getReadableColorOn(painted, state === 'rest')
+          : getReadableAccentColorOn(getSaturatedTint(main, tintAmount), painted),
+      };
+    }
+
+    // as the effect draws it: its colors at rest, each a step lighter hovered or pressed
+    fills = state === 'rest' ? stops : stops.map((stop) => changeLightness(stop, 0.05));
+  } else if (state === 'active') {
+    fills = [changeLightness(main, 0.1)];
+  } else if (state === 'hover') {
+    fills = [getButtonHoverFill(theme, color, main, minimal, transparent)];
+  } else {
+    fills = [getButtonRestFill(color, main, minimal, transparent)];
+  }
+
+  const backgrounds = unders.flatMap((under) =>
+    fills.map((fill) => (fill === 'transparent' ? under : getDrawnColor(fill, under)))
+  );
+  const dim = state === 'rest';
+  let text: TReqoreHexColor;
+
+  if (outlined && state !== 'active' && !isAchromatic(main)) {
+    // a color the helpers cannot read (a CSS variable) is as it is given: the text is written in it
+    text = getReadableAccentColorOn(getSaturatedTint(main, tintAmount), backgrounds);
+  } else {
+    text = getReadableColorOn(backgrounds, dim);
+  }
+
+  return { backgrounds, text };
+};
+
+/**
+ * The fill a button paints at rest: nothing when transparent, a wash of its color when minimal (one the helpers
+ * cannot read, a CSS variable, is washed by the browser), else its color.
+ */
+const getButtonRestFill = (
+  color: TReqoreHexColor | undefined,
+  main: TReqoreHexColor,
+  minimal?: boolean,
+  transparent?: boolean
+): string => (transparent ? 'transparent' : minimal ? getColorAtAlpha(main, 0.2) : color || main);
+
+/** The fill a button paints hovered: a stronger wash when minimal or transparent, else its color a step lighter. */
+const getButtonHoverFill = (
+  theme: IReqoreTheme,
+  color: TReqoreHexColor | undefined,
+  main: TReqoreHexColor,
+  minimal?: boolean,
+  transparent?: boolean
+): string =>
   minimal || transparent
-    ? isAchromatic(color)
-      ? getReadableColorFrom(theme.originalMain, true)
-      : saturate(1, tint(0.8, color))
-    : getReadableColorFrom(color, true);
+    ? getColorAtAlpha(changeLightness(main, 0.1), transparent ? 0.2 : 0.4)
+    : changeLightness(getButtonMainColor(theme, color), 0.05);
+
+/** A button's colors in each state it is drawn in: at rest, hovered (when it is not active), and active. */
+export interface IReqoreButtonStateColors {
+  rest: IReqoreButtonColors;
+  hover?: IReqoreButtonColors;
+  active?: IReqoreButtonColors;
+}
+
+/**
+ * How a button draws an icon, at rest and hovered alike: in its own color (`color`, in a shade that stands out by
+ * 3:1) or the button's text color, at `CONTROL_ICON_OPACITY` or as much more as it needs to stand out by 3:1.
+ */
+export const getButtonIconLook = (
+  style: TReqoreButtonColorProps,
+  color?: TReqoreEffectColor,
+  active?: boolean
+): { color?: TReqoreHexColor; opacity: number } =>
+  getButtonIconLookIn(style.theme, getButtonStateColors(style, active), color);
+
+/** `getButtonIconLook`, from the button's colors worked out already (`IReqoreButtonStateColors`). */
+const getButtonIconLookIn = (
+  theme: IReqoreTheme,
+  states: IReqoreButtonStateColors,
+  color?: TReqoreEffectColor
+): { color?: TReqoreHexColor; opacity: number } => {
+  // an active button (a selected menu item) is drawn in its fill, hovered or not
+  const rest = states.active ?? states.rest;
+  const hover = states.active ?? states.hover ?? rest;
+  const look = getReadableIconLook(
+    theme,
+    [...rest.backgrounds, ...hover.backgrounds],
+    rest.text,
+    CONTROL_ICON_OPACITY,
+    color
+  );
+
+  // hovered, the text (which an icon without a color of its own is drawn in) may be another color
+  return look.color
+    ? look
+    : {
+        opacity: Math.max(
+          look.opacity,
+          getReadableAlpha(
+            hover.text,
+            hover.backgrounds,
+            CONTROL_ICON_OPACITY,
+            READABLE_ICON_CONTRAST
+          )
+        ),
+      };
+};
+
+/** What a button's styles paint it with, worked out once per render (`getButtonPaint`), not in each style rule. */
+export interface IReqoreButtonPaint {
+  /** Its fill and text at rest. */
+  background: string;
+  text: TReqoreHexColor;
+  /** Its color a step lighter: the edge (`flat={false}`), the focus ring and an active button's fill. */
+  edge: string;
+  /** The ring drawn while it is hovered or pressed, and its edge then. */
+  ring: string;
+  /** Hovered (not when active): its fill and text. */
+  hoverBackground?: string;
+  hoverText?: TReqoreHexColor;
+  /** Active (a selected menu item): its text and edge, at rest and hovered. */
+  activeText?: TReqoreHexColor;
+  activeEdge: string;
+  activeHoverEdge: string;
+  /** The description's color, faded as far as it still reads (with a description only). */
+  description?: string;
+  /** Hovered (not when active): the description's color, faded as far as it reads on the hover fill. */
+  hoverDescription?: string;
+}
+
+/**
+ * A button's colors in the states it is drawn in (`IReqoreButtonStateColors`): at rest, and hovered or - when it
+ * is `active` - active.
+ */
+export const getButtonStateColors = (
+  style: TReqoreButtonColorProps,
+  active?: boolean
+): IReqoreButtonStateColors => ({
+  rest: getButtonColors(style),
+  hover: active ? undefined : getButtonColors(style, 'hover'),
+  active: active ? getButtonColors(style, 'active') : undefined,
+});
+
+/**
+ * Everything a button is painted with (`IReqoreButtonPaint`), from its colors in each state. `description`: whether
+ * it has one, whose color is then worked out too.
+ */
+export const getButtonPaint = (
+  style: TReqoreButtonColorProps,
+  states: IReqoreButtonStateColors,
+  description?: boolean
+): IReqoreButtonPaint => {
+  const { theme, color, minimal, transparent, effect } = style;
+  const main = getButtonMainColor(theme, color, effect);
+  const drawn = states.active ?? states.rest;
+
+  return {
+    background: transparent ? 'transparent' : minimal ? getColorAtAlpha(main, 0.2) : color,
+    text: states.rest.text,
+    edge: changeLightness(main, 0.1),
+    ring: changeLightness(main, 0.25),
+    hoverBackground: states.hover
+      ? getButtonHoverFill(theme, color, main, minimal, transparent)
+      : undefined,
+    hoverText: states.hover?.text,
+    activeText: states.active?.text,
+    activeEdge: changeLightness(main, 0.175),
+    activeHoverEdge: changeLightness(main, 0.275),
+    // on the button as it is drawn: at rest, or filled when active (a selected menu item)
+    description: description
+      ? getReadableFadedColor(drawn.text, drawn.backgrounds, 0.7)
+      : undefined,
+    /* hovered, the description is on the hover fill, in the hovered text: faded as far as it reads there. Faded for
+       the resting fill, it fell to 3.8:1 on an info button's lighter hover fill (qorus#646) */
+    hoverDescription:
+      description && states.hover
+        ? getReadableFadedColor(states.hover.text, states.hover.backgrounds, 0.7)
+        : undefined,
+  };
+};
+
+/**
+ * What a styled button is painted with: what the button worked out for this render, or - a `StyledButton`
+ * rendered on its own - worked out from its props.
+ */
+const getStyledButtonPaint = (props: IReqoreButtonStyle): IReqoreButtonPaint =>
+  props.$paint ??
+  getButtonPaint(props, getButtonStateColors(props, props.active), !!props.description);
+
+/** The CSS variable each color of a button's paint is set in, on the button. */
+const BUTTON_PAINT_VARIABLES: Record<keyof IReqoreButtonPaint, `--${string}`> = {
+  background: '--reqore-button-background',
+  text: '--reqore-button-text',
+  edge: '--reqore-button-edge',
+  ring: '--reqore-button-ring',
+  hoverBackground: '--reqore-button-hover-background',
+  hoverText: '--reqore-button-hover-text',
+  activeText: '--reqore-button-active-text',
+  activeEdge: '--reqore-button-active-edge',
+  activeHoverEdge: '--reqore-button-active-hover-edge',
+  description: '--reqore-button-description',
+  hoverDescription: '--reqore-button-hover-description',
+};
+
+/**
+ * A button's paint as CSS variables on the button, which its styles read (`paintOf`). Written into the styles, every
+ * color a button is drawn in made a class of its own - a page of buttons in each intent, minimal, flat and active
+ * made hundreds, and styled-components warned - where the styles now differ only in what the button is.
+ */
+const getButtonPaintVariables = (props: IReqoreButtonStyle): Record<`--${string}`, string> => {
+  const paint = getStyledButtonPaint(props);
+
+  return Object.fromEntries(
+    (Object.keys(BUTTON_PAINT_VARIABLES) as (keyof IReqoreButtonPaint)[])
+      .filter((color) => paint[color])
+      .map((color) => [BUTTON_PAINT_VARIABLES[color], paint[color] as string])
+  );
+};
+
+/**
+ * The value a button's styles give a property for one of its paint's colors: the variable it is set in, or - a color
+ * the paint has none for - nothing, as the color itself was, so the declaration is dropped as before.
+ */
+const paintOf = (props: IReqoreButtonStyle, color: keyof IReqoreButtonPaint) => {
+  const value = getStyledButtonPaint(props)[color];
+
+  return value ? `var(${BUTTON_PAINT_VARIABLES[color]})` : value;
+};
+
+/** A button's height (and a square one's width): its size's, with its vertical padding's change on both sides. */
+const getButtonBoxPx = ({ size, verticalPadding = 'normal' }: IReqoreButtonStyle) =>
+  SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2;
+
+/**
+ * The lengths a button is drawn at, as its styles wrote them: from its size, vertical padding and shape, and its own
+ * `maxWidth`. `undefined` where it has none (a radius when it is not rounded).
+ */
+const BUTTON_LENGTHS = {
+  '--reqore-button-padding': ({ size, compact, verticalPadding = 'normal', square }) =>
+    `${
+      CONTROL_VERTICAL_PADDING_FROM_SIZE[size] +
+      CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding]
+    }px ${
+      square
+        ? 0
+        : compact
+        ? CONTROL_VERTICAL_PADDING_FROM_SIZE[size]
+        : CONTROL_HORIZONTAL_PADDING_FROM_SIZE[size]
+    }px`,
+  '--reqore-button-font-size': ({ size }) => `${CONTROL_TEXT_FROM_SIZE[size]}px`,
+  '--reqore-button-min-height': (props) => `${getButtonBoxPx(props)}px`,
+  '--reqore-button-min-width': (props) =>
+    `${props.square ? getButtonBoxPx(props) : SIZE_TO_PX[props.size]}px`,
+  '--reqore-button-width': (props) => `${getButtonBoxPx(props)}px`,
+  '--reqore-button-max-width': (props) =>
+    props.square ? `${getButtonBoxPx(props)}px` : props.maxWidth || '100%',
+  '--reqore-button-max-height': (props) => `${getButtonBoxPx(props)}px`,
+  '--reqore-button-radius': ({ size, radiusSize, rounded, pill, circle }) =>
+    rounded === false
+      ? undefined
+      : circle
+      ? '9999px'
+      : `${resolveRadius(size, radiusSize) * (pill ? PILL_RADIUS_MODIFIER : 1)}px`,
+  '--reqore-button-description-padding': ({ size }) => `${PADDING_FROM_SIZE[size] / 2}px`,
+} satisfies Record<`--${string}`, (props: IReqoreButtonStyle) => string | undefined>;
+
+/** Whether a length the styles wrote is one CSS takes: not missing, and not made of a size the button lacks. */
+const isUsableLength = (length?: string): length is string =>
+  !!length && !/NaN|undefined/.test(length);
+
+/**
+ * The value a button's styles give a property for one of its lengths: the variable it is set in, or - a length that
+ * is not one - what the styles wrote before, which CSS drops as it did.
+ */
+const lengthOf = (props: IReqoreButtonStyle, variable: keyof typeof BUTTON_LENGTHS) => {
+  const length = BUTTON_LENGTHS[variable](props);
+
+  return isUsableLength(length) ? `var(${variable})` : length;
+};
+
+/**
+ * What a button is drawn with as CSS variables on the button, which its styles read: its paint's colors and its
+ * lengths. Written into the styles, each color and length made a class of its own - a page of buttons in each
+ * intent, size and shape made hundreds, and styled-components warned - where the styles now differ only in what the
+ * button is (flat, square, active, read only, ...).
+ */
+const getButtonVariables = (props: IReqoreButtonStyle): Record<`--${string}`, string> => {
+  const lengths = (Object.keys(BUTTON_LENGTHS) as (keyof typeof BUTTON_LENGTHS)[])
+    .map((variable) => [variable, BUTTON_LENGTHS[variable](props)] as const)
+    .filter((entry): entry is readonly [keyof typeof BUTTON_LENGTHS, string] =>
+      isUsableLength(entry[1])
+    );
+
+  return { ...getButtonPaintVariables(props), ...Object.fromEntries(lengths) };
+};
 
 export const StyledAnimatedTextWrapper = styled.span`
   min-width: 5px;
@@ -400,15 +755,19 @@ export const REQORE_BUTTON_STYLE_PROPS = listReqoreStyleProps<
   wrap: true,
 });
 
-export const StyledButton = styled(StyledEffect).withConfig({
-  // Its own styling props, and the layout flags a containing ControlGroup hands it (`fill`, its
-  // place in a stack, ...); `color` is the button's colour, read by its styles.
-  shouldForwardProp: omitStyleProps(
-    ...REQORE_BUTTON_STYLE_PROPS,
-    ...REQORE_CONTROL_GROUP_CHILD_PROPS,
-    'color'
-  ),
-})<IReqoreButtonStyle>`
+export const StyledButton = styled(StyledEffect)
+  .withConfig({
+    // Its own styling props, and the layout flags a containing ControlGroup hands it (`fill`, its
+    // place in a stack, ...); `color` is the button's colour, read by its styles.
+    shouldForwardProp: omitStyleProps(
+      ...REQORE_BUTTON_STYLE_PROPS,
+      ...REQORE_CONTROL_GROUP_CHILD_PROPS,
+      'color'
+    ),
+  })
+  .attrs((props: IReqoreButtonStyle) => ({
+    style: getButtonVariables(props) as React.CSSProperties,
+  }))<IReqoreButtonStyle>`
   display: flex;
   flex-flow: column;
   justify-content: center;
@@ -420,51 +779,31 @@ export const StyledButton = styled(StyledEffect).withConfig({
   position: relative;
   overflow: hidden;
   vertical-align: middle;
-  border: ${({ theme, color, flat, effect }) =>
-    !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.1)}` : 0};
-  padding: ${({ size, compact, verticalPadding = 'normal', square }) =>
-    `${
-      CONTROL_VERTICAL_PADDING_FROM_SIZE[size] +
-      CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding]
-    }px ${
-      square
-        ? 0
-        : compact
-        ? CONTROL_VERTICAL_PADDING_FROM_SIZE[size]
-        : CONTROL_HORIZONTAL_PADDING_FROM_SIZE[size]
-    }px`};
-  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  border: ${(props: IReqoreButtonStyle) =>
+    !props.flat ? `1px solid ${paintOf(props, 'edge')}` : 0};
+  padding: ${(props: IReqoreButtonStyle) => lengthOf(props, '--reqore-button-padding')};
+  font-size: ${(props: IReqoreButtonStyle) => lengthOf(props, '--reqore-button-font-size')};
   outline-offset: -2px;
 
-  min-height: ${({ size, verticalPadding = 'normal' }) =>
-    SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2}px;
-  min-width: ${({ size, square, verticalPadding = 'normal' }) =>
-    square
-      ? SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2
-      : SIZE_TO_PX[size]}px;
-  ${({ square, size, verticalPadding = 'normal' }) =>
-    square
+  min-height: ${(props: IReqoreButtonStyle) => lengthOf(props, '--reqore-button-min-height')};
+  min-width: ${(props: IReqoreButtonStyle) => lengthOf(props, '--reqore-button-min-width')};
+  ${(props: IReqoreButtonStyle) =>
+    props.square
       ? css`
-          width: ${SIZE_TO_PX[size] +
-          CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2}px;
+          width: ${lengthOf(props, '--reqore-button-width')};
         `
       : null}
   /* A button is never wider than its container, unless it sets its own maxWidth: fixed means it does not
      stretch, not that it may run past what holds it. A fixed button saying a value and its description stayed as
      wide as both on one line, 487-712px in a 346px card on a phone (qorus#646); capped, its label is clipped as any
      button's is, and its description takes as many lines as it needs. */
-  max-width: ${({ square, maxWidth, size, verticalPadding = 'normal' }) =>
-    square
-      ? `${
-          SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2
-        }px`
-      : maxWidth || '100%'};
+  max-width: ${(props: IReqoreButtonStyle) => lengthOf(props, '--reqore-button-max-width')};
 
   ${({ wrap, description }) =>
     !wrap && !description
       ? css`
-          max-height: ${({ size, verticalPadding = 'normal' }) =>
-            SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2}px;
+          max-height: ${(props: IReqoreButtonStyle) =>
+            lengthOf(props, '--reqore-button-max-height')};
         `
       : null}
 
@@ -474,122 +813,102 @@ export const StyledButton = styled(StyledEffect).withConfig({
   align-self: ${({ alignSelf, fixed, fluid }) =>
     alignSelf ?? (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
 
-  border-radius: ${({ size, radiusSize, rounded, pill, circle }) =>
-    rounded === false
-      ? undefined
-      : circle
-      ? '9999px'
-      : `${resolveRadius(size, radiusSize) * (pill ? PILL_RADIUS_MODIFIER : 1)}px`};
+  border-radius: ${(props: IReqoreButtonStyle) => lengthOf(props, '--reqore-button-radius')};
 
-  background-color: ${({ minimal, color, theme, transparent, effect }) => {
-    if (transparent) {
-      return 'transparent';
-    }
+  background-color: ${(props: IReqoreButtonStyle) => paintOf(props, 'background')};
 
-    if (minimal) {
-      return css`
-        ${rgba(getButtonMainColor(theme, color, effect), 0.2)}
-      `;
-    }
-
-    return color;
-  }};
-
-  color: ${({ color, minimal, transparent, theme, effect }) => {
-    const finalColor = getButtonMainColor(theme, color, effect);
-
-    return getButtonTextColor({ minimal, transparent, color: finalColor, theme });
-  }};
+  color: ${(props: IReqoreButtonStyle) => paintOf(props, 'text')};
 
   ${InactiveIconScale};
 
   ${({ raised, flat, transparent }) => raised && flat && !transparent && RaisedElement}
 
-  ${({ readOnly, animate, active, theme, color, effect }) =>
-    !readOnly && !active
-      ? css`
-          &:not(:disabled) {
-            ${ScaleIconOnHover}
+  ${(props: IReqoreButtonStyle) => {
+    const { readOnly, animate, active, flat } = props;
 
-            cursor: pointer;
-            transition: all 0.2s ease-out;
+    if (readOnly || active) {
+      return readOnly
+        ? css`
+            ${ReadOnlyElement};
+          `
+        : undefined;
+    }
 
-            &:active {
-              outline: 3px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.25)};
-              outline-offset: -3px;
-              transition: none;
-            }
+    const ring = paintOf(props, 'ring');
+    const hoverBackground = paintOf(props, 'hoverBackground');
+    const hoverText = paintOf(props, 'hoverText');
+    const hoverDescription = paintOf(props, 'hoverDescription');
 
-            &:hover:not(:active) {
-              outline: 2px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.25)};
-              transition: none;
-            }
+    return css`
+      &:not(:disabled) {
+        ${ScaleIconOnHover}
 
-            &:hover,
-            &:active {
-              border-color: ${({ flat, theme, color }) =>
-                flat ? undefined : changeLightness(getButtonMainColor(theme, color, effect), 0.25)};
-              background-color: ${({ theme, color, minimal, transparent }: IReqoreButtonStyle) =>
-                minimal || transparent
-                  ? rgba(
-                      changeLightness(getButtonMainColor(theme, color, effect), 0.1),
-                      transparent ? 0.2 : 0.4
-                    )
-                  : changeLightness(getButtonMainColor(theme, color), 0.05)};
-              color: ${({ theme, color, minimal, transparent, effect }) => {
-                  const finalColor = getButtonMainColor(theme, color, effect);
-                  return minimal || transparent
-                    ? isAchromatic(finalColor)
-                      ? getReadableColorFrom(theme.originalMain)
-                      : saturate(1, tint(0.9, finalColor))
-                    : getReadableColorFrom(finalColor);
-                }}
-                ${animate
-                  ? css`
-                      cursor: pointer;
+        cursor: pointer;
+        transition: all 0.2s ease-out;
 
-                      ${StyledInActiveContent} {
-                        transform: translateY(150%);
-                        filter: blur(10px);
-                        opacity: 0;
-                      }
+        &:active {
+          outline: 3px solid ${ring};
+          outline-offset: -3px;
+          transition: none;
+        }
 
-                      ${StyledActiveContent} {
-                        transform: translateY(0px);
-                        filter: blur(0);
-                        opacity: 1;
-                      }
-                    `
-                  : undefined};
-            }
+        &:hover:not(:active) {
+          outline: 2px solid ${ring};
+          transition: none;
+        }
+
+        &:hover,
+        &:active {
+          border-color: ${flat ? undefined : ring};
+          background-color: ${hoverBackground};
+          /* Ended here: the animated content's rules below ran on into this declaration, which the
+             browser then dropped - a hovered button kept its resting text on its hovered fill. */
+          color: ${hoverText};
+
+          .reqore-button-description {
+            color: ${hoverDescription};
           }
-        `
-      : readOnly
-      ? css`
-          ${ReadOnlyElement};
-        `
-      : undefined};
 
-  ${({ active, flat, theme, color, effect }: IReqoreButtonStyle) => {
-    if (active) {
+          ${animate
+            ? css`
+                cursor: pointer;
+
+                ${StyledInActiveContent} {
+                  transform: translateY(150%);
+                  filter: blur(10px);
+                  opacity: 0;
+                }
+
+                ${StyledActiveContent} {
+                  transform: translateY(0px);
+                  filter: blur(0);
+                  opacity: 1;
+                }
+              `
+            : undefined};
+        }
+      }
+    `;
+  }};
+
+  ${(props: IReqoreButtonStyle) => {
+    if (props.active) {
+      const { flat } = props;
+      const edge = paintOf(props, 'edge');
+      const activeText = paintOf(props, 'activeText');
+      const activeEdge = paintOf(props, 'activeEdge');
+      const activeHoverEdge = paintOf(props, 'activeHoverEdge');
+
       return css`
         cursor: pointer;
-        background-color: ${changeLightness(getButtonMainColor(theme, color, effect), 0.1)};
-        color: ${getReadableColor(
-          { main: changeLightness(getButtonMainColor(theme, color, effect), 0.1) },
-          undefined,
-          undefined
-        )};
-        border-color: ${flat
-          ? undefined
-          : changeLightness(getButtonMainColor(theme, color, effect), 0.175)};
+        background-color: ${edge};
+        color: ${activeText};
+        border-color: ${flat ? undefined : activeEdge};
 
         &:hover,
         &:active,
         &:focus {
-          border-color: ${flat
-            ? undefined
-            : changeLightness(getButtonMainColor(theme, color, effect), 0.275)};
+          border-color: ${flat ? undefined : activeHoverEdge};
         }
 
         ${ActiveIconScale}
@@ -615,17 +934,16 @@ export const StyledButton = styled(StyledEffect).withConfig({
 
   &:focus,
   &:active {
-    outline: 2px solid
-      ${({ theme, color, effect }) =>
-        changeLightness(getButtonMainColor(theme, color, effect), 0.1)};
-    border-color: ${({ minimal, theme, color, effect }) =>
-      minimal ? undefined : changeLightness(getButtonMainColor(theme, color, effect), 0.1)};
+    outline: 2px solid ${(props: IReqoreButtonStyle) => paintOf(props, 'edge')};
+    border-color: ${(props: IReqoreButtonStyle) =>
+      props.minimal ? undefined : paintOf(props, 'edge')};
   }
 
   .reqore-button-description {
-    padding-top: ${({ size }) => PADDING_FROM_SIZE[size] / 2}px;
-    color: ${({ theme, color, minimal, transparent }) =>
-      rgba(getButtonTextColor({ minimal, transparent, color, theme }), 0.7)};
+    padding-top: ${(props: IReqoreButtonStyle) =>
+      lengthOf(props, '--reqore-button-description-padding')};
+    /* on the button as it is drawn: at rest, or filled when active (a selected menu item) */
+    color: ${(props: IReqoreButtonStyle) => paintOf(props, 'description')};
   }
 `;
 
@@ -819,6 +1137,7 @@ const ReqoreButton = memo(
       const animations = useReqoreProperty('animations');
       const shortcutHintsEnabled = useReqoreProperty('shortcutHints');
       const theme = useReqoreTheme('main', customTheme, intent);
+      const surface = useReqoreSurface();
       const fixedEffect = useReqoreEffect('buttons', theme, effect);
       const { targetRef, setRef } = useCombinedRefs(ref);
 
@@ -918,6 +1237,65 @@ const ReqoreButton = memo(
         }),
         [fixedEffect, intent, readOnly, rest.disabled]
       );
+      /* The button's colors depend on its gradient alone of its effect: an effect the caller writes inline (a new
+         object each render) with the same gradient keeps them. */
+      const gradientKey = memoEffect?.gradient ? JSON.stringify(memoEffect.gradient) : undefined;
+      // The icons stand out from what the button is drawn on, as its text does.
+      const colorProps: TReqoreButtonColorProps = useMemo(
+        () => ({
+          theme,
+          color: customColor,
+          minimal,
+          transparent,
+          effect: memoEffect,
+          $surface: surface,
+        }),
+        [theme, customColor, minimal, transparent, gradientKey, surface]
+      );
+      /* Its colors in the states it is drawn in, and what its styles paint it with, worked out once per render
+         rather than in each of its style rules. */
+      const states = useMemo(() => getButtonStateColors(colorProps, active), [colorProps, active]);
+      // whether it has a description, not the description: a node given inline is new each render
+      const hasDescription = !!description;
+      const paint = useMemo(
+        () => getButtonPaint(colorProps, states, hasDescription),
+        [colorProps, states, hasDescription]
+      );
+      // an icon's own color: in its props (which win, as they are spread over the rest), else the button's
+      const [leftIconPropsColor, leftIconRest] = splitIconColor(leftIconProps);
+      const [rightIconPropsColor, rightIconRest] = splitIconColor(rightIconProps);
+      const leftIconOwn = leftIconPropsColor || leftIconColor || iconColor;
+      const rightIconOwn = rightIconPropsColor || rightIconColor || iconColor;
+      // only for the icons the button draws
+      const leftIconLook = useMemo(
+        () => (hasLeftIcon ? getButtonIconLookIn(theme, states, leftIconOwn) : undefined),
+        [hasLeftIcon, theme, states, leftIconOwn]
+      );
+      const rightIconLook = useMemo(
+        () => (hasRightIcon ? getButtonIconLookIn(theme, states, rightIconOwn) : undefined),
+        [hasRightIcon, theme, states, rightIconOwn]
+      );
+      /* What the button holds (its badges, a label given as a node) is drawn on the button: at rest, or in its
+         fill when it is active (a selected menu item, whose badges were picked for the resting wash). */
+      const restingBackground = (states.active ?? states.rest).backgrounds;
+      /* Its effect's color is written on its own fill, at rest and hovered (or active), not on the surface
+         around it: an info text on a success button was read on the page, 2.7:1 on the green. */
+      const fillBackgrounds = useMemo(
+        () =>
+          states.active
+            ? states.active.backgrounds
+            : [...states.rest.backgrounds, ...(states.hover?.backgrounds ?? [])],
+        [states]
+      );
+      // one object for as long as the opacity holds: an icon is a memo component
+      const leftIconEffect = useMemo(
+        () => ({ opacity: leftIconLook?.opacity }),
+        [leftIconLook?.opacity]
+      );
+      const rightIconEffect = useMemo(
+        () => ({ opacity: rightIconLook?.opacity }),
+        [rightIconLook?.opacity]
+      );
 
       const indicatorConfig = useMemo(() => {
         if (!indicator) {
@@ -958,6 +1336,9 @@ const ReqoreButton = memo(
             size,
             intent,
             color: customColor,
+            $surface: surface,
+            $backgrounds: fillBackgrounds,
+            $paint: paint,
             animate,
             flat: _flat,
             active,
@@ -975,166 +1356,166 @@ const ReqoreButton = memo(
           Component={StyledButton}
           ref={setRef}
         >
-          <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
-            {hasLeftIcon ? (
-              <>
-                <ReqoreIcon
-                  size={size}
-                  color={leftIconColor || iconColor}
-                  compact
-                  effect={{
-                    opacity: CONTROL_ICON_OPACITY,
-                  }}
-                  {...leftIconProps}
-                  style={
-                    textAlign !== 'left' || iconsAlign === 'center' || !_children
-                      ? {
-                          marginRight: iconsAlign !== 'center' || !_children ? 'auto' : undefined,
-                          marginLeft:
-                            iconsAlign === 'center' ||
-                            !_children ||
-                            (textAlign === 'center' && !_children)
-                              ? 'auto'
-                              : undefined,
-                        }
-                      : undefined
-                  }
-                  animation={loading ? 'spin' : leftIconProps?.animation}
-                  icon={leftIcon}
-                />
-                {_children || hasRightIcon ? (
-                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / 2} />
-                ) : null}
-              </>
-            ) : _children ? (
-              <ReqoreHorizontalSpacer
-                width={1}
-                style={textAlign !== 'left' ? { marginRight: 'auto' } : undefined}
-              />
-            ) : null}
-            {_children && (
-              <StyledAnimatedTextWrapper
-                textAlign={textAlign}
-                style={
-                  textAlign === 'center' && iconsAlign !== 'center' ? { margin: 'auto' } : undefined
-                }
-              >
-                {!animate && (
-                  <StyledContent
-                    wrap={wrap}
-                    effect={labelEffect}
-                    className='reqore-button-text-content'
-                    {...REQORE_MARQUEE_TEXT}
-                  >
-                    {_children}
-                  </StyledContent>
-                )}
-                {animate && (
-                  <StyledActiveContent
-                    wrap={wrap}
-                    effect={labelEffect}
-                    className='reqore-button-text-content reqore-animated reqore-active'
-                    {...REQORE_MARQUEE_TEXT}
-                  >
-                    {_children}
-                  </StyledActiveContent>
-                )}
-                {animate && (
-                  <StyledInActiveContent
-                    wrap={wrap}
-                    effect={labelEffect}
-                    className='reqore-button-text-content reqore-animated reqore-inactive'
-                    {...REQORE_MARQUEE_TEXT}
-                    aria-hidden='true'
-                  >
-                    {_children}
-                  </StyledInActiveContent>
-                )}
-                {animate && (
-                  <StyledInvisibleContent
-                    wrap={wrap}
-                    effect={labelEffect}
-                    className='reqore-button-text-content reqore-animated reqore-invisible'
-                    aria-hidden='true'
-                  >
-                    {_children}
-                  </StyledInvisibleContent>
-                )}
-                {(badge || badge === 0) && wrap ? (
-                  <ButtonBadge content={badge} size={size} wrap active={active} />
-                ) : null}
-              </StyledAnimatedTextWrapper>
-            )}
-            {(badge || badge === 0) && !wrap ? (
-              <ButtonBadge
-                content={badge}
-                size={size}
-                compact={_compact}
-                wrapGroup={false}
-                wrap={false}
-                active={active}
-              />
-            ) : null}
-            {!hasRightIcon ? (
-              _children ? (
+          <ReqoreSurfaceProvider color={restingBackground}>
+            <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
+              {hasLeftIcon ? (
+                <>
+                  <ReqoreIcon
+                    size={size}
+                    color={leftIconLook?.color ?? leftIconOwn}
+                    compact
+                    effect={leftIconEffect}
+                    {...leftIconRest}
+                    style={
+                      textAlign !== 'left' || iconsAlign === 'center' || !_children
+                        ? {
+                            marginRight: iconsAlign !== 'center' || !_children ? 'auto' : undefined,
+                            marginLeft:
+                              iconsAlign === 'center' ||
+                              !_children ||
+                              (textAlign === 'center' && !_children)
+                                ? 'auto'
+                                : undefined,
+                          }
+                        : undefined
+                    }
+                    animation={loading ? 'spin' : leftIconProps?.animation}
+                    icon={leftIcon}
+                  />
+                  {_children || hasRightIcon ? (
+                    <ReqoreSpacer width={PADDING_FROM_SIZE[size] / 2} />
+                  ) : null}
+                </>
+              ) : _children ? (
                 <ReqoreHorizontalSpacer
                   width={1}
+                  style={textAlign !== 'left' ? { marginRight: 'auto' } : undefined}
+                />
+              ) : null}
+              {_children && (
+                <StyledAnimatedTextWrapper
+                  textAlign={textAlign}
                   style={
-                    textAlign !== 'right' && !hasRightAlignedBadge
-                      ? { marginLeft: 'auto' }
+                    textAlign === 'center' && iconsAlign !== 'center'
+                      ? { margin: 'auto' }
                       : undefined
                   }
-                />
-              ) : null
-            ) : (
-              <>
-                {_children || badge ? <ReqoreSpacer width={PADDING_FROM_SIZE[size] / 2} /> : null}
-                <ReqoreIcon
-                  icon={rightIcon}
+                >
+                  {!animate && (
+                    <StyledContent
+                      wrap={wrap}
+                      effect={labelEffect}
+                      className='reqore-button-text-content'
+                      {...REQORE_MARQUEE_TEXT}
+                    >
+                      {_children}
+                    </StyledContent>
+                  )}
+                  {animate && (
+                    <StyledActiveContent
+                      wrap={wrap}
+                      effect={labelEffect}
+                      className='reqore-button-text-content reqore-animated reqore-active'
+                      {...REQORE_MARQUEE_TEXT}
+                    >
+                      {_children}
+                    </StyledActiveContent>
+                  )}
+                  {animate && (
+                    <StyledInActiveContent
+                      wrap={wrap}
+                      effect={labelEffect}
+                      className='reqore-button-text-content reqore-animated reqore-inactive'
+                      {...REQORE_MARQUEE_TEXT}
+                      aria-hidden='true'
+                    >
+                      {_children}
+                    </StyledInActiveContent>
+                  )}
+                  {animate && (
+                    <StyledInvisibleContent
+                      wrap={wrap}
+                      effect={labelEffect}
+                      className='reqore-button-text-content reqore-animated reqore-invisible'
+                      aria-hidden='true'
+                    >
+                      {_children}
+                    </StyledInvisibleContent>
+                  )}
+                  {(badge || badge === 0) && wrap ? (
+                    <ButtonBadge content={badge} size={size} wrap active={active} />
+                  ) : null}
+                </StyledAnimatedTextWrapper>
+              )}
+              {(badge || badge === 0) && !wrap ? (
+                <ButtonBadge
+                  content={badge}
                   size={size}
-                  color={rightIconColor || iconColor}
-                  effect={{
-                    opacity: CONTROL_ICON_OPACITY,
-                  }}
-                  {...rightIconProps}
-                  style={
-                    textAlign !== 'right' || iconsAlign === 'center'
-                      ? {
-                          marginLeft:
-                            !hasRightAlignedBadge && (iconsAlign !== 'center' || !_children)
-                              ? 'auto'
-                              : undefined,
-                          marginRight:
-                            iconsAlign === 'center' || (textAlign === 'center' && !_children)
-                              ? 'auto'
-                              : undefined,
-                        }
-                      : undefined
-                  }
+                  compact={_compact}
+                  wrapGroup={false}
+                  wrap={false}
+                  active={active}
                 />
-              </>
-            )}
-            {showShortcutHint ? (
-              <>
-                <ReqoreSpacer width={PADDING_FROM_SIZE[size] / 2} />
-                <ReqoreKeyboardShortcut shortcut={shortcut} size={size} compact={_compact} />
-              </>
-            ) : null}
-          </StyledButtonContent>
+              ) : null}
+              {!hasRightIcon ? (
+                _children ? (
+                  <ReqoreHorizontalSpacer
+                    width={1}
+                    style={
+                      textAlign !== 'right' && !hasRightAlignedBadge
+                        ? { marginLeft: 'auto' }
+                        : undefined
+                    }
+                  />
+                ) : null
+              ) : (
+                <>
+                  {_children || badge ? <ReqoreSpacer width={PADDING_FROM_SIZE[size] / 2} /> : null}
+                  <ReqoreIcon
+                    icon={rightIcon}
+                    size={size}
+                    color={rightIconLook?.color ?? rightIconOwn}
+                    effect={rightIconEffect}
+                    {...rightIconRest}
+                    style={
+                      textAlign !== 'right' || iconsAlign === 'center'
+                        ? {
+                            marginLeft:
+                              !hasRightAlignedBadge && (iconsAlign !== 'center' || !_children)
+                                ? 'auto'
+                                : undefined,
+                            marginRight:
+                              iconsAlign === 'center' || (textAlign === 'center' && !_children)
+                                ? 'auto'
+                                : undefined,
+                          }
+                        : undefined
+                    }
+                  />
+                </>
+              )}
+              {showShortcutHint ? (
+                <>
+                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / 2} />
+                  <ReqoreKeyboardShortcut shortcut={shortcut} size={size} compact={_compact} />
+                </>
+              ) : null}
+            </StyledButtonContent>
 
-          {description && (
-            <ReqoreTextEffect
-              className='reqore-button-description'
-              effect={{
-                textSize: getOneLessSize(size),
-                weight: 'light',
-                textAlign,
-                ...descriptionEffect,
-              }}
-            >
-              {description}
-            </ReqoreTextEffect>
-          )}
+            {description && (
+              <ReqoreTextEffect
+                className='reqore-button-description'
+                effect={{
+                  textSize: getOneLessSize(size),
+                  weight: 'light',
+                  textAlign,
+                  ...descriptionEffect,
+                }}
+              >
+                {description}
+              </ReqoreTextEffect>
+            )}
+          </ReqoreSurfaceProvider>
 
           {indicatorConfig && (
             <StyledButtonIndicator

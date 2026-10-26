@@ -29,11 +29,13 @@
  *     so the operator doesn't lose their place when expanding deep
  *     trees.
  */
+import { isUndefined, omitBy } from 'lodash';
 import {
   forwardRef,
   memo,
   useCallback,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -52,7 +54,7 @@ import {
 } from '../../constants/sizes';
 import { MONO_FONT, getFontFamily } from '../../constants/fonts';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { TReqoreEffectColor } from '../Effect';
+import { IReqoreEffect, TReqoreEffectColor } from '../Effect';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreButton from '../Button';
@@ -81,6 +83,12 @@ import {
   reqoreSetAtPath,
   reqoreUnwrapEnvelope,
 } from './helpers';
+
+// A tag's effects, one object each for every tag that draws them: a tag is a memo component.
+/** A key or a value written bold. */
+const BOLD_TAG_EFFECT: IReqoreEffect = { weight: 'bold' };
+/** A value's type: faint small capitals. */
+const TYPE_TAG_EFFECT: IReqoreEffect = { uppercase: true, spaced: 1, opacity: 0.6 };
 
 /**
  * Bag of user-visible strings the DataView renders. Every entry is optional;
@@ -145,7 +153,55 @@ export interface IReqoreDataViewLabels {
   typeObjectLabel?: string;
   typeArrayLabel?: string;
   typeNullLabel?: string;
+  /** How a `true` value is written. Defaults to `'true'`: a consumer whose
+   *  readers are not programmers passes its own word ("Yes"). The value
+   *  keeps its boolean colour either way. */
+  booleanTrue?: string;
+  /** How a `false` value is written. Defaults to `'false'`. */
+  booleanFalse?: string;
 }
+
+/** Every label, as the view writes it when the consumer gives none. */
+export const REQORE_DATA_VIEW_DEFAULT_LABELS: Required<IReqoreDataViewLabels> = {
+  objectSection: (count) => `Object · ${count} field${count === 1 ? '' : 's'}`,
+  listSection: (count) => `List · ${count} item${count === 1 ? '' : 's'}`,
+  scalarSection: 'Value',
+  editValue: 'Edit value',
+  renameKey: 'Rename key',
+  removeProperty: (key) => `Remove ${key}`,
+  removeItem: (indexOneBased) => `Remove item ${indexOneBased}`,
+  changeType: 'Change type',
+  saveValueTooltip: 'Save (Enter)',
+  cancelValueTooltip: 'Cancel (Esc)',
+  renameCommitTooltip: 'Rename (Enter)',
+  renameCancelTooltip: 'Cancel (Esc)',
+  addPropertyLabel: 'Add property',
+  addItemLabel: 'Add item',
+  addCommitLabel: 'Add',
+  addCancelTooltip: 'Cancel',
+  propertyNamePlaceholder: 'property name',
+  typeStringLabel: 'String',
+  typeNumberLabel: 'Number',
+  typeBooleanLabel: 'Boolean',
+  typeObjectLabel: 'Object (hash)',
+  typeArrayLabel: 'Array (list)',
+  typeNullLabel: 'Null',
+  booleanTrue: 'true',
+  booleanFalse: 'false',
+};
+
+/**
+ * The consumer's labels over the defaults. A label given as `undefined` keeps its default: a
+ * consumer that builds its labels from its own translations passes the ones it has none for that
+ * way, and spread over the defaults they replaced them, so the view called `undefined` for a
+ * summary and threw.
+ */
+const resolveDataViewLabels = (
+  labels?: IReqoreDataViewLabels
+): Required<IReqoreDataViewLabels> => ({
+  ...REQORE_DATA_VIEW_DEFAULT_LABELS,
+  ...omitBy(labels, isUndefined),
+});
 
 export interface IReqoreDataViewProps
   extends Omit<IReqorePanelProps, 'children'>,
@@ -279,13 +335,12 @@ export interface IReqoreDataViewProps
   onChangeType?: (path: string[], kind: TReqoreDataValueKind) => void;
 }
 
-const SECTION_LABEL = (kind: 'Object' | 'List', count: number): string => {
-  const word = kind === 'Object' ? 'field' : 'item';
-  return `${kind} · ${count} ${word}${count === 1 ? '' : 's'}`;
-};
 
 type TRenderContext = {
   theme: IReqoreTheme;
+  /** Every user-visible string, the consumer's over the defaults
+   *  (`REQORE_DATA_VIEW_DEFAULT_LABELS`). */
+  labels: Required<IReqoreDataViewLabels>;
   envelope: IReqoreDataViewEnvelope | false;
   parseEmbedded?: (value: string) => IReqoreDataViewEmbedded | undefined;
   showTypes: boolean;
@@ -794,6 +849,19 @@ const PreservedDetails = memo(
 
 PreservedDetails.displayName = 'ReqoreDataView.PreservedDetails';
 
+/** How a scalar is written: a yes/no value in the labels' words, any other
+ *  as `reqoreFormatScalar` writes it. */
+const scalarDisplay = (
+  value: unknown,
+  display: string,
+  ctx: TRenderContext
+): string =>
+  typeof value === 'boolean'
+    ? value
+      ? ctx.labels.booleanTrue
+      : ctx.labels.booleanFalse
+    : display;
+
 /** Render the read-only value chip for a scalar leaf. Extracted so
  *  both the read-only view and the click-to-edit cell share one
  *  rendering — keeps the "before / after" look of an edited row
@@ -813,9 +881,9 @@ const renderScalarChip = (
       flat={false}
       minimal
       wrap
-      label={scalar.display}
+      label={scalarDisplay(value, scalar.display, ctx)}
       intent={intent}
-      effect={{ weight: 'bold' }}
+      effect={BOLD_TAG_EFFECT}
       onClick={
         ctx.onItemClick ? () => ctx.onItemClick!(value, path) : undefined
       }
@@ -959,7 +1027,7 @@ const EditableScalarCell = memo<IEditableScalarCellProps>(
           }}
           role='button'
           tabIndex={0}
-          aria-label='Edit value'
+          aria-label={ctx.labels.editValue}
         >
           {renderScalarChip(value, type, ctx, path)}
         </EditCellShell>
@@ -992,7 +1060,7 @@ const EditableScalarCell = memo<IEditableScalarCellProps>(
       }
     };
 
-    const currentTypeItem = TYPE_PICKER_ITEMS.find(
+    const currentTypeItem = typePickerItems(ctx.labels).find(
       (entry) => entry.kind === kind
     );
 
@@ -1049,9 +1117,9 @@ const EditableScalarCell = memo<IEditableScalarCellProps>(
           <ReqoreDropdown
             size={ctx.size}
             icon={currentTypeItem?.icon ?? 'TextWrap'}
-            tooltip='Change type'
+            tooltip={ctx.labels.changeType}
             className='reqore-data-view-edit-type'
-            items={TYPE_PICKER_ITEMS.map((entry) => ({
+            items={typePickerItems(ctx.labels).map((entry) => ({
               label: entry.label,
               icon: entry.icon,
               selected: entry.kind === kind,
@@ -1068,7 +1136,7 @@ const EditableScalarCell = memo<IEditableScalarCellProps>(
           intent='success'
           flat
           minimal
-          tooltip='Save (Enter)'
+          tooltip={ctx.labels.saveValueTooltip}
           onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
             e.preventDefault();
             commitDraft();
@@ -1080,7 +1148,7 @@ const EditableScalarCell = memo<IEditableScalarCellProps>(
           icon='CloseLine'
           flat
           minimal
-          tooltip='Cancel (Esc)'
+          tooltip={ctx.labels.cancelValueTooltip}
           onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
             e.preventDefault();
             cancelEditing();
@@ -1156,7 +1224,7 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
           }}
           role='button'
           tabIndex={0}
-          aria-label='Rename key'
+          aria-label={ctx.labels.renameKey}
           className='reqore-data-view-key-shell'
         >
           <ReqoreTag
@@ -1167,7 +1235,7 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
             intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
             color={ctx.keyColor}
             label={keyName}
-            effect={{ weight: 'bold' }}
+            effect={BOLD_TAG_EFFECT}
             className='reqore-data-view-key'
           />
         </EditCellShell>
@@ -1212,7 +1280,7 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
           intent='success'
           flat
           minimal
-          tooltip='Rename (Enter)'
+          tooltip={ctx.labels.renameCommitTooltip}
           onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
             e.preventDefault();
             submit();
@@ -1224,7 +1292,7 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
           icon='CloseLine'
           flat
           minimal
-          tooltip='Cancel (Esc)'
+          tooltip={ctx.labels.renameCancelTooltip}
           onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
             e.preventDefault();
             cancel();
@@ -1319,17 +1387,20 @@ const defaultForKind = (kind: TReqoreDataValueKind): unknown => {
   }
 };
 
-const TYPE_PICKER_ITEMS: Array<{
+/** The kinds a value can be given, each named by the labels. */
+const typePickerItems = (
+  labels: Required<IReqoreDataViewLabels>
+): Array<{
   kind: TReqoreDataValueKind;
   label: string;
   icon: 'TextWrap' | 'Hashtag' | 'CheckboxLine' | 'BracesLine' | 'BracketsLine' | 'CircleLine';
-}> = [
-  { kind: 'string', label: 'String', icon: 'TextWrap' },
-  { kind: 'number', label: 'Number', icon: 'Hashtag' },
-  { kind: 'boolean', label: 'Boolean', icon: 'CheckboxLine' },
-  { kind: 'object', label: 'Object (hash)', icon: 'BracesLine' },
-  { kind: 'array', label: 'Array (list)', icon: 'BracketsLine' },
-  { kind: 'null', label: 'Null', icon: 'CircleLine' },
+}> => [
+  { kind: 'string', label: labels.typeStringLabel, icon: 'TextWrap' },
+  { kind: 'number', label: labels.typeNumberLabel, icon: 'Hashtag' },
+  { kind: 'boolean', label: labels.typeBooleanLabel, icon: 'CheckboxLine' },
+  { kind: 'object', label: labels.typeObjectLabel, icon: 'BracesLine' },
+  { kind: 'array', label: labels.typeArrayLabel, icon: 'BracketsLine' },
+  { kind: 'null', label: labels.typeNullLabel, icon: 'CircleLine' },
 ];
 
 const AddRowShell = styled.div`
@@ -1400,13 +1471,17 @@ const AddEntryAffordance = memo<IAddEntryAffordanceProps>(
             flat
             minimal
             onClick={() => setOpen(true)}
-            label={context.kind === 'record' ? 'Add property' : 'Add item'}
+            label={
+              context.kind === 'record'
+                ? ctx.labels.addPropertyLabel
+                : ctx.labels.addItemLabel
+            }
           />
         </AddRowShell>
       );
     }
 
-    const typeItem = TYPE_PICKER_ITEMS.find((entry) => entry.kind === valueKind);
+    const typeItem = typePickerItems(ctx.labels).find((entry) => entry.kind === valueKind);
 
     return (
       <AddRowShell
@@ -1422,7 +1497,7 @@ const AddEntryAffordance = memo<IAddEntryAffordanceProps>(
         {context.kind === 'record' ? (
           <ReqoreInput
             size={ctx.size}
-            placeholder='property name'
+            placeholder={ctx.labels.propertyNamePlaceholder}
             value={key}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setKey(e.target.value)
@@ -1439,9 +1514,9 @@ const AddEntryAffordance = memo<IAddEntryAffordanceProps>(
         <ReqoreDropdown
           size={ctx.size}
           icon={typeItem?.icon}
-          label={typeItem?.label ?? 'String'}
+          label={typeItem?.label ?? ctx.labels.typeStringLabel}
           className='reqore-data-view-add-type'
-          items={TYPE_PICKER_ITEMS.map((entry) => ({
+          items={typePickerItems(ctx.labels).map((entry) => ({
             label: entry.label,
             icon: entry.icon,
             selected: entry.kind === valueKind,
@@ -1455,7 +1530,7 @@ const AddEntryAffordance = memo<IAddEntryAffordanceProps>(
           flat
           minimal
           onClick={submit}
-          label='Add'
+          label={ctx.labels.addCommitLabel}
           className='reqore-data-view-add-commit'
         />
         <ReqoreButton
@@ -1464,7 +1539,7 @@ const AddEntryAffordance = memo<IAddEntryAffordanceProps>(
           flat
           minimal
           onClick={reset}
-          tooltip='Cancel'
+          tooltip={ctx.labels.addCancelTooltip}
           className='reqore-data-view-add-cancel'
         />
       </AddRowShell>
@@ -1517,7 +1592,7 @@ const renderScalar = (
           flat
           minimal
           label={displayType}
-          effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+          effect={TYPE_TAG_EFFECT}
           className='reqore-data-view-type'
         />
       </ScalarRow>
@@ -1574,7 +1649,7 @@ const renderScalar = (
           flat
           minimal
           label={displayType}
-          effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+          effect={TYPE_TAG_EFFECT}
           className='reqore-data-view-type'
         />
       </ScalarRow>
@@ -1599,11 +1674,9 @@ const renderScalar = (
       // overflows its column horizontally. With `wrap`, ReqoreTag
       // lets the label flow onto multiple lines inside the chip.
       wrap
-      label={scalar.display}
+      label={scalarDisplay(value, scalar.display, ctx)}
       intent={intent}
-      effect={{
-        weight: 'bold',
-      }}
+      effect={BOLD_TAG_EFFECT}
       onClick={
         ctx.onItemClick
           ? () => ctx.onItemClick!(value, path)
@@ -1623,7 +1696,7 @@ const renderScalar = (
         flat
         minimal
         label={displayType}
-        effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+        effect={TYPE_TAG_EFFECT}
         className='reqore-data-view-type'
       />
     </ScalarRow>
@@ -1727,7 +1800,7 @@ const RecordTable = memo(
                   intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
                   color={ctx.keyColor}
                   label={key}
-                  effect={{ weight: 'bold' }}
+                  effect={BOLD_TAG_EFFECT}
                   className='reqore-data-view-key'
                 />
               )}
@@ -1743,7 +1816,7 @@ const RecordTable = memo(
                 <RowActions
                   ctx={ctx}
                   path={rowPath}
-                  ariaLabel={`Remove ${key}`}
+                  ariaLabel={ctx.labels.removeProperty(key)}
                 />
               ) : null}
             </Row>
@@ -1808,7 +1881,7 @@ const renderTree = (
               minimal
               flat={false}
               label={envelopeType}
-              effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+              effect={TYPE_TAG_EFFECT}
               className='reqore-data-view-type'
             />
           ) : null}
@@ -1849,7 +1922,7 @@ const renderTree = (
                 <RowActions
                   ctx={ctx}
                   path={itemPath}
-                  ariaLabel={`Remove item ${index + 1}`}
+                  ariaLabel={ctx.labels.removeItem(index + 1)}
                 />
               ) : null}
             </ArrayItem>
@@ -1870,7 +1943,7 @@ const renderTree = (
     return (
       <PreservedDetails
         initialOpen={depth < ctx.defaultExpandDepth}
-        label={SECTION_LABEL('List', unwrapped.length)}
+        label={ctx.labels.listSection(unwrapped.length)}
         path={path}
         size={ctx.size}
         theme={theme}
@@ -1899,7 +1972,7 @@ const renderTree = (
     return (
       <PreservedDetails
         initialOpen={depth < ctx.defaultExpandDepth}
-        label={SECTION_LABEL('Object', entries.length)}
+        label={ctx.labels.objectSection(entries.length)}
         path={path}
         size={ctx.size}
         theme={theme}
@@ -1938,6 +2011,7 @@ export const ReqoreDataView = memo(
         onRenameProperty,
         onAddProperty,
         onChangeType,
+        labels,
         size = 'normal',
         customTheme,
         inheritCustomTheme,
@@ -2054,8 +2128,11 @@ export const ReqoreDataView = memo(
         [onChangeType, onDataChange]
       );
 
+      const resolvedLabels = useMemo(() => resolveDataViewLabels(labels), [labels]);
+
       const ctx: TRenderContext = {
         theme,
+        labels: resolvedLabels,
         envelope,
         parseEmbedded,
         showTypes,
@@ -2084,10 +2161,10 @@ export const ReqoreDataView = memo(
           initialOpen={true}
           label={
             Array.isArray(data)
-              ? SECTION_LABEL('List', (data as unknown[]).length)
+              ? ctx.labels.listSection((data as unknown[]).length)
               : reqoreIsRecord(data)
-              ? SECTION_LABEL('Object', Object.keys(data).length)
-              : 'Value'
+              ? ctx.labels.objectSection(Object.keys(data).length)
+              : ctx.labels.scalarSection
           }
           path={[]}
           size={size}

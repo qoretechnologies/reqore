@@ -9,4 +9,10 @@ export default defineConfig({
     // "A React Element from an older version of React was rendered".
     dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
   },
+  optimizeDeps: {
+    // Imported only by the story run's setup (`src/stories/utils/motion.ts`): listed, so it is
+    // bundled with the other dependencies before the first story runs, not when a story finds it,
+    // which reloaded the page in the middle of the run.
+    include: ['@react-spring/shared'],
+  },
 });
