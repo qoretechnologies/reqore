@@ -462,6 +462,65 @@ export const Responsive: Story = {
   },
 };
 
+const FILTER_ITEMS: IReqoreSegmentedControlProps['items'] = [
+  { value: 'all', label: 'All', badge: { label: '13', appearance: 'text' } },
+  { value: 'failing', label: 'Failing', badge: { label: '3', appearance: 'text' } },
+  { value: 'look', label: 'Needs a look', badge: { label: '4', appearance: 'text' } },
+  { value: 'healthy', label: 'Healthy', badge: { label: '3', appearance: 'text' } },
+  { value: 'idle', label: 'No orders', badge: { label: '1', appearance: 'text' } },
+  { value: 'disabled', label: 'Disabled', badge: { label: '1', appearance: 'text' } },
+  { value: 'drafts', label: 'Drafts', badge: { label: '1', appearance: 'text' } },
+];
+
+export const FoldToFit: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a seven-segment filter with counts, folding to fit the room its slot is given: at full width every segment shows at its own width; at 520px and 320px the segments that do not fit move into "More", each with its count. Asserts that no segment is cut off at the control\'s edge and that the narrow controls fold.',
+      },
+    },
+  },
+  render: (args) => {
+    const [value, setValue] = useState('all');
+
+    return (
+      <ReqoreControlGroup vertical gapSize='big' fluid>
+        {[undefined, 520, 320].map((width) => (
+          <div key={width ?? 'full'} style={{ display: 'flex', width: width ?? '100%' }}>
+            <div style={{ flex: '1 1 0', minWidth: 0 }}>
+              <ReqoreSegmentedControl
+                {...args}
+                items={FILTER_ITEMS}
+                value={value}
+                onChange={setValue}
+                foldToFit
+                overflowLabel='More'
+              />
+            </div>
+          </div>
+        ))}
+      </ReqoreControlGroup>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      const controls = Array.from(
+        canvasElement.querySelectorAll<HTMLElement>('.reqore-segmented-control')
+      );
+      expect(controls.length).toBe(3);
+      for (const control of controls) {
+        const edge = control.getBoundingClientRect().right;
+        for (const item of control.querySelectorAll('.reqore-segmented-control-item')) {
+          expect(item.getBoundingClientRect().right).toBeLessThanOrEqual(edge + 0.5);
+        }
+      }
+      expect(controls[1].querySelector('.reqore-segmented-control-more')).toBeTruthy();
+      expect(controls[2].querySelector('.reqore-segmented-control-more')).toBeTruthy();
+    });
+  },
+};
+
 /* ------------------------------------------------------------------------------------------------
  * Per-item props
  * ---------------------------------------------------------------------------------------------- */

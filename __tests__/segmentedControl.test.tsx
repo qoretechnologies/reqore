@@ -438,6 +438,42 @@ test('A segment folded into the More menu passes its props to its menu item', ()
   expect(menuItem).toBeTruthy();
 });
 
+test('foldToFit draws the control inside a slot and keeps every segment at its own width', () => {
+  renderControl({ foldToFit: true, fluid: true });
+
+  const slot = document.querySelector('.reqore-segmented-control-slot');
+  expect(slot).toBeTruthy();
+  expect(slot!.querySelector('.reqore-segmented-control')).toBeTruthy();
+  // `fluid` does not stretch the segments while folding: they keep their own width.
+  const wrapper = document.querySelector('.reqore-segmented-control-item')!
+    .parentElement as HTMLElement;
+  expect(getComputedStyle(wrapper).flex).toBe('0 0 auto');
+});
+
+test('A segment folded to fit keeps its count in the More menu', () => {
+  renderControl({
+    foldToFit: true,
+    _testWidth: 150,
+    items: [
+      { value: 'day', label: 'Day' },
+      { value: 'week', label: 'Week' },
+      { value: 'month', label: 'Month' },
+      { value: 'year', label: 'Year', badge: { label: '42', appearance: 'text' } },
+    ],
+    value: 'day',
+  });
+
+  const more = document.querySelector('.reqore-segmented-control-more') as HTMLElement;
+  expect(more).toBeTruthy();
+  fireEvent.mouseEnter(more);
+  fireEvent.click(more);
+
+  const yearItem = Array.from(document.querySelectorAll('.reqore-menu-item')).find((item) =>
+    item.textContent?.includes('Year')
+  );
+  expect(yearItem?.textContent).toContain('42');
+});
+
 test('fitSize makes the whole control the size of a button beside it', () => {
   render(
     <ReqoreUIProvider>
