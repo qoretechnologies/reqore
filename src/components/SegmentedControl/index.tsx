@@ -267,9 +267,11 @@ const estimateItemWidth = (
  * Calculate the total estimated width of all items including gaps.
  * Mirrors the Tabs `getTabsLength` approach.
  */
-/** A segment's width as it was last drawn (`foldToFit`), by value; `MORE_KEY` is "More". */
+/** A segment's width as it was last drawn (`foldToFit`), by value; "More" by the label it
+ *  showed (`moreKey`) — the label of the selected segment when that one is folded. */
 type TMeasuredWidths = Record<string, number>;
 const MORE_KEY = '__more__';
+const moreKey = (label: string | number) => `${MORE_KEY}:${label}`;
 
 const getItemsLength = (
   items: (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[],
@@ -281,14 +283,14 @@ const getItemsLength = (
 ): number =>
   items.reduce((len, item) => {
     if (Array.isArray(item)) {
-      if (measured?.[MORE_KEY] && !item.some((i) => i.value === selectedValue)) {
-        return len + measured[MORE_KEY];
-      }
-      // "More" group — estimate the More button width
+      // "More" group — its width as drawn with this label, else an estimate
       const isSelectedHidden = item.some((i) => i.value === selectedValue);
       const moreLabel = isSelectedHidden
         ? item.find((i) => i.value === selectedValue)?.label ?? overflowLabel
         : overflowLabel;
+      if (measured?.[moreKey(moreLabel)]) {
+        return len + measured[moreKey(moreLabel)];
+      }
       const hPad = CONTROL_HORIZONTAL_PADDING_FROM_SIZE[itemSize];
       const iconWidth = ICON_FROM_SIZE[itemSize] + PADDING_FROM_SIZE[itemSize] / 2;
       const labelWidth = calculateStringSizeInPixels(
@@ -509,7 +511,7 @@ const ReqoreSegmentedControl = memo(
           }
         };
         visibleItems.forEach((item) => record(item.value, wrapperRefs.current[item.value]));
-        if (hasOverflow && !isSelectedHidden) record(MORE_KEY, wrapperRefs.current[MORE_KEY]);
+        if (hasOverflow) record(moreKey(moreLabel), wrapperRefs.current[MORE_KEY]);
         if (changed) setMeasuredVersion((version) => version + 1);
       });
 

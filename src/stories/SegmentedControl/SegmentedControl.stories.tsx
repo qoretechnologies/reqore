@@ -1,6 +1,6 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, fireEvent, waitFor } from 'storybook/test';
 import ReqoreSegmentedControl, {
   IReqoreSegmentedControlProps,
 } from '../../components/SegmentedControl';
@@ -462,15 +462,23 @@ export const Responsive: Story = {
   },
 };
 
-const FILTER_ITEMS: IReqoreSegmentedControlProps['items'] = [
-  { value: 'all', label: 'All', badge: { label: '13', appearance: 'text' } },
-  { value: 'failing', label: 'Failing', badge: { label: '3', appearance: 'text' } },
-  { value: 'look', label: 'Needs a look', badge: { label: '4', appearance: 'text' } },
-  { value: 'healthy', label: 'Healthy', badge: { label: '3', appearance: 'text' } },
-  { value: 'idle', label: 'No orders', badge: { label: '1', appearance: 'text' } },
-  { value: 'disabled', label: 'Disabled', badge: { label: '1', appearance: 'text' } },
-  { value: 'drafts', label: 'Drafts', badge: { label: '1', appearance: 'text' } },
-];
+// `data-value` lets the play find each segment by its value.
+const FILTER_ITEMS: IReqoreSegmentedControlProps['items'] = (
+  [
+    ['all', 'All', '13'],
+    ['failing', 'Failing', '3'],
+    ['look', 'Needs a look', '4'],
+    ['healthy', 'Healthy', '3'],
+    ['idle', 'No orders', '1'],
+    ['disabled', 'Disabled', '1'],
+    ['drafts', 'Drafts', '1'],
+  ] as const
+).map(([value, label, count]) => ({
+  value,
+  label,
+  badge: { label: count, appearance: 'text' as const },
+  props: { 'data-value': value },
+}));
 
 export const FoldToFit: Story = {
   parameters: {
@@ -504,19 +512,55 @@ export const FoldToFit: Story = {
     );
   },
   play: async ({ canvasElement }) => {
-    await waitFor(() => {
-      const controls = Array.from(
-        canvasElement.querySelectorAll<HTMLElement>('.reqore-segmented-control')
+    const controls = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('.reqore-segmented-control'));
+    const width = (element: Element) => element.getBoundingClientRect().width;
+    const itemsOf = (control: HTMLElement) =>
+      Array.from(control.querySelectorAll<HTMLElement>('.reqore-segmented-control-item'));
+    // Folds only what does not fit: nothing is cut off at the control's edge, and the first
+    // folded segment (at the width the full row draws it) would not have fitted beside the
+    // ones shown. The frame is 3px of padding and a 1px border on each side.
+    const expectFoldsOnlyWhatDoesNotFit = () => {
+      const [full, ...narrow] = controls();
+      expect(narrow.length).toBe(2);
+      const drawn = Object.fromEntries(
+        itemsOf(full).map((item) => [item.dataset.value, width(item.parentElement!)])
       );
-      expect(controls.length).toBe(3);
-      for (const control of controls) {
-        const edge = control.getBoundingClientRect().right;
-        for (const item of control.querySelectorAll('.reqore-segmented-control-item')) {
-          expect(item.getBoundingClientRect().right).toBeLessThanOrEqual(edge + 0.5);
-        }
+      for (const control of narrow) {
+        const room = width(control.parentElement!) - 8;
+        const shown = itemsOf(control).filter(
+          (item) => !item.classList.contains('reqore-segmented-control-more')
+        );
+        const more = control.querySelector('.reqore-segmented-control-more');
+        expect(more).toBeTruthy();
+        const used =
+          shown.reduce((sum, item) => sum + width(item.parentElement!), 0) +
+          width(more!.parentElement!);
+        expect(used).toBeLessThanOrEqual(room + 0.5);
+        const firstFolded = FILTER_ITEMS[shown.length].value;
+        expect(used + drawn[firstFolded]).toBeGreaterThan(room);
       }
-      expect(controls[1].querySelector('.reqore-segmented-control-more')).toBeTruthy();
-      expect(controls[2].querySelector('.reqore-segmented-control-more')).toBeTruthy();
+    };
+
+    await waitFor(() => expectFoldsOnlyWhatDoesNotFit());
+
+    // Pick a folded segment: "More" takes its label, and the fold is measured again with it.
+    const more = controls()[1].querySelector<HTMLElement>('.reqore-segmented-control-more')!;
+    fireEvent.mouseEnter(more);
+    fireEvent.click(more);
+    const drafts = await waitFor(() => {
+      const item = Array.from(document.querySelectorAll<HTMLElement>('.reqore-menu-item')).find(
+        (menuItem) => menuItem.textContent?.includes('Drafts')
+      );
+      expect(item).toBeTruthy();
+      return item!;
+    });
+    fireEvent.click(drafts);
+    await waitFor(() => {
+      expect(controls()[1].querySelector('.reqore-segmented-control-more')?.textContent).toContain(
+        'Drafts'
+      );
+      expectFoldsOnlyWhatDoesNotFit();
     });
   },
 };

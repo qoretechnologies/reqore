@@ -474,6 +474,49 @@ test('A segment folded to fit keeps its count in the More menu', () => {
   expect(yearItem?.textContent).toContain('42');
 });
 
+test('foldToFit folds on the widths segments are drawn at, and "More" by the label it shows', () => {
+  // jsdom lays nothing out, so the drawn widths are given: a segment is 100px, "More" 60px,
+  // and "More" carrying a folded segment's label (once that one is picked) 40px — narrower
+  // than an estimate from that label, which is what folded a segment that had room.
+  const original = Element.prototype.getBoundingClientRect;
+  Element.prototype.getBoundingClientRect = function (this: HTMLElement) {
+    let width = 0;
+    if (this.parentElement?.classList.contains('reqore-segmented-control')) {
+      const more = this.querySelector('.reqore-segmented-control-more');
+      width = more ? (more.textContent?.includes('More') ? 60 : 40) : 100;
+    }
+    return { width, height: 30, top: 0, left: 0, right: width, bottom: 30, x: 0, y: 0 } as DOMRect;
+  };
+
+  try {
+    // 290px of room: two segments and "More" (260) fit, a third does not.
+    renderControl({ foldToFit: true, _testWidth: 290, value: 'day' });
+    const shown = () =>
+      Array.from(document.querySelectorAll('.reqore-segmented-control-item'))
+        .filter((item) => !item.classList.contains('reqore-segmented-control-more'))
+        // the button draws its label more than once (for its bold width); read which one it is
+        .map((item) => defaultItems.find((def) => item.textContent?.startsWith(def.label))?.label);
+    expect(shown()).toEqual(['Day', 'Week']);
+
+    const more = document.querySelector('.reqore-segmented-control-more') as HTMLElement;
+    fireEvent.mouseEnter(more);
+    fireEvent.click(more);
+    const year = Array.from(document.querySelectorAll('.reqore-menu-item')).find((item) =>
+      item.textContent?.includes('Year')
+    ) as HTMLElement;
+    fireEvent.click(year);
+
+    // "More" now reads "Year" and is drawn 40px: Day, Week and it (240) still fit, so Week
+    // stays — measured, not estimated from the label.
+    expect(document.querySelector('.reqore-segmented-control-more')?.textContent).toContain(
+      'Year'
+    );
+    expect(shown()).toEqual(['Day', 'Week']);
+  } finally {
+    Element.prototype.getBoundingClientRect = original;
+  }
+});
+
 test('fitSize makes the whole control the size of a button beside it', () => {
   render(
     <ReqoreUIProvider>
