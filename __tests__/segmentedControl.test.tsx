@@ -249,6 +249,8 @@ test('Shows selected item label in "More" button when active item is hidden', ()
   expect(moreButton).toBeTruthy();
   // The "More" button should display the hidden selected item's label
   expect(moreButton!.textContent).toContain('Year');
+  // ...and is marked the way a visible selected segment is: by the highlight, not a fill
+  expect(document.querySelector('.reqore-segmented-control-indicator')).toBeTruthy();
 });
 
 /**

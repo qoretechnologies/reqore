@@ -454,31 +454,30 @@ const ReqoreSegmentedControl = memo(
 
       const hasOverflow = hiddenItems.length > 0;
 
-      // Is the selected value hidden in the "More" dropdown?
-      const isSelectedHidden = useMemo(
+      // The selected segment, when it is folded into the "More" dropdown
+      const hiddenSelectedItem = useMemo(
         () =>
           hasOverflow && _value
-            ? hiddenItems.some((item) => item.value === _value)
-            : false,
+            ? hiddenItems.find((item) => item.value === _value)
+            : undefined,
         [hasOverflow, _value, hiddenItems]
       );
+      const isSelectedHidden = !!hiddenSelectedItem;
+      const hiddenSelectedIntent = hiddenSelectedItem
+        ? hiddenSelectedItem.activeIntent || activeIntent
+        : undefined;
 
       // Get the label for the "More" button
-      const moreLabel = useMemo(() => {
-        if (isSelectedHidden) {
-          const hidden = hiddenItems.find((item) => item.value === _value);
-          return hidden?.label ?? overflowLabel;
-        }
-        return overflowLabel;
-      }, [isSelectedHidden, hiddenItems, _value, overflowLabel]);
+      const moreLabel = hiddenSelectedItem?.label ?? overflowLabel;
 
-      // Calculate indicator position
+      // Calculate indicator position. A selected segment folded into "More" is marked where it
+      // is drawn — on "More", which carries its label — the same way a visible one is marked.
       useLayoutEffect(() => {
-        if (!_value || isSelectedHidden) {
+        if (!_value) {
           return;
         }
 
-        const selectedWrapper = wrapperRefs.current[_value];
+        const selectedWrapper = wrapperRefs.current[isSelectedHidden ? MORE_KEY : _value];
         const container = containerRef.current;
 
         if (selectedWrapper && container) {
@@ -494,7 +493,7 @@ const ReqoreSegmentedControl = memo(
             width: itemRect.width,
           });
         }
-      }, [_value, items, isSelectedHidden, visibleItems, measuredWidth]);
+      }, [_value, items, isSelectedHidden, visibleItems, measuredWidth, moreLabel]);
 
       // foldToFit: remember each drawn segment's width (and "More"'s), and fold again when
       // one changed — a count that loaded, a label in another language. Segments keep
@@ -611,7 +610,7 @@ const ReqoreSegmentedControl = memo(
           onKeyDown={handleKeyDown}
           className={`${className || ''} reqore-segmented-control`}
         >
-          {_value && selectedVisibleIndex >= 0 && !isSelectedHidden && (
+          {_value && (selectedVisibleIndex >= 0 || isSelectedHidden) && (
             <StyledSegmentedControlIndicator
               className='reqore-segmented-control-indicator'
               theme={theme}
@@ -626,7 +625,8 @@ const ReqoreSegmentedControl = memo(
           )}
           {visibleItems.map((item, index) => {
             const isSelected = item.value === _value;
-            const isBeforeSelected = index === selectedVisibleIndex - 1;
+            const isBeforeSelected =
+              index === (isSelectedHidden ? visibleItems.length : selectedVisibleIndex) - 1;
             const isLastVisible =
               index === visibleItems.length - 1 && !hasOverflow;
             const itemDisabled = disabled || item.disabled;
@@ -702,7 +702,7 @@ const ReqoreSegmentedControl = memo(
               ref={(el: HTMLDivElement | null) => {
                 wrapperRefs.current[MORE_KEY] = el;
               }}
-              isSelected={false}
+              isSelected={isSelectedHidden}
               isBeforeSelected={false}
               isLast
               theme={theme}
@@ -717,11 +717,15 @@ const ReqoreSegmentedControl = memo(
                   size,
                   pill,
                   fluid: stretch,
-                  active: isSelectedHidden,
-                  intent: isSelectedHidden ? activeIntent : undefined,
-                  customTheme: isSelectedHidden
-                    ? { main: getReadableColorFrom(theme.main) }
-                    : customTheme,
+                  // Exactly what a visible selected segment gets: it is the same state. An
+                  // `active` (filled) "More" drew one selection two ways.
+                  intent: hiddenSelectedIntent,
+                  // ...and its count: a folded "Drafts 1" still says how many
+                  badge: hiddenSelectedItem?.badge,
+                  customTheme:
+                    isSelectedHidden && !hiddenSelectedIntent
+                      ? { main: getReadableColorFrom(theme.main) }
+                      : customTheme,
                   className:
                     'reqore-segmented-control-item reqore-segmented-control-more',
                   label: moreLabel,

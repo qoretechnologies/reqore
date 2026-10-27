@@ -485,7 +485,7 @@ export const FoldToFit: Story = {
     docs: {
       description: {
         story:
-          'Renders a seven-segment filter with counts, folding to fit the room its slot is given: at full width every segment shows at its own width; at 520px and 320px the segments that do not fit move into "More", each with its count. Asserts that no segment is cut off at the control\'s edge and that the narrow controls fold.',
+          'Renders a seven-segment filter with counts, folding to fit the room its slot is given: at full width every segment shows at its own width; at 520px and 320px the segments that do not fit move into "More", each with its count. Asserts that no segment is cut off at the control\'s edge and that the narrow controls fold. Then picks a folded segment ("Drafts"): "More" takes its label and its count and is marked the way a visible selection is — the same highlight, never a fill.',
       },
     },
   },
@@ -561,6 +561,22 @@ export const FoldToFit: Story = {
         'Drafts'
       );
       expectFoldsOnlyWhatDoesNotFit();
+    });
+
+    // A folded selection is marked the way a visible one is: the highlight moves under "More",
+    // and "More" itself stays unfilled — never a second look for the same state.
+    await waitFor(() => {
+      const control = controls()[1];
+      const more = control.querySelector<HTMLElement>('.reqore-segmented-control-more')!;
+      const indicator = control.querySelector<HTMLElement>('.reqore-segmented-control-indicator');
+      expect(indicator).toBeTruthy();
+      const moreRect = more.parentElement!.getBoundingClientRect();
+      const indicatorRect = indicator!.getBoundingClientRect();
+      expect(Math.abs(indicatorRect.left - moreRect.left)).toBeLessThan(1);
+      expect(Math.abs(indicatorRect.width - moreRect.width)).toBeLessThan(1);
+      expect(getComputedStyle(more).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+      // and it keeps the segment's count, as the visible "Drafts 1" does
+      expect(more.textContent).toContain('1');
     });
   },
 };
