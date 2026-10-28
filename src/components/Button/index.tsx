@@ -23,6 +23,7 @@ import {
   changeLightness,
   getColorFromMaybeString,
   getGradientMix,
+  getReadableAccentColor,
   getReadableColor,
   getReadableColorFrom,
   isAchromatic,
@@ -69,6 +70,7 @@ import {
   TReqoreColor,
   TReqoreEffectColor,
   TReqoreHexColor,
+  TReqoreMultiTypeColor,
 } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
@@ -633,6 +635,14 @@ export const StyledButton = styled(StyledEffect).withConfig({
     color: ${({ theme, color, minimal, transparent }) =>
       rgba(getButtonTextColor({ minimal, transparent, color, theme }), 0.7)};
   }
+
+  /* An intent drawn as text (\`theme.buttons.intentLook\`) on an icon-only button: the ordinary
+     button at rest, the intent's colour under the pointer and on keyboard focus. A labelled one
+     carries the colour on its own style. */
+  &&[data-intent-text='icon']:not(:disabled):hover,
+  &&[data-intent-text='icon']:focus-visible {
+    color: var(--reqore-button-intent-text);
+  }
 `;
 
 export const StyledButtonContent = styled.div.withConfig({
@@ -824,7 +834,12 @@ const ReqoreButton = memo(
     ) => {
       const animations = useReqoreProperty('animations');
       const shortcutHintsEnabled = useReqoreProperty('shortcutHints');
-      const theme = useReqoreTheme('main', customTheme, intent);
+      /* `theme.buttons.intentLook`: an intent the theme draws as TEXT is not a fill. The button is
+         then the ordinary button (no intent below this point) and the intent is its foreground. */
+      const baseTheme = useReqoreTheme('main', customTheme);
+      const intentAsText = !!intent && baseTheme.buttons?.intentLook?.[intent] === 'text';
+      const fillIntent = intentAsText ? undefined : intent;
+      const theme = useReqoreTheme('main', customTheme, fillIntent);
       const fixedEffect = useReqoreEffect('buttons', theme, effect);
       const { targetRef, setRef } = useCombinedRefs(ref);
 
@@ -883,7 +898,7 @@ const ReqoreButton = memo(
       // customised — a customTheme main, given or inherited, moves `main` off
       // `originalMain`), else `main` a step lighter.
       const customColor = useMemo(() => {
-        if (intent) {
+        if (fillIntent) {
           return theme.main;
         }
 
@@ -893,7 +908,18 @@ const ReqoreButton = memo(
             : undefined;
 
         return themedButtons ?? changeLightness(theme.main, 0.07);
-      }, [intent, theme]);
+      }, [fillIntent, theme]);
+      // The intent as words: its colour, moved until it reads on this button.
+      const intentTextColor = useMemo(
+        () =>
+          intentAsText
+            ? getReadableAccentColor(
+                getColorFromMaybeString(baseTheme, intent) as TReqoreMultiTypeColor,
+                customColor as TReqoreMultiTypeColor
+              )
+            : undefined,
+        [intentAsText, baseTheme, intent, customColor]
+      );
       const _flat = minimal ? flat : flat === true;
       const _children = useMemo(() => label || children, [label, children]);
       /* An icon alone names nothing: a button with no label of its own and no `aria-label` was read as
@@ -931,9 +957,9 @@ const ReqoreButton = memo(
         () => ({
           interactive: !readOnly && !rest.disabled,
           ...fixedEffect,
-          gradient: intent ? undefined : fixedEffect?.gradient,
+          gradient: fillIntent ? undefined : fixedEffect?.gradient,
         }),
-        [fixedEffect, intent, readOnly, rest.disabled]
+        [fixedEffect, fillIntent, readOnly, rest.disabled]
       );
 
       const indicatorConfig = useMemo(() => {
@@ -958,6 +984,19 @@ const ReqoreButton = memo(
           {...{
             ...rest,
             ...(tooltipName ? { 'aria-label': tooltipName } : {}),
+            /* An intent drawn as text: a labelled button's words and icons are in it; an icon-only
+               button is the ordinary button and takes it under the pointer (see StyledButton). A
+               caller's own `style` still wins. */
+            ...(intentTextColor
+              ? {
+                  'data-intent-text': _children ? 'label' : 'icon',
+                  style: {
+                    ...(_children ? { color: intentTextColor } : {}),
+                    '--reqore-button-intent-text': intentTextColor,
+                    ...rest.style,
+                  },
+                }
+              : {}),
             effect: memoEffect,
             // The caller's tab stop wins — a grid or a diagram keeps one of its
             // buttons in the tab order and moves it — except that a disabled
@@ -973,7 +1012,7 @@ const ReqoreButton = memo(
             minimal,
             transparent,
             size,
-            intent,
+            intent: fillIntent,
             color: customColor,
             animate,
             flat: _flat,

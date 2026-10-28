@@ -177,6 +177,15 @@ export interface IReqoreCustomTheme {
   };
   effect?: IReqoreEffect;
   compact?: boolean;
+  /**
+   * As `theme.buttons.intentLook`: how a button with an intent draws it, per intent. `'fill'`
+   * (the default) paints the button in the intent. `'text'` keeps the ordinary button and says the
+   * intent in its words and icons, in the intent's colour made readable on the button: a calm
+   * theme's destructive button is red words on a plain button, not a red block. A `'text'` button
+   * with no label (an icon-only bin) is the ordinary button at rest and takes the intent's colour
+   * only under the pointer — a row of bins is not a row of red.
+   */
+  intentLook?: Partial<Record<TReqoreIntent, 'fill' | 'text'>>;
 }
 
 export interface IReqoreIntents {

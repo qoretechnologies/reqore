@@ -88,10 +88,10 @@ export interface IReqoreSeverityRowProps
    * (Investigate, Try again) are the response it asks for, so they stay in sight, together; `'row'`
    * keeps them under the label as a row of buttons; `'menu'`, opted into, folds them into one menu button at
    * the end of the label's line, for a list of rows that should not grow by a line per action. See
-   * `TReqoreNarrowRowActions`. A single action is a button under the label, the row's width where the
-   * container is a phone's width or narrower; with `'menu'` in a container wider than that it stays a button
-   * at the end of the label's line, where the menu would be (`data-actions='end'`), saying its `shortLabel`
-   * there (see `getCompactRowAction`).
+   * `TReqoreNarrowRowActions`. A single action stays a button at the end of the label's line while the
+   * container is wider than a phone (`data-actions='end'`, saying its `shortLabel` there, see
+   * `getCompactRowAction`) — with `'stack'` only under a fine pointer, so a touch screen still gets it under the
+   * label. Where the container is a phone's width or narrower it is a button under the label, the row's width.
    */
   narrowActions?: TReqoreNarrowRowActions;
   /** What the menu button of `narrowActions='menu'` is called (its accessible name and tooltip). */
@@ -451,11 +451,19 @@ const ReqoreSeverityRow = memo(
       const leadingColumn = hasLeading && !showStrip;
       // Nothing to put in the strip's column, and the caller does not want it kept empty.
       const noGutter = !showStrip && !hasLeading && !stripGutter;
-      /* Narrow, a row that folds two or more into a menu keeps its one action where the menu would be - only
-         while its container is wider than a phone. As narrow as a phone, the action goes under the label and
-         spans the row like any lone action there (David and Foxhoundn, qorus#646). */
+      /* Narrow, a lone action stays at the end of the label's line while the container is wider than a
+         phone. Under the label, a drawer's one "Open" became a bordered bar the drawer's width on a desktop,
+         because every drawer is narrower than 640px (Filip, 2026-10-28). It goes under the label, spanning the
+         row, only where a full-width target is what helps: a phone-width container (David and Foxhoundn,
+         qorus#646), or - in the default 'stack' mode - a touch screen. A row that folds two or more into a menu
+         kept its one action there already, on any pointer. */
+      const coarsePointer =
+        typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
       const loneActionAtLineEnd =
-        isNarrow && !isPhoneWidth && narrowActions === 'menu' && loneAction;
+        isNarrow &&
+        !isPhoneWidth &&
+        loneAction &&
+        (narrowActions === 'menu' || (narrowActions === 'stack' && !coarsePointer));
       /* Stacked (the default), one to a line, only where the container is a phone's width or narrower. Narrow
          but wider than a phone, they sit side by side under the label at their labels' widths, onto another line
          only where they do not fit, as with `'row'`: actions that answer one callout belong together (Foxhoundn:
