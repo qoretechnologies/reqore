@@ -245,6 +245,33 @@ export const Stacked: Story = {
   },
 };
 
+export const StackedList: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection stacked as a list: the items are one block of rows, without gaps, and each row after the first is divided from the one above by the panel hairline. Asserts the divider, which a stacked grid does not draw.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      const rows = canvasElement.querySelectorAll<HTMLElement>(
+        '.reqore-collection-content > .reqore-collection-item'
+      );
+      expect(rows.length).toBeGreaterThan(1);
+      expect(getComputedStyle(rows[0]).borderTopWidth).toBe('0px');
+      expect(getComputedStyle(rows[1]).borderTopWidth).toBe('1px');
+    });
+  },
+  args: {
+    label: 'Collection of items',
+    stacked: true,
+    showAs: 'list',
+    items,
+  },
+};
+
 export const Fill: Story = {
   parameters: {
     docs: {

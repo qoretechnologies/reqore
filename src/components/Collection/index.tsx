@@ -6,6 +6,8 @@ import { css } from 'styled-components';
 import { ReqoreErrorBoundary, ReqoreP, useReqoreProperty } from '../..';
 import { TReqorePaginationType } from '../../constants/paging';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
+import { IReqoreTheme } from '../../constants/theme';
+import { getPanelHairlineColor } from '../../helpers/colors';
 import { ReqorePaginationContainer } from '../../containers/Paging';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
@@ -131,8 +133,8 @@ export interface IReqoreCollectionProps
 }
 
 export const StyledCollectionWrapper = styled(StyledColumns).withConfig({
-  shouldForwardProp: omitStyleProps('fill', 'height'),
-})`
+  shouldForwardProp: omitStyleProps('fill', 'height', '$rows'),
+})<{ $rows?: boolean }>`
   height: ${({ height }) => (height ? `${height}` : 'auto')};
   flex: ${({ fill }) => (fill ? 1 : undefined)};
 
@@ -140,6 +142,17 @@ export const StyledCollectionWrapper = styled(StyledColumns).withConfig({
     (!rounded || stacked) &&
     css`
       border-radius: ${stacked && rounded ? '10px' : undefined};
+    `}
+
+  /* Stacked items in one column are one block: its rows divided by the panel hairline.
+     Without it, flat items lay one under another with nothing between them, and a list of
+     three-line items read as one long column of text. A grid is not rows, so it is left as is. */
+  ${({ $rows, theme }: { $rows?: boolean; theme: IReqoreTheme }) =>
+    $rows &&
+    css`
+      & > .reqore-collection-item + .reqore-collection-item {
+        border-top: 1px solid ${getPanelHairlineColor(theme)};
+      }
     `}
 
   overflow: auto;
@@ -450,6 +463,7 @@ export const ReqoreCollection = memo(
                 columnsGap={stacked ? '0px' : columnsGap}
                 rounded={rounded}
                 stacked={stacked}
+                $rows={stacked && (columns || (_showAs === 'grid' ? 'auto-fit' : 1)) === 1}
                 fill={fill}
                 ref={setContentRef}
                 height={height}
@@ -579,6 +593,9 @@ export const ReqoreCollection = memo(
                           columnsGap={stacked ? '0px' : columnsGap}
                           rounded={rounded}
                           stacked={stacked}
+                          $rows={
+                            stacked && (columns || (_showAs === 'grid' ? 'auto-fill' : 1)) === 1
+                          }
                           alignItems={alignItems}
                           minColumnWidth={minColumnWidth || zoomWidth}
                           maxColumnWidth={maxColumnWidth || zoomWidth}
