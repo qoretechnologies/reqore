@@ -4,7 +4,7 @@ import { expect, fireEvent, waitFor } from 'storybook/test';
 import ReqoreSegmentedControl, {
   IReqoreSegmentedControlProps,
 } from '../../components/SegmentedControl';
-import { ReqoreControlGroup } from '../../index';
+import { ReqoreControlGroup, ReqorePanel } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
@@ -577,6 +577,72 @@ export const FoldToFit: Story = {
       expect(getComputedStyle(more).backgroundColor).toBe('rgba(0, 0, 0, 0)');
       // and it keeps the segment's count, as the visible "Drafts 1" does
       expect(more.textContent).toContain('1');
+    });
+  },
+};
+
+const METHOD_FILTERS: IReqoreSegmentedControlProps['items'] = (
+  [
+    ['all', 'All', '5'],
+    ['public', 'Public', '4'],
+    ['internal', 'Internal', '1'],
+  ] as const
+).map(([value, label, count]) => ({
+  value,
+  label,
+  badge: { label: count, appearance: 'text' as const },
+}));
+
+export const FoldToFitBesideATitle: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a folding filter as the action of a 330px panel titled "Methods", the width of a section heading on a phone. The title keeps its whole word and the filter folds into the room left beside it. Asserts the title is not squeezed and the filter folded: a fold slot used to report the full row of segments as the least it could do with, which left the title 0px wide.',
+      },
+    },
+  },
+  render: (args) => {
+    const [value, setValue] = useState('all');
+
+    return (
+      <div style={{ width: 330 }}>
+        <ReqorePanel
+          label='Methods'
+          transparent
+          flat
+          minimal
+          padded={false}
+          collapsible
+          responsiveActions={false}
+          actions={[
+            {
+              as: ReqoreSegmentedControl,
+              props: {
+                ...args,
+                items: METHOD_FILTERS,
+                value,
+                onChange: setValue,
+                foldToFit: true,
+                overflowLabel: 'More',
+              },
+            },
+          ]}
+        >
+          {null}
+        </ReqorePanel>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      const title = canvasElement.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+      const heading = title.querySelector<HTMLElement>('.reqore-heading')!;
+      // The whole word, on one line: not squeezed below what it needs.
+      expect(title.getBoundingClientRect().width).toBeGreaterThanOrEqual(heading.scrollWidth - 0.5);
+      expect(heading.getBoundingClientRect().height).toBeLessThan(30);
+      // and the filter folded into what was left, rather than holding the row
+      expect(canvasElement.querySelector('.reqore-segmented-control-more')).toBeTruthy();
     });
   },
 };

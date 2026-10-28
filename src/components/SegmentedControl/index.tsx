@@ -180,9 +180,19 @@ const StyledSegmentedControl = styled.div<IStyledSegmentedControlProps>`
     `}
 `;
 
-/** The room a `foldToFit` control is given: as wide as its parent allows, never wider. */
+/**
+ * The room a `foldToFit` control is given: as wide as its parent allows, never wider.
+ *
+ * One grid track of `minmax(0, max-content)` rather than a flex box, for what the slot reports
+ * about itself. Its max-content width is the whole control, so a parent sized to its content
+ * still draws every segment that fits. Its min-content width is 0 — the control folds, so it can
+ * do without any of its width — where a flex box passed up the full row of segments. A panel's
+ * narrow title bar gives the title its claim and the actions "at least what their controls
+ * cannot do without", and with the full row as that floor the title was left 0px wide.
+ */
 const StyledFoldSlot = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, max-content);
   width: 100%;
   min-width: 0;
 `;
