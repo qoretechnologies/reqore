@@ -18,6 +18,7 @@ import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
 import { dragPointer } from '../utils/pointer';
 
+import { ThemedSurface } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreModalProps>();
 
 const meta = {
@@ -1212,4 +1213,22 @@ export const IsNotDraggableUnlessAsked: Story = {
     await sleep(300);
     await expect(modalOffset()).toEqual({ x: 0, y: 0 });
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an open modal on the themed surface: with `theme.panel` set it is a panel like any other — the panel surface, title bar included, and the hairline.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurface>
+      <ReqoreModal isOpen label='A modal on the themed surface' width='420px'>
+        <ReqoreP>Modals are panels, so they follow theme.panel.</ReqoreP>
+      </ReqoreModal>
+    </ThemedSurface>
+  ),
 };

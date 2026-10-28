@@ -5,6 +5,7 @@ import { MONO_FONT } from '../../constants/fonts';
 import ReqoreUIProvider from '../../containers/UIProvider';
 import {
   ReqoreButton,
+  ReqoreCallout,
   ReqoreContent,
   ReqoreControlGroup,
   ReqoreInput,
@@ -12,6 +13,8 @@ import {
   ReqoreLayoutContent,
   ReqoreP,
   ReqorePanel,
+  ReqoreStatistic,
+  ReqoreTable,
   ReqoreTag,
   ReqoreTextarea,
 } from '../../index';
@@ -208,5 +211,73 @@ export const TransparentLayout: Story = {
     const color = (element: HTMLElement) => getComputedStyle(element).color;
     await expect(color(darkTransparent)).toBe(color(darkDefault));
     await expect(color(lightTransparent)).toBe(color(lightDefault));
+  },
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * theme.panel — one surface and one hairline for every panel-like container
+ * ---------------------------------------------------------------------------------------------- */
+
+const SurfaceSample = ({ label, panel }: { label: string; panel?: { main: TReqoreHexColor; border: TReqoreHexColor } }) => (
+  <div style={{ background: '#0c0c0e', padding: 24, flex: '1 1 0', minWidth: 0 }}>
+    <ReqoreUIProvider theme={{ main: '#121212', panel }} layoutWrapperProps={{ transparent: true }}>
+      <ReqoreLayoutContent>
+        <ReqoreContent style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <ReqoreP>{label}</ReqoreP>
+          <ReqorePanel label='A panel' className='story-surface-panel' padded>
+            Cards sit on the panel surface, edged with the hairline.
+          </ReqorePanel>
+          <ReqoreControlGroup fluid>
+            <ReqoreStatistic value='8,782' label='Events' description='Last 24 hours' rounded flat={false} fluid />
+            <ReqoreStatistic value='96.1%' label='Success' description='+0.1 pts' rounded flat={false} fluid />
+          </ReqoreControlGroup>
+          <ReqoreTable
+            label='A table'
+            columns={[
+              { dataId: 'area', header: { label: 'Business area' }, grow: 2 },
+              { dataId: 'events', header: { label: 'Events' } },
+            ]}
+            data={[
+              { area: 'Order Management', events: 4820 },
+              { area: 'Payment Processing', events: 1812 },
+              { area: 'Inventory Management', events: 1190 },
+            ]}
+          />
+          <ReqoreCallout label='A callout' description='Callouts share the surface too.' />
+          <ReqorePanel label='An intent still tints the edge' intent='danger' padded>
+            Status colour wins over the neutral hairline.
+          </ReqorePanel>
+          <ReqorePanel label='A customTheme still wins' customTheme={{ main: '#1e2a3a' }} padded>
+            A panel that names its own surface keeps it.
+          </ReqorePanel>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  </div>
+);
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the same panels, statistics, table and callout twice: on the left the surface is ' +
+          'derived from `main` (a shade darker than the page), on the right `theme.panel` puts every ' +
+          'container one step above the page with a neutral hairline. An intent and a customTheme ' +
+          'still win.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ display: 'flex', gap: 0 }}>
+      <SurfaceSample label='Derived from main (default)' />
+      <SurfaceSample label='theme.panel = { main: #141417, border: #2d2d33 }' panel={{ main: '#141417', border: '#2d2d33' }} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const panels = canvasElement.querySelectorAll('.story-surface-panel');
+    await expect(panels).toHaveLength(2);
+    await expect(getComputedStyle(panels[1]).backgroundColor).toBe('rgb(20, 20, 23)');
+    await expect(getComputedStyle(panels[0]).backgroundColor).not.toBe('rgb(20, 20, 23)');
   },
 };

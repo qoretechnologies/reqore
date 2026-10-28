@@ -4,7 +4,12 @@ import { css } from 'styled-components';
 import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TOUCH_TARGET_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getMainBackgroundColor,
+  getPanelHairlineColor,
+  getReadableColor,
+} from '../../helpers/colors';
 import {
   getOneLessSize,
   resolvePadding,
@@ -30,6 +35,7 @@ import {
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, StyledEffect } from '../Effect';
+import { getTextSize } from '../../helpers/typeScale';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import ReqoreRowActionsMenu, {
@@ -82,10 +88,10 @@ export interface IReqoreSeverityRowProps
    * (Investigate, Try again) are the response it asks for, so they stay in sight, together; `'row'`
    * keeps them under the label as a row of buttons; `'menu'`, opted into, folds them into one menu button at
    * the end of the label's line, for a list of rows that should not grow by a line per action. See
-   * `TReqoreNarrowRowActions`. A single action is a button under the label, the row's width where the
-   * container is a phone's width or narrower; with `'menu'` in a container wider than that it stays a button
-   * at the end of the label's line, where the menu would be (`data-actions='end'`), saying its `shortLabel`
-   * there (see `getCompactRowAction`).
+   * `TReqoreNarrowRowActions`. A single action stays a button at the end of the label's line while the
+   * container is wider than a phone (`data-actions='end'`, saying its `shortLabel` there, see
+   * `getCompactRowAction`) — with `'stack'` only under a fine pointer, so a touch screen still gets it under the
+   * label. Where the container is a phone's width or narrower it is a button under the label, the row's width.
    */
   narrowActions?: TReqoreNarrowRowActions;
   /** What the menu button of `narrowActions='menu'` is called (its accessible name and tooltip). */
@@ -94,6 +100,14 @@ export interface IReqoreSeverityRowProps
   transparent?: boolean;
   /** Show the colored severity strip on the left edge. Default `true`. */
   showStrip?: boolean;
+  /**
+   * Keep the strip's column when the row has neither a strip (`showStrip={false}`) nor a
+   * `leading` mark. Default `true`: the label starts where a striped row's does, so rows with and
+   * without a strip line up in one list. `false` drops the empty column, so the label starts at
+   * the row's padding — for a list whose rows never carry a strip, where the column is 20px of
+   * nothing before every label.
+   */
+  stripGutter?: boolean;
   /** Rounded corners on the row. Default `true`. */
   rounded?: boolean;
   /**
@@ -253,6 +267,35 @@ const StyledRow = styled(StyledEffect).withConfig({
   &[data-narrow='true'][data-actions='end'] {
     grid-template-columns: ${STRIP_WIDTH_PX}px 1fr auto;
   }
+  /* A row without a strip whose \`leading\` mark (a status dot) takes the strip's column: the mark
+     sits in the gutter, level with the label's first line, and the label and description wrap
+     beside it. It used to be the first item of the label's WRAPPING line, so a label too long for
+     the rest of that line moved down whole and left the mark alone on a line of its own. */
+  &[data-leading-column='true'] {
+    grid-template-columns: auto 1fr auto;
+  }
+  &[data-leading-column='true'][data-narrow='true'] {
+    grid-template-columns: auto 1fr;
+  }
+  &[data-leading-column='true'][data-narrow='true'][data-actions='menu'] {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  /* stripGutter={false} on a row with no strip and no mark: no first column, so the label starts
+     at the row's padding. */
+  &[data-gutter='none'] {
+    grid-template-columns: 1fr auto;
+  }
+  &[data-gutter='none'][data-narrow='true'] {
+    grid-template-columns: 1fr;
+  }
+  &[data-gutter='none'][data-narrow='true']:not([data-actions='menu']) > .reqore-severity-row-actions {
+    grid-column: 1 / -1;
+  }
+  &[data-gutter='none'][data-narrow='true'][data-actions='menu'] {
+    grid-template-columns: 1fr auto;
+  }
+
   /* The last column, named: an item placed in a row with its column left to the grid is placed before
      the items around it, in the first column. */
   &[data-narrow='true'][data-actions='menu'] > .reqore-severity-row-actions,
@@ -270,8 +313,8 @@ const StyledRow = styled(StyledEffect).withConfig({
         background-color: ${$intent
           ? rgba(theme.intents[$intent], $transparent ? 0.04 : 0.1)
           : $transparent
-          ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
-          : rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 1)};
+          ? rgba(getPanelHairlineColor(theme), 0.08)
+          : rgba(getPanelHairlineColor(theme), 1)};
       }
     `}
 
@@ -294,6 +337,29 @@ const StyledBody = styled.div`
   flex-flow: column;
   gap: 4px;
   min-width: 0;
+`;
+
+/** The strip's column, holding the `leading` mark instead: one line tall at the label's own size,
+ *  so the mark is centred on the label's first line however many lines the text runs to. */
+const StyledLeadingCell = styled.span<{ theme: IReqoreTheme; $size: TSizes }>`
+  align-self: start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: ${({ theme, $size }) => getTextSize(theme, $size)}px;
+  font-weight: 500;
+  height: 1.2em;
+  height: 1lh;
+`;
+
+/** A mark kept on the label's line (a row WITH a strip): the mark and the label never part. The
+ *  label shrinks and wraps its own words beside the mark rather than moving below it. */
+const StyledLeadingGroup = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 0 1 auto;
 `;
 
 const StyledLabelLine = styled.div<{ $wrap: boolean }>`
@@ -341,6 +407,7 @@ const ReqoreSeverityRow = memo(
         intent,
         transparent = false,
         showStrip = true,
+        stripGutter = true,
         size = 'normal',
         flat = true,
         fluid = true,
@@ -379,11 +446,24 @@ const ReqoreSeverityRow = memo(
       const loneAction = actions?.length === 1;
       // Narrow, two or more actions are one menu button only where the caller asks for it.
       const actionsAsMenu = isNarrow && narrowActions === 'menu' && (actions?.length ?? 0) > 1;
-      /* Narrow, a row that folds two or more into a menu keeps its one action where the menu would be - only
-         while its container is wider than a phone. As narrow as a phone, the action goes under the label and
-         spans the row like any lone action there (David and Foxhoundn, qorus#646). */
+      const hasLeading = leading !== undefined && leading !== null && leading !== false;
+      // Without a strip, the mark takes the strip's column (see StyledRow).
+      const leadingColumn = hasLeading && !showStrip;
+      // Nothing to put in the strip's column, and the caller does not want it kept empty.
+      const noGutter = !showStrip && !hasLeading && !stripGutter;
+      /* Narrow, a lone action stays at the end of the label's line while the container is wider than a
+         phone. Under the label, a drawer's one "Open" became a bordered bar the drawer's width on a desktop,
+         because every drawer is narrower than 640px (Filip, 2026-10-28). It goes under the label, spanning the
+         row, only where a full-width target is what helps: a phone-width container (David and Foxhoundn,
+         qorus#646), or - in the default 'stack' mode - a touch screen. A row that folds two or more into a menu
+         kept its one action there already, on any pointer. */
+      const coarsePointer =
+        typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
       const loneActionAtLineEnd =
-        isNarrow && !isPhoneWidth && narrowActions === 'menu' && loneAction;
+        isNarrow &&
+        !isPhoneWidth &&
+        loneAction &&
+        (narrowActions === 'menu' || (narrowActions === 'stack' && !coarsePointer));
       /* Stacked (the default), one to a line, only where the container is a phone's width or narrower. Narrow
          but wider than a phone, they sit side by side under the label at their labels' widths, onto another line
          only where they do not fit, as with `'row'`: actions that answer one callout belong together (Foxhoundn:
@@ -419,6 +499,8 @@ const ReqoreSeverityRow = memo(
                       ? 'stack'
                       : 'row'
             }
+            data-leading-column={leadingColumn || undefined}
+            data-gutter={noGutter ? 'none' : undefined}
             {...rest}
             Component={StyledRow}
             tooltip={tooltip}
@@ -445,17 +527,35 @@ const ReqoreSeverityRow = memo(
                 className='reqore-severity-row-strip'
                 aria-hidden
               />
-            ) : (
+            ) : leadingColumn ? (
+              <StyledLeadingCell
+                theme={theme}
+                $size={size}
+                className='reqore-severity-row-leading'
+              >
+                {leading}
+              </StyledLeadingCell>
+            ) : noGutter ? null : (
               <span aria-hidden style={{ width: STRIP_WIDTH_PX }} />
             )}
             <StyledBody className='reqore-severity-row-body'>
               <StyledLabelLine $wrap={wrap} className='reqore-severity-row-label'>
-                {leading}
-                <StyledTextSlot $wrap={wrap}>
-                  <ReqoreSpan size={size} effect={labelEffect}>
-                    {label}
-                  </ReqoreSpan>
-                </StyledTextSlot>
+                {hasLeading && !leadingColumn ? (
+                  <StyledLeadingGroup className='reqore-severity-row-leading'>
+                    {leading}
+                    <StyledTextSlot $wrap={wrap}>
+                      <ReqoreSpan size={size} effect={labelEffect}>
+                        {label}
+                      </ReqoreSpan>
+                    </StyledTextSlot>
+                  </StyledLeadingGroup>
+                ) : (
+                  <StyledTextSlot $wrap={wrap}>
+                    <ReqoreSpan size={size} effect={labelEffect}>
+                      {label}
+                    </ReqoreSpan>
+                  </StyledTextSlot>
+                )}
                 {hasBadge && (
                   <ButtonBadge
                     size={size}

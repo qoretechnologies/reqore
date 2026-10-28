@@ -257,14 +257,14 @@ export const ReqoreSpacer = memo(
 
     const _labelEffect = useMemo<IReqoreEffect>(
       () => ({
-        uppercase: true,
-        spaced: 1,
+        uppercase: theme.uppercaseLabels !== false,
+        spaced: theme.uppercaseLabels !== false ? 1 : 0,
         weight: 'thick',
         noWrap: true,
         color: labelColor,
         ...labelEffect,
       }),
-      [labelColor, labelEffect]
+      [labelColor, labelEffect, theme.uppercaseLabels]
     );
 
     if (hasLabel) {

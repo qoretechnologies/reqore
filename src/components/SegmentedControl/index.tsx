@@ -13,15 +13,16 @@ import { css } from 'styled-components';
 import styled from '../../helpers/styled';
 import {
   CONTROL_HORIZONTAL_PADDING_FROM_SIZE,
-  CONTROL_TEXT_FROM_SIZE,
   ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
   PILL_RADIUS_MODIFIER,
   RADIUS_FROM_SIZE,
+  SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -105,6 +106,14 @@ export interface IReqoreSegmentedControlProps
   pill?: boolean;
   /** Allow deselecting by clicking active item */
   allowDeselect?: boolean;
+  /**
+   * The whole control is the size's height — as tall as a button or an input of the same
+   * `size` beside it — and its items are that much shorter inside the frame. Off (the
+   * default), each item is the size's height and the frame adds its padding and border
+   * around them, so a `small` control stands 8px taller than the `small` controls in its
+   * toolbar.
+   */
+  fitSize?: boolean;
   /** Intent applied to the selected item */
   activeIntent?: TReqoreIntent;
   /**
@@ -115,6 +124,15 @@ export interface IReqoreSegmentedControlProps
    * visible.
    */
   overflowLabel?: string;
+  /**
+   * Keep every segment at its own width and fold the ones that do not fit into "More".
+   * The control takes the room its parent gives it (a toolbar slot that is
+   * `flex: 1 1 0; min-width: 0`) and folds against THAT width, not its own, so what it
+   * draws never feeds back into what it measures; and it folds on the segments' measured
+   * widths, badges included, rather than on an estimate of their labels. `fluid`
+   * stretches the segments to fill the width instead, and folds on the estimate.
+   */
+  foldToFit?: boolean;
   /** Override width for testing responsive behavior */
   _testWidth?: number;
 }
@@ -125,6 +143,7 @@ interface IStyledSegmentedControlProps {
   flat?: boolean;
   pill?: boolean;
   fluid?: boolean;
+  foldToFit?: boolean;
   disabled?: boolean;
 }
 
@@ -149,6 +168,7 @@ const StyledSegmentedControl = styled.div<IStyledSegmentedControlProps>`
   border-radius: ${({ size, pill }) =>
     `${RADIUS_FROM_SIZE[size] * (pill ? PILL_RADIUS_MODIFIER : 1) + 1}px`};
   width: ${({ fluid }) => (fluid ? '100%' : undefined)};
+  max-width: ${({ foldToFit }) => (foldToFit ? '100%' : undefined)};
   overflow: hidden;
   gap: 0;
 
@@ -158,6 +178,23 @@ const StyledSegmentedControl = styled.div<IStyledSegmentedControlProps>`
       opacity: 0.5;
       pointer-events: none;
     `}
+`;
+
+/**
+ * The room a `foldToFit` control is given: as wide as its parent allows, never wider.
+ *
+ * One grid track of `minmax(0, max-content)` rather than a flex box, for what the slot reports
+ * about itself. Its max-content width is the whole control, so a parent sized to its content
+ * still draws every segment that fits. Its min-content width is 0 — the control folds, so it can
+ * do without any of its width — where a flex box passed up the full row of segments. A panel's
+ * narrow title bar gives the title its claim and the actions "at least what their controls
+ * cannot do without", and with the full row as that floor the title was left 0px wide.
+ */
+const StyledFoldSlot = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, max-content);
+  width: 100%;
+  min-width: 0;
 `;
 
 const StyledSegmentedControlIndicator = styled.div<IStyledIndicatorProps>`
@@ -212,7 +249,8 @@ const StyledItemWrapper = styled.div<{
  */
 const estimateItemWidth = (
   item: IReqoreSegmentedControlItem,
-  itemSize: TSizes = 'normal'
+  itemSize: TSizes = 'normal',
+  theme?: IReqoreTheme
 ): number => {
   const hPad = CONTROL_HORIZONTAL_PADDING_FROM_SIZE[itemSize];
   let width = hPad * 2;
@@ -220,7 +258,7 @@ const estimateItemWidth = (
   if (item.label) {
     width += calculateStringSizeInPixels(
       item.label.toString(),
-      CONTROL_TEXT_FROM_SIZE[itemSize]
+      getControlTextSize(theme, itemSize)
     );
   }
 
@@ -239,29 +277,40 @@ const estimateItemWidth = (
  * Calculate the total estimated width of all items including gaps.
  * Mirrors the Tabs `getTabsLength` approach.
  */
+/** A segment's width as it was last drawn (`foldToFit`), by value; "More" by the label it
+ *  showed (`moreKey`) — the label of the selected segment when that one is folded. */
+type TMeasuredWidths = Record<string, number>;
+const MORE_KEY = '__more__';
+const moreKey = (label: string | number) => `${MORE_KEY}:${label}`;
+
 const getItemsLength = (
   items: (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[],
   itemSize: TSizes = 'normal',
   selectedValue?: string,
-  overflowLabel: string = 'More'
+  overflowLabel: string = 'More',
+  theme?: IReqoreTheme,
+  measured?: TMeasuredWidths
 ): number =>
   items.reduce((len, item) => {
     if (Array.isArray(item)) {
-      // "More" group — estimate the More button width
+      // "More" group — its width as drawn with this label, else an estimate
       const isSelectedHidden = item.some((i) => i.value === selectedValue);
       const moreLabel = isSelectedHidden
         ? item.find((i) => i.value === selectedValue)?.label ?? overflowLabel
         : overflowLabel;
+      if (measured?.[moreKey(moreLabel)]) {
+        return len + measured[moreKey(moreLabel)];
+      }
       const hPad = CONTROL_HORIZONTAL_PADDING_FROM_SIZE[itemSize];
       const iconWidth = ICON_FROM_SIZE[itemSize] + PADDING_FROM_SIZE[itemSize] / 2;
       const labelWidth = calculateStringSizeInPixels(
         moreLabel.toString(),
-        CONTROL_TEXT_FROM_SIZE[itemSize]
+        getControlTextSize(theme, itemSize)
       );
       return len + hPad * 2 + iconWidth + labelWidth;
     }
 
-    return len + estimateItemWidth(item, itemSize);
+    return len + (measured?.[item.value] ?? estimateItemWidth(item, itemSize, theme));
   }, 0);
 
 /**
@@ -274,7 +323,9 @@ const getTransformedItems = (
   availableWidth: number,
   itemSize: TSizes = 'normal',
   selectedValue?: string,
-  overflowLabel: string = 'More'
+  overflowLabel: string = 'More',
+  theme?: IReqoreTheme,
+  measured?: TMeasuredWidths
 ): (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[] => {
   if (!availableWidth) {
     return items;
@@ -283,7 +334,8 @@ const getTransformedItems = (
   let newItems = [...items];
 
   while (
-    getItemsLength(newItems, itemSize, selectedValue, overflowLabel) > availableWidth &&
+    getItemsLength(newItems, itemSize, selectedValue, overflowLabel, theme, measured) >
+      availableWidth &&
     newItems.length > 1
   ) {
     const last = newItems[newItems.length - 1];
@@ -315,6 +367,7 @@ const ReqoreSegmentedControl = memo(
         flat,
         pill,
         allowDeselect,
+        fitSize,
         activeIntent,
         disabled,
         readOnly,
@@ -324,12 +377,23 @@ const ReqoreSegmentedControl = memo(
         fluid,
         className,
         overflowLabel = 'More',
+        foldToFit,
         _testWidth,
         ...rest
       },
       ref
     ) => {
       const animations = useReqoreProperty('animations');
+      // Folding to fit keeps every segment at its own width, so `fluid` does not stretch them.
+      const stretch = fluid && !foldToFit;
+      // fitSize: the frame (its padding and its 1px border, top and bottom) comes out of
+      // the items, so the control as a whole is the size's height.
+      const fittedItemHeight = SIZE_TO_PX[size] - 2 * (CONTAINER_PADDING + (flat ? 0 : 1));
+      const fittedItemStyle = {
+        height: fittedItemHeight,
+        minHeight: fittedItemHeight,
+        maxHeight: fittedItemHeight,
+      };
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
 
       const [_value, _setValue] = useState<string | undefined>(
@@ -345,10 +409,19 @@ const ReqoreSegmentedControl = memo(
         width: number;
       }>({ left: 0, width: 0 });
 
-      // Only constrain width when fluid (container has fixed width from parent)
-      // or when _testWidth is explicitly provided for testing.
-      // Non-fluid containers grow to fit their content, so overflow never applies.
-      const availableWidth = _testWidth || (fluid ? measuredWidth : 0);
+      // foldToFit: the room the slot is given, and each segment's width as drawn.
+      const [slotRef, { width: slotWidth }] = useMeasure<HTMLDivElement>();
+      const measuredWidths = useRef<TMeasuredWidths>({});
+      const [measuredVersion, setMeasuredVersion] = useState(0);
+      // The frame's padding and border come out of the room the segments have.
+      const frameWidth = 2 * (CONTAINER_PADDING + (flat ? 0 : 1));
+
+      // Only constrain width when fluid (container has fixed width from parent),
+      // folding to fit (the slot's width) or when _testWidth is explicitly provided
+      // for testing. Other containers grow to fit their content, so overflow never applies.
+      const availableWidth =
+        _testWidth ||
+        (foldToFit ? Math.max(0, slotWidth - frameWidth) : fluid ? measuredWidth : 0);
 
       // Sync controlled value
       useUpdateEffect(() => {
@@ -359,8 +432,18 @@ const ReqoreSegmentedControl = memo(
 
       // Transform items using the Tabs-style width estimation approach
       const transformedItems = useMemo(
-        () => getTransformedItems(items, availableWidth, size, _value, overflowLabel),
-        [items, availableWidth, size, _value, overflowLabel]
+        () =>
+          getTransformedItems(
+            items,
+            availableWidth,
+            size,
+            _value,
+            overflowLabel,
+            theme,
+            foldToFit ? measuredWidths.current : undefined
+          ),
+        // `measuredVersion` stands for `measuredWidths`, a ref: a segment drawn at a new width.
+        [items, availableWidth, size, _value, overflowLabel, theme, foldToFit, measuredVersion]
       );
 
       // Split into visible items and hidden items (the More group)
@@ -381,31 +464,30 @@ const ReqoreSegmentedControl = memo(
 
       const hasOverflow = hiddenItems.length > 0;
 
-      // Is the selected value hidden in the "More" dropdown?
-      const isSelectedHidden = useMemo(
+      // The selected segment, when it is folded into the "More" dropdown
+      const hiddenSelectedItem = useMemo(
         () =>
           hasOverflow && _value
-            ? hiddenItems.some((item) => item.value === _value)
-            : false,
+            ? hiddenItems.find((item) => item.value === _value)
+            : undefined,
         [hasOverflow, _value, hiddenItems]
       );
+      const isSelectedHidden = !!hiddenSelectedItem;
+      const hiddenSelectedIntent = hiddenSelectedItem
+        ? hiddenSelectedItem.activeIntent || activeIntent
+        : undefined;
 
       // Get the label for the "More" button
-      const moreLabel = useMemo(() => {
-        if (isSelectedHidden) {
-          const hidden = hiddenItems.find((item) => item.value === _value);
-          return hidden?.label ?? overflowLabel;
-        }
-        return overflowLabel;
-      }, [isSelectedHidden, hiddenItems, _value, overflowLabel]);
+      const moreLabel = hiddenSelectedItem?.label ?? overflowLabel;
 
-      // Calculate indicator position
+      // Calculate indicator position. A selected segment folded into "More" is marked where it
+      // is drawn — on "More", which carries its label — the same way a visible one is marked.
       useLayoutEffect(() => {
-        if (!_value || isSelectedHidden) {
+        if (!_value) {
           return;
         }
 
-        const selectedWrapper = wrapperRefs.current[_value];
+        const selectedWrapper = wrapperRefs.current[isSelectedHidden ? MORE_KEY : _value];
         const container = containerRef.current;
 
         if (selectedWrapper && container) {
@@ -421,7 +503,26 @@ const ReqoreSegmentedControl = memo(
             width: itemRect.width,
           });
         }
-      }, [_value, items, isSelectedHidden, visibleItems, measuredWidth]);
+      }, [_value, items, isSelectedHidden, visibleItems, measuredWidth, moreLabel]);
+
+      // foldToFit: remember each drawn segment's width (and "More"'s), and fold again when
+      // one changed — a count that loaded, a label in another language. Segments keep
+      // their own width in this mode, so what is drawn is what they need.
+      useLayoutEffect(() => {
+        if (!foldToFit) return;
+        let changed = false;
+        const record = (key: string, el: HTMLElement | null | undefined) => {
+          if (!el) return;
+          const width = el.getBoundingClientRect().width;
+          if (width && Math.abs((measuredWidths.current[key] ?? 0) - width) > 0.5) {
+            measuredWidths.current[key] = width;
+            changed = true;
+          }
+        };
+        visibleItems.forEach((item) => record(item.value, wrapperRefs.current[item.value]));
+        if (hasOverflow) record(moreKey(moreLabel), wrapperRefs.current[MORE_KEY]);
+        if (changed) setMeasuredVersion((version) => version + 1);
+      });
 
       const handleSelect = useCallback(
         (itemValue: string) => {
@@ -494,7 +595,7 @@ const ReqoreSegmentedControl = memo(
         return null;
       }
 
-      return (
+      const control = (
         <StyledSegmentedControl
           {...rest}
           ref={(node) => {
@@ -512,13 +613,14 @@ const ReqoreSegmentedControl = memo(
           size={size}
           flat={flat}
           pill={pill}
-          fluid={fluid}
+          fluid={stretch}
+          foldToFit={foldToFit}
           disabled={disabled}
           role='radiogroup'
           onKeyDown={handleKeyDown}
           className={`${className || ''} reqore-segmented-control`}
         >
-          {_value && selectedVisibleIndex >= 0 && !isSelectedHidden && (
+          {_value && (selectedVisibleIndex >= 0 || isSelectedHidden) && (
             <StyledSegmentedControlIndicator
               className='reqore-segmented-control-indicator'
               theme={theme}
@@ -533,7 +635,8 @@ const ReqoreSegmentedControl = memo(
           )}
           {visibleItems.map((item, index) => {
             const isSelected = item.value === _value;
-            const isBeforeSelected = index === selectedVisibleIndex - 1;
+            const isBeforeSelected =
+              index === (isSelectedHidden ? visibleItems.length : selectedVisibleIndex) - 1;
             const isLastVisible =
               index === visibleItems.length - 1 && !hasOverflow;
             const itemDisabled = disabled || item.disabled;
@@ -549,7 +652,7 @@ const ReqoreSegmentedControl = memo(
                 isBeforeSelected={isBeforeSelected}
                 isLast={isLastVisible}
                 theme={theme}
-                fluid={fluid}
+                fluid={stretch}
               >
                 <ReqoreButton
                   {...item.props}
@@ -571,7 +674,7 @@ const ReqoreSegmentedControl = memo(
                   )}
                   disabled={itemDisabled}
                   size={size}
-                  fluid={fluid}
+                  fluid={stretch}
                   intent={
                     isSelected && selectedItemIntent
                       ? selectedItemIntent
@@ -596,6 +699,7 @@ const ReqoreSegmentedControl = memo(
                   }
                   className={`${item.props?.className || ''} reqore-segmented-control-item`}
                   pill={pill}
+                  style={fitSize ? { ...item.props?.style, ...fittedItemStyle } : item.props?.style}
                 >
                   {item.label}
                 </ReqoreButton>
@@ -604,12 +708,15 @@ const ReqoreSegmentedControl = memo(
           })}
           {hasOverflow && (
             <StyledItemWrapper
-              key='__more__'
-              isSelected={false}
+              key={MORE_KEY}
+              ref={(el: HTMLDivElement | null) => {
+                wrapperRefs.current[MORE_KEY] = el;
+              }}
+              isSelected={isSelectedHidden}
               isBeforeSelected={false}
               isLast
               theme={theme}
-              fluid={fluid}
+              fluid={stretch}
             >
               <ReqorePopover
                 component={ReqoreButton}
@@ -619,15 +726,20 @@ const ReqoreSegmentedControl = memo(
                   transparent: true,
                   size,
                   pill,
-                  fluid,
-                  active: isSelectedHidden,
-                  intent: isSelectedHidden ? activeIntent : undefined,
-                  customTheme: isSelectedHidden
-                    ? { main: getReadableColorFrom(theme.main) }
-                    : customTheme,
+                  fluid: stretch,
+                  // Exactly what a visible selected segment gets: it is the same state. An
+                  // `active` (filled) "More" drew one selection two ways.
+                  intent: hiddenSelectedIntent,
+                  // ...and its count: a folded "Drafts 1" still says how many
+                  badge: hiddenSelectedItem?.badge,
+                  customTheme:
+                    isSelectedHidden && !hiddenSelectedIntent
+                      ? { main: getReadableColorFrom(theme.main) }
+                      : customTheme,
                   className:
                     'reqore-segmented-control-item reqore-segmented-control-more',
                   label: moreLabel,
+                  style: fitSize ? fittedItemStyle : undefined,
                 }}
                 closeOnOutsideClick
                 isReqoreComponent
@@ -642,7 +754,12 @@ const ReqoreSegmentedControl = memo(
                         {...overflowItem.props}
                         key={overflowItem.value}
                         {...omitBy(
-                          { icon: overflowItem.icon, rightIcon: overflowItem.rightIcon },
+                          {
+                            icon: overflowItem.icon,
+                            rightIcon: overflowItem.rightIcon,
+                            // a folded "Healthy 3" keeps its count
+                            badge: overflowItem.badge,
+                          },
                           isUndefined
                         )}
                         disabled={overflowItem.disabled}
@@ -666,6 +783,14 @@ const ReqoreSegmentedControl = memo(
             </StyledItemWrapper>
           )}
         </StyledSegmentedControl>
+      );
+
+      return foldToFit ? (
+        <StyledFoldSlot ref={slotRef} className='reqore-segmented-control-slot'>
+          {control}
+        </StyledFoldSlot>
+      ) : (
+        control
       );
     }
   )

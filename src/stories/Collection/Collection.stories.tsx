@@ -16,6 +16,7 @@ import { expectControlsInside } from '../utils/controlsInside';
 import { StoryRowBox } from '../utils/rowBoxes';
 import { PHONE_STORY } from '../utils/touchScreen';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 export interface IColumnsStoryArgs extends IReqoreColumnsProps {
   multipleColumns?: boolean;
 }
@@ -241,6 +242,33 @@ export const Stacked: Story = {
       { label: 'Custom action', icon: 'Home7Line', fixed: true },
       { actions: [{ label: 'Test' }] },
     ],
+  },
+};
+
+export const StackedList: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection stacked as a list: the items are one block of rows, without gaps, and each row after the first is divided from the one above by the panel hairline. Asserts the divider, which a stacked grid does not draw.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      const rows = canvasElement.querySelectorAll<HTMLElement>(
+        '.reqore-collection-content > .reqore-collection-item'
+      );
+      expect(rows.length).toBeGreaterThan(1);
+      expect(getComputedStyle(rows[0]).borderTopWidth).toBe('0px');
+      expect(getComputedStyle(rows[1]).borderTopWidth).toBe('1px');
+    });
+  },
+  args: {
+    label: 'Collection of items',
+    stacked: true,
+    showAs: 'list',
+    items,
   },
 };
 
@@ -1035,4 +1063,27 @@ export const NarrowContainerKeepsItsItemsInsideOnAPhone: Story = {
     });
     await expectFavoritesInside(content);
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a collection on the default and on the themed surface: with `theme.panel` set each item sits on the panel surface.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreCollection
+        label='Connections'
+        items={[
+          { label: 'Gmail', content: 'Reads the inbox' },
+          { label: 'Slack', content: 'Ops workspace' },
+          { label: 'Telegram', content: 'The bot connection' },
+        ]}
+      />
+    </ThemedSurfaceComparison>
+  ),
 };

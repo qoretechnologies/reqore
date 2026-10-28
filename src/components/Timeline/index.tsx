@@ -6,9 +6,9 @@ import {
   ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
-  TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
@@ -414,7 +414,7 @@ const StyledTimelineContent = styled.div.withConfig({
 })<IReqoreTimelineItemStyle>`
   flex: 1;
   min-width: 0;
-  ${({ direction, size }) =>
+  ${({ direction, size, theme }) =>
     direction === 'horizontal'
       ? css`
           padding-top: ${GAP_FROM_SIZE[size]}px;
@@ -423,7 +423,10 @@ const StyledTimelineContent = styled.div.withConfig({
           text-align: center;
         `
       : css`
-          padding-top: ${Math.max(0, (MARKER_SIZE_FROM_SIZE[size] - TEXT_FROM_SIZE[size]) / 2 - 2)}px;
+          padding-top: ${Math.max(
+            0,
+            (MARKER_SIZE_FROM_SIZE[size] - getTextSize(theme, size)) / 2 - 2
+          )}px;
           padding-bottom: ${PADDING_FROM_SIZE[size] * 2}px;
         `}
 `;

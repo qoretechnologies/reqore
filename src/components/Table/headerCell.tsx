@@ -7,13 +7,13 @@ import styled from '../../helpers/styled';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreIcon } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
-import { getReadableColor } from '../../helpers/colors';
+import { getPanelBackgroundColor, getReadableColor } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect } from '../Effect';
-import { getColumnRenderedWidth } from './helpers';
+import { TABLE_PIN_ATTRIBUTE, getColumnRenderedWidth, pinnedEdgeShadowSelector } from './helpers';
 import { TColumnsUpdater } from './header';
 
 export interface IReqoreTableHeaderCellProps
@@ -34,6 +34,12 @@ export interface IReqoreTableHeaderCellProps
    * public column config — the table threads it through internally.
    */
   parentMinimal?: boolean;
+  /** See `IReqoreTableProps.headerEffect`: merged over the base header typography. */
+  parentHeaderEffect?: IReqoreEffect;
+  /** See `IReqoreTableProps.headerDividers`: `false` shows the resize handle only on hover. */
+  dividers?: boolean;
+  /** See `IReqoreTableProps.sortIndicator`: `'arrow'` draws an arrow instead of the info wash. */
+  sortIndicator?: 'wash' | 'arrow';
   /** See `IReqoreTableProps.sortAscendingLabel`. */
   sortAscendingLabel?: string;
   /** See `IReqoreTableProps.sortDescendingLabel`. */
@@ -105,12 +111,23 @@ const StyledHeaderResizable = styled(Resizable)<{
       }
     `}
 
+  /* A pinned header cell paints the surface the table sits on, so the header
+     cells scrolling under it do not show through. Under minimal the cell's own
+     button is transparent, and a pinned column used to need header.transparent
+     set to false (a filled button, i.e. a different-looking header) to stay opaque. */
+  ${({ $pin, theme }) =>
+    $pin &&
+    css`
+      background: ${getPanelBackgroundColor(theme)};
+    `}
+
   ${({ $pin, $pinEdge }) =>
     $pin &&
     $pinEdge &&
     css`
       /* Bounded-height pseudo-shadow (matches body pinned cells). Override the inline
-         overflow:hidden so the 12px projection isn't clipped on this cell. */
+         overflow:hidden so the 12px projection isn't clipped on this cell. Drawn only
+         while a column is hidden under this edge — see TABLE_OVERFLOW_ATTRIBUTE. */
       overflow: visible !important;
 
       &::after {
@@ -120,6 +137,8 @@ const StyledHeaderResizable = styled(Resizable)<{
         bottom: 0;
         width: 12px;
         pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.12s ease;
         ${$pin === 'left' ? 'right: -12px;' : 'left: -12px;'}
         background: linear-gradient(
           to ${$pin === 'left' ? 'right' : 'left'},
@@ -127,6 +146,9 @@ const StyledHeaderResizable = styled(Resizable)<{
           rgba(0, 0, 0, 0)
         );
         z-index: 1;
+      }
+      ${pinnedEdgeShadowSelector($pin)} {
+        opacity: 1;
       }
     `}
 `;
@@ -172,6 +194,9 @@ export const ReqoreTableHeaderCell = memo(
     onFilterChange,
     actions,
     parentMinimal,
+    parentHeaderEffect,
+    dividers = true,
+    sortIndicator = 'wash',
     hasColumns,
     sortAscendingLabel = 'Sort ascending',
     sortDescendingLabel = 'Sort descending',
@@ -326,8 +351,9 @@ export const ReqoreTableHeaderCell = memo(
         textSize: getOneLessSize(size),
         spaced: 1,
         ...(parentMinimal ? { opacity: 0.7 } : {}),
+        ...parentHeaderEffect,
       }),
-      [size, parentMinimal]
+      [size, parentMinimal, parentHeaderEffect]
     );
 
     /* What a header cell hands the button and the menus it draws keeps its identity while what it is made
@@ -368,20 +394,28 @@ export const ReqoreTableHeaderCell = memo(
               size: 1,
             }
           : undefined,
-        gradient: isSortedBy
-          ? {
-              direction: `to ${sortDirection === 'desc' ? 'top' : 'bottom'}`,
-              colors: {
-                0: 'main:lighten:2',
-                30: 'main:lighten:2',
-                150: 'info:darken:3',
-              },
-            }
-          : undefined,
+        gradient:
+          isSortedBy && sortIndicator !== 'arrow'
+            ? {
+                direction: `to ${sortDirection === 'desc' ? 'top' : 'bottom'}`,
+                colors: {
+                  0: 'main:lighten:2',
+                  30: 'main:lighten:2',
+                  150: 'info:darken:3',
+                },
+              }
+            : undefined,
         ...ownEffect,
       }),
-      [filter, isSortedBy, sortDirection, ownEffect]
+      [filter, isSortedBy, sortDirection, sortIndicator, ownEffect]
     );
+    // `sortIndicator: 'arrow'` says the sort with an arrow beside the label, in place of the wash.
+    const sortArrowIcon =
+      sortIndicator === 'arrow' && isSortedBy
+        ? sortDirection === 'desc'
+          ? 'ArrowDownLine'
+          : 'ArrowUpLine'
+        : undefined;
     const buttonEffect = useMemo<IReqoreEffect>(
       () => ({ ...baseHeaderEffect, ...ownEffect }),
       [baseHeaderEffect, ownEffect]
@@ -391,6 +425,7 @@ export const ReqoreTableHeaderCell = memo(
       <StyledHeaderResizable
         {...({ $pin: pin, $pinEdge: pinEdge, $minimal: parentMinimal } as any)}
         data-reqore-table-column-id={hasColumns ? undefined : dataId}
+        {...{ [TABLE_PIN_ATTRIBUTE]: pin }}
         minWidth={minWidth ?? renderedWidth}
         maxWidth={maxWidth}
         onResize={(_event, _direction, _component) => {
@@ -402,7 +437,7 @@ export const ReqoreTableHeaderCell = memo(
           right: (
             <StyledTableHeaderResize
               className='reqore-table-header-resize'
-              $minimal={parentMinimal}
+              $minimal={parentMinimal || !dividers}
             />
           ),
         }}
@@ -446,6 +481,7 @@ export const ReqoreTableHeaderCell = memo(
                     onClick={handleClick}
                     labelEffect={baseHeaderEffect}
                     {...rest}
+                    rightIcon={sortArrowIcon ?? rest.rightIcon}
                     effect={menuEffect}
                   />
                 ) : (
@@ -473,7 +509,7 @@ export const ReqoreTableHeaderCell = memo(
                 buttonStyle={OPTIONS_BUTTON_STYLE}
                 size={size}
                 rounded={false}
-                intent={filter || sortData.by === dataId ? 'info' : rest.intent}
+                intent={filter || (isSortedBy && sortIndicator !== 'arrow') ? 'info' : rest.intent}
                 filterable={filterable}
                 filterPlaceholder={filterPlaceholder || columnFilterPlaceholder}
                 filter={filter}

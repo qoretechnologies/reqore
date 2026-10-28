@@ -179,6 +179,8 @@ export { ReqoreTableBodyCell } from './components/Table/cell';
 export { ReqoreTableHeaderCell } from './components/Table/headerCell';
 export { default as ReqoreTableRow } from './components/Table/row';
 export { ReqoreTableValue } from './components/Table/value';
+// The column picker's entries, for a page that draws its own toolbar beside the table.
+export { getTableColumnsPickerItems } from './components/Table/helpers';
 /* The geometric guard for tables — what a consumer's own tests assert so that
    "a row's box contains its content" keeps holding in THEIR tables too — is
    NOT here. It is published as `@qoretechnologies/reqore/testing`, because
@@ -204,6 +206,10 @@ export { Colors as ReqoreColors } from './constants/colors';
 export { FONT_FAMILY_SHORTHANDS as ReqoreFonts } from './constants/fonts';
 export { ReqoreSizes } from './constants/sizes';
 export { ReqoreIntents } from './constants/theme';
+export type { IReqoreTypeScale } from './constants/theme';
+/* The px a size renders its text at, as the theme's `typeScale` decides it — for a consumer's own
+   element that has to sit at the same size as the Reqore text beside it. */
+export { getControlTextSize, getTagTextSize, getTextSize } from './helpers/typeScale';
 export { ReqorePaginationContainer } from './containers/Paging';
 export { default as ReqoreNotifications, modalStore } from './containers/ReqoreProvider';
 export { default as ReqoreUIProvider } from './containers/UIProvider';

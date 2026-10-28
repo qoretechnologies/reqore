@@ -43,16 +43,11 @@ import {
 import { rgba } from 'polished';
 import { css } from 'styled-components';
 import styled from '../../helpers/styled';
-import {
-  GAP_FROM_SIZE,
-  PADDING_FROM_SIZE,
-  RADIUS_FROM_SIZE,
-  TEXT_FROM_SIZE,
-  TSizes,
-} from '../../constants/sizes';
+import { GAP_FROM_SIZE, PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { MONO_FONT, getFontFamily } from '../../constants/fonts';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { TReqoreEffectColor } from '../Effect';
+import { IReqoreEffect, TReqoreEffectColor } from '../Effect';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreButton from '../Button';
@@ -220,6 +215,19 @@ export interface IReqoreDataViewProps
    *  `'info'`. */
   keyIntent?: TReqoreIntent | null;
 
+  /** Colour each value chip by its type — a number green, a boolean amber, a date blue.
+   *  Default `true`. `false` draws every value as the one neutral chip (an empty value stays
+   *  muted): for an app whose colours each mean something (green "healthy", amber "unusual"),
+   *  where a number painted green reads as a verdict it is not. The type is unchanged
+   *  everywhere else it shows. */
+  colorValuesByType?: boolean;
+
+  /** Keys and values as plain words, not outlined chips: a key a quieter label, a value its
+   *  text — the look of a description list, for an app that shows the same facts that way
+   *  elsewhere. Default `false` (the outlined chips). Sections, types and editing are
+   *  unchanged. */
+  plain?: boolean;
+
   /** Enable inline editing. When `true`, the view becomes a
    *  click-to-edit tree:
    *    - **Scalars** (string / number / boolean / null) render as
@@ -284,6 +292,13 @@ const SECTION_LABEL = (kind: 'Object' | 'List', count: number): string => {
   return `${kind} · ${count} ${word}${count === 1 ? '' : 's'}`;
 };
 
+/** A value's type tag ("string", "int") — tracked uppercase unless the theme sets labels in
+ *  sentence case (`theme.uppercaseLabels`). */
+const typeTagEffect = (theme: IReqoreTheme): IReqoreEffect => {
+  const upper = theme.uppercaseLabels !== false;
+  return { uppercase: upper, spaced: upper ? 1 : 0, opacity: 0.6 };
+};
+
 type TRenderContext = {
   theme: IReqoreTheme;
   envelope: IReqoreDataViewEnvelope | false;
@@ -299,6 +314,10 @@ type TRenderContext = {
   keyColor?: TReqoreEffectColor;
   /** Key-chip intent (defaults to `'info'`, `null` drops it). */
   keyIntent?: TReqoreIntent | null;
+  /** See `IReqoreDataViewProps.colorValuesByType`. */
+  colorValuesByType: boolean;
+  /** See `IReqoreDataViewProps.plain`. */
+  plain: boolean;
   /** When true, scalar leaves render as click-to-edit chips, keys
    *  are renamable, rows expose delete affordances, and containers
    *  expose `+ Add` affordances. */
@@ -336,7 +355,7 @@ const Tree = styled.div<IStyledThemeProps>`
   gap: ${({ $size }) => GAP_FROM_SIZE[$size]}px;
   min-width: 0;
   width: 100%;
-  font-size: ${({ $size }) => TEXT_FROM_SIZE[$size]}px;
+  font-size: ${({ $size, $theme }) => getTextSize($theme, $size)}px;
   color: ${({ $theme }) => $theme.text.color || $theme.main};
 
   /* Force monospace on every tag we render inside the view — keys,
@@ -497,7 +516,7 @@ const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean }>`
   min-width: 0;
   max-width: 100%;
   font-family: ${MONO_FONT};
-  font-size: ${({ $size }) => TEXT_FROM_SIZE[$size] - 1}px;
+  font-size: ${({ $size, $theme }) => getTextSize($theme, $size) - 1}px;
   word-break: break-word;
 
   /* The monospace is for the data, not for the controls in the cell. Buttons and inputs take
@@ -555,7 +574,7 @@ const MultilineValue = styled.pre<IStyledThemeProps & { $interactive?: boolean }
   background: ${rgba(changeLightness('#000000', 0.05), 0.3)};
   color: ${({ $theme }) => getReadableColorFrom(changeLightness($theme.main, 0.1))};
   font-family: ${MONO_FONT};
-  font-size: ${({ $size }) => TEXT_FROM_SIZE[$size] - 1}px;
+  font-size: ${({ $size, $theme }) => getTextSize($theme, $size) - 1}px;
   font-variant-ligatures: none;
   line-height: 1.45;
   cursor: ${({ $interactive }) => ($interactive ? 'pointer' : 'text')};
@@ -644,7 +663,7 @@ const SectionSummary = styled.summary<IStyledThemeProps>`
   cursor: pointer;
   user-select: none;
   font-family: ${MONO_FONT};
-  font-size: ${({ $size }) => TEXT_FROM_SIZE[$size] - 2}px;
+  font-size: ${({ $size, $theme }) => getTextSize($theme, $size) - 2}px;
   font-weight: 700;
   /* Section labels MUST stay readable — they're the only way the
      operator knows what's nested below. We derive a high-contrast
@@ -798,6 +817,10 @@ PreservedDetails.displayName = 'ReqoreDataView.PreservedDetails';
  *  both the read-only view and the click-to-edit cell share one
  *  rendering — keeps the "before / after" look of an edited row
  *  perfectly aligned with rows you can't edit. */
+/** A value chip's intent: by type, unless the view draws every value neutral. */
+const valueIntent = (kind: TReqoreDataValueKind, ctx: TRenderContext) =>
+  ctx.colorValuesByType || kind === 'null' ? reqoreDataValueIntent(kind) : undefined;
+
 const renderScalarChip = (
   value: unknown,
   type: string | undefined,
@@ -806,16 +829,16 @@ const renderScalarChip = (
 ): ReactNode => {
   const scalar = reqoreFormatScalar(value, type, ctx.scalarOptions);
   const kind = type ? reqoreDataValueKind(value, type) : scalar.kind;
-  const intent = reqoreDataValueIntent(kind);
+  const intent = valueIntent(kind, ctx);
   return (
     <ReqoreTag
       size={ctx.size}
-      flat={false}
+      flat={ctx.plain}
       minimal
       wrap
       label={scalar.display}
       intent={intent}
-      effect={{ weight: 'bold' }}
+      effect={ctx.plain ? PLAIN_VALUE_EFFECT : { weight: 'bold' }}
       onClick={
         ctx.onItemClick ? () => ctx.onItemClick!(value, path) : undefined
       }
@@ -823,6 +846,11 @@ const renderScalarChip = (
     />
   );
 };
+
+/** A plain value: the text, at normal weight. */
+const PLAIN_VALUE_EFFECT = { weight: 'normal' } as const;
+/** A plain key: a quieter label beside its value. */
+const PLAIN_KEY_EFFECT = { weight: 'normal', opacity: 0.65 } as const;
 
 const EditCellShell = styled.span<{ $editing?: boolean }>`
   display: inline-flex;
@@ -1161,13 +1189,13 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
         >
           <ReqoreTag
             size={ctx.size}
-            flat={false}
+            flat={ctx.plain}
             minimal
             wrap
             intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
             color={ctx.keyColor}
             label={keyName}
-            effect={{ weight: 'bold' }}
+            effect={ctx.plain ? PLAIN_KEY_EFFECT : { weight: 'bold' }}
             className='reqore-data-view-key'
           />
         </EditCellShell>
@@ -1492,7 +1520,7 @@ const renderScalar = (
 ): ReactNode => {
   const scalar = reqoreFormatScalar(value, type, ctx.scalarOptions);
   const kind = type ? reqoreDataValueKind(value, type) : scalar.kind;
-  const intent = reqoreDataValueIntent(kind);
+  const intent = valueIntent(kind, ctx);
   const displayType = type ?? kind;
 
   // Editable mode: render the click-to-edit cell instead of the
@@ -1517,7 +1545,7 @@ const renderScalar = (
           flat
           minimal
           label={displayType}
-          effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+          effect={typeTagEffect(ctx.theme)}
           className='reqore-data-view-type'
         />
       </ScalarRow>
@@ -1574,7 +1602,7 @@ const renderScalar = (
           flat
           minimal
           label={displayType}
-          effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+          effect={typeTagEffect(ctx.theme)}
           className='reqore-data-view-type'
         />
       </ScalarRow>
@@ -1591,7 +1619,7 @@ const renderScalar = (
   const tag = (
     <ReqoreTag
       size={ctx.size}
-      flat={false}
+      flat={ctx.plain}
       minimal
       // `wrap` is critical for the value chip — without it, a long
       // string scalar (an HL7 payload, a stack trace, a UUID-heavy
@@ -1601,9 +1629,7 @@ const renderScalar = (
       wrap
       label={scalar.display}
       intent={intent}
-      effect={{
-        weight: 'bold',
-      }}
+      effect={ctx.plain ? PLAIN_VALUE_EFFECT : { weight: 'bold' }}
       onClick={
         ctx.onItemClick
           ? () => ctx.onItemClick!(value, path)
@@ -1623,7 +1649,7 @@ const renderScalar = (
         flat
         minimal
         label={displayType}
-        effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+        effect={typeTagEffect(ctx.theme)}
         className='reqore-data-view-type'
       />
     </ScalarRow>
@@ -1721,13 +1747,13 @@ const RecordTable = memo(
               ) : (
                 <ReqoreTag
                   size={ctx.size}
-                  flat={false}
+                  flat={ctx.plain}
                   minimal
                   wrap
                   intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
                   color={ctx.keyColor}
                   label={key}
-                  effect={{ weight: 'bold' }}
+                  effect={ctx.plain ? PLAIN_KEY_EFFECT : { weight: 'bold' }}
                   className='reqore-data-view-key'
                 />
               )}
@@ -1808,7 +1834,7 @@ const renderTree = (
               minimal
               flat={false}
               label={envelopeType}
-              effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+              effect={typeTagEffect(ctx.theme)}
               className='reqore-data-view-type'
             />
           ) : null}
@@ -1931,6 +1957,8 @@ export const ReqoreDataView = memo(
         onSectionToggle,
         keyColor,
         keyIntent,
+        colorValuesByType = true,
+        plain = false,
         editable = false,
         onDataChange,
         onValueChange,
@@ -2067,6 +2095,8 @@ export const ReqoreDataView = memo(
         onSectionToggle,
         keyColor,
         keyIntent,
+        colorValuesByType,
+        plain,
         editable,
         commitScalar: editable ? commitScalar : undefined,
         commitDelete: editable ? commitDelete : undefined,

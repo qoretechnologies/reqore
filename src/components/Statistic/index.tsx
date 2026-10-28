@@ -5,9 +5,9 @@ import styled from '../../helpers/styled';
 import { HEADER_SIZE_TO_NUMBER, resolveRadius, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
-  changeDarkness,
   changeLightness,
-  getMainBackgroundColor,
+  getPanelBackgroundColor,
+  getPanelHairlineColor,
   getReadableColor,
 } from '../../helpers/colors';
 import {
@@ -81,8 +81,15 @@ export interface IReqoreStatisticProps
     IWithReqoreTooltip {
   /** The primary value to display */
   value: string | number;
-  /** Optional label displayed above the value */
+  /** Optional label displayed above the value (or below it — see `labelPosition`) */
   label?: string;
+  /**
+   * Where the label sits. `'above'` (the default) is the eyebrow-over-figure tile Reqore has
+   * always drawn. `'below'` leads with the figure and puts the label under it, then the
+   * description — the dashboard-strip reading order, where the number is what the eye lands on
+   * and the label names it.
+   */
+  labelPosition?: 'above' | 'below';
   /** Optional icon */
   icon?: IReqoreIconName;
   /** Optional color for the icon */
@@ -126,6 +133,14 @@ export interface IReqoreStatisticProps
   countUp?: boolean | IReqoreStatisticCountUp;
   /** Effect applied to the label text */
   labelEffect?: IReqoreEffect;
+  /**
+   * A line under the value — what the number is measured against, or where it came from
+   * ("+5.9% vs the day before", "Last 24 hours"). Smaller and quieter than the value; a string,
+   * a number or any node. Rendered in `.reqore-statistic-description`.
+   */
+  description?: React.ReactNode;
+  /** Effect applied to the description, over its defaults (`{ opacity: 0.6 }`). */
+  descriptionEffect?: IReqoreEffect;
   /** Effect applied to the card background (supports gradients) */
   effect?: IReqoreEffect;
   /** Text alignment */
@@ -293,14 +308,13 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
   }) =>
     $hasBackground &&
     css`
-      background-color: ${rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
+      background-color: ${rgba(getPanelBackgroundColor(theme), opacity)};
       border-radius: ${rounded ? resolveRadius(size, radiusSize) : 0}px;
       border: ${flat
         ? undefined
-        : `1px solid ${changeLightness(
-            intent ? theme.intents[intent] : getMainBackgroundColor(theme),
-            0.08
-          )}`};
+        : `1px solid ${
+            intent ? changeLightness(theme.intents[intent], 0.08) : getPanelHairlineColor(theme)
+          }`};
       color: ${getReadableColor(theme, undefined, undefined, true)};
       padding: ${resolvePadding({
         padded: $padded,
@@ -410,6 +424,7 @@ const ReqoreStatistic = memo(
       {
         value,
         label,
+        labelPosition = 'above',
         icon,
         iconColor,
         iconProps,
@@ -420,6 +435,8 @@ const ReqoreStatistic = memo(
         valueAs,
         countUp,
         labelEffect,
+        description,
+        descriptionEffect,
         effect,
         align = 'center',
         size = 'normal',
@@ -487,6 +504,21 @@ const ReqoreStatistic = memo(
         return newEffect;
       }, [effect, intent, theme]);
 
+      const labelElement = (
+        <ReqoreSpan
+          size={secondarySize}
+          className='reqore-statistic-label'
+          effect={{
+            opacity: 0.7,
+            uppercase: theme.uppercaseLabels !== false,
+            spaced: theme.uppercaseLabels !== false ? 1 : 0,
+            ...labelEffect,
+          }}
+        >
+          {label}
+        </ReqoreSpan>
+      );
+
       return (
         <ReqoreTooltipComponent
           {...rest}
@@ -536,15 +568,7 @@ const ReqoreStatistic = memo(
                 className='reqore-statistic-icon'
               />
             )}
-            {label && (
-              <ReqoreSpan
-                size={secondarySize}
-                className='reqore-statistic-label'
-                effect={{ opacity: 0.7, uppercase: true, spaced: 1, ...labelEffect }}
-              >
-                {label}
-              </ReqoreSpan>
-            )}
+            {label && labelPosition !== 'below' ? labelElement : null}
             <StyledStatisticValueRow
               ref={valueRowRef}
               as={valueAs}
@@ -594,6 +618,7 @@ const ReqoreStatistic = memo(
                 </StatisticValuePart>
               )}
             </StyledStatisticValueRow>
+            {label && labelPosition === 'below' ? labelElement : null}
             {trend && (
               <ReqoreControlGroup
                 gapSize='micro'
@@ -607,6 +632,15 @@ const ReqoreStatistic = memo(
                   </ReqoreSpan>
                 )}
               </ReqoreControlGroup>
+            )}
+            {description !== undefined && description !== null && description !== '' && (
+              <ReqoreSpan
+                size={secondarySize}
+                className='reqore-statistic-description'
+                effect={{ opacity: 0.6, ...descriptionEffect }}
+              >
+                {description}
+              </ReqoreSpan>
             )}
           </ReqoreControlGroup>
         </ReqoreTooltipComponent>

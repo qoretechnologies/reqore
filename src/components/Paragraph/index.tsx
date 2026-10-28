@@ -1,6 +1,7 @@
 import { forwardRef, memo } from 'react';
-import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { TSizes } from '../../constants/sizes';
 import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
+import { getTextSize } from '../../helpers/typeScale';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
@@ -41,7 +42,8 @@ export const StyledParagraph = styled(StyledTextEffect).withConfig({
   margin: 0;
   color: ${({ theme, intent }) =>
     intent ? theme.intents[intent] : theme.text?.color || 'inherit'};
-  font-size: ${({ _size }) => (isStringSize(_size) ? `${TEXT_FROM_SIZE[_size]}px` : _size)};
+  font-size: ${({ _size, theme }) =>
+    isStringSize(_size) ? `${getTextSize(theme, _size as TSizes)}px` : _size};
 `;
 
 /**

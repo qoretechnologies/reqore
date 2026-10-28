@@ -93,11 +93,18 @@ const StyledPortal = styled.div`
     color: ${getReadableColor(theme, undefined, undefined, true)};
   `}
 
-  /* The portal is outside the layout wrapper, so it names the theme's font itself. */
+  /* The portal is outside the layout wrapper, so it names the theme's font and line height
+     itself. */
   ${({ theme }) =>
     theme.fontFamily &&
     css`
       font-family: ${getFontFamily(theme.fontFamily)};
+    `}
+
+  ${({ theme }) =>
+    theme.typeScale?.lineHeight &&
+    css`
+      line-height: ${theme.typeScale.lineHeight};
     `}
 `;
 

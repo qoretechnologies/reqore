@@ -1,6 +1,7 @@
 import { IReqoreEffect, TReqoreEffectColor, TReqoreHexColor } from '../components/Effect';
 import { Colors } from './colors';
 import { TReqoreFontFamilyShorthand } from './fonts';
+import { TSizes } from './sizes';
 
 export interface IReqoreSidebarTheme {
   main?: TReqoreHexColor;
@@ -51,6 +52,64 @@ export interface IReqoreNavbarTheme {
   hoverColor?: TReqoreHexColor;
 }
 
+/**
+ * The surface panels and panel-like containers are painted on, and the hairline they are edged
+ * with. Unset, both are derived from `main` as they always were (on a dark theme the panel comes
+ * out a shade DARKER than the page). Set, a panel can sit one step above the page with a
+ * neutral 1px edge — one decision for every surface instead of a `customTheme` on each.
+ *
+ * Read by ReqorePanel (and so ReqoreDrawer, ReqoreModal and ReqoreTable), ReqoreStatistic,
+ * ReqoreAccordion, ReqoreCallout, ReqoreCollection items, ReqoreFeatureCard, ReqoreMenu,
+ * ReqoreTestimonial, ReqoreTier, ReqoreEntityRow and ReqoreSeverityRow, and by table row lines.
+ *
+ * A component whose surface is customised — a `customTheme` with a `main`, an `intent`, or a
+ * custom theme inherited from an ancestor — keeps deriving its colours from that, as before.
+ */
+export interface IReqorePanelTheme {
+  /** The panel surface. */
+  main?: TReqoreHexColor;
+  /** The 1px hairline on the panel's edge and between its rows. */
+  border?: TReqoreHexColor;
+  /**
+   * The corner radius, in px, of every rounded panel that names no `radiusSize` — one curve
+   * for every card on the page, decided once. Unset, a panel keeps the `normal` radius.
+   */
+  radius?: number;
+}
+
+/**
+ * The px every `size` renders its text at, decided once for the whole app. Each table names only
+ * the sizes it changes; a size it leaves out — and every size when `typeScale` is unset — keeps
+ * Reqore's own value (`TEXT_FROM_SIZE`, `CONTROL_TEXT_FROM_SIZE`, `TAG_TEXT_FROM_SIZE`), so a
+ * theme without it renders exactly as before.
+ *
+ * What a component derives from its text size (a feature card's title at 1.4×, a data view's
+ * secondary line a pixel smaller, the width a tab list measures a label at) is derived from the
+ * theme's value. Box heights are not type: a button, an input, a tag or a table row keeps its
+ * height from the size, and its text is centred in it.
+ */
+export interface IReqoreTypeScale {
+  /**
+   * px per size for running text: ReqoreP, ReqoreSpan, ReqoreLink, table cells,
+   * panel/accordion/callout/bubble/notification/dataview text, `effect.textSize` given as a
+   * size name (which is how table header cells are sized: one size below the table's).
+   */
+  text?: Partial<Record<TSizes, number>>;
+  /**
+   * px per size for controls: buttons, inputs, textareas, tabs, checkboxes, segmented control,
+   * progress, a tag's actions.
+   */
+  control?: Partial<Record<TSizes, number>>;
+  /** px per size for tags, badges and keyboard keys. */
+  tag?: Partial<Record<TSizes, number>>;
+  /**
+   * Unitless line height for running text, set where `theme.fontFamily` is set (the layout
+   * wrapper and the portal popovers, modals and drawers render into) and inherited from there.
+   * Unset, neither names one: the browser's `normal` applies, as before.
+   */
+  lineHeight?: number;
+}
+
 export interface IReqoreTheme {
   main: TReqoreHexColor;
   originalMain?: TReqoreHexColor;
@@ -71,12 +130,34 @@ export interface IReqoreTheme {
    * Unset (the default), the wrapper and the portal name no font: the page's font reaches them.
    */
   fontFamily?: TReqoreFontFamilyShorthand | string;
+  /** Text sizes and line height for the whole app. See `IReqoreTypeScale`. */
+  typeScale?: IReqoreTypeScale;
   intents: IReqoreIntents;
   sidebar?: IReqoreSidebarTheme;
   notifications: IReqoreIntents;
   popover?: {
     main: TReqoreHexColor;
   };
+  /** Surface and hairline for panels and panel-like containers. See `IReqorePanelTheme`. */
+  panel?: IReqorePanelTheme;
+  /**
+   * Whether the small labels Reqore names things with — a statistic's label, a menu's group
+   * heading, a stacked bar's segment labels, a description list's row labels, a collection's
+   * group headers, a switch's on / off text, a progress bar's target label, a data view's type
+   * tags, a spacer's label — are set in tracked uppercase (`useUppercaseLabels()`). Default `true` (unchanged). A theme that sets every label in sentence
+   * case (the calm theme) sets `false` once here, instead of overriding each component at every
+   * call site — which is how one app ended up with uppercase headings in the menus nobody had
+   * reached yet. A component's own `uppercase` prop or effect still wins.
+   */
+  uppercaseLabels?: boolean;
+  /**
+   * How a message (`ReqoreMessage`) shows its intent. `'tint'` (the default, unchanged): the
+   * box is filled with a shade of the intent and edged in it. `'panel'`: the box sits on the
+   * panel surface (`theme.panel`) with the panel hairline, like a calm callout — the intent is
+   * on the icon, and a danger or warning message carries a soft glow in its top-left corner. A
+   * theme that keeps colour for state sets it once here, instead of restyling every message.
+   */
+  messageSurface?: 'tint' | 'panel';
   header?: IReqoreNavbarTheme;
   footer?: IReqoreNavbarTheme;
   breadcrumbs?: IReqoreBreadcrumbsTheme;
@@ -84,6 +165,11 @@ export interface IReqoreTheme {
 }
 
 export interface IReqoreCustomTheme {
+  /**
+   * As `theme.buttons.main`: the surface of every button that has no intent and no surface of
+   * its own (a `customTheme` main, given or inherited) — table header cells included, which are
+   * buttons. Unset, a button is `main` a step lighter, as before. (`text` is not read.)
+   */
   main?: TReqoreEffectColor;
   text?: {
     color?: TReqoreEffectColor;
@@ -91,6 +177,15 @@ export interface IReqoreCustomTheme {
   };
   effect?: IReqoreEffect;
   compact?: boolean;
+  /**
+   * As `theme.buttons.intentLook`: how a button with an intent draws it, per intent. `'fill'`
+   * (the default) paints the button in the intent. `'text'` keeps the ordinary button and says the
+   * intent in its words and icons, in the intent's colour made readable on the button: a calm
+   * theme's destructive button is red words on a plain button, not a red block. A `'text'` button
+   * with no label (an icon-only bin) is the ordinary button at rest and takes the intent's colour
+   * only under the pointer — a row of bins is not a row of red.
+   */
+  intentLook?: Partial<Record<TReqoreIntent, 'fill' | 'text'>>;
 }
 
 export interface IReqoreIntents {

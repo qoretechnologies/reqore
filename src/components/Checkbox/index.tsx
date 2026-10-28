@@ -2,13 +2,8 @@ import { rgba } from 'polished';
 import React, { forwardRef, memo, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { useMeasure } from 'react-use';
 import { css } from 'styled-components';
-import {
-  CONTROL_TEXT_FROM_SIZE,
-  PADDING_FROM_SIZE,
-  SIZE_TO_PX,
-  SWITCH_SIZE_TO_PX,
-  TSizes,
-} from '../../constants/sizes';
+import { PADDING_FROM_SIZE, SIZE_TO_PX, SWITCH_SIZE_TO_PX, TSizes } from '../../constants/sizes';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
@@ -261,7 +256,7 @@ const StyledCheckbox = styled.div.withConfig({
       : css`
           height: ${SIZE_TO_PX[size]}px;
         `}
-  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getControlTextSize(theme, size)}px;
 
   max-width: ${({ fluid, fixed, $wrapLabel }) =>
     (fluid && !fixed) || $wrapLabel ? '100%' : undefined};
@@ -608,7 +603,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                 parentHasGradient={!!effect?.gradient}
                 effect={
                   {
-                    uppercase: true,
+                    uppercase: theme.uppercaseLabels !== false,
                     textSize: getOneLessSize(size),
                     weight: 'bold',
                     ...switchTextEffect,
@@ -637,7 +632,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                 hasMargin={onText || onText === 0}
                 effect={
                   {
-                    uppercase: true,
+                    uppercase: theme.uppercaseLabels !== false,
                     textSize: getOneLessSize(size),
                     weight: 'thick',
                     ...switchTextEffect,

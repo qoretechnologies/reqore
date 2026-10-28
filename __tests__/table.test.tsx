@@ -634,6 +634,59 @@ test('<Table /> renders a single header wrapper even with pinned columns', () =>
   expect(document.querySelectorAll('.reqore-table-wrapper').length).toBe(1);
 });
 
+test('<Table /> marks its scroll containers only while columns are hidden under a pinned edge', () => {
+  const data: IReqoreTableProps = {
+    ...tableData,
+    columns: [
+      { dataId: 'id', header: { label: 'ID' }, width: 60, pin: 'left' },
+      { dataId: 'firstName', header: { label: 'First Name' }, width: 150 },
+      { dataId: 'lastName', header: { label: 'Last Name' }, width: 150 },
+      { dataId: 'address', header: { label: 'Address' }, width: 300, pin: 'right' },
+    ],
+  };
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const body = document.querySelector('.reqore-table-body')!;
+  const header = document.querySelector('.reqore-table-header-wrapper')!;
+  // jsdom lays nothing out: nothing is wider than its viewport, nothing is hidden.
+  expect(body.getAttribute('data-reqore-table-overflow')).toBeNull();
+  expect(header.getAttribute('data-reqore-table-overflow')).toBeNull();
+
+  // A viewport narrower than its columns, scrolled to the start: columns are
+  // hidden to the right, under the right-pinned edge only.
+  Object.defineProperty(body, 'scrollWidth', { configurable: true, value: 660 });
+  Object.defineProperty(body, 'clientWidth', { configurable: true, value: 400 });
+  body.scrollLeft = 0;
+  fireEvent.scroll(body);
+  expect(body.getAttribute('data-reqore-table-overflow')).toBe('right');
+  expect(header.getAttribute('data-reqore-table-overflow')).toBe('right');
+
+  // Part-way: hidden under both edges.
+  body.scrollLeft = 100;
+  fireEvent.scroll(body);
+  expect(body.getAttribute('data-reqore-table-overflow')).toBe('left right');
+
+  // Scrolled to the end: only the left-pinned edge has columns under it.
+  body.scrollLeft = 260;
+  fireEvent.scroll(body);
+  expect(body.getAttribute('data-reqore-table-overflow')).toBe('left');
+  expect(header.getAttribute('data-reqore-table-overflow')).toBe('left');
+
+  // Wide enough again: the mark goes away on both.
+  Object.defineProperty(body, 'clientWidth', { configurable: true, value: 660 });
+  body.scrollLeft = 0;
+  fireEvent.scroll(body);
+  expect(body.getAttribute('data-reqore-table-overflow')).toBeNull();
+  expect(header.getAttribute('data-reqore-table-overflow')).toBeNull();
+});
+
 test('Rows on <Table /> are all selected/deselected when clicking on header', () => {
   const data: IReqoreTableProps = {
     ...tableData,
@@ -1677,4 +1730,93 @@ test('<Table /> keeps a sort in charge without the opt-in', () => {
   settleFilter();
 
   expect(renderedNames()[0]).toBe('Untelegrammed');
+});
+
+describe('calm list props', () => {
+  const expandable: Partial<IReqoreTableProps> = {
+    columns: [{ dataId: 'id', header: { label: 'ID' } }, { dataId: 'firstName', header: { label: 'Name' } }],
+    data: tableData.data.slice(0, 3),
+    renderExpandedRow: () => <span>detail</span>,
+  };
+
+  const renderTable = (props: Partial<IReqoreTableProps>) =>
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTable {...(expandable as IReqoreTableProps)} {...props} />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+  test("expanderPosition='start' (default) leads the row with the caret", () => {
+    renderTable({});
+    const cells = document.querySelector('.reqore-table-row')!.querySelectorAll('.reqore-table-cell');
+    expect(cells[0].querySelector('[aria-expanded]')).toBeTruthy();
+  });
+
+  test("expanderPosition='end' puts the caret after the last column", () => {
+    renderTable({ expanderPosition: 'end' });
+    const cells = document.querySelector('.reqore-table-row')!.querySelectorAll('.reqore-table-cell');
+    expect(cells[0].querySelector('[aria-expanded]')).toBeNull();
+    expect(cells[cells.length - 1].querySelector('[aria-expanded]')).toBeTruthy();
+  });
+
+  test("expanderPosition='none' draws no expander column and the row still opens", () => {
+    renderTable({ expanderPosition: 'none' });
+    const row = document.querySelector('.reqore-table-row')!;
+    expect(row.querySelector('[aria-expanded]')).toBeNull();
+    expect(row.querySelectorAll('.reqore-table-cell').length).toBe(2);
+    // The whole row is the expander: its cells take the click, no caret needed.
+    fireEvent.click(row.querySelector('.reqore-table-cell')!);
+    expect(document.body.textContent).toContain('detail');
+  });
+
+  test("actionsRevealOn='hover' marks the table and the action groups it dims", () => {
+    renderTable({
+      actionsRevealOn: 'hover',
+      columns: [
+        { dataId: 'id', header: { label: 'ID' } },
+        { dataId: 'actions', header: { label: '' }, cell: { actions: () => [{ icon: 'PencilLine' }] } },
+      ],
+    });
+    expect(document.querySelector('.reqore-table-wrapper')!.classList.contains('reqore-table-actions-reveal-hover')).toBe(true);
+    expect(document.querySelector('.reqore-table-cell-actions')).toBeTruthy();
+  });
+
+  test("sortIndicator='arrow' renders the sorted column without throwing and keeps the sort", () => {
+    renderTable({
+      sortIndicator: 'arrow',
+      sort: { by: 'id', direction: 'desc' },
+      columns: [{ dataId: 'id', header: { label: 'ID' }, sortable: true }, { dataId: 'firstName', header: { label: 'Name' } }],
+    });
+    const headers = document.querySelectorAll('.reqore-table-header-cell');
+    expect(headers.length).toBeGreaterThan(0);
+    expect(document.body.textContent).toContain('ID');
+  });
+
+  test('headerDividers={false} keeps the resize handles so columns still resize', () => {
+    renderTable({ headerDividers: false });
+    expect(document.querySelectorAll('.reqore-table-header-resize').length).toBeGreaterThan(0);
+  });
+});
+
+test('<Table /> a padded: horizontal cell pads only its sides', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable
+          {...tableData}
+          columns={[
+            { dataId: 'id', header: { label: 'ID' }, width: 60, cell: { padded: 'horizontal' } },
+            { dataId: 'firstName', header: { label: 'First' }, width: 150, cell: { padded: 'vertical' } },
+          ]}
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+  const horizontal = document.querySelector<HTMLElement>('.reqore-table-cell[data-reqore-table-column-id="id"]')!;
+  const vertical = document.querySelector<HTMLElement>('.reqore-table-cell[data-reqore-table-column-id="firstName"]')!;
+  expect(getComputedStyle(horizontal).paddingTop).toBe('0px');
+  expect(getComputedStyle(horizontal).paddingLeft).toBe('10px');
+  expect(getComputedStyle(vertical).paddingLeft).toBe('0px');
 });

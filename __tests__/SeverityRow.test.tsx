@@ -83,6 +83,35 @@ test('Renders <SeverityRow /> with leading content', () => {
   );
 
   expect(document.querySelector('.reqore-severity-row-label')!.textContent).toContain('Critical');
+  // With a strip the mark stays on the label's line, grouped with the label so the two never part.
+  const group = document.querySelector('.reqore-severity-row-label .reqore-severity-row-leading');
+  expect(group!.textContent).toContain('Critical');
+  expect(group!.textContent).toContain('Issue');
+});
+
+// A long label used to wrap below its own leading mark, leaving the dot alone on a line.
+test('Renders <SeverityRow /> leading content in the strip column when there is no strip', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSeverityRow
+            label='Retries-exceeded → page on-call'
+            description='May apply'
+            showStrip={false}
+            leading={<span data-testid='dot'>●</span>}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const row = document.querySelector('.reqore-severity-row')!;
+  expect(row.getAttribute('data-leading-column')).toBe('true');
+  // The mark is the row's first cell, beside the body, not inside the label line.
+  expect(row.firstElementChild!.classList.contains('reqore-severity-row-leading')).toBe(true);
+  expect(row.firstElementChild!.textContent).toBe('●');
+  expect(document.querySelector('.reqore-severity-row-label')!.textContent).not.toContain('●');
 });
 
 test('Renders <SeverityRow /> with badge (string)', () => {
@@ -586,11 +615,12 @@ test('With narrowActions="menu" in a container a phone\'s width or narrower, put
   );
 });
 
-test('Leaves one action as it was by default, with "stack" and with "row", and wide with "menu"', () => {
+test('Keeps one action at the end of the line wider than a phone, under the label on a phone, and as asked with "row"', () => {
   for (const [width, props, expected] of [
-    // wider than a phone: under the label in a row, in every mode but 'menu'
-    [600, {}, 'row'],
-    [600, { narrowActions: 'stack' as const }, 'row'],
+    // wider than a phone, under a mouse: at the end of the label's line (a drawer's lone "Open" was a
+    // bar the drawer's width under the text), unless the caller asked for 'row'
+    [600, {}, 'end'],
+    [600, { narrowActions: 'stack' as const }, 'end'],
     [600, { narrowActions: 'row' as const }, 'row'],
     // a phone's width: a line of its own with 'stack', the default
     [400, {}, 'stack'],
@@ -609,6 +639,20 @@ test('Leaves one action as it was by default, with "stack" and with "row", and w
   expect(wide.getAttribute('data-actions')).toBeNull();
 });
 
+test('Puts one action under the label on a touch screen, where a full-width target helps', () => {
+  const matchMedia = window.matchMedia;
+  window.matchMedia = ((query: string) =>
+    ({ matches: query === '(pointer: coarse)', media: query }) as MediaQueryList) as never;
+  try {
+    renderMeasured(600, { actions: [{ icon: 'CloseLine', tooltip: 'Dismiss' }] });
+    expect(document.querySelector('.reqore-severity-row')!.getAttribute('data-actions')).toBe(
+      'row'
+    );
+  } finally {
+    window.matchMedia = matchMedia;
+  }
+});
+
 test('Stacked, labels an action whose label is empty with its tooltip', () => {
   renderMeasured(400, {
     actions: [{ label: 'Investigate' }, { label: '', icon: 'CloseLine', tooltip: 'Dismiss' }],
@@ -617,4 +661,31 @@ test('Stacked, labels an action whose label is empty with its tooltip', () => {
   const buttons = document.querySelectorAll('.reqore-severity-row-actions .reqore-button');
   expect(buttons).toHaveLength(2);
   expect(buttons[1].textContent).toContain('Dismiss');
+});
+
+test('A row with no strip and no mark keeps the strip column unless stripGutter is false', () => {
+  const renderRow = (stripGutter?: boolean) =>
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreSeverityRow label='Primary source' showStrip={false} stripGutter={stripGutter} />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+  // Default: the empty column stays, so the label lines up with striped rows.
+  renderRow();
+  const row = document.querySelector('.reqore-severity-row')!;
+  expect(row.getAttribute('data-gutter')).toBeNull();
+  expect(row.querySelector(':scope > span[aria-hidden]')).not.toBeNull();
+  cleanup();
+
+  // stripGutter={false}: no column, the label starts at the padding.
+  renderRow(false);
+  const flush = document.querySelector('.reqore-severity-row')!;
+  expect(flush.getAttribute('data-gutter')).toBe('none');
+  expect(flush.querySelector(':scope > span[aria-hidden]')).toBeNull();
+  expect(flush.firstElementChild!.className).toContain('reqore-severity-row-body');
 });

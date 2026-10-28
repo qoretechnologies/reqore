@@ -328,8 +328,14 @@ const ReqoreTableRow = memo(
     const CellComponent = cellComponent || ReqoreTableBodyCell;
     const RowComponent = rowComponent || StyledTableRow;
 
-    const pinOffsets = useMemo(() => calculatePinOffsets(columns), [columns]);
-    const totalColumnsWidth = useMemo(() => getTotalColumnsWidth(columns), [columns]);
+    const pinOffsets = useMemo(
+      () => calculatePinOffsets(columns, tableWidth),
+      [columns, tableWidth]
+    );
+    const totalColumnsWidth = useMemo(
+      () => getTotalColumnsWidth(columns, tableWidth),
+      [columns, tableWidth]
+    );
     const rowWrap = useMemo(() => {
       if (wrap) {
         return true;
@@ -362,6 +368,7 @@ const ReqoreTableRow = memo(
               fluid
               style={{ height: '100%' }}
               rounded={false}
+              className='reqore-table-cell-actions'
             >
               {(actions ?? cell.actions(data)).map(({ label, shortLabel, ...action }, index) => {
                 /* An action's label is drawn in its button, as a button's is. Only where the
@@ -610,7 +617,7 @@ const ReqoreTableRow = memo(
                   pinEdge: pinInfo?.isEdge,
                   even: index % 2 === 0 ? true : false,
                   intent: cell?.intent || data[index]._intent || intent,
-                  interactive: (!!cell?.onClick || !!onRowClick) && !isStatic,
+                  interactive: (!!cell?.onClick || !!onRowClick || canExpand) && !isStatic,
                   interactiveCell: !!cell?.onClick && !isStatic,
                   onClick: (e: React.MouseEvent<HTMLDivElement>) => {
                     if (isStatic) {
