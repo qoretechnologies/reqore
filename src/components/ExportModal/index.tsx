@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { stringify } from 'yaml';
 import { ReqoreTextarea, useReqoreProperty } from '../..';
+import { copyText } from '../../helpers/secureContextApis';
 import { convertToCSV } from '../../helpers/utils';
 import { IReqoreModalProps, ReqoreModal } from '../Modal';
 import ReqoreTabs, { IReqoreTabsProps } from '../Tabs';
@@ -40,6 +41,20 @@ export interface IReqoreExportModalProps extends IReqoreModalProps {
    * Defaults to English `'Data copied to clipboard'` — override to translate.
    */
   copyNotificationContent?: string;
+  /**
+   * Title of the notification shown when the data could not be copied (the browser allowed
+   * neither the Clipboard API nor its copy command, as on a page served over plain http).
+   * Shown whatever `sendNotificationOnCopy` says: a copy that did not happen is never silent.
+   * Defaults to English `'Could not copy'` — override to translate.
+   */
+  copyFailedNotificationTitle?: string;
+  /**
+   * Content of the notification shown when the data could not be copied. "Copy and close"
+   * leaves the modal open then, so the text can be selected. Defaults to English
+   * `'The browser did not allow copying to the clipboard. Select the text and copy it
+   * yourself.'` — override to translate.
+   */
+  copyFailedNotificationContent?: string;
 }
 
 export const ReqoreExportModal = ({
@@ -52,6 +67,8 @@ export const ReqoreExportModal = ({
   copyLabel = 'Copy',
   copyAndCloseLabel = 'Copy and close',
   copyNotificationContent = 'Data copied to clipboard',
+  copyFailedNotificationTitle = 'Could not copy',
+  copyFailedNotificationContent = 'The browser did not allow copying to the clipboard. Select the text and copy it yourself.',
   ...rest
 }: IReqoreExportModalProps) => {
   const addNotification = useReqoreProperty('addNotification');
@@ -76,8 +93,19 @@ export const ReqoreExportModal = ({
     }
   }, [data, tab, isArray]);
 
-  const handleCopyClick = useCallback(() => {
-    navigator.clipboard.writeText(dataToExport);
+  /** Copies the shown data, says how it went, and resolves to whether it was copied. */
+  const handleCopyClick = useCallback(async (): Promise<boolean> => {
+    try {
+      await copyText(dataToExport);
+    } catch {
+      addNotification({
+        title: copyFailedNotificationTitle,
+        content: copyFailedNotificationContent,
+        intent: 'danger',
+        duration: 10000,
+      });
+      return false;
+    }
 
     if (sendNotificationOnCopy) {
       addNotification({
@@ -86,7 +114,15 @@ export const ReqoreExportModal = ({
         duration: 3000,
       });
     }
-  }, [sendNotificationOnCopy, dataToExport, copyNotificationContent]);
+    return true;
+  }, [
+    addNotification,
+    sendNotificationOnCopy,
+    dataToExport,
+    copyNotificationContent,
+    copyFailedNotificationTitle,
+    copyFailedNotificationContent,
+  ]);
 
   return (
     <ReqoreModal
@@ -100,16 +136,19 @@ export const ReqoreExportModal = ({
           label: copyLabel,
           icon: 'ClipboardLine',
           onClick: () => {
-            handleCopyClick();
+            void handleCopyClick();
           },
         },
         {
           position: 'right',
           label: copyAndCloseLabel,
           icon: 'ClipboardFill',
-          onClick: () => {
-            handleCopyClick();
-            rest.onClose?.();
+          // Closes only once the data was copied: when it was not, the text stays on screen to
+          // be selected and copied by hand.
+          onClick: async () => {
+            if (await handleCopyClick()) {
+              rest.onClose?.();
+            }
           },
         },
       ]}
