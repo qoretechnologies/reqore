@@ -447,31 +447,15 @@ const KEY_VALUE_GAP_PX = 8;
  * record or list, and every row of a stacked (narrow) record, spans the record and
  * keeps a column of its own; see `rowColumns`.
  */
-const recordColumns = ({
-  $stacked,
-  $editable,
-  $frozenKeyColumn,
-}: {
-  $stacked?: boolean;
-  $editable?: boolean;
-  $frozenKeyColumn?: string;
-}) => {
+const recordColumns = ({ $stacked, $editable }: { $stacked?: boolean; $editable?: boolean }) => {
   if ($stacked) {
     return 'minmax(0, 1fr)';
   }
-  // While a key is renamed its column keeps the width it had when the rename opened (see
-  // `RecordTable`), so the values do not jump as the key is typed.
-  const keyColumn = $frozenKeyColumn ?? KEY_COLUMN;
-  return $editable ? `${keyColumn} minmax(0, 1fr) auto` : `${keyColumn} minmax(0, 1fr)`;
+  return $editable ? `${KEY_COLUMN} minmax(0, 1fr) auto` : `${KEY_COLUMN} minmax(0, 1fr)`;
 };
 
 const TableShell = styled.div<
-  IStyledThemeProps & {
-    $nested?: boolean;
-    $stacked?: boolean;
-    $editable?: boolean;
-    $frozenKeyColumn?: string;
-  }
+  IStyledThemeProps & { $nested?: boolean; $stacked?: boolean; $editable?: boolean }
 >`
   display: grid;
   grid-template-columns: ${recordColumns};
@@ -556,13 +540,31 @@ const Row = styled.div<
   & > .reqore-data-view-key-edit-actions {
     grid-area: actions;
   }
-  /* The rename input is as wide as the key column, whatever is typed into it: text longer than
-     the column scrolls inside the input (an input never wraps). Its commit and cancel buttons
-     sit in the actions cell, so the whole column is the input's. */
+  /* While a key is renamed, its column, and so every value of the record, stays exactly where it
+     was. The key column is sized by the browser from what its cells contribute, so the rename
+     cell contributes what the key did: the key itself, drawn as it was at rest but invisible and
+     no height (\`.reqore-data-view-key-edit-sizer\`), holds the cell's width, and the input
+     contributes nothing (\`width: 0\`) and fills the cell it is given (\`min-width: 100%\`).
+     Nothing is measured, so nothing is rounded: a width read back from the page (the resolved
+     \`grid-template-columns\` is serialized to a few digits) and set again moved the values by a
+     fraction of a pixel. Text longer than the column scrolls inside the input, which never
+     wraps; the commit and cancel buttons sit in the actions cell, so the column is the input's. */
   & > .reqore-data-view-key-edit-group {
-    min-width: 0;
+    display: grid;
   }
-  & > .reqore-data-view-key-edit-group .reqore-input,
+  & > .reqore-data-view-key-edit-group > * {
+    grid-area: 1 / 1;
+  }
+  & > .reqore-data-view-key-edit-group > .reqore-data-view-key-edit-sizer {
+    justify-self: start;
+    height: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  & > .reqore-data-view-key-edit-group > .reqore-control-wrapper {
+    width: 0;
+    min-width: 100%;
+  }
   & > .reqore-data-view-key-edit-group input {
     min-width: 0;
     width: 100%;
@@ -1255,9 +1257,9 @@ interface IEditableKeyCellProps {
   siblingKeys: ReadonlyArray<string>;
   parentPath: string[];
   ctx: TRenderContext;
-  /** Called with `true` as the rename opens, BEFORE the input replaces the key, and with
-   *  `false` once it is committed or cancelled (or the cell goes away mid-rename). The record
-   *  freezes its key column in between. */
+  /** Called with `true` as the rename opens and with `false` once it is committed or cancelled
+   *  (or the cell goes away mid-rename). The record gives the row's actions cell to the rename's
+   *  commit and cancel buttons in between. */
   onRenameOpenChange: (keyName: string, open: boolean) => void;
 }
 
@@ -1298,7 +1300,6 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
 
     const start = useCallback(() => {
       if (!commit) return;
-      // The record measures its key column now, while the key is still drawn.
       setOpen(true);
       setDraft(keyName);
       setEditing(true);
@@ -1323,6 +1324,20 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
       setOpen(false);
     }, [cancel, commit, draft, keyName, parentPath, siblingKeys, setOpen]);
 
+    const keyTag = (
+      <ReqoreTag
+        size={ctx.size}
+        flat={false}
+        minimal
+        wrap
+        intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
+        color={ctx.keyColor}
+        label={keyName}
+        effect={BOLD_TAG_EFFECT}
+        className='reqore-data-view-key'
+      />
+    );
+
     if (!editing) {
       return (
         <EditCellShell
@@ -1336,17 +1351,7 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
           aria-label={ctx.labels.renameKey}
           className='reqore-data-view-key-shell'
         >
-          <ReqoreTag
-            size={ctx.size}
-            flat={false}
-            minimal
-            wrap
-            intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
-            color={ctx.keyColor}
-            label={keyName}
-            effect={BOLD_TAG_EFFECT}
-            className='reqore-data-view-key'
-          />
+          {keyTag}
         </EditCellShell>
       );
     }
@@ -1354,6 +1359,14 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
     return (
       <>
         <div className='reqore-data-view-key-edit-group'>
+          {/* The key as it was drawn, unseen: it holds the key column at its width (see `Row`). */}
+          <EditCellShell
+            data-editing='true'
+            aria-hidden
+            className='reqore-data-view-key-shell reqore-data-view-key-edit-sizer'
+          >
+            {keyTag}
+          </EditCellShell>
           <ReqoreInput
             size={ctx.size}
             value={draft}
@@ -1846,22 +1859,12 @@ const RecordTable = memo(
   ({ entries, ctx, theme, depth, path }: IRecordTableProps) => {
     const shellRef = useRef<HTMLDivElement | null>(null);
     const [stacked, setStacked] = useState(false);
-    /** The key being renamed, and the key column's width when its rename opened. The column
-     *  holds that width until the rename is committed or cancelled, then fits its keys again:
-     *  sized from the keys while typing, every value of the record moved with each keystroke
-     *  that made the key the widest (and the input itself started wider than the column). */
-    const [rename, setRename] = useState<{ key: string; keyColumn?: string } | undefined>();
+    /** The key being renamed: its row's actions cell holds the rename's commit and cancel
+     *  buttons, in place of the delete button, until the rename is committed or cancelled. */
+    const [renamingKey, setRenamingKey] = useState<string | undefined>();
 
     const onRenameOpenChange = useCallback((key: string, open: boolean) => {
-      if (!open) {
-        setRename((current) => (current?.key === key ? undefined : current));
-        return;
-      }
-      // Read the column's used width now, while the key is still drawn: the first track of
-      // the record's resolved `grid-template-columns` (stacked records have no key column).
-      const node = shellRef.current;
-      const track = node ? getComputedStyle(node).gridTemplateColumns.split(' ')[0] : undefined;
-      setRename({ key, keyColumn: track && /^[\d.]+px$/.test(track) ? track : undefined });
+      setRenamingKey((current) => (open ? key : current === key ? undefined : current));
     }, []);
 
     useLayoutEffect(() => {
@@ -1887,7 +1890,6 @@ const RecordTable = memo(
         $nested={depth > 0}
         $stacked={stacked}
         $editable={ctx.editable}
-        $frozenKeyColumn={stacked ? undefined : rename?.keyColumn}
         className='reqore-data-view-record'
       >
         {entries.map(([key, item], index) => {
@@ -1948,7 +1950,7 @@ const RecordTable = memo(
                 {renderTree(item, ctx, theme, depth + 1, rowPath)}
               </ValueCell>
               {/* while this key is renamed, its commit and cancel buttons hold the actions cell */}
-              {ctx.editable && rename?.key !== key ? (
+              {ctx.editable && renamingKey !== key ? (
                 <RowActions
                   ctx={ctx}
                   path={rowPath}
