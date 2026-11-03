@@ -34,6 +34,7 @@ import {
   forwardRef,
   memo,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -446,15 +447,31 @@ const KEY_VALUE_GAP_PX = 8;
  * record or list, and every row of a stacked (narrow) record, spans the record and
  * keeps a column of its own; see `rowColumns`.
  */
-const recordColumns = ({ $stacked, $editable }: { $stacked?: boolean; $editable?: boolean }) => {
+const recordColumns = ({
+  $stacked,
+  $editable,
+  $frozenKeyColumn,
+}: {
+  $stacked?: boolean;
+  $editable?: boolean;
+  $frozenKeyColumn?: string;
+}) => {
   if ($stacked) {
     return 'minmax(0, 1fr)';
   }
-  return $editable ? `${KEY_COLUMN} minmax(0, 1fr) auto` : `${KEY_COLUMN} minmax(0, 1fr)`;
+  // While a key is renamed its column keeps the width it had when the rename opened (see
+  // `RecordTable`), so the values do not jump as the key is typed.
+  const keyColumn = $frozenKeyColumn ?? KEY_COLUMN;
+  return $editable ? `${keyColumn} minmax(0, 1fr) auto` : `${keyColumn} minmax(0, 1fr)`;
 };
 
 const TableShell = styled.div<
-  IStyledThemeProps & { $nested?: boolean; $stacked?: boolean; $editable?: boolean }
+  IStyledThemeProps & {
+    $nested?: boolean;
+    $stacked?: boolean;
+    $editable?: boolean;
+    $frozenKeyColumn?: string;
+  }
 >`
   display: grid;
   grid-template-columns: ${recordColumns};
@@ -535,8 +552,20 @@ const Row = styled.div<
   & > .reqore-data-view-value-cell {
     grid-area: value;
   }
-  & > .reqore-data-view-row-actions {
+  & > .reqore-data-view-row-actions,
+  & > .reqore-data-view-key-edit-actions {
     grid-area: actions;
+  }
+  /* The rename input is as wide as the key column, whatever is typed into it: text longer than
+     the column scrolls inside the input (an input never wraps). Its commit and cancel buttons
+     sit in the actions cell, so the whole column is the input's. */
+  & > .reqore-data-view-key-edit-group {
+    min-width: 0;
+  }
+  & > .reqore-data-view-key-edit-group .reqore-input,
+  & > .reqore-data-view-key-edit-group input {
+    min-width: 0;
+    width: 100%;
   }
   gap: ${({ $size, $complex, $stacked }) =>
     $complex || $stacked ? GAP_FROM_SIZE[$size] : KEY_VALUE_GAP_PX}px;
@@ -1205,14 +1234,33 @@ interface IEditableKeyCellProps {
   siblingKeys: ReadonlyArray<string>;
   parentPath: string[];
   ctx: TRenderContext;
+  /** Called with `true` as the rename opens, BEFORE the input replaces the key, and with
+   *  `false` once it is committed or cancelled (or the cell goes away mid-rename). The record
+   *  freezes its key column in between. */
+  onRenameOpenChange: (keyName: string, open: boolean) => void;
 }
 
 const EditableKeyCell = memo<IEditableKeyCellProps>(
-  ({ keyName, siblingKeys, parentPath, ctx }) => {
+  ({ keyName, siblingKeys, parentPath, ctx, onRenameOpenChange }) => {
     const commit = ctx.commitRename;
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState(keyName);
     const inputRef = useRef<HTMLInputElement | null>(null);
+    // Whether this cell has told its record that a rename is open, so that it says when it
+    // closes exactly once — including when the cell is unmounted mid-rename.
+    const openRef = useRef(false);
+    const keyNameRef = useRef(keyName);
+    keyNameRef.current = keyName;
+    const onRenameOpenChangeRef = useRef(onRenameOpenChange);
+    onRenameOpenChangeRef.current = onRenameOpenChange;
+
+    const setOpen = useCallback((open: boolean) => {
+      if (openRef.current === open) return;
+      openRef.current = open;
+      onRenameOpenChangeRef.current(keyNameRef.current, open);
+    }, []);
+
+    useEffect(() => () => setOpen(false), [setOpen]);
 
     useLayoutEffect(() => {
       if (editing) return;
@@ -1229,13 +1277,16 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
 
     const start = useCallback(() => {
       if (!commit) return;
+      // The record measures its key column now, while the key is still drawn.
+      setOpen(true);
       setDraft(keyName);
       setEditing(true);
-    }, [commit, keyName]);
+    }, [commit, keyName, setOpen]);
     const cancel = useCallback(() => {
       setDraft(keyName);
       setEditing(false);
-    }, [keyName]);
+      setOpen(false);
+    }, [keyName, setOpen]);
     const submit = useCallback(() => {
       const trimmed = draft.trim();
       if (!commit || !trimmed || trimmed === keyName) {
@@ -1248,7 +1299,8 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
       }
       commit(parentPath, keyName, trimmed);
       setEditing(false);
-    }, [cancel, commit, draft, keyName, parentPath, siblingKeys]);
+      setOpen(false);
+    }, [cancel, commit, draft, keyName, parentPath, siblingKeys, setOpen]);
 
     if (!editing) {
       return (
@@ -1279,63 +1331,68 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
     }
 
     return (
-      <ReqoreControlGroup
-        gapSize='tiny'
-        verticalAlign='center'
-        size={ctx.size}
-        className='reqore-data-view-key-edit-group'
-      >
-        <ReqoreInput
-          size={ctx.size}
-          value={draft}
-          ref={
-            ((node: HTMLDivElement | null) => {
-              if (node instanceof HTMLElement) {
-                inputRef.current = node.querySelector('input');
+      <>
+        <div className='reqore-data-view-key-edit-group'>
+          <ReqoreInput
+            size={ctx.size}
+            value={draft}
+            fluid
+            ref={
+              ((node: HTMLDivElement | null) => {
+                if (node instanceof HTMLElement) {
+                  inputRef.current = node.querySelector('input');
+                }
+              }) as unknown as React.Ref<HTMLDivElement>
+            }
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setDraft(e.target.value)
+            }
+            onBlur={submit}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                submit();
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                cancel();
               }
-            }) as unknown as React.Ref<HTMLDivElement>
-          }
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setDraft(e.target.value)
-          }
-          onBlur={submit}
-          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === 'Enter') {
+            }}
+            className='reqore-data-view-key-edit'
+          />
+        </div>
+        <ReqoreControlGroup
+          gapSize='tiny'
+          verticalAlign='center'
+          size={ctx.size}
+          className='reqore-data-view-key-edit-actions'
+        >
+          <ReqoreButton
+            size={ctx.size}
+            icon='CheckLine'
+            intent='success'
+            flat
+            minimal
+            tooltip={ctx.labels.renameCommitTooltip}
+            onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.preventDefault();
               submit();
-            } else if (e.key === 'Escape') {
+            }}
+            className='reqore-data-view-key-edit-commit'
+          />
+          <ReqoreButton
+            size={ctx.size}
+            icon='CloseLine'
+            flat
+            minimal
+            tooltip={ctx.labels.renameCancelTooltip}
+            onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.preventDefault();
               cancel();
-            }
-          }}
-          className='reqore-data-view-key-edit'
-        />
-        <ReqoreButton
-          size={ctx.size}
-          icon='CheckLine'
-          intent='success'
-          flat
-          minimal
-          tooltip={ctx.labels.renameCommitTooltip}
-          onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
-            e.preventDefault();
-            submit();
-          }}
-          className='reqore-data-view-key-edit-commit'
-        />
-        <ReqoreButton
-          size={ctx.size}
-          icon='CloseLine'
-          flat
-          minimal
-          tooltip={ctx.labels.renameCancelTooltip}
-          onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
-            e.preventDefault();
-            cancel();
-          }}
-          className='reqore-data-view-key-edit-cancel'
-        />
-      </ReqoreControlGroup>
+            }}
+            className='reqore-data-view-key-edit-cancel'
+          />
+        </ReqoreControlGroup>
+      </>
     );
   }
 );
@@ -1768,6 +1825,23 @@ const RecordTable = memo(
   ({ entries, ctx, theme, depth, path }: IRecordTableProps) => {
     const shellRef = useRef<HTMLDivElement | null>(null);
     const [stacked, setStacked] = useState(false);
+    /** The key being renamed, and the key column's width when its rename opened. The column
+     *  holds that width until the rename is committed or cancelled, then fits its keys again:
+     *  sized from the keys while typing, every value of the record moved with each keystroke
+     *  that made the key the widest (and the input itself started wider than the column). */
+    const [rename, setRename] = useState<{ key: string; keyColumn?: string } | undefined>();
+
+    const onRenameOpenChange = useCallback((key: string, open: boolean) => {
+      if (!open) {
+        setRename((current) => (current?.key === key ? undefined : current));
+        return;
+      }
+      // Read the column's used width now, while the key is still drawn: the first track of
+      // the record's resolved `grid-template-columns` (stacked records have no key column).
+      const node = shellRef.current;
+      const track = node ? getComputedStyle(node).gridTemplateColumns.split(' ')[0] : undefined;
+      setRename({ key, keyColumn: track && /^[\d.]+px$/.test(track) ? track : undefined });
+    }, []);
 
     useLayoutEffect(() => {
       const node = shellRef.current;
@@ -1792,6 +1866,7 @@ const RecordTable = memo(
         $nested={depth > 0}
         $stacked={stacked}
         $editable={ctx.editable}
+        $frozenKeyColumn={stacked ? undefined : rename?.keyColumn}
         className='reqore-data-view-record'
       >
         {entries.map(([key, item], index) => {
@@ -1827,6 +1902,7 @@ const RecordTable = memo(
                   siblingKeys={siblingKeys}
                   parentPath={path}
                   ctx={ctx}
+                  onRenameOpenChange={onRenameOpenChange}
                 />
               ) : (
                 <ReqoreTag
@@ -1849,7 +1925,8 @@ const RecordTable = memo(
               >
                 {renderTree(item, ctx, theme, depth + 1, rowPath)}
               </ValueCell>
-              {ctx.editable ? (
+              {/* while this key is renamed, its commit and cancel buttons hold the actions cell */}
+              {ctx.editable && rename?.key !== key ? (
                 <RowActions
                   ctx={ctx}
                   path={rowPath}
