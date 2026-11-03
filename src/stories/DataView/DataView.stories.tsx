@@ -132,6 +132,12 @@ const expectKeyColumnsFitKeys = async (container: Element, minRecords = 1) => {
   });
 };
 
+/** The record row under `container` whose key is `name`. */
+const recordRow = (container: Element, name: string) =>
+  Array.from(container.querySelectorAll('.reqore-data-view-record > .reqore-data-view-row')).find(
+    (row) => rowKey(row)?.textContent === name
+  ) as HTMLElement;
+
 /** Every key/value row of every record in `container` has its value under its key. */
 const expectStacked = async (container: Element) => {
   await waitFor(() => {
@@ -953,7 +959,7 @@ export const EditableKeyRename: Story = {
     docs: {
       description: {
         story:
-          'Renders an editable DataView whose keys are each a control as wide as the key itself. A click on display_name opens it for editing, and "label" typed with Enter renames it.',
+          'Renders an editable DataView whose keys are each a control as wide as the key itself. A click on display_name opens it for editing, and "label" typed with Enter renames it. While a key is renamed the values stay where they are, even as a key longer than any other is typed (the input scrolls); a cancel leaves them there, and a commit moves them once, to 8px after the new widest key.',
       },
     },
   },
@@ -999,6 +1005,58 @@ export const EditableKeyRename: Story = {
       | undefined;
     await expect(Object.keys(last ?? {})).toEqual(['label', 'retries']);
     await expect(last?.label).toBe('Customer');
+
+    // While a key is renamed the key column holds its width, so the values do not move as it is
+    // typed, even past the widest key; the input is the column's width and scrolls.
+    const LONG_KEY = 'a_key_much_longer_than_retries';
+    const valueLeft = () =>
+      rowValue(recordRow(canvasElement, 'retries')).getBoundingClientRect().left;
+    await waitFor(() => expect(recordRow(canvasElement, 'label')).toBeTruthy());
+    const before = valueLeft();
+    const openRename = async (name: string) => {
+      fireEvent.click(rowKey(recordRow(canvasElement, name)));
+      await waitFor(() =>
+        expect(canvasElement.querySelector('input.reqore-data-view-key-edit')).toBeTruthy()
+      );
+      return canvasElement.querySelector('input.reqore-data-view-key-edit') as HTMLInputElement;
+    };
+    const typeLongKey = async (input: HTMLInputElement) => {
+      const height = input.getBoundingClientRect().height;
+      await expect(document.activeElement).toBe(input);
+      // one character at a time, the value checked after each
+      for (let length = 1; length <= LONG_KEY.length; length++) {
+        fireEvent.change(input, { target: { value: LONG_KEY.slice(0, length) } });
+        await expect(input.value).toBe(LONG_KEY.slice(0, length));
+        await expect(valueLeft()).toBe(before);
+      }
+      await expect(input.value).toBe(LONG_KEY);
+      const column = input.closest('.reqore-data-view-key-edit-group') as HTMLElement;
+      await expect(input.getBoundingClientRect().right).toBeLessThanOrEqual(
+        column.getBoundingClientRect().right + 0.5
+      );
+      // one line that scrolls, not a wrap
+      await expect(input.scrollWidth).toBeGreaterThan(input.clientWidth);
+      await expect(input.getBoundingClientRect().height).toBe(height);
+    };
+
+    // Cancelled: nothing moved, and nothing moves after it.
+    let input = await openRename('label');
+    await expect(valueLeft()).toBe(before);
+    await typeLongKey(input);
+    fireEvent.keyDown(input, { key: 'Escape' });
+    await waitFor(() =>
+      expect(canvasElement.querySelector('input.reqore-data-view-key-edit')).toBeNull()
+    );
+    await expect(rowKey(recordRow(canvasElement, 'label'))).toBeTruthy();
+    await expect(valueLeft()).toBe(before);
+
+    // Committed: the column fits the new widest key, once.
+    input = await openRename('label');
+    await typeLongKey(input);
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(recordRow(canvasElement, LONG_KEY)).toBeTruthy());
+    await expect(valueLeft()).toBeGreaterThan(before);
+    await expectKeyColumnsFitKeys(canvasElement);
   },
 };
 
