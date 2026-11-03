@@ -34,7 +34,9 @@ jobs:
   Prerelease:
     # Never run for PRs opened from forks — the org NPM_TOKEN must not be exposed.
     if: github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
+    # a fixed image, not ubuntu-latest: ubuntu-latest moved to 26.04, which the pinned Playwright cannot install browsers on;
+    # move to a newer image together with a Playwright upgrade
+    runs-on: ubuntu-24.04
 
     steps:
       # Check out the PR head exactly, so the build matches the stamped sha.
