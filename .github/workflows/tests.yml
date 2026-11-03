@@ -17,7 +17,9 @@ permissions:
 jobs:
   Tests:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    # a fixed image, not ubuntu-latest: ubuntu-latest moved to 26.04, which the pinned Playwright cannot install browsers on;
+    # move to a newer image together with a Playwright upgrade
+    runs-on: ubuntu-24.04
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
