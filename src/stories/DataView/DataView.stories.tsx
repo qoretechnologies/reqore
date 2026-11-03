@@ -1087,6 +1087,58 @@ export const EditableKeyRename: Story = {
   },
 };
 
+/** Letter spacings that give the key column fractional widths: widths the page reports to fewer
+ *  digits than it lays out (`85.2188px` for 85.21875), which a width read back and set again lost. */
+const FRACTIONAL_KEY_SPACINGS = [0.013, 0.021, 0.09, 0.137];
+
+export const EditableKeyRenameAtFractionalWidths: Story = {
+  parameters: {
+    // Interaction-only: the play is the guard; the rename is pictured by EditableKeyRename.
+    qlip: { skip: true },
+    docs: {
+      description: {
+        story:
+          'Renders four editable DataViews whose keys are spaced to fractional widths, and renames the widest key of each: the values stay exactly where they were, to the fraction of a pixel, while the rename is open and after it is cancelled.',
+      },
+    },
+  },
+  args: {
+    label: 'Fractional key widths',
+    data: { display_name: 'Customer', retries: 3, id: 7 },
+    collapsibleRoot: false,
+  },
+  render: (args) => (
+    <div style={{ display: 'flex', flexFlow: 'column', gap: 16 }}>
+      {FRACTIONAL_KEY_SPACINGS.map((spacing) => (
+        <div key={spacing} data-spacing={spacing} style={{ letterSpacing: `${spacing}px` }}>
+          <EditableHarness {...args} />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const views = Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-spacing]'));
+    await expect(views.length).toBe(FRACTIONAL_KEY_SPACINGS.length);
+    for (const view of views) {
+      await waitFor(() => expect(recordRow(view, 'retries')).toBeTruthy());
+      const valueLeft = () => rowValue(recordRow(view, 'retries')).getBoundingClientRect().left;
+      const before = valueLeft();
+      // the widest key, the one whose width the key column is
+      fireEvent.click(rowKey(recordRow(view, 'display_name')));
+      await waitFor(() =>
+        expect(view.querySelector('input.reqore-data-view-key-edit')).toBeTruthy()
+      );
+      const input = view.querySelector('input.reqore-data-view-key-edit') as HTMLInputElement;
+      await expect(valueLeft()).toBe(before);
+      fireEvent.change(input, { target: { value: 'display_name_and_then_some_more' } });
+      await expect(valueLeft()).toBe(before);
+      fireEvent.keyDown(input, { key: 'Escape' });
+      await waitFor(() => expect(view.querySelector('input.reqore-data-view-key-edit')).toBeNull());
+      await expect(valueLeft()).toBe(before);
+    }
+  },
+};
+
 /* -------------------------------------------------------------------------------------------
  * Labels: every word the view draws is the consumer's, here in plain words for readers who are
  * not programmers, with "Yes" / "No" for a yes/no value.
