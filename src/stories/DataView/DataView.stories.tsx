@@ -1,4 +1,4 @@
-import { expect, fireEvent, fn } from 'storybook/test';
+import { expect, fireEvent, fn, waitFor } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { useState } from 'react';
@@ -87,17 +87,80 @@ const sampleOrder = {
   ],
 };
 
+/** The gap between a key chip and its value: the record's column gap. */
+const KEY_VALUE_GAP_PX = 8;
+
+/** The key chip of a row, read-only or editable (the "Rename key" control wraps it). */
+const rowKey = (row: Element) =>
+  row.querySelector(
+    ':scope > .reqore-data-view-key, :scope > .reqore-data-view-key-shell'
+  ) as HTMLElement;
+
+const rowValue = (row: Element) =>
+  row.querySelector(':scope > .reqore-data-view-value-cell') as HTMLElement;
+
+/** A row whose value sits beside its key (not under it: a nested value, or a stacked record). */
+const isSideBySide = (row: Element) =>
+  rowValue(row).getBoundingClientRect().left > rowKey(row).getBoundingClientRect().left + 1;
+
+/**
+ * Every record's values start one gap after its widest key, in the same place on every
+ * row: the key column is the widest key chip (capped), never a fixed width. At least
+ * `minRecords` records must hold side-by-side rows, so the story measured something.
+ */
+const expectKeyColumnsFitKeys = async (container: Element, minRecords = 1) => {
+  await waitFor(() => {
+    let measured = 0;
+    container.querySelectorAll('.reqore-data-view-record').forEach((record) => {
+      const rows = Array.from(record.querySelectorAll(':scope > .reqore-data-view-row')).filter(
+        isSideBySide
+      );
+      if (!rows.length) {
+        return;
+      }
+      measured++;
+      const valueLefts = rows.map((row) => rowValue(row).getBoundingClientRect().left);
+      const widestKeyRight = Math.max(
+        ...rows.map((row) => rowKey(row).getBoundingClientRect().right)
+      );
+      // aligned: every value of the record starts at the same x
+      expect(Math.max(...valueLefts) - Math.min(...valueLefts)).toBeLessThanOrEqual(1);
+      // and that x is one gap after the widest key, not a fixed column's width away
+      expect(Math.abs(valueLefts[0] - widestKeyRight - KEY_VALUE_GAP_PX)).toBeLessThanOrEqual(1);
+    });
+    expect(measured).toBeGreaterThanOrEqual(minRecords);
+  });
+};
+
+/** Every key/value row of every record in `container` has its value under its key. */
+const expectStacked = async (container: Element) => {
+  await waitFor(() => {
+    // record rows only: a list's items carry the row class too, and have no key
+    const rows = container.querySelectorAll('.reqore-data-view-record > .reqore-data-view-row');
+    expect(rows.length).toBeGreaterThan(0);
+    rows.forEach((row) => {
+      expect(rowValue(row).getBoundingClientRect().top).toBeGreaterThanOrEqual(
+        rowKey(row).getBoundingClientRect().bottom - 1
+      );
+    });
+  });
+};
+
 export const Basic: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'Renders DataView in its default configuration.',
+          'Renders DataView in its default configuration. Each record\'s values start 8px after its widest key, aligned on every row; the nested static_data and delivery records size their own key columns.',
       },
     },
   },
   args: {
     data: sampleOrder,
+  },
+  play: async ({ canvasElement }) => {
+    // the root record and the nested static_data and delivery records each fit their own keys
+    await expectKeyColumnsFitKeys(canvasElement, 3);
   },
 };
 
@@ -360,7 +423,7 @@ export const LongKey: Story = {
     docs: {
       description: {
         story:
-          'Renders DataView with an unusually long key.',
+          'Renders DataView with an unusually long key: the key column stops at min(34%, 220px) and the long key wraps inside its chip, while the values start 8px after the column.',
       },
     },
   },
@@ -376,6 +439,22 @@ export const LongKey: Story = {
       validated_against_local_terminology_dictionary: true,
       escalated_to_downstream_clinical_decision_support: false,
     },
+  },
+  play: async ({ canvasElement }) => {
+    await expectKeyColumnsFitKeys(canvasElement);
+    const key = (name: string) =>
+      Array.from(canvasElement.querySelectorAll('.reqore-data-view-key')).find(
+        (element) => element.textContent === name
+      ) as HTMLElement;
+    const longKey = key('escalated_to_downstream_clinical_decision_support');
+    const record = canvasElement.querySelector('.reqore-data-view-record') as HTMLElement;
+    // capped at min(34%, 220px) of the record, and wrapped onto more lines than a short key
+    expect(longKey.getBoundingClientRect().width).toBeLessThanOrEqual(
+      Math.min(record.clientWidth * 0.34, 220) + 1
+    );
+    expect(longKey.getBoundingClientRect().height).toBeGreaterThan(
+      key('device_id').getBoundingClientRect().height * 1.5
+    );
   },
 };
 
@@ -418,7 +497,7 @@ export const InNarrowContainer: Story = {
     docs: {
       description: {
         story:
-          'Renders DataView inside a narrow container.',
+          'Renders DataView inside a narrow (300px) container: every row puts its value under its key.',
       },
     },
   },
@@ -439,6 +518,9 @@ export const InNarrowContainer: Story = {
       payload: HL7_PAYLOAD,
     },
   },
+  play: async ({ canvasElement }) => {
+    await expectStacked(canvasElement);
+  },
 };
 
 export const WidthComparison: Story = {
@@ -446,7 +528,7 @@ export const WidthComparison: Story = {
     docs: {
       description: {
         story:
-          'Renders DataView at two widths side by side for comparison.',
+          'Renders DataView at 260, 360, 480 and 720px: the narrowest stacks each value under its key, the wider ones put values 8px after the widest key.',
       },
     },
   },
@@ -455,6 +537,7 @@ export const WidthComparison: Story = {
       {[260, 360, 480, 720].map((width) => (
         <div
           key={width}
+          data-width={width}
           style={{
             width,
             border: '1px dashed rgba(255,255,255,0.2)',
@@ -481,6 +564,17 @@ export const WidthComparison: Story = {
         },
       ],
     },
+  },
+  play: async ({ canvasElement }) => {
+    const containers = Array.from(
+      canvasElement.querySelectorAll('[data-width]')
+    ) as HTMLElement[];
+    expect(containers.length).toBe(4);
+    // 260px stacks; at 480px and 720px values sit beside keys, one gap after the widest
+    await expectStacked(containers[0]);
+    for (const container of containers.slice(2)) {
+      await expectKeyColumnsFitKeys(container);
+    }
   },
 };
 
@@ -609,7 +703,7 @@ export const EditableOpenApiSchema: Story = {
     docs: {
       description: {
         story:
-          'Renders DataView editing an OpenAPI schema.',
+          'Renders DataView editing an OpenAPI schema: in every editable record, the values start 8px after the widest key and line up on every row.',
       },
     },
   },
@@ -621,6 +715,10 @@ export const EditableOpenApiSchema: Story = {
     collapsibleRoot: false,
   },
   render: (args) => <EditableHarness {...args} />,
+  play: async ({ canvasElement }) => {
+    // the editable records (root, properties, each property) fit their keys too
+    await expectKeyColumnsFitKeys(canvasElement, 3);
+  },
 };
 
 /**

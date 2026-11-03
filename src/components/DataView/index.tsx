@@ -426,9 +426,46 @@ const Tree = styled.div<IStyledThemeProps>`
   }
 `;
 
-const TableShell = styled.div<IStyledThemeProps & { $nested?: boolean }>`
-  display: flex;
-  flex-flow: column;
+/** The key column of a record: as wide as its widest key chip, never wider than
+ *  `min(34%, 220px)`. Measured by the browser from the chips themselves, so the value
+ *  column starts one row gap after the longest key — not at a fixed offset that left
+ *  short keys (`id`, `type`) 180px from their values. */
+const KEY_COLUMN = 'fit-content(min(34%, 220px))';
+
+/** The gap between a key chip and its value, and between a value and its actions. */
+const KEY_VALUE_GAP_PX = 8;
+
+/**
+ * A record's columns, set on the record and shared by its rows.
+ *
+ * Every key/value row used to be a grid of its own, so no row could know how wide the
+ * other rows' keys were: the only way to line the values up was a fixed key column, and
+ * the fixed column was too wide for most keys. The record is the grid now, and a plain
+ * row is a `subgrid` of it, so the key column is sized once, by the widest key of the
+ * record, and every value starts in the same place. A row whose value is a nested
+ * record or list, and every row of a stacked (narrow) record, spans the record and
+ * keeps a column of its own; see `rowColumns`.
+ */
+const recordColumns = ({ $stacked, $editable }: { $stacked?: boolean; $editable?: boolean }) => {
+  if ($stacked) {
+    return 'minmax(0, 1fr)';
+  }
+  return $editable ? `${KEY_COLUMN} minmax(0, 1fr) auto` : `${KEY_COLUMN} minmax(0, 1fr)`;
+};
+
+const TableShell = styled.div<
+  IStyledThemeProps & { $nested?: boolean; $stacked?: boolean; $editable?: boolean }
+>`
+  display: grid;
+  grid-template-columns: ${recordColumns};
+  column-gap: ${KEY_VALUE_GAP_PX}px;
+  align-content: start;
+  /* Rows, the add-property row and anything else the record holds span all of its
+     columns; a plain row then lays its own cells out on the record's columns. */
+  & > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
   min-width: 0;
   max-width: 100%;
   overflow: hidden;
@@ -465,16 +502,15 @@ const Row = styled.div<
      grid-template-areas, a 3-child row (key + value + actions) in a
      2-column grid would auto-place the value into the actions
      column. */
+  /* A plain row takes the record's columns (see \`recordColumns\`), so its key column is
+     the record's widest key. A row holding a nested record or list, or a row of a
+     stacked record, puts its value under its key across the whole row, in a column of
+     its own: as a subgrid its nested value would size the shared key column. */
   grid-template-columns: ${({ $complex, $stacked, $editable }) => {
-    const stacked = $complex || $stacked;
-    if ($editable) {
-      return stacked
-        ? 'minmax(0, 1fr) auto'
-        : 'minmax(120px, min(34%, 220px)) minmax(0, 1fr) auto';
+    if (!($complex || $stacked)) {
+      return 'subgrid';
     }
-    return stacked
-      ? 'minmax(0, 1fr)'
-      : 'minmax(120px, min(34%, 220px)) minmax(0, 1fr)';
+    return $editable ? 'minmax(0, 1fr) auto' : 'minmax(0, 1fr)';
   }};
   grid-template-areas: ${({ $complex, $stacked, $editable }) => {
     const stacked = $complex || $stacked;
@@ -503,7 +539,7 @@ const Row = styled.div<
     grid-area: actions;
   }
   gap: ${({ $size, $complex, $stacked }) =>
-    $complex || $stacked ? GAP_FROM_SIZE[$size] : 8}px;
+    $complex || $stacked ? GAP_FROM_SIZE[$size] : KEY_VALUE_GAP_PX}px;
   align-items: start;
   min-width: 0;
   padding: ${({ $size }) => PADDING_FROM_SIZE[$size] / 2}px ${({ $size }) =>
@@ -537,10 +573,10 @@ const Row = styled.div<
        full grid cell. The chip sizes to its content instead, only
        hitting the column cap when content actually needs it.
      - \`min-width: 0\` releases ReqoreTag's intrinsic min-content size
-       (its longest unbreakable run) so the grid track can honour
-       its \`minmax(..., 220px)\` cap. Without this, snake_case keys
-       or UUIDs feed back into the track sizing and expand the
-       column past 220px. */
+       (its longest unbreakable run) so the key track can honour its
+       \`min(34%, 220px)\` cap. Without this, snake_case keys or UUIDs
+       feed back into the track sizing and expand the column past
+       the cap. */
   & > .reqore-data-view-key {
     justify-self: start;
     min-width: 0;
@@ -1705,9 +1741,8 @@ const renderScalar = (
 
 /** Width (in CSS px) below which a `RecordTable` switches its rows
  *  from a two-column grid (key | value) to a single column (key on
- *  top, value beneath). Tuned to the point where the 120px-min key
- *  column + gap + the value column starts squeezing the value into a
- *  useless sliver. */
+ *  top, value beneath). Below it, a long key's capped column (34% of the
+ *  record) plus the gap leaves the value a useless sliver. */
 const STACK_BELOW_PX = 360;
 
 interface IRecordTableProps {
@@ -1755,6 +1790,8 @@ const RecordTable = memo(
         $size={ctx.size}
         $theme={theme}
         $nested={depth > 0}
+        $stacked={stacked}
+        $editable={ctx.editable}
         className='reqore-data-view-record'
       >
         {entries.map(([key, item], index) => {
