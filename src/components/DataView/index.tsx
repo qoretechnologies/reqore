@@ -613,7 +613,7 @@ const Row = styled.div<
   }
 `;
 
-const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean }>`
+const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean; $stackedScalar?: boolean }>`
   min-width: 0;
   max-width: 100%;
   font-family: ${MONO_FONT};
@@ -644,6 +644,27 @@ const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean }>`
     css`
       margin-top: 4px;
       padding-left: ${PADDING_FROM_SIZE[$size] + 6}px;
+    `}
+
+  /* A stacked row (a narrow record) draws its value on a line of its own under the key. The
+     value is set against the row's far edge, so key and value read as a pair across the row
+     rather than as two left-aligned lines: a chip, or a value with its type chip, ends at the
+     right edge (and a row of chips that wraps justifies each line to it). Inside a value the
+     text keeps its own alignment: a value that wraps across lines reads left to right in a box
+     that sits at the right. What fills the width already — multi-line text, a parsed nested
+     record — is unchanged. */
+  ${({ $stackedScalar }) =>
+    $stackedScalar &&
+    css`
+      text-align: end;
+
+      & > * {
+        text-align: start;
+      }
+
+      & > .reqore-control-group {
+        justify-content: flex-end;
+      }
     `}
 `;
 
@@ -1921,6 +1942,7 @@ const RecordTable = memo(
                 $size={ctx.size}
                 $theme={theme}
                 $complex={complex}
+                $stackedScalar={stacked && !complex}
                 className='reqore-data-view-value-cell'
               >
                 {renderTree(item, ctx, theme, depth + 1, rowPath)}
