@@ -120,6 +120,9 @@ export {
   watchHoverGate,
 } from './helpers/hoveringPointer';
 export type { IReqoreHoverGate, IReqoreHoveringPointerEvent } from './helpers/hoveringPointer';
+/* Copying and UUIDs that work outside a secure context too (a page served over plain http),
+   for a consumer's own copy controls to say when a copy did not happen. */
+export { ClipboardUnavailableError, copyText, randomUuid } from './helpers/secureContextApis';
 export { ReqoreKeyValueTable } from './components/KeyValueTable';
 export * from './components/Label';
 export { default as ReqoreLayoutContent } from './components/Layout/content';
