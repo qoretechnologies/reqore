@@ -9,6 +9,7 @@ import {
   unset,
 } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { copyText } from '../../helpers/secureContextApis';
 import styled from '../../helpers/styled';
 import {
   ReqoreErrorBoundary,
@@ -79,9 +80,21 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize, IR
   noDataContent?: React.ReactNode;
   /**
    * Notification text shown when the "copy value" affordance succeeds.
-   * Defaults to `'Successfuly copied to clipboard'`.
+   * Defaults to `'Successfully copied to clipboard'`.
    */
   copySuccessMessage?: string;
+  /**
+   * Title of the notification shown when the "copy value" affordance could not copy (the
+   * browser allowed neither the Clipboard API nor its copy command, as on a page served over
+   * plain http). Defaults to `'Could not copy'`.
+   */
+  copyFailedTitle?: string;
+  /**
+   * Content of the notification shown when the "copy value" affordance could not copy.
+   * Defaults to `'The browser did not allow copying to the clipboard. Select the value and
+   * copy it yourself.'`.
+   */
+  copyFailedMessage?: string;
   /**
    * Formatter for the collapsed-object item count (e.g. `"3 items"` when a
    * collapsed object has three entries). Defaults to `` (n) => `${n} items` ``.
@@ -153,7 +166,9 @@ export const ReqoreTree = ({
   collapseAllLabel = 'Collapse all',
   showTypesLabel = 'Show types',
   noDataContent,
-  copySuccessMessage = 'Successfuly copied to clipboard',
+  copySuccessMessage = 'Successfully copied to clipboard',
+  copyFailedTitle = 'Could not copy',
+  copyFailedMessage = 'The browser did not allow copying to the clipboard. Select the value and copy it yourself.',
   itemCountLabel = (n: number) => `${n} items`,
   addItemDialogLabel = 'Adding new item',
   updateItemDialogLabel = (path: string) => `Updating "${path}"`,
@@ -195,6 +210,30 @@ export const ReqoreTree = ({
     zoomChosenByUser.current = true;
     setZoom(newZoom);
   }, []);
+  /** Copies one value and says how it went: never a "copied" that did not happen. */
+  const handleCopyValue = useCallback(
+    async (value: string) => {
+      try {
+        await copyText(value);
+      } catch {
+        addNotification({
+          title: copyFailedTitle,
+          content: copyFailedMessage,
+          id: Date.now().toString(),
+          intent: 'danger',
+          duration: 10000,
+        });
+        return;
+      }
+      addNotification({
+        content: copySuccessMessage,
+        id: Date.now().toString(),
+        type: 'success',
+        duration: 3000,
+      });
+    },
+    [addNotification, copySuccessMessage, copyFailedTitle, copyFailedMessage]
+  );
   const [showExportModal, setShowExportModal] = useState<'full' | 'current' | undefined>(undefined);
   const [managementDialog, setManagementDialog] = useState<IReqoreTreeManagementDialog>({
     open: false,
@@ -450,19 +489,8 @@ export const ReqoreTree = ({
                   flat
                   icon='ClipboardLine'
                   size='tiny'
-                  onClick={() => {
-                    try {
-                      navigator.clipboard.writeText(JSON.stringify(_data[key]));
-                      addNotification({
-                        content: copySuccessMessage,
-                        id: Date.now().toString(),
-                        type: 'success',
-                        duration: 3000,
-                      });
-                    } catch (e) {
-                      console.error(e);
-                    }
-                  }}
+                  className='reqore-tree-copy'
+                  onClick={() => void handleCopyValue(JSON.stringify(_data[key]))}
                 />
               )}
               {renderEditButton()}
