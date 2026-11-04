@@ -65,7 +65,14 @@ export const Throws: Story = {
 };
 
 export const ShowDetails: Story = {
+  ...Throws,
+  // After the spread, or `Throws.parameters` replaces this block and the
+  // description below is never shown.
   parameters: {
+    ...Throws.parameters,
+    // The details view is one line of quoted text in a box; the play asserts
+    // it, and a frame of it has nothing to compare.
+    qlip: { skip: true },
     docs: {
       description: {
         story:
@@ -73,7 +80,6 @@ export const ShowDetails: Story = {
       },
     },
   },
-  ...Throws,
   play: async (args) => {
     await Throws.play(args);
     await _testsClickButton({ label: 'Details' });
