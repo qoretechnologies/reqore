@@ -1,4 +1,4 @@
-import { expect, fireEvent, waitFor } from 'storybook/test';
+import { expect, fireEvent, screen, waitFor } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { ChangeEvent, useState } from 'react';
@@ -15,6 +15,7 @@ import { SIZES, TEXT_FROM_SIZE } from '../../constants/sizes';
 import MockObject from '../../mock/object.json';
 import { StoryMeta } from '../utils';
 import { SizeArg, argManager } from '../utils/args';
+import { withBrowserThatCannotCopy, withStoryClipboard } from '../utils/clipboard';
 
 const { createArg } = argManager<IReqoreTreeProps>();
 
@@ -529,5 +530,53 @@ export const CustomRenderers: Story = {
         />
       );
     },
+  },
+};
+
+export const CopyFailed: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree with a value\'s copy button in a browser that allows no copy (the Clipboard API refuses and the copy command copies nothing), and presses it: a red "Could not copy" notification says the browser did not allow it and to select the value and copy it by hand. No "copied" confirmation is shown for a copy that did not happen.',
+      },
+    },
+  },
+  args: {
+    data: { name: 'Rose Farmer', age: 42 },
+    expanded: true,
+    withLabelCopy: true,
+  },
+  beforeEach: () => withBrowserThatCannotCopy(),
+  play: async () => {
+    await _testsClickButton({ selector: '.reqore-tree-copy' });
+    await _testsWaitForText('Could not copy');
+    await _testsWaitForText(
+      'The browser did not allow copying to the clipboard. Select the value and copy it yourself.'
+    );
+    await expect(document.querySelector('.reqore-notification')).toHaveAttribute('role', 'alert');
+    await expect(screen.queryByText('Successfully copied to clipboard')).toBeNull();
+  },
+};
+
+export const CopiedWithoutClipboardApi: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree on a page with no Clipboard API, as one served over plain http by address is, and presses a value\'s copy button: the value is copied with the browser\'s copy command instead, and the usual "copied" notification shows.',
+      },
+    },
+  },
+  args: {
+    data: { name: 'Rose Farmer', age: 42 },
+    expanded: true,
+    withLabelCopy: true,
+  },
+  beforeEach: () => withStoryClipboard({ api: 'absent', copyCommand: true }),
+  play: async () => {
+    await _testsClickButton({ selector: '.reqore-tree-copy' });
+    await _testsWaitForText('Successfully copied to clipboard');
+    await expect(screen.queryByText('Could not copy')).toBeNull();
   },
 };

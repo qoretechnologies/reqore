@@ -17,7 +17,9 @@ permissions:
 jobs:
   Publish-and-release:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    # a fixed image, not ubuntu-latest: ubuntu-latest moved to 26.04, which the pinned Playwright cannot install browsers on;
+    # move to a newer image together with a Playwright upgrade
+    runs-on: ubuntu-24.04
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -76,6 +78,36 @@ jobs:
           body: v${{ steps.save_release_version.outputs.version }}
           draft: false
           prerelease: false
+
+      # Tell the consumers. qorus-ide and toolkit-react each answer with a
+      # `deps/reqore` PR that takes this version, runs its own CI and Qlip, and
+      # merges itself when nothing changed visually; see library-release.yml in
+      # each of them. A failure here is a warning, not a failed release: the
+      # package is already on npm, and either consumer's workflow can be run by
+      # hand (Actions -> Library release -> Run workflow).
+      - name: Mint a token for the consumers
+        id: bot
+        continue-on-error: true
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.QORUS_BOT_APP_ID }}
+          private-key: ${{ secrets.QORUS_BOT_APP_PRIVATE_KEY }}
+          owner: qoretechnologies
+          repositories: qorus-ide,toolkit-react
+      - name: Tell the consumers a release exists
+        if: steps.bot.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ steps.bot.outputs.token }}
+          VERSION: ${{ steps.save_release_version.outputs.version }}
+        run: |
+          for consumer in qorus-ide toolkit-react; do
+            jq -cn --arg version "$VERSION" --arg sha "$GITHUB_SHA" --arg repository "$GITHUB_REPOSITORY" \
+              '{event_type: "library-release", client_payload: {package: "@qoretechnologies/reqore", version: $version, repository: $repository, sha: $sha}}' \
+            | gh api "repos/qoretechnologies/$consumer/dispatches" --input - \
+              && echo "told $consumer about reqore $VERSION" \
+              || echo "::warning::could not tell $consumer about reqore $VERSION; run its Library release workflow by hand"
+          done
       # Notify discord if success
       - name: Discord notification
         env:
