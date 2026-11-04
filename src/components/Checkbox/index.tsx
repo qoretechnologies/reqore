@@ -111,6 +111,10 @@ export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
 /** The style of the groups a label that wraps is in: they shrink with the room the checkbox has. */
 const WRAPPING_LABEL_GROUP_STYLE: React.CSSProperties = { flexShrink: 1, minWidth: 0 };
 
+/** An on switch's track under `theme.switchOnLook: 'filled'`: the text colour of the surface. */
+const getSwitchFillColor = (theme: IReqoreTheme) =>
+  getReadableColor(theme, undefined, undefined, true, theme.originalMain);
+
 const StyledSwitchToggle = styled.div.withConfig({
   shouldForwardProp: omitStyleProps('width'),
 })`
@@ -175,6 +179,8 @@ const StyledSwitchToggle = styled.div.withConfig({
   background-color: ${({ theme, checked, transparent, parentEffect }) =>
     transparent
       ? 'transparent'
+      : checked && theme.switchOnLook === 'filled'
+      ? theme.originalMain || theme.main
       : !checked
       ? parentEffect?.gradient
         ? changeLightness(getNthGradientColor(theme, parentEffect?.gradient?.colors, 1), 0.2)
@@ -195,10 +201,17 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
   height: ${({ size }) => SWITCH_SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SWITCH_SIZE_TO_PX[size] * 1.8}px;
 
-  border: 1px solid ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.35 : 0.2)};
+  border: 1px solid
+    ${({ theme, checked }) =>
+      checked && theme.switchOnLook === 'filled'
+        ? getSwitchFillColor(theme)
+        : changeLightness(theme.main, checked ? 0.35 : 0.2)};
   border-radius: 50px;
 
-  background-color: ${({ theme }) => rgba(changeLightness(theme.main, 0.3), 0.1)};
+  background-color: ${({ theme, checked }) =>
+    checked && theme.switchOnLook === 'filled'
+      ? getSwitchFillColor(theme)
+      : rgba(changeLightness(theme.main, 0.3), 0.1)};
 
   ${StyledIconWrapper} {
     z-index: 1;
@@ -224,7 +237,13 @@ const StyledSwitchTextWrapper = styled(StyledTextEffect)`
 const StyledOnSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
   color: ${({ theme, checked, parentHasGradient }) =>
     !parentHasGradient &&
-    getReadableColorFrom(checked ? changeLightness(theme.main, 0.25) : theme.originalMain)};
+    getReadableColorFrom(
+      checked && theme.switchOnLook === 'filled'
+        ? getSwitchFillColor(theme)
+        : checked
+        ? changeLightness(theme.main, 0.25)
+        : theme.originalMain
+    )};
 `;
 
 const StyledOffSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`

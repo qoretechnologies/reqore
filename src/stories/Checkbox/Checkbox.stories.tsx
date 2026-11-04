@@ -399,6 +399,35 @@ export const FormControlKeyboard: Story = {
   },
 };
 
+export const SwitchFilledOn: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Two switches, on and off, under a theme with `switchOnLook: \'filled\'`: the on switch\'s track is filled with the text colour (white on a dark theme) and its knob is the surface, so on and off read apart without a colour; the off switch is unchanged.',
+      },
+    },
+  },
+  args: {
+    // @ts-expect-error — a preview decorator arg, not a Checkbox prop
+    otherThemeOptions: { switchOnLook: 'filled' },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical>
+      <ReqoreCheckbox label='Share usage analytics' asSwitch checked className='switch-on' />
+      <ReqoreCheckbox label='Send weekly digest' asSwitch checked={false} className='switch-off' />
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    const track = (selector: string) =>
+      getComputedStyle(document.querySelector(`${selector} .reqore-checkbox-box`) as Element);
+    // The on track is light: its red, green and blue are each above half.
+    const [r, g, b] = (track('.switch-on').backgroundColor.match(/\d+/g) ?? []).map(Number);
+    await expect(Math.min(r, g, b)).toBeGreaterThan(128);
+    await expect(track('.switch-off').backgroundColor).not.toBe(track('.switch-on').backgroundColor);
+  },
+};
+
 export const FormControlSwitchKeyboard: Story = {
   parameters: {
     docs: {

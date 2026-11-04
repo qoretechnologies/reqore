@@ -174,6 +174,13 @@ export interface IReqoreTheme {
    * instead of finding each dialog.
    */
   primaryActionIntent?: TReqoreIntent;
+  /**
+   * How a switch (`ReqoreCheckbox asSwitch`) shows that it is on. `'tint'` (the default,
+   * unchanged): the track takes a lighter shade of the switch's intent. `'filled'`: an on switch's
+   * track is filled with the text colour — white on a dark theme — and its knob is the surface,
+   * so on and off read apart without a colour. Decided once here for every switch in the app.
+   */
+  switchOnLook?: 'tint' | 'filled';
   header?: IReqoreNavbarTheme;
   footer?: IReqoreNavbarTheme;
   breadcrumbs?: IReqoreBreadcrumbsTheme;
