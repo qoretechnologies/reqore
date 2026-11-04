@@ -60,7 +60,7 @@ const SHRINKABLE_LIST_STYLE: React.CSSProperties = { minHeight: 0 };
 
 export interface IReqoreDropdownListProps
   extends IReqoreComponent,
-    Pick<IReqoreDropdownProps, 'customElements'>,
+    Pick<IReqoreDropdownProps, 'customElements' | 'customElementsPosition'>,
     IWithReqoreCustomTheme,
     IReqoreIntent {
   items?: TReqoreDropdownItems;
@@ -208,6 +208,7 @@ const ReqoreDropdownList = memo(
     noItemsFoundText = 'No items found',
     filter,
     customElements,
+    customElementsPosition = 'start',
     customTheme,
         inheritCustomTheme,
     intent,
@@ -598,7 +599,7 @@ const ReqoreDropdownList = memo(
         {/* An array prop: keyed here, so a caller passing elements without keys draws no warning.
             `toArray` keeps the keys a caller gave rather than putting keys by position over them,
             and takes a single node too, which `map` threw on. */}
-        {React.Children.toArray(customElements)}
+        {customElementsPosition === 'start' ? React.Children.toArray(customElements) : null}
         {(size(items) && filterable) || _onBackClick ? (
           <>
             <ReqoreControlGroup fluid>
@@ -750,6 +751,7 @@ const ReqoreDropdownList = memo(
             );
           }}
         </ReqorePaginationContainer>
+        {customElementsPosition === 'end' ? React.Children.toArray(customElements) : null}
       </ReqoreControlGroup>
     );
   }

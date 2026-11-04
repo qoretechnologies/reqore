@@ -642,6 +642,44 @@ export const WithCustomElements: Story = {
     ],
   },
 };
+export const CustomElementsAtTheEnd: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A row\'s "⋯" menu with `customElementsPosition=\'end\'`: the actions people reach for (Run, Edit) come first and the custom element, a secondary "Disable" toggle, comes after them — with the default `\'start\'` it sat above them.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreDropdown
+      label='Actions'
+      isDefaultOpen
+      customElementsPosition='end'
+      items={[
+        { label: 'Run', icon: 'PlayLine' },
+        { label: 'Edit', icon: 'EditLine' },
+      ]}
+      customElements={[
+        <ReqoreButton key='disable' icon='ToggleLine' className='custom-disable' flat>
+          Disable
+        </ReqoreButton>,
+      ]}
+    />
+  ),
+  play: async () => {
+    await _testsWaitForText('Edit');
+    const edit = Array.from(document.querySelectorAll('.reqore-menu-item')).find((item) =>
+      item.textContent?.includes('Edit')
+    ) as Element;
+    const disable = document.querySelector('.custom-disable') as Element;
+    // Disable follows Edit in the document: it is drawn after the items.
+    await expect(
+      edit.compareDocumentPosition(disable) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  },
+};
+
 export const WithKeyboardNavigation: Story = {
   parameters: {
     docs: {
