@@ -130,7 +130,8 @@ const getMoreLabel = (
   return overflowLabel;
 };
 
-const getBadgeLength = (
+/** A badge's width as a tab (or a segment) draws it: its text one size down, and its padding. */
+export const getBadgeLength = (
   badge: IReqoreButtonProps['badge'],
   tabsSize: TSizes = 'normal',
   theme?: IReqoreTheme

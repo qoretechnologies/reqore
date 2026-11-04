@@ -1,3 +1,4 @@
+import { getBadgeLength } from '../Tabs/list';
 import { isUndefined, omitBy } from 'lodash';
 import React, {
   forwardRef,
@@ -247,7 +248,7 @@ const StyledItemWrapper = styled.div<{
  * Estimate the pixel width of a segment item based on its content.
  * Same approach as Tabs: calculates width from label text size, icons, badges, and padding.
  */
-const estimateItemWidth = (
+export const estimateItemWidth = (
   item: IReqoreSegmentedControlItem,
   itemSize: TSizes = 'normal',
   theme?: IReqoreTheme
@@ -269,6 +270,10 @@ const estimateItemWidth = (
   if (item.rightIcon ?? item.props?.rightIcon) {
     width += ICON_FROM_SIZE[itemSize] + PADDING_FROM_SIZE[itemSize] / 2;
   }
+
+  // The count beside a label ("Failing 3") is part of the segment: left out, a `fluid` control
+  // (and the first frame before measuring) folded too late and cut its last segment in half.
+  width += getBadgeLength(item.badge ?? item.props?.badge, itemSize, theme);
 
   return width;
 };
