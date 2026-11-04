@@ -268,6 +268,24 @@ export const FromPropsAlone: Story = {
   },
 };
 
+export const FlatWithRowDividers: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A `flat` table (no panel border) with `rowDividers`: each row keeps its hairline. Before, `flat` dropped both, so a borderless list could not read as rows.',
+      },
+    },
+  },
+  render: () => <Template rowDividers />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getByText('Chargeback Handler')).toBeInTheDocument());
+    const cell = canvas.getByText('Chargeback Handler').closest('.reqore-table-cell') as Element;
+    await expect(getComputedStyle(cell).borderBottomWidth).toBe('1px');
+  },
+};
+
 /**
  * The same list with the props the table grew for it: a sentence-case header
  * with no dividers at rest, checkbox selection, no expander column (the row

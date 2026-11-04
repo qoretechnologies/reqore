@@ -305,6 +305,12 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   estimatedExpandedRowHeight?: number;
 
   striped?: boolean;
+  /**
+   * Whether rows are divided by a hairline. Default: the opposite of `flat`, as before — a flat
+   * table drew neither a panel border nor row dividers. Set it to keep the dividers on a `flat`
+   * table (a borderless list that still reads as rows), or to drop them on one that is not.
+   */
+  rowDividers?: boolean;
   emptyMessage?: string;
   showHelp?: boolean;
   showColumnsOptions?: boolean;
@@ -615,6 +621,7 @@ const ReqoreTable = ({
   onRowClick,
   onScrollChange,
   striped,
+  rowDividers,
   selectedRowIntent = 'info',
   size = 'normal',
   wrapperSize = 'normal',
@@ -1534,6 +1541,9 @@ const ReqoreTable = ({
     return badgeList;
   }, [rest.badge, rest.label, transformedData]);
 
+  // The rows' own flatness: no divider under each row. Follows `flat` unless `rowDividers` says.
+  const rowsFlat = rowDividers === undefined ? rest.flat : !rowDividers;
+
   /* Under a coarse pointer, a row with its actions folded into a menu button is at least a finger
      tall, so the button is a finger's size both ways. The row's border is the 1px the body adds to a
      table that is not flat. */
@@ -1541,10 +1551,10 @@ const ReqoreTable = ({
     if (!touch || !actionsMenuColumnIds.length) {
       return rowHeight;
     }
-    const border = rest.flat ? 0 : 1;
+    const border = rowsFlat ? 0 : 1;
 
     return Math.max(rowHeight ?? TABLE_SIZE_TO_PX[zoomSize] + border, TOUCH_TARGET_PX + border);
-  }, [touch, actionsMenuColumnIds, rowHeight, zoomSize, rest.flat]);
+  }, [touch, actionsMenuColumnIds, rowHeight, zoomSize, rowsFlat]);
 
   const renderTable = (items: IReqoreTableRowData[]) => {
     if (count(finalColumns) === 0 || count(data) === 0) {
@@ -1602,7 +1612,7 @@ const ReqoreTable = ({
             selectedRowIntent={selectedRowIntent}
             size={zoomSize}
             striped={striped}
-            flat={rest.flat}
+            flat={rowsFlat}
             wrap={wrap}
             maxCellHeight={maxCellHeight}
             expandHeightButtonProps={expandHeightButtonProps}
