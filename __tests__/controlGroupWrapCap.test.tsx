@@ -12,6 +12,7 @@ import {
   ReqorePanel,
   ReqoreUIProvider,
 } from '../src';
+import { CONTROL_GROUP_COLLAPSE_VARIABLE } from '../src/constants/controlGroup';
 import { WRAPPED_CONTROL_GROUP_CHILD_SELECTOR } from '../src/containers/UIProvider';
 
 const inLayout = (node: React.ReactNode) =>
@@ -85,4 +86,67 @@ test("a nested group's children are capped by the nested group only when it wrap
   expect(isCapped(container.querySelector('.step')!)).toBe(true);
   expect(isCapped(container.querySelector('.step')!.firstElementChild!)).toBe(false);
   expect(isCapped(container.querySelector('.wrapped-step')!.firstElementChild!)).toBe(true);
+});
+
+/** What the group says it pulls `element` over by, in the child's own style. */
+const collapse = (element: Element) =>
+  (element as HTMLElement).style.getPropertyValue(CONTROL_GROUP_COLLAPSE_VARIABLE);
+
+test('a stacked wrapped group says what it pulls a child with a margin over by', () => {
+  const { container } = inLayout(
+    <ReqoreControlGroup stack wrap className='rail'>
+      <ReqoreButton label='Clone' flat={false} />
+      <ReqoreButton label='Edit' />
+    </ReqoreControlGroup>
+  );
+  const [clone, edit] = Array.from(container.querySelector('.rail')!.children);
+
+  expect((clone as HTMLElement).style.marginLeft).toBe('-1px');
+  expect(collapse(clone)).toBe('1px');
+  expect(collapse(edit)).toBe('1px');
+});
+
+test('a flat child of a stacked wrapped group has no margin, and so nothing to add to its cap', () => {
+  const { container } = inLayout(
+    <ReqoreControlGroup stack wrap flat className='rail'>
+      <ReqoreButton label='Clone' />
+    </ReqoreControlGroup>
+  );
+  const clone = container.querySelector('.rail')!.children[0] as HTMLElement;
+
+  expect(clone.style.marginLeft).toBe('');
+  expect(collapse(clone)).toBe('');
+});
+
+test("a child that sets its own left margin adds nothing: the group's margin is not in effect", () => {
+  const { container } = inLayout(
+    <ReqoreControlGroup stack wrap className='rail'>
+      <ReqoreButton label='Clone' flat={false} style={{ marginLeft: 4 }} />
+    </ReqoreControlGroup>
+  );
+  const clone = container.querySelector('.rail')!.children[0] as HTMLElement;
+
+  expect(clone.style.marginLeft).toBe('4px');
+  expect(collapse(clone)).toBe('');
+});
+
+test('a stack that does not wrap, and a wrapped group that is not a stack, pull nothing over', () => {
+  const { container } = inLayout(
+    <>
+      <ReqoreControlGroup stack className='one-line'>
+        <ReqoreButton label='One' flat={false} />
+        <ReqoreButton label='Two' flat={false} />
+      </ReqoreControlGroup>
+      <ReqoreControlGroup wrap className='spaced'>
+        <ReqoreButton label='One' flat={false} />
+      </ReqoreControlGroup>
+    </>
+  );
+
+  for (const child of [
+    ...Array.from(container.querySelector('.one-line')!.children),
+    ...Array.from(container.querySelector('.spaced')!.children),
+  ]) {
+    expect(collapse(child)).toBe('');
+  }
 });
