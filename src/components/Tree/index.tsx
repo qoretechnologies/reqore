@@ -10,6 +10,7 @@ import {
 } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { copyText } from '../../helpers/secureContextApis';
+import { useColorDataByType } from '../../hooks/useColorDataByType';
 import styled from '../../helpers/styled';
 import {
   ReqoreErrorBoundary,
@@ -63,6 +64,13 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize, IR
   exportable?: boolean;
   defaultZoom?: TReqoreZoom;
   editable?: boolean;
+
+  /**
+   * Colour keys (blue) and values by their type (a boolean green or red, a number blue).
+   * Default `theme.colorDataByType` (`true` unless the theme says otherwise). `false` draws keys
+   * as quiet labels and values as plain text.
+   */
+  colorByType?: boolean;
 
   // Components provided here must be valid JSX components
   KeyRenderer?: React.ComponentType<IReqoreTreeCustomRendererProps>;
@@ -162,6 +170,7 @@ export const ReqoreTree = ({
   errorBoundaryOptions,
   KeyRenderer,
   ValueRenderer,
+  colorByType: colorByTypeProp,
   expandAllLabel = 'Expand all',
   collapseAllLabel = 'Collapse all',
   showTypesLabel = 'Show types',
@@ -185,6 +194,17 @@ export const ReqoreTree = ({
   const [allExpanded, setAllExpanded] = useState(expanded || !showControls);
   const [_showTypes, setShowTypes] = useState(showTypes);
   const addNotification = useReqoreProperty('addNotification');
+  const themeColorsDataByType = useColorDataByType();
+  const colorByType = colorByTypeProp ?? themeColorsDataByType;
+  // A key: blue when the tree colours by type, else a quieter label beside its value (the
+  // data view's plain key).
+  const keyEffect = useMemo(
+    () =>
+      colorByType
+        ? ({ weight: 'normal', color: 'info:lighten:5' } as const)
+        : ({ weight: 'normal', opacity: 0.65 } as const),
+    [colorByType]
+  );
   const [zoom, setZoom] = useState<number>(clampZoom(defaultZoom ?? sizeToZoom[size]));
   // The size the tree paints at — `zoom` is the size as a number, this is it back as a
   // size. `??` and not `||`, so `defaultZoom={0}` means `tiny` rather than "not given".
@@ -389,10 +409,7 @@ export const ReqoreTree = ({
               ) : (
                 <ReqoreP
                   className='reqore-tree-toggle'
-                  effect={{
-                    weight: 'normal',
-                    color: 'info:lighten:5',
-                  }}
+                  effect={keyEffect}
                   tooltip={getItemTooltip?.([...path, key], 'key', _pathWithoutArrayKeys)}
                 >
                   {displayKey}:
@@ -449,7 +466,7 @@ export const ReqoreTree = ({
               ) : (
                 <ReqoreP
                   {...{
-                    customTheme: { text: { color: 'info:lighten:5' } },
+                    effect: keyEffect,
                     style: { flexShrink: 0 },
                     size: zoomSize,
                   }}
@@ -467,7 +484,9 @@ export const ReqoreTree = ({
                   className='reqore-tree-label'
                   customTheme={{
                     text: {
-                      color: isBoolean(_data[key])
+                      color: !colorByType
+                        ? undefined
+                        : isBoolean(_data[key])
                         ? _data[key]
                           ? 'success:lighten:5'
                           : 'danger:lighten:10'

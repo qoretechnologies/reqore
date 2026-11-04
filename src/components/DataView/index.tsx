@@ -49,6 +49,7 @@ import { MONO_FONT, getFontFamily } from '../../constants/fonts';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { IReqoreEffect, TReqoreEffectColor } from '../Effect';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
+import { useColorDataByType } from '../../hooks/useColorDataByType';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreButton from '../Button';
 import ReqoreCheckbox from '../Checkbox';
@@ -216,7 +217,7 @@ export interface IReqoreDataViewProps
   keyIntent?: TReqoreIntent | null;
 
   /** Colour each value chip by its type — a number green, a boolean amber, a date blue.
-   *  Default `true`. `false` draws every value as the one neutral chip (an empty value stays
+   *  Default `theme.colorDataByType` (`true` unless the theme says otherwise). `false` draws every value as the one neutral chip (an empty value stays
    *  muted): for an app whose colours each mean something (green "healthy", amber "unusual"),
    *  where a number painted green reads as a verdict it is not. The type is unchanged
    *  everywhere else it shows. */
@@ -1957,7 +1958,7 @@ export const ReqoreDataView = memo(
         onSectionToggle,
         keyColor,
         keyIntent,
-        colorValuesByType = true,
+        colorValuesByType: colorValuesByTypeProp,
         plain = false,
         editable = false,
         onDataChange,
@@ -1982,6 +1983,8 @@ export const ReqoreDataView = memo(
         undefined,
         inheritCustomTheme
       );
+      const themeColorsDataByType = useColorDataByType();
+      const colorValuesByType = colorValuesByTypeProp ?? themeColorsDataByType;
 
       // In editable mode an empty `{}` or `[]` must still render the
       // tree so the `+ Add property` / `+ Add item` affordance is

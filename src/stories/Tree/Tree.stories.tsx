@@ -70,6 +70,31 @@ export const Basic: Story = {
     },
   },};
 
+export const NeutralColours: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree under a theme with `colorDataByType: false`: keys are quiet labels (the text colour at 0.65 opacity, as a plain data view draws them) and every value is plain text — no blue keys, no green or red booleans, no blue numbers. For an app whose colours each mean something, where a value painted green reads as a verdict.',
+      },
+    },
+  },
+  args: {
+    expanded: true,
+    // @ts-expect-error — a preview decorator arg, not a Tree prop
+    otherThemeOptions: { colorDataByType: false },
+  },
+  play: async () => {
+    await waitFor(() => expect(document.querySelectorAll('.reqore-tree-label').length).toBeGreaterThan(0));
+    const colours = new Set(
+      Array.from(document.querySelectorAll('.reqore-tree-label')).map(
+        (label) => getComputedStyle(label).color
+      )
+    );
+    await expect(colours.size).toBe(1);
+  },
+};
+
 export const TextView: Story = {
   parameters: {
     docs: {

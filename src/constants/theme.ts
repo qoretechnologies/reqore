@@ -158,6 +158,22 @@ export interface IReqoreTheme {
    * theme that keeps colour for state sets it once here, instead of restyling every message.
    */
   messageSurface?: 'tint' | 'panel';
+  /**
+   * Whether the data viewers colour what they show by its type: a tree's keys blue and its
+   * values by type (a boolean green or red, a number blue), a data view's value chips by type.
+   * Default `true` (unchanged). `false` draws keys as quiet labels and values as plain text,
+   * for an app whose colours each mean something (green "healthy"), where a value painted green
+   * reads as a verdict it is not. Decided once here; a component's own prop still wins
+   * (`ReqoreTree` `colorByType`, `ReqoreDataView` `colorValuesByType`).
+   */
+  colorDataByType?: boolean;
+  /**
+   * The intent of the primary action in the dialogs Reqore draws itself — the tree editor's Save,
+   * the confirm dialog's confirm when the action is not dangerous. Unset, each dialog keeps its
+   * own (the tree's Save is `success`). An app whose primary is not green sets it once here,
+   * instead of finding each dialog.
+   */
+  primaryActionIntent?: TReqoreIntent;
   header?: IReqoreNavbarTheme;
   footer?: IReqoreNavbarTheme;
   breadcrumbs?: IReqoreBreadcrumbsTheme;
