@@ -37,24 +37,28 @@ import {
 } from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
 import { useUppercaseLabels } from '../../hooks/useUppercaseLabels';
+import type { IReqoreEffect } from '../Effect';
 
-const CollectionGroupHeader = memo(({ name }: { name: string }) => {
-  const upper = useUppercaseLabels();
-  return (
-    <ReqoreP
-      style={{ gridColumn: '1 / -1' }}
-      effect={{
-        opacity: 0.8,
-        uppercase: upper,
-        weight: 'bold',
-        textSize: 'small',
-        spaced: upper ? 1 : 0,
-      }}
-    >
-      {name}
-    </ReqoreP>
-  );
-});
+const CollectionGroupHeader = memo(
+  ({ name, effect }: { name: string; effect?: IReqoreEffect }) => {
+    const upper = useUppercaseLabels();
+    return (
+      <ReqoreP
+        style={{ gridColumn: '1 / -1' }}
+        effect={{
+          opacity: 0.8,
+          uppercase: upper,
+          weight: 'bold',
+          textSize: 'small',
+          spaced: upper ? 1 : 0,
+          ...effect,
+        }}
+      >
+        {name}
+      </ReqoreP>
+    );
+  }
+);
 
 export type TReqoreCollectionActions = (IReqorePanelAction & { position?: 'left' | 'right' })[];
 
@@ -91,6 +95,12 @@ export interface IReqoreCollectionProps
    *  Keys match group names found on items. Groups without an entry render
    *  with the default (flat header) styling for back-compat. */
   groups?: TReqoreCollectionGroups;
+  /**
+   * The effect of every group heading, over the default (bold, small, 0.8 opacity, and uppercase
+   * when the theme sets labels in uppercase); a group's own `groups[name].labelEffect` still wins.
+   * One heading style for the whole collection, without listing every group by name.
+   */
+  groupLabelEffect?: IReqoreEffect;
 
   filterable?: boolean;
   /**
@@ -201,6 +211,7 @@ export const ReqoreCollection = memo(
     sortKeys = {},
     sortByGroupFirst = true,
     groups: groupsConfig,
+    groupLabelEffect,
 
     onQueryChange,
     contentRenderer = (children, _items, searchInput) => (
@@ -491,7 +502,9 @@ export const ReqoreCollection = memo(
 
                       return (
                         <React.Fragment key={index}>
-                          {showHeader && <CollectionGroupHeader name={group} />}
+                          {showHeader && (
+                            <CollectionGroupHeader name={group} effect={groupLabelEffect} />
+                          )}
                           <ReqoreErrorBoundary {...errorBoundaryOptions}>
                             <ReqoreCollectionItem
                               size={zoomSize}
@@ -582,6 +595,7 @@ export const ReqoreCollection = memo(
                           weight: 'bold',
                           textSize: 'small',
                           spaced: uppercaseLabels ? 1 : 0,
+                          ...groupLabelEffect,
                           ...groupConfig?.labelEffect,
                         }}
                         key={groupName}

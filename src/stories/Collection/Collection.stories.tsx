@@ -799,6 +799,34 @@ export const WithConfiguredGroups: Story = {
   } as IReqoreCollectionProps,
 };
 
+export const GroupLabelEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A grouped collection with one `groupLabelEffect` for every heading (sentence case, no letter-spacing, full opacity), with no group listed by name in `groups`.',
+      },
+    },
+  },
+  args: {
+    label: 'Integrations',
+    items: [
+      { label: 'Send Email', groups: ['Communication'], content: 'Send an email through SMTP' },
+      { label: 'Run Query', groups: ['Database'], content: 'Execute a SQL query' },
+    ],
+    groupLabelEffect: { uppercase: false, spaced: 0, opacity: 1 },
+  } as IReqoreCollectionProps,
+  play: async () => {
+    await waitFor(() =>
+      expect(document.querySelectorAll('.reqore-collection-group').length).toBe(2)
+    );
+    document.querySelectorAll('.reqore-collection-group').forEach((group) => {
+      const heading = group.querySelector('h1, h2, h3, h4, h5, h6, .reqore-heading') as Element;
+      expect(getComputedStyle(heading).textTransform).not.toBe('uppercase');
+    });
+  },
+};
+
 export const SortByRelevanceAcrossGroups: Story = {
   parameters: {
     docs: {
