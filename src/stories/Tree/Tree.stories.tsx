@@ -85,7 +85,9 @@ export const NeutralColours: Story = {
     otherThemeOptions: { colorDataByType: false },
   },
   play: async () => {
-    await waitFor(() => expect(document.querySelectorAll('.reqore-tree-label').length).toBeGreaterThan(0));
+    await waitFor(() =>
+      expect(document.querySelectorAll('.reqore-tree-label').length).toBeGreaterThan(0)
+    );
     const colours = new Set(
       Array.from(document.querySelectorAll('.reqore-tree-label')).map(
         (label) => getComputedStyle(label).color

@@ -42,7 +42,10 @@ describe('theme.colorDataByType', () => {
   });
 
   test("a tree's own colorByType wins over the theme", () => {
-    renderWith({ colorDataByType: false }, <ReqoreTree data={DATA} showControls={false} colorByType />);
+    renderWith(
+      { colorDataByType: false },
+      <ReqoreTree data={DATA} showControls={false} colorByType />
+    );
     expect(styleOf('retries:').opacity).not.toBe('0.65');
   });
 });
@@ -51,7 +54,11 @@ describe('theme.primaryActionIntent', () => {
   const saveBackground = (theme: Partial<IReqoreTheme> | undefined) => {
     const { unmount } = renderWith(
       theme,
-      <ReqoreTreeManagementDialog data={{ key: 'a', value: '1' }} type='object' onClose={() => {}} />
+      <ReqoreTreeManagementDialog
+        data={{ key: 'a', value: '1' }}
+        type='object'
+        onClose={() => {}}
+      />
     );
     const background = getComputedStyle(
       document.querySelector('.reqore-tree-save') as Element
