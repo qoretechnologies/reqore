@@ -215,6 +215,10 @@ export type { IReqoreTypeScale } from './constants/theme';
 export { getControlTextSize, getTagTextSize, getTextSize } from './helpers/typeScale';
 export { ReqorePaginationContainer } from './containers/Paging';
 export { default as ReqoreNotifications, modalStore } from './containers/ReqoreProvider';
+export type {
+  IReqoreConfirmationDefaults,
+  IReqoreConfirmationModal,
+} from './containers/ReqoreProvider';
 export { default as ReqoreUIProvider } from './containers/UIProvider';
 export { default as ReqoreContext } from './context/ReqoreContext';
 export { default as ReqoreThemeContext } from './context/ThemeContext';

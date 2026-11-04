@@ -315,6 +315,51 @@ export const ConfirmationModal: Story = {
   },
 };
 
+/** Opens a destructive confirmation as a caller would, under the app's defaults. */
+const AsksToDelete = () => {
+  const confirmAction = useReqoreProperty('confirmAction');
+  useMount(() => {
+    confirmAction({
+      title: 'Delete this job?',
+      description: 'Its runs and their logs go with it.',
+      intent: 'danger',
+      confirmButtonIntent: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: noop,
+    });
+  });
+  return null;
+};
+
+export const ConfirmationWithAppDefaults: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A destructive confirmation under app-wide defaults (`options.confirmations`): a solid dialog (`surfaceOpacity: 1`) over an unblurred backdrop (`backdropBlur: 0`), the intent on the icon only (`intentLook: \'icon\'`), no "Are you sure you want to proceed?" line under a title that already asks (`content: null`), and the Cancel button in the app\'s own words (`cancelLabel: \'Keep it\'`). The call still names its own confirm label and intent.',
+      },
+    },
+  },
+  render: () => <AsksToDelete />,
+  args: {
+    // @ts-expect-error — a preview decorator arg, not a Modal prop
+    options: {
+      confirmations: {
+        surfaceOpacity: 1,
+        backdropBlur: 0,
+        intentLook: 'icon',
+        content: null,
+        cancelLabel: 'Keep it',
+      },
+    },
+  },
+  play: async () => {
+    await _testsWaitForText('Delete this job?');
+    await _testsWaitForText('Keep it');
+    await expect(document.body).not.toHaveTextContent('Are you sure you want to proceed?');
+  },
+};
+
 export const BasicWithConfirmationOnClose: Story = {
   parameters: {
     docs: {
