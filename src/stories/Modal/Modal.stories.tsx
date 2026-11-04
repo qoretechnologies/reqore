@@ -343,7 +343,6 @@ export const ConfirmationWithAppDefaults: Story = {
   },
   render: () => <AsksToDelete />,
   args: {
-    // @ts-expect-error — a preview decorator arg, not a Modal prop
     options: {
       confirmations: {
         surfaceOpacity: 1,

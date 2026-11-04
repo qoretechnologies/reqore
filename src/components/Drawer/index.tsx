@@ -612,7 +612,7 @@ const getSlideTransform = (slide: SpringValue<number>, position: TPosition) =>
 export const MODAL_PHONE_WIDTH = 'calc(100vw - 32px)';
 
 /** What a drawer hands its panel instead of the title bar's props when `titleBar` is `false`. */
-const NO_TITLE_BAR = {
+const NO_TITLE_BAR: Partial<IReqorePanelProps> = {
   label: undefined,
   icon: undefined,
   badge: undefined,
@@ -621,7 +621,7 @@ const NO_TITLE_BAR = {
   collapsible: false,
   onClose: undefined,
   actions: [],
-} as const;
+};
 
 export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
   ({

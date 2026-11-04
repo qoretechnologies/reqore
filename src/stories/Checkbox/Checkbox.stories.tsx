@@ -409,7 +409,6 @@ export const SwitchFilledOn: Story = {
     },
   },
   args: {
-    // @ts-expect-error — a preview decorator arg, not a Checkbox prop
     otherThemeOptions: { switchOnLook: 'filled' },
   },
   render: () => (

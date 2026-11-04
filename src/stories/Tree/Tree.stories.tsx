@@ -81,7 +81,6 @@ export const NeutralColours: Story = {
   },
   args: {
     expanded: true,
-    // @ts-expect-error — a preview decorator arg, not a Tree prop
     otherThemeOptions: { colorDataByType: false },
   },
   play: async () => {
