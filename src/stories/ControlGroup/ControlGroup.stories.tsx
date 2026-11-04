@@ -978,6 +978,14 @@ const StackedRails = () => (
         />
       </ReqoreControlGroup>
     </StoryRowBox>
+    <ReqoreVerticalSpacer height={10} />
+    <ReqoreControlGroup stack wrap fluid className='rail-rows'>
+      <ReqoreButton label='A row a button fills' />
+      <ReqoreControlGroup>
+        <ReqoreButton label='A row a group fills' />
+      </ReqoreControlGroup>
+      <ReqoreInput placeholder='A row an input fills' />
+    </ReqoreControlGroup>
   </>
 );
 
@@ -1008,6 +1016,16 @@ const expectStackedRails = async (canvasElement: HTMLElement) => {
   expect(long.right).toBeLessThanOrEqual(narrow.getBoundingClientRect().right + 0.05);
   expect(long.left).toBeGreaterThanOrEqual(box.getBoundingClientRect().left - 0.05);
   await expectControlsInside(box);
+
+  // the rows of a stack that fill it end on one line, whatever fills them
+  const rail = canvasElement.querySelector<HTMLElement>('.rail-rows')!;
+  const rows = [
+    rail.querySelector(':scope > .reqore-button'),
+    rail.querySelector(':scope > .reqore-control-group'),
+    // what an input draws: its wrapper is the group's child, and has no margin of its own
+    rail.querySelector('input'),
+  ].map((row) => row!.getBoundingClientRect().right);
+  expect(new Set(rows).size).toBe(1);
 };
 
 export const StackedWrappedGroupKeepsALabelThatFits: Story = {
@@ -1015,7 +1033,7 @@ export const StackedWrappedGroupKeepsALabelThatFits: Story = {
     docs: {
       description: {
         story:
-          'Renders stacked wrapped groups as a page draws its action rail: one button alone, two side by side, and in a 120.5px box one whose label is far too long. A label that fits is said whole, and the long one is cut inside the box.',
+          'Renders stacked wrapped groups as a page draws its action rail: one button alone, two side by side, and in a 120.5px box one whose label is far too long, then rows that fill a group. A label that fits is said whole, the long one is cut inside the box, and the rows end on one line.',
       },
     },
   },
@@ -1033,7 +1051,7 @@ export const StackedWrappedGroupKeepsALabelThatFitsOnAPhone: Story = {
     docs: {
       description: {
         story:
-          'The same stacked wrapped groups on a phone (390px): a label that fits is said whole, and the long one is cut inside its box.',
+          'The same stacked wrapped groups on a phone (390px): a label that fits is said whole, the long one is cut inside its box, and the rows end on one line.',
       },
     },
   },

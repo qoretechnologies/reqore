@@ -597,10 +597,12 @@ const ReqoreControlGroup = memo(
               ? {
                   marginTop: -1,
                   marginLeft: -1,
-                  // The row a child of a wrapped stack may take is 1px more than the group's content
-                  // box: the margin above pulls it over the group's 1px padding. See
+                  // A child sized by its content needs 1px more than the group's content box, which
+                  // the margin above pulls it over. One that fills its row does not: the rows of a
+                  // stack line up with what `width: 100%` gives a group among them. See
                   // `CONTROL_GROUP_COLLAPSE_VARIABLE`.
-                  ...(props?.style?.marginLeft === undefined
+                  ...(props?.style?.marginLeft === undefined &&
+                  !((props?.fluid ?? fluid) && !(props?.fixed ?? fixed))
                     ? { [CONTROL_GROUP_COLLAPSE_VARIABLE]: '1px' }
                     : {}),
                 }

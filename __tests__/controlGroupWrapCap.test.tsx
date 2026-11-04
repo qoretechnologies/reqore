@@ -118,6 +118,23 @@ test('a flat child of a stacked wrapped group has no margin, and so nothing to a
   expect(collapse(clone)).toBe('');
 });
 
+test('a child that fills its row keeps its cap, so the rows of a stack stay in line', () => {
+  const { container } = inLayout(
+    <ReqoreControlGroup stack wrap fluid className='rows'>
+      <ReqoreButton label='Fills, as the group does' />
+      <ReqoreButton label='Fills' fluid />
+      <ReqoreButton label='Does not' fixed />
+      <ReqoreButton label='Does not' fluid={false} />
+    </ReqoreControlGroup>
+  );
+  const [inherits, own, fixed, notFluid] = Array.from(container.querySelector('.rows')!.children);
+
+  expect(collapse(inherits)).toBe('');
+  expect(collapse(own)).toBe('');
+  expect(collapse(fixed)).toBe('1px');
+  expect(collapse(notFluid)).toBe('1px');
+});
+
 test("a child that sets its own left margin adds nothing: the group's margin is not in effect", () => {
   const { container } = inLayout(
     <ReqoreControlGroup stack wrap className='rail'>
