@@ -17,6 +17,7 @@ import {
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
 import { dragPointer } from '../utils/pointer';
+import { PHONE_STORY } from '../utils/touchScreen';
 
 import { ThemedSurface } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreModalProps>();
@@ -357,6 +358,74 @@ export const ConfirmationWithAppDefaults: Story = {
     await _testsWaitForText('Delete this job?');
     await _testsWaitForText('Keep it');
     await expect(document.body).not.toHaveTextContent('Are you sure you want to proceed?');
+  },
+};
+
+/** A modal opened as a caller would, with a button to open it again after it closes. */
+const SearchDialog = ({ titleBar }: { titleBar?: boolean }) => {
+  const [isOpen, setIsOpen] = useState(true);
+  return (
+    <>
+      <ReqoreButton id='reopen' onClick={() => setIsOpen(true)}>
+        Open search
+      </ReqoreButton>
+      <ReqoreModal
+        isOpen={isOpen}
+        label='Search'
+        titleBar={titleBar}
+        onClose={() => setIsOpen(false)}
+        width='520px'
+      >
+        <ReqoreP>Type to search workflows, jobs and services.</ReqoreP>
+      </ReqoreModal>
+    </>
+  );
+};
+
+export const WithoutTitleBar: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A modal with `titleBar={false}`: no label, icon or close button above its content — for a dialog whose content already says what it is, such as a command palette. Escape still closes it, and its `label` ("Search") is the dialog\'s accessible name.',
+      },
+    },
+  },
+  render: () => <SearchDialog titleBar={false} />,
+  play: async () => {
+    await _testsWaitForText('Type to search workflows, jobs and services.');
+    await expect(document.querySelector('.reqore-modal .reqore-panel-title')).toBeNull();
+    await expect(document.querySelector('[role="dialog"][aria-label="Search"]')).not.toBeNull();
+    await fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() =>
+      expect(document.querySelector('[role="dialog"][aria-label="Search"]')).toBeNull()
+    );
+    // Open again, so the capture shows the dialog without its bar.
+    await _testsClickButton({ selector: '#reopen' });
+    await _testsWaitForText('Type to search workflows, jobs and services.');
+  },
+};
+
+export const OnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'A modal opened on a phone (390 px), asked to be 520px wide: it takes the screen less the page\'s 16px gutter each side (`phoneWidth`, held to `calc(100vw - 32px)`), where 80vw left about 40px each side and a third of the screen unused.',
+      },
+    },
+  },
+  render: () => <SearchDialog />,
+  play: async () => {
+    await _testsWaitForText('Type to search workflows, jobs and services.');
+    const { clientWidth } = document.documentElement;
+    await waitFor(() => {
+      const box = document.querySelector('.reqore-modal') as HTMLElement;
+      expect(Math.round(box.getBoundingClientRect().width)).toBe(clientWidth - 32);
+    });
   },
 };
 

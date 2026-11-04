@@ -20,6 +20,13 @@ export interface IReqoreModalProps extends Omit<IReqoreDrawerProps, 'position' |
    * HTML attribute of the same name: it never reaches the DOM.
    */
   draggable?: boolean;
+  /**
+   * The modal's width on a phone (`isMobile`). Default `'100%'`, which the modal's phone maximum
+   * (`MODAL_PHONE_WIDTH`, `calc(100vw - 32px)`) holds to the page's own 16px gutter each side,
+   * where 80vw left ~40px and a third of the screen's width unused. (Not `calc()` itself: the
+   * resizable box does not take one as a width.) `null` keeps `width` on a phone too.
+   */
+  phoneWidth?: string | null;
 }
 
 export interface IReqoreModalStyle extends IReqoreModalProps {
@@ -33,9 +40,11 @@ export const ReqoreModal = memo(
     height = 'fit-content',
     confirmOnClose,
     draggable,
+    phoneWidth = '100%',
     ...rest
   }: IReqoreModalProps) => {
     const id = useMemo(() => nanoid(), []);
+    const isMobile = useReqoreProperty('isMobile');
     const escClosableModals = useReqoreProperty('escClosableModals');
     const closeModalsOnEscPress = useReqoreProperty('closeModalsOnEscPress');
     const add = useReqoreProperty('addEscClosableModal');
@@ -82,7 +91,7 @@ export const ReqoreModal = memo(
         closeOnEscPress={closeModalsOnEscPress}
         {...rest}
         confirmOnClose={confirmOnClose}
-        width={width}
+        width={isMobile && phoneWidth !== null ? phoneWidth : width}
         height={height}
         position='left'
         _isModal
