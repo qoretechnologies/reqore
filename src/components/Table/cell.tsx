@@ -60,6 +60,7 @@ export const StyledTableCell = styled.div.withConfig({
     size,
     flat,
     striped,
+    pinnedSurface,
     even,
     selected,
     selectedIntent,
@@ -131,10 +132,13 @@ export const StyledTableCell = styled.div.withConfig({
     // Pinned cells need an opaque paint so non-pinned cells scrolling underneath don't show
     // through. We layer the semi-transparent displayed color over the surface a table is
     // drawn on — a panel's — so at rest a pinned cell is indistinguishable from its neighbours.
+    // The surface is the table's own when it names one (`pinnedSurface`: a table on the page),
+    // and a row at rest shows that surface alone, never the panel's under it.
+    const pinnedSurfaceColor = pinnedSurface ?? getPanelBackgroundColor(theme);
     const pinnedBackground = pin
-      ? `linear-gradient(${displayedBackgroundColor}, ${displayedBackgroundColor}), ${getPanelBackgroundColor(
-          theme
-        )}`
+      ? backgroundColor === 'transparent' && pinnedSurface
+        ? pinnedSurface
+        : `linear-gradient(${displayedBackgroundColor}, ${displayedBackgroundColor}), ${pinnedSurfaceColor}`
       : undefined;
 
     return css`

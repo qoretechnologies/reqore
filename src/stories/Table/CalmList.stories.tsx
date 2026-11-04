@@ -375,6 +375,39 @@ export const ExpanderAtEnd: Story = {
   },
 };
 
+/** A table drawn straight on the page, its actions pinned: the pinned column paints the page. */
+const PAGE = '#101012';
+export const PinnedOnThePage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A `transparent` table drawn straight on the page, with its actions column pinned and `pinnedSurface` set to the page colour: the pinned column paints the page, so it is not a lighter block over the rows beside it. Without the prop it painted the panel surface it was not sitting on.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ background: PAGE, padding: 16 }}>
+      <ReqoreTable
+        {...TABLE_PROPS}
+        transparent
+        pinnedSurface={PAGE}
+        columns={columns.map((column) =>
+          column.dataId === 'actions' ? { ...column, pin: 'right' } : column
+        )}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getByText('Chargeback Handler')).toBeInTheDocument());
+    const row = canvasElement.querySelector('.reqore-table-row') as Element;
+    const cells = row.querySelectorAll('.reqore-table-cell');
+    const pinned = cells[cells.length - 1];
+    await expect(getComputedStyle(pinned).backgroundColor).toBe('rgb(16, 16, 18)');
+  },
+};
+
 /** The actions column pinned to the right edge, as every list in a product pins it. */
 export const PinnedActions: Story = {
   parameters: {

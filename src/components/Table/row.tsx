@@ -78,6 +78,8 @@ export interface IReqoreTableRowOptions {
   selected: (string | number)[];
   onRowClick?: IReqoreTableRowClick;
   striped?: boolean;
+  /** See `IReqoreTableProps.pinnedSurface`. */
+  pinnedSurface?: TReqoreHexColor;
   selectedRowIntent?: TReqoreIntent;
   size?: TSizes;
   flat?: boolean;
@@ -246,6 +248,7 @@ export interface IReqoreTableCellStyle {
   selectedIntent?: TReqoreIntent;
   even?: boolean;
   striped?: boolean;
+  pinnedSurface?: TReqoreHexColor;
   padded?: IReqoreTableColumn['cell']['padded'];
   wrap?: boolean;
   pin?: 'left' | 'right';
@@ -289,6 +292,7 @@ const ReqoreTableRow = memo(
       selected,
       onRowClick,
       striped,
+      pinnedSurface,
       size,
       selectedRowIntent,
       flat,
@@ -603,6 +607,7 @@ const ReqoreTableRow = memo(
                   align,
                   size,
                   striped,
+                  pinnedSurface,
                   tooltip,
                   padded: cell?.padded ?? (cell?.actions ? 'none' : undefined),
                   disabled: data[index]._disabled,
@@ -664,6 +669,7 @@ const ReqoreTableRow = memo(
         expandHeightButtonProps,
         size,
         striped,
+        pinnedSurface,
         selectedRowIntent,
         flat,
         CellComponent,

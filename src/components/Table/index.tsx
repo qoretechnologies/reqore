@@ -1,5 +1,5 @@
 /* @flow */
-import type { IReqoreEffect } from '../Effect';
+import type { IReqoreEffect, TReqoreHexColor } from '../Effect';
 import { TReqoreFilterRanking } from '../../helpers/search';
 import { size as count, isArray } from 'lodash';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
@@ -311,6 +311,13 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * table (a borderless list that still reads as rows), or to drop them on one that is not.
    */
   rowDividers?: boolean;
+  /**
+   * The surface behind the table, which a pinned column paints so the cells scrolling under it
+   * do not show through. Default: the panel surface, for a table inside a panel. A table drawn
+   * straight on the page (a `transparent` table) passes the page's colour, or its pinned columns
+   * read as a lighter block over the rows beside them.
+   */
+  pinnedSurface?: TReqoreHexColor;
   emptyMessage?: string;
   showHelp?: boolean;
   showColumnsOptions?: boolean;
@@ -622,6 +629,7 @@ const ReqoreTable = ({
   onScrollChange,
   striped,
   rowDividers,
+  pinnedSurface,
   selectedRowIntent = 'info',
   size = 'normal',
   wrapperSize = 'normal',
@@ -1612,6 +1620,7 @@ const ReqoreTable = ({
             selectedRowIntent={selectedRowIntent}
             size={zoomSize}
             striped={striped}
+            pinnedSurface={pinnedSurface}
             flat={rowsFlat}
             wrap={wrap}
             maxCellHeight={maxCellHeight}
