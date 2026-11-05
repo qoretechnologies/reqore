@@ -1093,6 +1093,47 @@ const EditableScalarCell = memo<IEditableScalarCellProps>(
       setEditing(false);
     }, [cancelEditing, commit, draft, isBoolean, isNumber, path, value]);
 
+    // Inline type-change. Coerces the CURRENT DRAFT (in its
+    // canonical form for the current kind — string for text/numeric
+    // inputs, boolean for the checkbox) to the picked kind. A user
+    // who has typed `42` and then realises they meant Number keeps
+    // the `42` they typed; a user who has clicked the checkbox `on`
+    // and switches to String gets `"true"`.
+    //
+    // Picking `string` / `number` / `boolean` keeps the cell in edit
+    // mode and re-initialises the draft to the coerced value (so the
+    // input swap doesn't visually drop the user's intent). Picking
+    // `object` / `array` / `null` commits the coerced value and
+    // exits so the right control takes over (structural view / "—"
+    // chip).
+    const handlePickType = useCallback(
+      (newKind: TReqoreDataValueKind) => {
+        if (newKind === kind) return;
+        const coerced = reqoreCoerceValueToKind(draft, newKind);
+        ctx.commitTypeChange?.(path, newKind);
+        if (newKind === 'string' || newKind === 'number') {
+          setDraft(coerced === null || coerced === undefined ? '' : String(coerced));
+        } else if (newKind === 'boolean') {
+          setDraft(coerced === true);
+        } else {
+          setEditing(false);
+        }
+      },
+      [ctx, draft, kind, path]
+    );
+
+    const typeItems = useMemo(
+      () =>
+        typePickerItems(ctx.labels).map((entry) => ({
+          label: entry.label,
+          icon: entry.icon,
+          selected: entry.kind === kind,
+          onClick: () => handlePickType(entry.kind),
+        })),
+      [ctx.labels, handlePickType, kind]
+    );
+
+
     if (!editing) {
       return (
         <EditCellShell
@@ -1115,32 +1156,6 @@ const EditableScalarCell = memo<IEditableScalarCellProps>(
         </EditCellShell>
       );
     }
-
-    // Inline type-change. Coerces the CURRENT DRAFT (in its
-    // canonical form for the current kind — string for text/numeric
-    // inputs, boolean for the checkbox) to the picked kind. A user
-    // who has typed `42` and then realises they meant Number keeps
-    // the `42` they typed; a user who has clicked the checkbox `on`
-    // and switches to String gets `"true"`.
-    //
-    // Picking `string` / `number` / `boolean` keeps the cell in edit
-    // mode and re-initialises the draft to the coerced value (so the
-    // input swap doesn't visually drop the user's intent). Picking
-    // `object` / `array` / `null` commits the coerced value and
-    // exits so the right control takes over (structural view / "—"
-    // chip).
-    const handlePickType = (newKind: TReqoreDataValueKind) => {
-      if (newKind === kind) return;
-      const coerced = reqoreCoerceValueToKind(draft, newKind);
-      ctx.commitTypeChange?.(path, newKind);
-      if (newKind === 'string' || newKind === 'number') {
-        setDraft(coerced === null || coerced === undefined ? '' : String(coerced));
-      } else if (newKind === 'boolean') {
-        setDraft(coerced === true);
-      } else {
-        setEditing(false);
-      }
-    };
 
     const currentTypeItem = typePickerItems(ctx.labels).find(
       (entry) => entry.kind === kind
@@ -1201,12 +1216,7 @@ const EditableScalarCell = memo<IEditableScalarCellProps>(
             icon={currentTypeItem?.icon ?? 'TextWrap'}
             tooltip={ctx.labels.changeType}
             className='reqore-data-view-edit-type'
-            items={typePickerItems(ctx.labels).map((entry) => ({
-              label: entry.label,
-              icon: entry.icon,
-              selected: entry.kind === kind,
-              onClick: () => handlePickType(entry.kind),
-            }))}
+            items={typeItems}
           />
         ) : null}
         {/* Save / Cancel use `onMouseDown` with `preventDefault` so
@@ -1332,6 +1342,22 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
       />
     );
 
+    const handleCommitMouseDown = useCallback(
+      (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        submit();
+      },
+      [submit]
+    );
+
+    const handleCancelMouseDown = useCallback(
+      (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        cancel();
+      },
+      [cancel]
+    );
+
     if (!editing) {
       return (
         <EditCellShell
@@ -1401,10 +1427,7 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
             flat
             minimal
             tooltip={ctx.labels.renameCommitTooltip}
-            onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
-              e.preventDefault();
-              submit();
-            }}
+            onMouseDown={handleCommitMouseDown}
             className='reqore-data-view-key-edit-commit'
           />
           <ReqoreButton
@@ -1413,10 +1436,7 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
             flat
             minimal
             tooltip={ctx.labels.renameCancelTooltip}
-            onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
-              e.preventDefault();
-              cancel();
-            }}
+            onMouseDown={handleCancelMouseDown}
             className='reqore-data-view-key-edit-cancel'
           />
         </ReqoreControlGroup>
@@ -1559,6 +1579,17 @@ const AddEntryAffordance = memo<IAddEntryAffordanceProps>(
     const [key, setKey] = useState('');
     const [valueKind, setValueKind] = useState<TReqoreDataValueKind>('string');
 
+    const typeItems = useMemo(
+      () =>
+        typePickerItems(ctx.labels).map((entry) => ({
+          label: entry.label,
+          icon: entry.icon,
+          selected: entry.kind === valueKind,
+          onClick: () => setValueKind(entry.kind),
+        })),
+      [ctx.labels, valueKind]
+    );
+
     if (!ctx.commitAdd) return null;
 
     const reset = () => {
@@ -1637,12 +1668,7 @@ const AddEntryAffordance = memo<IAddEntryAffordanceProps>(
           icon={typeItem?.icon}
           label={typeItem?.label ?? ctx.labels.typeStringLabel}
           className='reqore-data-view-add-type'
-          items={typePickerItems(ctx.labels).map((entry) => ({
-            label: entry.label,
-            icon: entry.icon,
-            selected: entry.kind === valueKind,
-            onClick: () => setValueKind(entry.kind),
-          }))}
+          items={typeItems}
         />
         <ReqoreButton
           size={ctx.size}
