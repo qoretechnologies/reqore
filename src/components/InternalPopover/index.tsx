@@ -18,12 +18,15 @@ import { useReqoreProperty } from '../..';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { ReqoreSurfaceProvider } from '../../context/SurfaceContext';
 import { fadeIn } from '../../helpers/animations';
 import {
   changeLightness,
   getColorFromMaybeString,
   getNotificationIntent,
+  getThemeSurface,
 } from '../../helpers/colors';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { getPrimaryGradient } from '../Effect';
 import ReqoreMessage from '../Message';
 import { IPopoverData } from '../Popover';
@@ -285,6 +288,13 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     const animations = useReqoreProperty('animations');
     const customPortalId = useReqoreProperty('customPortalId');
     const uiScale = useReqoreProperty('uiScale');
+    /* What the popover is drawn on: the layout's surface, not that of what opened it. It is in the
+       portal, over the page, but in the React tree of its trigger, and so inherited its surface: a
+       tag in a popover opened from a danger message picked its shade against the message's red. Its
+       message (the default wrapper) draws the popover's fill on this and hands that fill to the
+       content; content without one (`noWrapper`) is drawn on this. */
+    const theme = useReqoreTheme();
+    const layoutSurface = useMemo(() => getThemeSurface(theme), [theme]);
     const [popperElement, setPopperElement] = useState(null);
     const [arrowElement, setArrowElement] = useState(null);
     const popperRef: MutableRefObject<any> = useRef(null);
@@ -687,61 +697,63 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
 
     return createPortal(
       <ReqoreThemeProvider>
-        <StyledPopoverWrapper
-          interactive={interactive}
-          maxWidth={maxWidth}
-          minWidth={minWidth}
-          maxHeight={maxHeight ?? roomBelow}
-          transparent={transparent}
-          effect={effect}
-          isOpaque={!transparent && !minimal}
-          intent={intent}
-          flat={flat}
-          noWrapper={noWrapper}
-          dim={flat && !transparent && !effect && minimal}
-          className='reqore-popover-content'
-          ref={handleRef}
-          style={style}
-          animate={animations?.popovers}
-          id={id}
-          onMouseEnter={onPopoverMouseEnter}
-          onMouseLeave={onPopoverMouseLeave}
-          {...attributes.popper}
-        >
-          {!noArrow && !transparent ? (
-            <StyledPopoverArrow ref={setArrowElement} style={arrowStyle} data-popper-arrow />
-          ) : null}
-          <StyledPopoverContent $capped={!!(maxHeight ?? roomBelow)}>
-            {!noWrapper || isString(content) ? (
-              <ReqoreMessage
-                opaque={!transparent && !minimal}
-                className='reqore-popover-text'
-                intent={intent}
-                title={title}
-                icon={icon}
-                minimal={transparent}
-                flat={flat || transparent}
-                effect={effect}
-                backgroundBlur={backgroundBlur}
-              >
-                {content}
-              </ReqoreMessage>
-            ) : (
-              <>
-                {React.Children.map(content, (child) =>
-                  child
-                    ? // A DOM element cannot use it, and React would warn about the prop.
-                      React.isValidElement(child) && typeof child.type === 'string'
-                      ? child
-                      : React.cloneElement(child, {
-                          closePopover,
-                        })
-                    : null
-                )}
-              </>
-            )}
-          </StyledPopoverContent>
-        </StyledPopoverWrapper>
+        <ReqoreSurfaceProvider color={layoutSurface}>
+          <StyledPopoverWrapper
+            interactive={interactive}
+            maxWidth={maxWidth}
+            minWidth={minWidth}
+            maxHeight={maxHeight ?? roomBelow}
+            transparent={transparent}
+            effect={effect}
+            isOpaque={!transparent && !minimal}
+            intent={intent}
+            flat={flat}
+            noWrapper={noWrapper}
+            dim={flat && !transparent && !effect && minimal}
+            className='reqore-popover-content'
+            ref={handleRef}
+            style={style}
+            animate={animations?.popovers}
+            id={id}
+            onMouseEnter={onPopoverMouseEnter}
+            onMouseLeave={onPopoverMouseLeave}
+            {...attributes.popper}
+          >
+            {!noArrow && !transparent ? (
+              <StyledPopoverArrow ref={setArrowElement} style={arrowStyle} data-popper-arrow />
+            ) : null}
+            <StyledPopoverContent $capped={!!(maxHeight ?? roomBelow)}>
+              {!noWrapper || isString(content) ? (
+                <ReqoreMessage
+                  opaque={!transparent && !minimal}
+                  className='reqore-popover-text'
+                  intent={intent}
+                  title={title}
+                  icon={icon}
+                  minimal={transparent}
+                  flat={flat || transparent}
+                  effect={effect}
+                  backgroundBlur={backgroundBlur}
+                >
+                  {content}
+                </ReqoreMessage>
+              ) : (
+                <>
+                  {React.Children.map(content, (child) =>
+                    child
+                      ? // A DOM element cannot use it, and React would warn about the prop.
+                        React.isValidElement(child) && typeof child.type === 'string'
+                        ? child
+                        : React.cloneElement(child, {
+                            closePopover,
+                          })
+                      : null
+                  )}
+                </>
+              )}
+            </StyledPopoverContent>
+          </StyledPopoverWrapper>
+        </ReqoreSurfaceProvider>
       </ReqoreThemeProvider>,
       document.querySelector(customPortalId || '#reqore-portal')!
     );

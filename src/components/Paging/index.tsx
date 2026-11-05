@@ -8,6 +8,7 @@ import ReqoreButton, { IReqoreButtonProps, StyledButton } from '../Button';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItemProps } from '../Dropdown/item';
+import { smoothScrollBehavior } from '../../hooks/usePrefersReducedMotion';
 
 export interface IReqorePaginationComponentProps
   extends Omit<IReqoreControlGroupProps, 'children'> {
@@ -98,7 +99,7 @@ function Pagination<T>({
     // resulting in infinite scroll
     if (!scrollContainer && scrollTargetRef && scrollOnLoadMore && !isLastPage && !isFirstPage) {
       scrollTargetRef.scrollIntoView({
-        behavior: 'smooth',
+        behavior: smoothScrollBehavior(),
         block: 'end',
         inline: 'start',
       });
@@ -111,7 +112,7 @@ function Pagination<T>({
     if (scrollContainer && scrollOnLoadMore && !isFirstPage) {
       scrollContainer.scrollBy?.({
         top: scrollContainer.scrollHeight,
-        behavior: 'smooth',
+        behavior: smoothScrollBehavior(),
       });
     }
   }, [currentPage, scrollContainer, scrollOnLoadMore, isFirstPage]);
@@ -121,7 +122,7 @@ function Pagination<T>({
     if (scrollContainer && scrollToTopOnPageChange && !infinite) {
       scrollContainer.scrollTo?.({
         top: 0,
-        behavior: 'smooth',
+        behavior: smoothScrollBehavior(),
       });
     }
   }, [currentPage, scrollContainer, scrollToTopOnPageChange, infinite]);

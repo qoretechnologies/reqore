@@ -1,7 +1,7 @@
 // Copyright 2026 Qore Technologies, s.r.o.
 
 /**
- * No story makes React warn (qorus#646).
+ * No story makes React, or anything else, warn, and none logs an error it does not expect (qorus#646).
  *
  * React's development build says what is wrong with a page as a warning on the console and goes on, so a story whose
  * page is wrong passed as long as it looked right: a component that spreads props it does not take onto an element
@@ -14,6 +14,16 @@
  * its own, so the first story of a file to cause one fails. A warning given before a story starts - as the story
  * file loads, or as the story before it unmounts - fails the next story, saying so; one given after a file's last
  * story fails the file.
+ *
+ * Any other warning on the console fails a story the same way ({@link CONSOLE_WARNING_RULE}): a library saying it was
+ * given a state or a value it cannot use as given (a field that turns from uncontrolled to controlled, a control given
+ * a value of another type), styled-components saying a component makes a new class for every value it is drawn with,
+ * or a Reqore component saying a prop has no effect. Each was printed in the middle of the run and passed.
+ *
+ * An error on the console fails a story too ({@link CONSOLE_ERROR_RULE}): one a component logs (an error boundary
+ * catching what its children threw), or one the page did not handle, which the story run reports through the console.
+ * A story that does on purpose what a component warns about or logs an error for checks it instead, with
+ * `expectedWarning` or `expectedError` (`expectedConsole.ts`), which keep it off the console.
  */
 
 /** A kind of React warning: what it means for the page, and what to do about it. */
@@ -125,7 +135,9 @@ const sourceFrames = (lines: readonly string[]): string[] =>
     .filter((frame) => /\/(src|\.storybook)\//.test(frame) && !frame.includes('/node_modules/'))
     .filter(
       (frame) =>
-        !/\/src\/stories\/reactWarningGate\.ts|\/\.storybook\/reactWarnings\.ts/.test(frame)
+        !/\/src\/stories\/(utils\/)?reactWarningGate\.ts|\/\.storybook\/reactWarnings\.ts/.test(
+          frame
+        )
     )
     .slice(0, SOURCE_FRAMES)
     .map((frame) => frame.replace(/https?:\/\/[^/\s]+\//, ''));
@@ -165,6 +177,64 @@ export const reactWarning = (
   return { rule, text: [[text.trim(), ...where].join(' '), ...source].join('\n    ') };
 };
 
+/**
+ * Every other warning on the console (`console.warn`, not React's): what it means for the page, and what to do about
+ * it.
+ */
+export const CONSOLE_WARNING_RULE: IReactWarningRule = {
+  name: 'a console warning',
+  matches: () => true,
+  says: 'Something the story renders or does warned on the console',
+  advice: 'give what warned what it asks for, or stop doing what it says has no effect.',
+};
+
+/**
+ * Every error on the console (`console.error`, not React's warning): what it means for the page, and what to do about
+ * it.
+ */
+export const CONSOLE_ERROR_RULE: IReactWarningRule = {
+  name: 'a console error',
+  matches: () => true,
+  says: 'Something the story renders or does logged an error on the console',
+  advice:
+    'fix what threw it; a story that shows what an error does checks it with `expectedError` instead.',
+};
+
+/**
+ * What a console call says: its first line, with the values its format names put in (an error as its name and
+ * message). Throws for a value that cannot be read as text.
+ */
+export const consoleCallText = (args: readonly unknown[]): string => {
+  const [first, ...values] = args;
+  const rest = values.map((value) => String(value));
+  const message =
+    typeof first === 'string'
+      ? first.replace(/%[sdifoOc]/g, () => rest.shift() ?? '')
+      : String(first);
+  return [message, ...rest].join(' ').trim().split('\n')[0].trim();
+};
+
+/**
+ * A console call that is not React's warning, under `rule`: what it says (`consoleCallText`), and the first frames of
+ * `callStack` that name reqore's source.
+ */
+const consoleMessage = (
+  rule: IReactWarningRule,
+  args: readonly unknown[],
+  callStack: string
+): IReactWarning => ({
+  rule,
+  text: [consoleCallText(args), ...sourceFrames(callStack.split('\n'))].join('\n    '),
+});
+
+/** A `console.warn` call that is not React's warning, under {@link CONSOLE_WARNING_RULE}. */
+export const consoleWarning = (args: readonly unknown[], callStack = ''): IReactWarning =>
+  consoleMessage(CONSOLE_WARNING_RULE, args, callStack);
+
+/** A `console.error` call that is not React's warning, under {@link CONSOLE_ERROR_RULE}. */
+export const consoleError = (args: readonly unknown[], callStack = ''): IReactWarning =>
+  consoleMessage(CONSOLE_ERROR_RULE, args, callStack);
+
 /** What a watch on a console gives: the React warnings since it was last asked, and the console as it was. */
 export interface IReactWarningWatch {
   take: () => IReactWarning[];
@@ -172,8 +242,9 @@ export interface IReactWarningWatch {
 }
 
 /**
- * Keeps every React warning the console is given from here on, through `console.error` and `console.warn`. The console
- * still prints it, and everything else, as before; a call it cannot read is passed on unread.
+ * Keeps every React warning the console is given from here on, through `console.error` and `console.warn`, and every
+ * other warning ({@link consoleWarning}) and error ({@link consoleError}). The console still prints it, as before; a
+ * call it cannot read is passed on unread.
  */
 export const watchReactWarnings = (
   target: Pick<Console, 'error' | 'warn'> = console
@@ -181,10 +252,14 @@ export const watchReactWarnings = (
   const originals = { error: target.error, warn: target.warn };
   const warnings: IReactWarning[] = [];
   const watched =
-    (original: (...args: unknown[]) => void) =>
+    (
+      original: (...args: unknown[]) => void,
+      other: (args: readonly unknown[], callStack: string) => IReactWarning
+    ) =>
     (...args: unknown[]) => {
       try {
-        const warning = reactWarning(args, new Error().stack ?? '');
+        const stack = new Error().stack ?? '';
+        const warning = reactWarning(args, stack) ?? other(args, stack);
         if (warning) {
           warnings.push(warning);
         }
@@ -193,8 +268,8 @@ export const watchReactWarnings = (
       }
       original.apply(target, args);
     };
-  target.error = watched(originals.error);
-  target.warn = watched(originals.warn);
+  target.error = watched(originals.error, consoleError);
+  target.warn = watched(originals.warn, consoleWarning);
   return {
     take: () => warnings.splice(0),
     restore: () => {
@@ -225,13 +300,17 @@ const WHEN: Record<keyof IReactWarningsGiven, string> = {
  * what it says and what to do, then the warnings under it; nothing when there are none.
  */
 export const reactWarningsFailure = (given: IReactWarningsGiven): Error | undefined => {
-  const parts = REACT_WARNING_RULES.flatMap((rule) => {
-    const lines = (['before', 'during', 'after'] as const).flatMap((when) =>
-      (given[when] ?? [])
-        .filter((warning) => warning.rule === rule)
-        .map((warning) => `  - ${WHEN[when]}${warning.text}`)
-    );
-    return lines.length ? [`${rule.says} (${rule.name}): ${rule.advice}\n${lines.join('\n')}`] : [];
-  });
+  const parts = [...REACT_WARNING_RULES, CONSOLE_WARNING_RULE, CONSOLE_ERROR_RULE].flatMap(
+    (rule) => {
+      const lines = (['before', 'during', 'after'] as const).flatMap((when) =>
+        (given[when] ?? [])
+          .filter((warning) => warning.rule === rule)
+          .map((warning) => `  - ${WHEN[when]}${warning.text}`)
+      );
+      return lines.length
+        ? [`${rule.says} (${rule.name}): ${rule.advice}\n${lines.join('\n')}`]
+        : [];
+    }
+  );
   return parts.length ? new Error(parts.join('\n')) : undefined;
 };

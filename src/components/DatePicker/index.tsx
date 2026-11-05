@@ -1,6 +1,7 @@
 import {
   getLocalTimeZone,
   isSameDay,
+  now,
   Time,
   toCalendarDateTime,
   toZoned,
@@ -22,6 +23,7 @@ import {
 import { ReqoreErrorBoundary, ReqorePanel, ReqorePopover } from '../..';
 import { changeLightness } from '../../helpers/colors';
 import { formatDateToType, isUnreadableDate, TDateFormat, toDate } from '../../helpers/dates';
+import { resolveLocale } from '../../helpers/locale';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -87,7 +89,9 @@ export interface IDatePickerProps<T extends TDateValue>
   readOnlyInputOnTouch?: boolean;
   /** BCP 47 locale string (e.g. 'cs', 'en-US') used to format dates.
    * Defaults to the first non-English entry in navigator.languages, falling
-   * back to navigator.language. Pass explicitly to override. */
+   * back to navigator.language. Pass explicitly to override. A POSIX locale
+   * name (`cs_CZ.UTF-8`, `C`) is read as the tag it stands for, and one that
+   * names no locale `Intl` can format with falls back to the browser's. */
   locale?: string;
   /** When true, renders a button trigger instead of a text input.
    *  The date can only be selected via the calendar popover — no manual typing. */
@@ -478,11 +482,20 @@ export const DatePicker = <T extends TDateValue>({
     ref
   );
 
-  const resolvedLocale =
-    locale ??
-    (typeof navigator !== 'undefined'
-      ? (navigator.languages?.find((l) => !l.startsWith('en')) ?? navigator.language)
-      : undefined);
+  /* A tag `Intl` can format with, as `Intl` and the date fields are given it: one it cannot use
+     threw a RangeError and the picker drew nothing. Chromium on Linux reports its language as
+     `en-US@posix` when its environment's locale is C or POSIX (LANG=C.UTF-8, or no LANG), and a
+     host may pass a POSIX name of its own (`cs_CZ.UTF-8`). See `resolveLocale`. */
+  const resolvedLocale = useMemo(
+    () =>
+      resolveLocale(
+        locale,
+        ...(typeof navigator !== 'undefined'
+          ? [navigator.languages?.find((l) => !l.startsWith('en')), navigator.language]
+          : [])
+      ),
+    [locale]
+  );
 
   const formattedDate = useMemo(() => {
     if (!value) return undefined;
@@ -504,7 +517,10 @@ export const DatePicker = <T extends TDateValue>({
       <Calendar<ZonedDateTime>
         defaultFocusedValue={value}
         onChange={handleCalendarDateChange}
-        focusedValue={focusedValue}
+        /* always a date: react-aria reads a focused value of null as none given, so the calendar was
+           uncontrolled until the first date was focused and then controlled, and warned. With none
+           focused yet, it is the date the calendar opens on: the value's, or today's. */
+        focusedValue={focusedValue ?? value ?? now(getLocalTimeZone())}
         onFocusChange={(date) => setFocusedValue(toZoned(date, getLocalTimeZone()))}
         minValue={toDate(minValue)}
         maxValue={toDate(maxValue)}
@@ -584,7 +600,10 @@ export const DatePicker = <T extends TDateValue>({
           {showTime && (
             <ReqoreControlGroup fluid>
               <StyledTimeField
-                value={time}
+                /* controlled from the first render: with no time yet it is `null`, not `undefined`, which
+                   react-aria reads as uncontrolled, so picking the first date switched the field over and
+                   it warned */
+                value={time ?? null}
                 onChange={onTimeChange}
                 granularity={granularity}
                 hideTimeZone={hideTimeZone}

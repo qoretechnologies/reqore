@@ -29,11 +29,14 @@
  *     so the operator doesn't lose their place when expanding deep
  *     trees.
  */
+import { isUndefined, omitBy } from 'lodash';
 import {
   forwardRef,
   memo,
   useCallback,
+  useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -52,7 +55,7 @@ import {
 } from '../../constants/sizes';
 import { MONO_FONT, getFontFamily } from '../../constants/fonts';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { TReqoreEffectColor } from '../Effect';
+import { IReqoreEffect, TReqoreEffectColor } from '../Effect';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreButton from '../Button';
@@ -81,6 +84,12 @@ import {
   reqoreSetAtPath,
   reqoreUnwrapEnvelope,
 } from './helpers';
+
+// A tag's effects, one object each for every tag that draws them: a tag is a memo component.
+/** A key or a value written bold. */
+const BOLD_TAG_EFFECT: IReqoreEffect = { weight: 'bold' };
+/** A value's type: faint small capitals. */
+const TYPE_TAG_EFFECT: IReqoreEffect = { uppercase: true, spaced: 1, opacity: 0.6 };
 
 /**
  * Bag of user-visible strings the DataView renders. Every entry is optional;
@@ -145,7 +154,55 @@ export interface IReqoreDataViewLabels {
   typeObjectLabel?: string;
   typeArrayLabel?: string;
   typeNullLabel?: string;
+  /** How a `true` value is written. Defaults to `'true'`: a consumer whose
+   *  readers are not programmers passes its own word ("Yes"). The value
+   *  keeps its boolean colour either way. */
+  booleanTrue?: string;
+  /** How a `false` value is written. Defaults to `'false'`. */
+  booleanFalse?: string;
 }
+
+/** Every label, as the view writes it when the consumer gives none. */
+export const REQORE_DATA_VIEW_DEFAULT_LABELS: Required<IReqoreDataViewLabels> = {
+  objectSection: (count) => `Object · ${count} field${count === 1 ? '' : 's'}`,
+  listSection: (count) => `List · ${count} item${count === 1 ? '' : 's'}`,
+  scalarSection: 'Value',
+  editValue: 'Edit value',
+  renameKey: 'Rename key',
+  removeProperty: (key) => `Remove ${key}`,
+  removeItem: (indexOneBased) => `Remove item ${indexOneBased}`,
+  changeType: 'Change type',
+  saveValueTooltip: 'Save (Enter)',
+  cancelValueTooltip: 'Cancel (Esc)',
+  renameCommitTooltip: 'Rename (Enter)',
+  renameCancelTooltip: 'Cancel (Esc)',
+  addPropertyLabel: 'Add property',
+  addItemLabel: 'Add item',
+  addCommitLabel: 'Add',
+  addCancelTooltip: 'Cancel',
+  propertyNamePlaceholder: 'property name',
+  typeStringLabel: 'String',
+  typeNumberLabel: 'Number',
+  typeBooleanLabel: 'Boolean',
+  typeObjectLabel: 'Object (hash)',
+  typeArrayLabel: 'Array (list)',
+  typeNullLabel: 'Null',
+  booleanTrue: 'true',
+  booleanFalse: 'false',
+};
+
+/**
+ * The consumer's labels over the defaults. A label given as `undefined` keeps its default: a
+ * consumer that builds its labels from its own translations passes the ones it has none for that
+ * way, and spread over the defaults they replaced them, so the view called `undefined` for a
+ * summary and threw.
+ */
+const resolveDataViewLabels = (
+  labels?: IReqoreDataViewLabels
+): Required<IReqoreDataViewLabels> => ({
+  ...REQORE_DATA_VIEW_DEFAULT_LABELS,
+  ...omitBy(labels, isUndefined),
+});
 
 export interface IReqoreDataViewProps
   extends Omit<IReqorePanelProps, 'children'>,
@@ -279,13 +336,12 @@ export interface IReqoreDataViewProps
   onChangeType?: (path: string[], kind: TReqoreDataValueKind) => void;
 }
 
-const SECTION_LABEL = (kind: 'Object' | 'List', count: number): string => {
-  const word = kind === 'Object' ? 'field' : 'item';
-  return `${kind} · ${count} ${word}${count === 1 ? '' : 's'}`;
-};
 
 type TRenderContext = {
   theme: IReqoreTheme;
+  /** Every user-visible string, the consumer's over the defaults
+   *  (`REQORE_DATA_VIEW_DEFAULT_LABELS`). */
+  labels: Required<IReqoreDataViewLabels>;
   envelope: IReqoreDataViewEnvelope | false;
   parseEmbedded?: (value: string) => IReqoreDataViewEmbedded | undefined;
   showTypes: boolean;
@@ -371,9 +427,46 @@ const Tree = styled.div<IStyledThemeProps>`
   }
 `;
 
-const TableShell = styled.div<IStyledThemeProps & { $nested?: boolean }>`
-  display: flex;
-  flex-flow: column;
+/** The key column of a record: as wide as its widest key chip, never wider than
+ *  `min(34%, 220px)`. Measured by the browser from the chips themselves, so the value
+ *  column starts one row gap after the longest key — not at a fixed offset that left
+ *  short keys (`id`, `type`) 180px from their values. */
+const KEY_COLUMN = 'fit-content(min(34%, 220px))';
+
+/** The gap between a key chip and its value, and between a value and its actions. */
+const KEY_VALUE_GAP_PX = 8;
+
+/**
+ * A record's columns, set on the record and shared by its rows.
+ *
+ * Every key/value row used to be a grid of its own, so no row could know how wide the
+ * other rows' keys were: the only way to line the values up was a fixed key column, and
+ * the fixed column was too wide for most keys. The record is the grid now, and a plain
+ * row is a `subgrid` of it, so the key column is sized once, by the widest key of the
+ * record, and every value starts in the same place. A row whose value is a nested
+ * record or list, and every row of a stacked (narrow) record, spans the record and
+ * keeps a column of its own; see `rowColumns`.
+ */
+const recordColumns = ({ $stacked, $editable }: { $stacked?: boolean; $editable?: boolean }) => {
+  if ($stacked) {
+    return 'minmax(0, 1fr)';
+  }
+  return $editable ? `${KEY_COLUMN} minmax(0, 1fr) auto` : `${KEY_COLUMN} minmax(0, 1fr)`;
+};
+
+const TableShell = styled.div<
+  IStyledThemeProps & { $nested?: boolean; $stacked?: boolean; $editable?: boolean }
+>`
+  display: grid;
+  grid-template-columns: ${recordColumns};
+  column-gap: ${KEY_VALUE_GAP_PX}px;
+  align-content: start;
+  /* Rows, the add-property row and anything else the record holds span all of its
+     columns; a plain row then lays its own cells out on the record's columns. */
+  & > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
   min-width: 0;
   max-width: 100%;
   overflow: hidden;
@@ -410,16 +503,15 @@ const Row = styled.div<
      grid-template-areas, a 3-child row (key + value + actions) in a
      2-column grid would auto-place the value into the actions
      column. */
+  /* A plain row takes the record's columns (see \`recordColumns\`), so its key column is
+     the record's widest key. A row holding a nested record or list, or a row of a
+     stacked record, puts its value under its key across the whole row, in a column of
+     its own: as a subgrid its nested value would size the shared key column. */
   grid-template-columns: ${({ $complex, $stacked, $editable }) => {
-    const stacked = $complex || $stacked;
-    if ($editable) {
-      return stacked
-        ? 'minmax(0, 1fr) auto'
-        : 'minmax(120px, min(34%, 220px)) minmax(0, 1fr) auto';
+    if (!($complex || $stacked)) {
+      return 'subgrid';
     }
-    return stacked
-      ? 'minmax(0, 1fr)'
-      : 'minmax(120px, min(34%, 220px)) minmax(0, 1fr)';
+    return $editable ? 'minmax(0, 1fr) auto' : 'minmax(0, 1fr)';
   }};
   grid-template-areas: ${({ $complex, $stacked, $editable }) => {
     const stacked = $complex || $stacked;
@@ -444,11 +536,41 @@ const Row = styled.div<
   & > .reqore-data-view-value-cell {
     grid-area: value;
   }
-  & > .reqore-data-view-row-actions {
+  & > .reqore-data-view-row-actions,
+  & > .reqore-data-view-key-edit-actions {
     grid-area: actions;
   }
+  /* While a key is renamed, its column, and so every value of the record, stays exactly where it
+     was. The key column is sized by the browser from what its cells contribute, so the rename
+     cell contributes what the key did: the key itself, drawn as it was at rest but invisible and
+     no height (\`.reqore-data-view-key-edit-sizer\`), holds the cell's width, and the input
+     contributes nothing (\`width: 0\`) and fills the cell it is given (\`min-width: 100%\`).
+     Nothing is measured, so nothing is rounded: a width read back from the page (the resolved
+     \`grid-template-columns\` is serialized to a few digits) and set again moved the values by a
+     fraction of a pixel. Text longer than the column scrolls inside the input, which never
+     wraps; the commit and cancel buttons sit in the actions cell, so the column is the input's. */
+  & > .reqore-data-view-key-edit-group {
+    display: grid;
+  }
+  & > .reqore-data-view-key-edit-group > * {
+    grid-area: 1 / 1;
+  }
+  & > .reqore-data-view-key-edit-group > .reqore-data-view-key-edit-sizer {
+    justify-self: start;
+    height: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  & > .reqore-data-view-key-edit-group > .reqore-control-wrapper {
+    width: 0;
+    min-width: 100%;
+  }
+  & > .reqore-data-view-key-edit-group input {
+    min-width: 0;
+    width: 100%;
+  }
   gap: ${({ $size, $complex, $stacked }) =>
-    $complex || $stacked ? GAP_FROM_SIZE[$size] : 8}px;
+    $complex || $stacked ? GAP_FROM_SIZE[$size] : KEY_VALUE_GAP_PX}px;
   align-items: start;
   min-width: 0;
   padding: ${({ $size }) => PADDING_FROM_SIZE[$size] / 2}px ${({ $size }) =>
@@ -482,10 +604,10 @@ const Row = styled.div<
        full grid cell. The chip sizes to its content instead, only
        hitting the column cap when content actually needs it.
      - \`min-width: 0\` releases ReqoreTag's intrinsic min-content size
-       (its longest unbreakable run) so the grid track can honour
-       its \`minmax(..., 220px)\` cap. Without this, snake_case keys
-       or UUIDs feed back into the track sizing and expand the
-       column past 220px. */
+       (its longest unbreakable run) so the key track can honour its
+       \`min(34%, 220px)\` cap. Without this, snake_case keys or UUIDs
+       feed back into the track sizing and expand the column past
+       the cap. */
   & > .reqore-data-view-key {
     justify-self: start;
     min-width: 0;
@@ -493,7 +615,7 @@ const Row = styled.div<
   }
 `;
 
-const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean }>`
+const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean; $stackedScalar?: boolean }>`
   min-width: 0;
   max-width: 100%;
   font-family: ${MONO_FONT};
@@ -524,6 +646,27 @@ const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean }>`
     css`
       margin-top: 4px;
       padding-left: ${PADDING_FROM_SIZE[$size] + 6}px;
+    `}
+
+  /* A stacked row (a narrow record) draws its value on a line of its own under the key. The
+     value is set against the row's far edge, so key and value read as a pair across the row
+     rather than as two left-aligned lines: a chip, or a value with its type chip, ends at the
+     right edge (and a row of chips that wraps justifies each line to it). Inside a value the
+     text keeps its own alignment: a value that wraps across lines reads left to right in a box
+     that sits at the right. What fills the width already — multi-line text, a parsed nested
+     record — is unchanged. */
+  ${({ $stackedScalar }) =>
+    $stackedScalar &&
+    css`
+      text-align: end;
+
+      & > * {
+        text-align: start;
+      }
+
+      & > .reqore-control-group {
+        justify-content: flex-end;
+      }
     `}
 `;
 
@@ -794,6 +937,19 @@ const PreservedDetails = memo(
 
 PreservedDetails.displayName = 'ReqoreDataView.PreservedDetails';
 
+/** How a scalar is written: a yes/no value in the labels' words, any other
+ *  as `reqoreFormatScalar` writes it. */
+const scalarDisplay = (
+  value: unknown,
+  display: string,
+  ctx: TRenderContext
+): string =>
+  typeof value === 'boolean'
+    ? value
+      ? ctx.labels.booleanTrue
+      : ctx.labels.booleanFalse
+    : display;
+
 /** Render the read-only value chip for a scalar leaf. Extracted so
  *  both the read-only view and the click-to-edit cell share one
  *  rendering — keeps the "before / after" look of an edited row
@@ -813,9 +969,9 @@ const renderScalarChip = (
       flat={false}
       minimal
       wrap
-      label={scalar.display}
+      label={scalarDisplay(value, scalar.display, ctx)}
       intent={intent}
-      effect={{ weight: 'bold' }}
+      effect={BOLD_TAG_EFFECT}
       onClick={
         ctx.onItemClick ? () => ctx.onItemClick!(value, path) : undefined
       }
@@ -943,6 +1099,47 @@ const EditableScalarCell = memo<IEditableScalarCellProps>(
       setEditing(false);
     }, [cancelEditing, commit, draft, isBoolean, isNumber, path, value]);
 
+    // Inline type-change. Coerces the CURRENT DRAFT (in its
+    // canonical form for the current kind — string for text/numeric
+    // inputs, boolean for the checkbox) to the picked kind. A user
+    // who has typed `42` and then realises they meant Number keeps
+    // the `42` they typed; a user who has clicked the checkbox `on`
+    // and switches to String gets `"true"`.
+    //
+    // Picking `string` / `number` / `boolean` keeps the cell in edit
+    // mode and re-initialises the draft to the coerced value (so the
+    // input swap doesn't visually drop the user's intent). Picking
+    // `object` / `array` / `null` commits the coerced value and
+    // exits so the right control takes over (structural view / "—"
+    // chip).
+    const handlePickType = useCallback(
+      (newKind: TReqoreDataValueKind) => {
+        if (newKind === kind) return;
+        const coerced = reqoreCoerceValueToKind(draft, newKind);
+        ctx.commitTypeChange?.(path, newKind);
+        if (newKind === 'string' || newKind === 'number') {
+          setDraft(coerced === null || coerced === undefined ? '' : String(coerced));
+        } else if (newKind === 'boolean') {
+          setDraft(coerced === true);
+        } else {
+          setEditing(false);
+        }
+      },
+      [ctx, draft, kind, path]
+    );
+
+    const typeItems = useMemo(
+      () =>
+        typePickerItems(ctx.labels).map((entry) => ({
+          label: entry.label,
+          icon: entry.icon,
+          selected: entry.kind === kind,
+          onClick: () => handlePickType(entry.kind),
+        })),
+      [ctx.labels, handlePickType, kind]
+    );
+
+
     if (!editing) {
       return (
         <EditCellShell
@@ -959,40 +1156,14 @@ const EditableScalarCell = memo<IEditableScalarCellProps>(
           }}
           role='button'
           tabIndex={0}
-          aria-label='Edit value'
+          aria-label={ctx.labels.editValue}
         >
           {renderScalarChip(value, type, ctx, path)}
         </EditCellShell>
       );
     }
 
-    // Inline type-change. Coerces the CURRENT DRAFT (in its
-    // canonical form for the current kind — string for text/numeric
-    // inputs, boolean for the checkbox) to the picked kind. A user
-    // who has typed `42` and then realises they meant Number keeps
-    // the `42` they typed; a user who has clicked the checkbox `on`
-    // and switches to String gets `"true"`.
-    //
-    // Picking `string` / `number` / `boolean` keeps the cell in edit
-    // mode and re-initialises the draft to the coerced value (so the
-    // input swap doesn't visually drop the user's intent). Picking
-    // `object` / `array` / `null` commits the coerced value and
-    // exits so the right control takes over (structural view / "—"
-    // chip).
-    const handlePickType = (newKind: TReqoreDataValueKind) => {
-      if (newKind === kind) return;
-      const coerced = reqoreCoerceValueToKind(draft, newKind);
-      ctx.commitTypeChange?.(path, newKind);
-      if (newKind === 'string' || newKind === 'number') {
-        setDraft(coerced === null || coerced === undefined ? '' : String(coerced));
-      } else if (newKind === 'boolean') {
-        setDraft(coerced === true);
-      } else {
-        setEditing(false);
-      }
-    };
-
-    const currentTypeItem = TYPE_PICKER_ITEMS.find(
+    const currentTypeItem = typePickerItems(ctx.labels).find(
       (entry) => entry.kind === kind
     );
 
@@ -1049,14 +1220,9 @@ const EditableScalarCell = memo<IEditableScalarCellProps>(
           <ReqoreDropdown
             size={ctx.size}
             icon={currentTypeItem?.icon ?? 'TextWrap'}
-            tooltip='Change type'
+            tooltip={ctx.labels.changeType}
             className='reqore-data-view-edit-type'
-            items={TYPE_PICKER_ITEMS.map((entry) => ({
-              label: entry.label,
-              icon: entry.icon,
-              selected: entry.kind === kind,
-              onClick: () => handlePickType(entry.kind),
-            }))}
+            items={typeItems}
           />
         ) : null}
         {/* Save / Cancel use `onMouseDown` with `preventDefault` so
@@ -1068,7 +1234,7 @@ const EditableScalarCell = memo<IEditableScalarCellProps>(
           intent='success'
           flat
           minimal
-          tooltip='Save (Enter)'
+          tooltip={ctx.labels.saveValueTooltip}
           onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
             e.preventDefault();
             commitDraft();
@@ -1080,7 +1246,7 @@ const EditableScalarCell = memo<IEditableScalarCellProps>(
           icon='CloseLine'
           flat
           minimal
-          tooltip='Cancel (Esc)'
+          tooltip={ctx.labels.cancelValueTooltip}
           onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
             e.preventDefault();
             cancelEditing();
@@ -1101,14 +1267,33 @@ interface IEditableKeyCellProps {
   siblingKeys: ReadonlyArray<string>;
   parentPath: string[];
   ctx: TRenderContext;
+  /** Called with `true` as the rename opens and with `false` once it is committed or cancelled
+   *  (or the cell goes away mid-rename). The record gives the row's actions cell to the rename's
+   *  commit and cancel buttons in between. */
+  onRenameOpenChange: (keyName: string, open: boolean) => void;
 }
 
 const EditableKeyCell = memo<IEditableKeyCellProps>(
-  ({ keyName, siblingKeys, parentPath, ctx }) => {
+  ({ keyName, siblingKeys, parentPath, ctx, onRenameOpenChange }) => {
     const commit = ctx.commitRename;
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState(keyName);
     const inputRef = useRef<HTMLInputElement | null>(null);
+    // Whether this cell has told its record that a rename is open, so that it says when it
+    // closes exactly once — including when the cell is unmounted mid-rename.
+    const openRef = useRef(false);
+    const keyNameRef = useRef(keyName);
+    keyNameRef.current = keyName;
+    const onRenameOpenChangeRef = useRef(onRenameOpenChange);
+    onRenameOpenChangeRef.current = onRenameOpenChange;
+
+    const setOpen = useCallback((open: boolean) => {
+      if (openRef.current === open) return;
+      openRef.current = open;
+      onRenameOpenChangeRef.current(keyNameRef.current, open);
+    }, []);
+
+    useEffect(() => () => setOpen(false), [setOpen]);
 
     useLayoutEffect(() => {
       if (editing) return;
@@ -1125,13 +1310,15 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
 
     const start = useCallback(() => {
       if (!commit) return;
+      setOpen(true);
       setDraft(keyName);
       setEditing(true);
-    }, [commit, keyName]);
+    }, [commit, keyName, setOpen]);
     const cancel = useCallback(() => {
       setDraft(keyName);
       setEditing(false);
-    }, [keyName]);
+      setOpen(false);
+    }, [keyName, setOpen]);
     const submit = useCallback(() => {
       const trimmed = draft.trim();
       if (!commit || !trimmed || trimmed === keyName) {
@@ -1144,7 +1331,38 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
       }
       commit(parentPath, keyName, trimmed);
       setEditing(false);
-    }, [cancel, commit, draft, keyName, parentPath, siblingKeys]);
+      setOpen(false);
+    }, [cancel, commit, draft, keyName, parentPath, siblingKeys, setOpen]);
+
+    const keyTag = (
+      <ReqoreTag
+        size={ctx.size}
+        flat={false}
+        minimal
+        wrap
+        intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
+        color={ctx.keyColor}
+        label={keyName}
+        effect={BOLD_TAG_EFFECT}
+        className='reqore-data-view-key'
+      />
+    );
+
+    const handleCommitMouseDown = useCallback(
+      (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        submit();
+      },
+      [submit]
+    );
+
+    const handleCancelMouseDown = useCallback(
+      (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        cancel();
+      },
+      [cancel]
+    );
 
     if (!editing) {
       return (
@@ -1156,82 +1374,79 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
           }}
           role='button'
           tabIndex={0}
-          aria-label='Rename key'
+          aria-label={ctx.labels.renameKey}
           className='reqore-data-view-key-shell'
         >
-          <ReqoreTag
-            size={ctx.size}
-            flat={false}
-            minimal
-            wrap
-            intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
-            color={ctx.keyColor}
-            label={keyName}
-            effect={{ weight: 'bold' }}
-            className='reqore-data-view-key'
-          />
+          {keyTag}
         </EditCellShell>
       );
     }
 
     return (
-      <ReqoreControlGroup
-        gapSize='tiny'
-        verticalAlign='center'
-        size={ctx.size}
-        className='reqore-data-view-key-edit-group'
-      >
-        <ReqoreInput
-          size={ctx.size}
-          value={draft}
-          ref={
-            ((node: HTMLDivElement | null) => {
-              if (node instanceof HTMLElement) {
-                inputRef.current = node.querySelector('input');
-              }
-            }) as unknown as React.Ref<HTMLDivElement>
-          }
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setDraft(e.target.value)
-          }
-          onBlur={submit}
-          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              submit();
-            } else if (e.key === 'Escape') {
-              e.preventDefault();
-              cancel();
+      <>
+        <div className='reqore-data-view-key-edit-group'>
+          {/* The key as it was drawn, unseen: it holds the key column at its width (see `Row`). */}
+          <EditCellShell
+            data-editing='true'
+            aria-hidden
+            className='reqore-data-view-key-shell reqore-data-view-key-edit-sizer'
+          >
+            {keyTag}
+          </EditCellShell>
+          <ReqoreInput
+            size={ctx.size}
+            value={draft}
+            fluid
+            ref={
+              ((node: HTMLDivElement | null) => {
+                if (node instanceof HTMLElement) {
+                  inputRef.current = node.querySelector('input');
+                }
+              }) as unknown as React.Ref<HTMLDivElement>
             }
-          }}
-          className='reqore-data-view-key-edit'
-        />
-        <ReqoreButton
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setDraft(e.target.value)
+            }
+            onBlur={submit}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                submit();
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                cancel();
+              }
+            }}
+            className='reqore-data-view-key-edit'
+          />
+        </div>
+        <ReqoreControlGroup
+          gapSize='tiny'
+          verticalAlign='center'
           size={ctx.size}
-          icon='CheckLine'
-          intent='success'
-          flat
-          minimal
-          tooltip='Rename (Enter)'
-          onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
-            e.preventDefault();
-            submit();
-          }}
-          className='reqore-data-view-key-edit-commit'
-        />
-        <ReqoreButton
-          size={ctx.size}
-          icon='CloseLine'
-          flat
-          minimal
-          tooltip='Cancel (Esc)'
-          onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
-            e.preventDefault();
-            cancel();
-          }}
-          className='reqore-data-view-key-edit-cancel'
-        />
-      </ReqoreControlGroup>
+          className='reqore-data-view-key-edit-actions'
+        >
+          <ReqoreButton
+            size={ctx.size}
+            icon='CheckLine'
+            intent='success'
+            flat
+            minimal
+            tooltip={ctx.labels.renameCommitTooltip}
+            onMouseDown={handleCommitMouseDown}
+            className='reqore-data-view-key-edit-commit'
+          />
+          <ReqoreButton
+            size={ctx.size}
+            icon='CloseLine'
+            flat
+            minimal
+            tooltip={ctx.labels.renameCancelTooltip}
+            onMouseDown={handleCancelMouseDown}
+            className='reqore-data-view-key-edit-cancel'
+          />
+        </ReqoreControlGroup>
+      </>
     );
   }
 );
@@ -1319,17 +1534,20 @@ const defaultForKind = (kind: TReqoreDataValueKind): unknown => {
   }
 };
 
-const TYPE_PICKER_ITEMS: Array<{
+/** The kinds a value can be given, each named by the labels. */
+const typePickerItems = (
+  labels: Required<IReqoreDataViewLabels>
+): Array<{
   kind: TReqoreDataValueKind;
   label: string;
   icon: 'TextWrap' | 'Hashtag' | 'CheckboxLine' | 'BracesLine' | 'BracketsLine' | 'CircleLine';
-}> = [
-  { kind: 'string', label: 'String', icon: 'TextWrap' },
-  { kind: 'number', label: 'Number', icon: 'Hashtag' },
-  { kind: 'boolean', label: 'Boolean', icon: 'CheckboxLine' },
-  { kind: 'object', label: 'Object (hash)', icon: 'BracesLine' },
-  { kind: 'array', label: 'Array (list)', icon: 'BracketsLine' },
-  { kind: 'null', label: 'Null', icon: 'CircleLine' },
+}> => [
+  { kind: 'string', label: labels.typeStringLabel, icon: 'TextWrap' },
+  { kind: 'number', label: labels.typeNumberLabel, icon: 'Hashtag' },
+  { kind: 'boolean', label: labels.typeBooleanLabel, icon: 'CheckboxLine' },
+  { kind: 'object', label: labels.typeObjectLabel, icon: 'BracesLine' },
+  { kind: 'array', label: labels.typeArrayLabel, icon: 'BracketsLine' },
+  { kind: 'null', label: labels.typeNullLabel, icon: 'CircleLine' },
 ];
 
 const AddRowShell = styled.div`
@@ -1367,6 +1585,17 @@ const AddEntryAffordance = memo<IAddEntryAffordanceProps>(
     const [key, setKey] = useState('');
     const [valueKind, setValueKind] = useState<TReqoreDataValueKind>('string');
 
+    const typeItems = useMemo(
+      () =>
+        typePickerItems(ctx.labels).map((entry) => ({
+          label: entry.label,
+          icon: entry.icon,
+          selected: entry.kind === valueKind,
+          onClick: () => setValueKind(entry.kind),
+        })),
+      [ctx.labels, valueKind]
+    );
+
     if (!ctx.commitAdd) return null;
 
     const reset = () => {
@@ -1400,13 +1629,17 @@ const AddEntryAffordance = memo<IAddEntryAffordanceProps>(
             flat
             minimal
             onClick={() => setOpen(true)}
-            label={context.kind === 'record' ? 'Add property' : 'Add item'}
+            label={
+              context.kind === 'record'
+                ? ctx.labels.addPropertyLabel
+                : ctx.labels.addItemLabel
+            }
           />
         </AddRowShell>
       );
     }
 
-    const typeItem = TYPE_PICKER_ITEMS.find((entry) => entry.kind === valueKind);
+    const typeItem = typePickerItems(ctx.labels).find((entry) => entry.kind === valueKind);
 
     return (
       <AddRowShell
@@ -1422,7 +1655,7 @@ const AddEntryAffordance = memo<IAddEntryAffordanceProps>(
         {context.kind === 'record' ? (
           <ReqoreInput
             size={ctx.size}
-            placeholder='property name'
+            placeholder={ctx.labels.propertyNamePlaceholder}
             value={key}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setKey(e.target.value)
@@ -1439,14 +1672,9 @@ const AddEntryAffordance = memo<IAddEntryAffordanceProps>(
         <ReqoreDropdown
           size={ctx.size}
           icon={typeItem?.icon}
-          label={typeItem?.label ?? 'String'}
+          label={typeItem?.label ?? ctx.labels.typeStringLabel}
           className='reqore-data-view-add-type'
-          items={TYPE_PICKER_ITEMS.map((entry) => ({
-            label: entry.label,
-            icon: entry.icon,
-            selected: entry.kind === valueKind,
-            onClick: () => setValueKind(entry.kind),
-          }))}
+          items={typeItems}
         />
         <ReqoreButton
           size={ctx.size}
@@ -1455,7 +1683,7 @@ const AddEntryAffordance = memo<IAddEntryAffordanceProps>(
           flat
           minimal
           onClick={submit}
-          label='Add'
+          label={ctx.labels.addCommitLabel}
           className='reqore-data-view-add-commit'
         />
         <ReqoreButton
@@ -1464,7 +1692,7 @@ const AddEntryAffordance = memo<IAddEntryAffordanceProps>(
           flat
           minimal
           onClick={reset}
-          tooltip='Cancel'
+          tooltip={ctx.labels.addCancelTooltip}
           className='reqore-data-view-add-cancel'
         />
       </AddRowShell>
@@ -1517,7 +1745,7 @@ const renderScalar = (
           flat
           minimal
           label={displayType}
-          effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+          effect={TYPE_TAG_EFFECT}
           className='reqore-data-view-type'
         />
       </ScalarRow>
@@ -1574,7 +1802,7 @@ const renderScalar = (
           flat
           minimal
           label={displayType}
-          effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+          effect={TYPE_TAG_EFFECT}
           className='reqore-data-view-type'
         />
       </ScalarRow>
@@ -1599,11 +1827,9 @@ const renderScalar = (
       // overflows its column horizontally. With `wrap`, ReqoreTag
       // lets the label flow onto multiple lines inside the chip.
       wrap
-      label={scalar.display}
+      label={scalarDisplay(value, scalar.display, ctx)}
       intent={intent}
-      effect={{
-        weight: 'bold',
-      }}
+      effect={BOLD_TAG_EFFECT}
       onClick={
         ctx.onItemClick
           ? () => ctx.onItemClick!(value, path)
@@ -1623,7 +1849,7 @@ const renderScalar = (
         flat
         minimal
         label={displayType}
-        effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+        effect={TYPE_TAG_EFFECT}
         className='reqore-data-view-type'
       />
     </ScalarRow>
@@ -1632,9 +1858,8 @@ const renderScalar = (
 
 /** Width (in CSS px) below which a `RecordTable` switches its rows
  *  from a two-column grid (key | value) to a single column (key on
- *  top, value beneath). Tuned to the point where the 120px-min key
- *  column + gap + the value column starts squeezing the value into a
- *  useless sliver. */
+ *  top, value beneath). Below it, a long key's capped column (34% of the
+ *  record) plus the gap leaves the value a useless sliver. */
 const STACK_BELOW_PX = 360;
 
 interface IRecordTableProps {
@@ -1660,6 +1885,13 @@ const RecordTable = memo(
   ({ entries, ctx, theme, depth, path }: IRecordTableProps) => {
     const shellRef = useRef<HTMLDivElement | null>(null);
     const [stacked, setStacked] = useState(false);
+    /** The key being renamed: its row's actions cell holds the rename's commit and cancel
+     *  buttons, in place of the delete button, until the rename is committed or cancelled. */
+    const [renamingKey, setRenamingKey] = useState<string | undefined>();
+
+    const onRenameOpenChange = useCallback((key: string, open: boolean) => {
+      setRenamingKey((current) => (open ? key : current === key ? undefined : current));
+    }, []);
 
     useLayoutEffect(() => {
       const node = shellRef.current;
@@ -1682,6 +1914,8 @@ const RecordTable = memo(
         $size={ctx.size}
         $theme={theme}
         $nested={depth > 0}
+        $stacked={stacked}
+        $editable={ctx.editable}
         className='reqore-data-view-record'
       >
         {entries.map(([key, item], index) => {
@@ -1717,6 +1951,7 @@ const RecordTable = memo(
                   siblingKeys={siblingKeys}
                   parentPath={path}
                   ctx={ctx}
+                  onRenameOpenChange={onRenameOpenChange}
                 />
               ) : (
                 <ReqoreTag
@@ -1727,7 +1962,7 @@ const RecordTable = memo(
                   intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
                   color={ctx.keyColor}
                   label={key}
-                  effect={{ weight: 'bold' }}
+                  effect={BOLD_TAG_EFFECT}
                   className='reqore-data-view-key'
                 />
               )}
@@ -1735,15 +1970,17 @@ const RecordTable = memo(
                 $size={ctx.size}
                 $theme={theme}
                 $complex={complex}
+                $stackedScalar={stacked && !complex}
                 className='reqore-data-view-value-cell'
               >
                 {renderTree(item, ctx, theme, depth + 1, rowPath)}
               </ValueCell>
-              {ctx.editable ? (
+              {/* while this key is renamed, its commit and cancel buttons hold the actions cell */}
+              {ctx.editable && renamingKey !== key ? (
                 <RowActions
                   ctx={ctx}
                   path={rowPath}
-                  ariaLabel={`Remove ${key}`}
+                  ariaLabel={ctx.labels.removeProperty(key)}
                 />
               ) : null}
             </Row>
@@ -1808,7 +2045,7 @@ const renderTree = (
               minimal
               flat={false}
               label={envelopeType}
-              effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+              effect={TYPE_TAG_EFFECT}
               className='reqore-data-view-type'
             />
           ) : null}
@@ -1849,7 +2086,7 @@ const renderTree = (
                 <RowActions
                   ctx={ctx}
                   path={itemPath}
-                  ariaLabel={`Remove item ${index + 1}`}
+                  ariaLabel={ctx.labels.removeItem(index + 1)}
                 />
               ) : null}
             </ArrayItem>
@@ -1870,7 +2107,7 @@ const renderTree = (
     return (
       <PreservedDetails
         initialOpen={depth < ctx.defaultExpandDepth}
-        label={SECTION_LABEL('List', unwrapped.length)}
+        label={ctx.labels.listSection(unwrapped.length)}
         path={path}
         size={ctx.size}
         theme={theme}
@@ -1899,7 +2136,7 @@ const renderTree = (
     return (
       <PreservedDetails
         initialOpen={depth < ctx.defaultExpandDepth}
-        label={SECTION_LABEL('Object', entries.length)}
+        label={ctx.labels.objectSection(entries.length)}
         path={path}
         size={ctx.size}
         theme={theme}
@@ -1938,6 +2175,7 @@ export const ReqoreDataView = memo(
         onRenameProperty,
         onAddProperty,
         onChangeType,
+        labels,
         size = 'normal',
         customTheme,
         inheritCustomTheme,
@@ -2054,8 +2292,11 @@ export const ReqoreDataView = memo(
         [onChangeType, onDataChange]
       );
 
+      const resolvedLabels = useMemo(() => resolveDataViewLabels(labels), [labels]);
+
       const ctx: TRenderContext = {
         theme,
+        labels: resolvedLabels,
         envelope,
         parseEmbedded,
         showTypes,
@@ -2084,10 +2325,10 @@ export const ReqoreDataView = memo(
           initialOpen={true}
           label={
             Array.isArray(data)
-              ? SECTION_LABEL('List', (data as unknown[]).length)
+              ? ctx.labels.listSection((data as unknown[]).length)
               : reqoreIsRecord(data)
-              ? SECTION_LABEL('Object', Object.keys(data).length)
-              : 'Value'
+              ? ctx.labels.objectSection(Object.keys(data).length)
+              : ctx.labels.scalarSection
           }
           path={[]}
           size={size}

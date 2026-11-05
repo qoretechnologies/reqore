@@ -540,6 +540,28 @@ const ReqoreDropdownList = memo(
       [closePopover, handleItemSelectClick]
     );
 
+    // The trail of levels' tags keeps its handlers while the trail holds: a tag is a memo component.
+    const handleHomeTagClick = useCallback(() => {
+      _onNavigateToLevel?.(0);
+    }, [_onNavigateToLevel]);
+    const labelClickHandlers = useMemo(
+      () =>
+        labels.map((label, index): IReqoreTagProps['onClick'] => (event) => {
+          // Navigate back to the clicked label's level
+          const targetLevel = label._levelIndex ?? index;
+
+          if (_onNavigateToLevel) {
+            _onNavigateToLevel(targetLevel);
+          }
+
+          // Call any original onClick if provided
+          if (label.onClick) {
+            label.onClick(event);
+          }
+        }),
+      [labels, _onNavigateToLevel]
+    );
+
     if (currentSelectedItem) {
       return (
         <ReqoreDropdownList
@@ -639,28 +661,10 @@ const ReqoreDropdownList = memo(
               size='small'
               intent={intent}
               customTheme={customTheme}
-              onClick={() => {
-                _onNavigateToLevel?.(0);
-              }}
+              onClick={handleHomeTagClick}
             />
             {labels.map((label, index) => (
-              <ReqoreTag
-                key={index}
-                {...label}
-                onClick={(event) => {
-                  // Navigate back to the clicked label's level
-                  const targetLevel = label._levelIndex ?? index;
-
-                  if (_onNavigateToLevel) {
-                    _onNavigateToLevel(targetLevel);
-                  }
-
-                  // Call any original onClick if provided
-                  if (label.onClick) {
-                    label.onClick(event);
-                  }
-                }}
-              />
+              <ReqoreTag key={index} {...label} onClick={labelClickHandlers[index]} />
             ))}
           </ReqoreTagGroup>
         ) : null}

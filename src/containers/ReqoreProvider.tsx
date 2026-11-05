@@ -16,6 +16,7 @@ import ReqoreNotification, {
 import { IReqorePanelAction } from '../components/Panel';
 import { IReqoreTheme, TReqoreIntent } from '../constants/theme';
 import ReqoreContext, { IReqoreContext } from '../context/ReqoreContext';
+import { scheduleOnTimer } from '../helpers/schedule';
 import ThemeContext from '../context/ThemeContext';
 import { IReqoreIconName } from '../types/icons';
 import { IReqoreOptions } from './UIProvider';
@@ -294,6 +295,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
       glowingIcons: options?.glowingIcons ?? false,
       shortcutHints: options?.shortcutHints ?? true,
       errorBoundaryOptions: options?.errorBoundaryOptions || DEFAULT_ERROR_BOUNDARY_OPTIONS,
+      schedule: options?.schedule ?? scheduleOnTimer,
     }),
     [options]
   );
@@ -336,6 +338,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
         customPortalId: resolvedOptions.customPortalId,
         uiScale: resolvedOptions.uiScale,
         errorBoundaryOptions: resolvedOptions.errorBoundaryOptions,
+        schedule: resolvedOptions.schedule,
       } satisfies IReqoreContext),
     [
       notifications,

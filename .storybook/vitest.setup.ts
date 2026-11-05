@@ -3,19 +3,26 @@ import { reactWarnings } from './reactWarnings';
 import { setProjectAnnotations } from '@storybook/react-vite';
 import { createElement } from 'react';
 import { afterAll, afterEach, beforeAll, beforeEach, expect } from 'vitest';
-import { server } from 'vitest/browser';
+import { commands, server } from 'vitest/browser';
 import * as previewAnnotations from './preview';
+import { lowContrastIn } from '../src/stories/utils/contrastGate';
+import { motionSettled } from '../src/stories/utils/motion';
 import { reactWarningsFailure, type IReactWarning } from '../src/stories/utils/reactWarningGate';
+import { POSIX_LANGUAGE, POSIX_LOCALE_STORY_PROJECT } from '../src/stories/utils/posixLocale.mts';
+import { SCROLLBARS_STORY_PROJECT, scrollbarWidth } from '../src/stories/utils/scrollbars';
 import { TOUCH_STORY_PROJECT } from '../src/stories/utils/touchScreen';
 
-/** Whether this run's browser is the phone the stories tagged `touch` run on (vitest.config.ts). */
-const onThePhone = (): boolean => {
+/** Whether this run's browser is the one of the story project `name` (vitest.config.mts). */
+const inProject = (name: string): boolean => {
   // a project's browser runs as a project of its own, named after both:
   // "storybook-touch (chromium)"
   const project = server.config.name ?? '';
 
-  return project === TOUCH_STORY_PROJECT || project.startsWith(`${TOUCH_STORY_PROJECT} (`);
+  return project === name || project.startsWith(`${name} (`);
 };
+
+/** Whether this run's browser is the phone the stories tagged `touch` run on (vitest.config.mts). */
+const onThePhone = (): boolean => inProject(TOUCH_STORY_PROJECT);
 
 // Registers the React renderer (renderToCanvas) plus the project's global
 // decorators/parameters from .storybook/preview for the Storybook Vitest project.
@@ -32,11 +39,15 @@ const annotations = setProjectAnnotations([
       (Story: any) => createElement('div', { style: { height: '100vh' } }, createElement(Story)),
     ],
     /* A story tagged `touch` runs on the phone. The two story projects tell those stories from the
-       others by the tags Storybook reads from the story file before it runs it (vitest.config.ts);
+       others by the tags Storybook reads from the story file before it runs it (vitest.config.mts);
        a tag the story only has once it runs - spread into it from a shared object - is not one of
        them, and the story would run here, on the desktop, with a mouse. It fails instead, saying
        how to tag it. */
-    beforeEach: ({ tags, title, name }) => {
+    beforeEach: async ({ tags, title, name }) => {
+      /* A story runs with the motion the user would see, unless it is about reduced motion (tagged
+         `reduced-motion`): the contrast gate after the story before it asked for reduced motion. */
+      await commands.emulateReducedMotion(tags.includes('reduced-motion'));
+
       if (tags.includes('touch') && !onThePhone()) {
         throw new Error(
           `"${title} / ${name}" is tagged 'touch' only once it runs, so it ran in the ` +
@@ -92,10 +103,20 @@ afterEach(async () => {
   ).toEqual([]);
 });
 
-/* Each story's browser is the one its project promises (vitest.config.ts): a desktop with a mouse, or, for
+/* Each story's browser is the one its project promises (vitest.config.mts): a desktop with a mouse, or, for
    the stories tagged `touch`, a phone. The phone's stories run first, so every desktop story checks, after
    them, that it still has its mouse: a touch screen that left a desktop page without one (qorus#646) fails
-   the next story here. */
+   the next story here.
+
+   And its scrollbars: hidden, taking no room, but in the project of the stories tagged `scrollbars`, whose
+   browser draws them. On Linux, where the CI runs, they take room there: a browser that hid them again
+   (a Playwright that hides them another way) would pass those stories without checking anything. On a Mac
+   they take room only when it is set to always show them, so there it is not asked.
+
+   And the browser of the stories tagged `posix-locale` reports the POSIX locale's language
+   (`POSIX_LANGUAGE`), on every platform: given it another way (the platform's locale, which the
+   amd64 Chromium the CI runs does not follow), it reported `en-US` there and passed those stories
+   without checking anything. */
 beforeEach(() => {
   const project = server.config.name ?? '';
   const promised = onThePhone()
@@ -103,6 +124,22 @@ beforeEach(() => {
     : '(hover: hover) and (pointer: fine)';
 
   expect(matchMedia(promised).matches, `the "${project}" project's browser matches ${promised}`).toBe(true);
+
+  if (!inProject(SCROLLBARS_STORY_PROJECT)) {
+    expect(scrollbarWidth(), `the "${project}" project's browser hides its scrollbars`).toBe(0);
+  } else if (server.platform === 'linux') {
+    expect(
+      scrollbarWidth(),
+      `the "${project}" project's browser draws scrollbars that take room`
+    ).toBeGreaterThan(0);
+  }
+
+  if (inProject(POSIX_LOCALE_STORY_PROJECT)) {
+    expect(
+      [navigator.language, ...navigator.languages],
+      `the "${project}" project's browser reports the POSIX locale's language`
+    ).toEqual([POSIX_LANGUAGE, POSIX_LANGUAGE]);
+  }
 });
 
 // No story makes React warn (`src/stories/utils/reactWarningGate.ts`): each warning fails the story it was given in.
@@ -131,3 +168,28 @@ afterAll(() => {
     throw failure;
   }
 });
+
+/* No story draws text or an icon too close to what it is drawn on (`src/stories/utils/contrastGate.ts`, qorus#646:
+   David's review found black text on dark gray): text at 4.5:1 (3:1 when large) by axe-core, measured over the
+   background it is drawn on - a translucent one over what is under it, a gradient as each of its colors - and an
+   icon at 3:1, as the Qorus IDE's story run checks its own. Measured once the story has settled, in its theme, and
+   under reduced motion, which Reqore honours: what stays on screen, never a frame of a fade or a spring. */
+afterEach(async () => {
+  await commands.emulateReducedMotion(true);
+  /* Settled on its own, not on another plugin's timing: a fade already running when reduced motion is
+     asked for runs on to its end, and in the projects that make captures qlip's capture used to be
+     what waited for it. Without one, the gate measured a date field's clear button 5% into its
+     fade-in, at 1.3:1 (`motionSettled`). */
+  await motionSettled();
+  expect(
+    await lowContrastIn(document.body),
+    'text (4.5:1, large 3:1) or icons (3:1) too close to what they are drawn on'
+  ).toEqual([]);
+});
+
+declare module 'vitest/browser' {
+  interface BrowserCommands {
+    /** Asks for reduced motion, or stops asking (vitest.config.mts). */
+    emulateReducedMotion: (reduce: boolean) => Promise<void>;
+  }
+}

@@ -7,10 +7,18 @@
 import { render } from '@testing-library/react';
 import { ReqoreLayoutContent, ReqorePanel, ReqoreTable, ReqoreUIProvider } from '../src';
 import { IReqoreTableColumn } from '../src/components/Table';
-import { DEFAULT_THEME } from '../src/constants/theme';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../src/context/SurfaceContext';
+import { TReqoreSurface } from '../src/helpers/colors';
 import { requiredAttribute, requiredElement } from '../src/stories/utils/required';
 
-const markedColumn = (
+/** What the components in a header cell are told they are drawn on. */
+const SurfaceProbe = ({ name }: { name: string }) => {
+  const surface = useReqoreSurface();
+
+  return <span data-probe={name} data-surface={JSON.stringify(surface ?? null)} />;
+};
+
+const probedColumn = (
   dataId: string,
   width: number,
   pin?: 'left' | 'right'
@@ -18,14 +26,14 @@ const markedColumn = (
   dataId,
   width,
   pin,
-  header: { content: <span data-probe={dataId} /> },
+  header: { content: <SurfaceProbe name={dataId} /> },
 });
 
 const pinnedColumns: IReqoreTableColumn[] = [
-  markedColumn('id', 60, 'left'),
-  markedColumn('firstName', 150),
-  markedColumn('lastName', 150),
-  markedColumn('address', 300, 'right'),
+  probedColumn('id', 60, 'left'),
+  probedColumn('firstName', 150),
+  probedColumn('lastName', 150),
+  probedColumn('address', 300, 'right'),
 ];
 
 const data = [
@@ -33,11 +41,13 @@ const data = [
   { id: 2, firstName: 'Alan', lastName: 'Turing', address: 'Manchester' },
 ];
 
-const renderTable = (columns: IReqoreTableColumn[]) =>
+const renderTable = (columns: IReqoreTableColumn[], surface?: TReqoreSurface) =>
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
-        <ReqoreTable columns={columns} data={data} label='Orders' stickyHeader />
+        <ReqoreSurfaceProvider color={surface}>
+          <ReqoreTable columns={columns} data={data} label='Orders' stickyHeader />
+        </ReqoreSurfaceProvider>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
   );
@@ -70,6 +80,11 @@ const headerCells = (container: HTMLElement): Record<string, HTMLElement> => {
 /** `#rrggbb` as the browser writes it back. */
 const rgbOf = (hex: string): string =>
   `rgb(${[1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16)).join(', ')})`;
+
+const surfaceIn = (cell: HTMLElement): TReqoreSurface | null =>
+  JSON.parse(
+    requiredAttribute(requiredElement('[data-probe]', "the cell's probe", cell), 'data-surface')
+  );
 
 describe('A panel with a sticky header', () => {
   test('draws its body in a stacking context of its own, under the header', () => {
@@ -117,28 +132,70 @@ describe('A panel with a sticky header', () => {
 });
 
 describe("A pinned column's header cell", () => {
-  test("paints the theme's main color, opaque as a pinned body cell is, above the cells that scroll under it", () => {
-    const { container } = renderTable(pinnedColumns);
+  test('paints what the header row is drawn on, opaque, above the cells that scroll under it', () => {
+    const { container } = renderTable(pinnedColumns, '#204060');
     const cells = headerCells(container);
 
     for (const pinned of [cells.id, cells.address]) {
       expect(pinned.style.position).toBe('sticky');
       expect(pinned.style.zIndex).toBe('2');
-      expect(pinned.style.backgroundColor).toBe(rgbOf(DEFAULT_THEME.main));
+      expect(pinned.style.backgroundColor).toBe('rgb(32, 64, 96)');
     }
-    // the cells between them paint nothing of their own: what the header row is drawn on shows
+    // the cells between them paint nothing of their own: the header row's surface shows
     for (const unpinned of [cells.firstName, cells.lastName]) {
       expect(unpinned.style.position).not.toBe('sticky');
       expect(unpinned.style.backgroundColor).toBe('');
     }
   });
 
+  test('on a gradient, paints its first color, and tells what it holds that it is drawn on that', () => {
+    const { container } = render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTable
+            columns={pinnedColumns}
+            data={data}
+            label='Orders'
+            contentEffect={{ gradient: { colors: { 0: '#102030', 100: '#405060' } } }}
+          />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+    const cells = headerCells(container);
+    // what the header row is drawn on: the table's gradient, each of its colors
+    const around = surfaceIn(cells.firstName) as string[];
+
+    expect(around).toHaveLength(2);
+    expect(surfaceIn(cells.lastName)).toEqual(around);
+    for (const pinned of [cells.id, cells.address]) {
+      expect(pinned.style.backgroundColor).toBe(rgbOf(around[0]));
+      expect(surfaceIn(pinned)).toBe(around[0]);
+    }
+  });
+
+  test("with no surface around the table, paints the theme's surface, opaque", () => {
+    const { container } = render(
+      <ReqoreUIProvider>
+        <ReqoreTable columns={pinnedColumns} data={data} label='Orders' />
+      </ReqoreUIProvider>
+    );
+    const cells = headerCells(container);
+
+    expect(cells.id.style.backgroundColor).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+    expect(cells.address.style.backgroundColor).toBe(cells.id.style.backgroundColor);
+    expect(surfaceIn(cells.id)).toMatch(/^#[0-9a-f]{6}$/i);
+  });
+
   test('is the only header cell that paints: a table with no pinned column paints none', () => {
-    const { container } = renderTable(pinnedColumns.map(({ pin: _pin, ...column }) => column));
+    const { container } = renderTable(
+      pinnedColumns.map(({ pin: _pin, ...column }) => column),
+      '#204060'
+    );
 
     for (const cell of Object.values(headerCells(container))) {
       expect(cell.style.position).not.toBe('sticky');
       expect(cell.style.backgroundColor).toBe('');
+      expect(surfaceIn(cell)).toEqual(['#204060']);
     }
   });
 });

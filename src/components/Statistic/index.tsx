@@ -8,8 +8,9 @@ import {
   changeDarkness,
   changeLightness,
   getMainBackgroundColor,
-  getReadableColor,
+  getReadableAlpha,
 } from '../../helpers/colors';
+import { ReqoreSurfaceProvider } from '../../context/SurfaceContext';
 import {
   alignToFlexAlign,
   getOneHigherSize,
@@ -18,6 +19,7 @@ import {
   TReqorePadded,
 } from '../../helpers/utils';
 import { IReqoreCountUpOptions, useCountUp } from '../../hooks/useCountUp';
+import { useReqoreDrawnSurface } from '../../hooks/useDrawnSurface';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, InactiveIconScale, RaisedElement, ScaleIconOnHover } from '../../styles';
 import {
@@ -31,9 +33,16 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreControlGroup from '../ControlGroup';
-import { IReqoreEffect, patchPrimaryGradient, StyledEffect, TReqoreEffectColor } from '../Effect';
+import {
+  IReqoreEffect,
+  patchPrimaryGradient,
+  StyledEffect,
+  TReqoreEffectColor,
+  TReqoreHexColor,
+} from '../Effect';
 import { ReqoreHeading, StyledHeader } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
+import { getDrawnEffectTextColor } from '../../helpers/surface';
 import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -170,6 +179,10 @@ interface IStyledStatisticWrapper {
   $fluid?: boolean;
   disabled?: boolean;
   $hasBackground?: boolean;
+  /** The statistic's text: what reads on it as it is drawn, its gradient's colors included. */
+  $text?: TReqoreHexColor;
+  /** Each color the statistic is drawn in: an `effect.color` is read against them. */
+  $backgrounds?: TReqoreHexColor[];
   $interactive?: boolean;
   $align?: 'flex-start' | 'center' | 'flex-end';
   rounded?: boolean;
@@ -290,6 +303,7 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
     opacity = 1,
     $padded,
     $paddingSize,
+    $text,
   }) =>
     $hasBackground &&
     css`
@@ -301,7 +315,7 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
             intent ? theme.intents[intent] : getMainBackgroundColor(theme),
             0.08
           )}`};
-      color: ${getReadableColor(theme, undefined, undefined, true)};
+      color: ${$text};
       padding: ${resolvePadding({
         padded: $padded,
         paddingSize: $paddingSize,
@@ -369,7 +383,8 @@ const StyledStatisticValueFinal = styled.span`
   white-space: nowrap;
 `;
 
-const PREFIX_SUFFIX_EFFECT: IReqoreEffect = { opacity: 0.6 };
+/** How faint the prefix and the suffix are beside the value, as far as they stay readable. */
+const PREFIX_SUFFIX_OPACITY = 0.6;
 
 interface IStatisticValuePartProps {
   as?: TReqoreStatisticValueElement;
@@ -463,16 +478,13 @@ const ReqoreStatistic = memo(
         [effect, rounded, flat, transparent, opacity, raised]
       );
 
-      const trendIntent = useMemo(
-        () => (trend ? trend.intent || TREND_DEFAULT_INTENTS[trend.direction] : undefined),
-        [trend]
-      );
-
-      const trendIcon = useMemo(
-        () => (trend ? trend.icon || TREND_ICONS[trend.direction] : undefined),
-        [trend]
-      );
-
+      // the opacity its surface is drawn at: none when transparent
+      const drawnOpacity = transparent ? 0 : opacity;
+      /* What the statistic is drawn on and in: its own surface, at the opacity it is drawn at, over what is under
+         it when it has one. What it holds is read against that, and its label and prefix and suffix fade only as
+         far as they stay readable there. Painting nothing, it is on what is around it: what a component there
+         says, or its customTheme's main. What it paints: with an intent, its gradient is ringed in the intent's
+         color. */
       const transformedEffect: IReqoreEffect = useMemo(() => {
         if (!effect) return undefined;
 
@@ -486,6 +498,47 @@ const ReqoreStatistic = memo(
 
         return newEffect;
       }, [effect, intent, theme]);
+      /* Painting nothing, it is on what is around it; else its fill, and the gradient it paints - the one it
+         draws (`transformedEffect`), not the effect as given: an intent rings it, and a ringed gradient is drawn
+         without its own surface color. */
+      const { backgrounds, text } = useReqoreDrawnSurface({
+        theme,
+        customTheme,
+        transparent: !hasBackground || drawnOpacity === 0,
+        fill: rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), drawnOpacity ?? 1),
+        effect: hasBackground ? transformedEffect : undefined,
+      });
+      /* fainter than the value, as far as it stays readable in the color it is drawn in, unless the caller gives
+         its opacity: one object while it holds, for a memo component */
+      const labelLook = useMemo(
+        () => ({
+          uppercase: true,
+          spaced: 1,
+          ...labelEffect,
+          opacity:
+            labelEffect?.opacity ??
+            getReadableAlpha(
+              getDrawnEffectTextColor(theme, labelEffect?.color, backgrounds) ?? text,
+              backgrounds,
+              0.7
+            ),
+        }),
+        [labelEffect, theme, text, backgrounds]
+      );
+      const prefixSuffixEffect: IReqoreEffect = useMemo(
+        () => ({ opacity: getReadableAlpha(text, backgrounds, PREFIX_SUFFIX_OPACITY) }),
+        [text, backgrounds]
+      );
+
+      const trendIntent = useMemo(
+        () => (trend ? trend.intent || TREND_DEFAULT_INTENTS[trend.direction] : undefined),
+        [trend]
+      );
+
+      const trendIcon = useMemo(
+        () => (trend ? trend.icon || TREND_ICONS[trend.direction] : undefined),
+        [trend]
+      );
 
       return (
         <ReqoreTooltipComponent
@@ -507,108 +560,114 @@ const ReqoreStatistic = memo(
           size={size}
           $fluid={fluid}
           disabled={disabled}
+          // a disabled statistic says so; any other keeps what the caller says
+          aria-disabled={disabled ? true : rest['aria-disabled']}
           $hasBackground={hasBackground}
+          $text={text}
+          $backgrounds={backgrounds}
           $interactive={interactive}
           $align={flexAlign}
           rounded={rounded}
           radiusSize={radiusSize}
           flat={flat}
           intent={intent}
-          opacity={transparent ? 0 : opacity}
+          opacity={drawnOpacity}
           $raised={raised}
           $padded={padded}
           $paddingSize={paddingSize ?? size}
           effect={transformedEffect}
           className={`${className || ''} reqore-statistic`}
         >
-          <ReqoreControlGroup
-            vertical
-            horizontalAlign={flexAlign}
-            className='reqore-statistic-content'
-          >
-            {icon && (
-              <ReqoreIcon
-                {...iconProps}
-                icon={icon}
-                size={size}
-                color={iconColor}
-                intent={iconColor ? undefined : intent}
-                className='reqore-statistic-icon'
-              />
-            )}
-            {label && (
-              <ReqoreSpan
-                size={secondarySize}
-                className='reqore-statistic-label'
-                effect={{ opacity: 0.7, uppercase: true, spaced: 1, ...labelEffect }}
-              >
-                {label}
-              </ReqoreSpan>
-            )}
-            <StyledStatisticValueRow
-              ref={valueRowRef}
-              as={valueAs}
-              $element={valueAs}
-              className='reqore-statistic-value-row'
+          <ReqoreSurfaceProvider color={backgrounds}>
+            <ReqoreControlGroup
+              vertical
+              horizontalAlign={flexAlign}
+              className='reqore-statistic-content'
             >
-              {prefix && (
-                <StatisticValuePart
-                  as={valueAs}
-                  size={valueSize}
-                  theme={valueTheme}
-                  className='reqore-statistic-prefix'
-                  effect={PREFIX_SUFFIX_EFFECT}
-                >
-                  {prefix}
-                </StatisticValuePart>
+              {icon && (
+                <ReqoreIcon
+                  {...iconProps}
+                  icon={icon}
+                  size={size}
+                  color={iconColor}
+                  intent={iconColor ? undefined : intent}
+                  className='reqore-statistic-icon'
+                />
               )}
-              <StatisticValuePart
+              {label && (
+                <ReqoreSpan
+                  size={secondarySize}
+                  className='reqore-statistic-label'
+                  effect={labelLook}
+                >
+                  {label}
+                </ReqoreSpan>
+              )}
+              <StyledStatisticValueRow
+                ref={valueRowRef}
                 as={valueAs}
-                size={valueSize}
-                theme={valueTheme}
-                className='reqore-statistic-value'
-                effect={valueEffect}
+                $element={valueAs}
+                className='reqore-statistic-value-row'
               >
-                {counting ? (
-                  <>
-                    <span aria-hidden='true' className='reqore-statistic-value-count'>
-                      {display}
-                    </span>
-                    <StyledStatisticValueFinal className='reqore-statistic-value-final'>
-                      {final}
-                    </StyledStatisticValueFinal>
-                  </>
-                ) : (
-                  display
+                {prefix && (
+                  <StatisticValuePart
+                    as={valueAs}
+                    size={valueSize}
+                    theme={valueTheme}
+                    className='reqore-statistic-prefix'
+                    effect={prefixSuffixEffect}
+                  >
+                    {prefix}
+                  </StatisticValuePart>
                 )}
-              </StatisticValuePart>
-              {suffix && (
                 <StatisticValuePart
                   as={valueAs}
                   size={valueSize}
                   theme={valueTheme}
-                  className='reqore-statistic-suffix'
-                  effect={PREFIX_SUFFIX_EFFECT}
+                  className='reqore-statistic-value'
+                  effect={valueEffect}
                 >
-                  {suffix}
+                  {counting ? (
+                    <>
+                      <span aria-hidden='true' className='reqore-statistic-value-count'>
+                        {display}
+                      </span>
+                      <StyledStatisticValueFinal className='reqore-statistic-value-final'>
+                        {final}
+                      </StyledStatisticValueFinal>
+                    </>
+                  ) : (
+                    display
+                  )}
                 </StatisticValuePart>
-              )}
-            </StyledStatisticValueRow>
-            {trend && (
-              <ReqoreControlGroup
-                gapSize='micro'
-                verticalAlign='center'
-                className='reqore-statistic-trend'
-              >
-                <ReqoreIcon icon={trendIcon!} size={secondarySize} intent={trendIntent} />
-                {trend.value !== undefined && (
-                  <ReqoreSpan size={secondarySize} intent={trendIntent}>
-                    {trend.value}
-                  </ReqoreSpan>
+                {suffix && (
+                  <StatisticValuePart
+                    as={valueAs}
+                    size={valueSize}
+                    theme={valueTheme}
+                    className='reqore-statistic-suffix'
+                    effect={prefixSuffixEffect}
+                  >
+                    {suffix}
+                  </StatisticValuePart>
                 )}
-              </ReqoreControlGroup>
-            )}
-          </ReqoreControlGroup>
+              </StyledStatisticValueRow>
+              {trend && (
+                <ReqoreControlGroup
+                  gapSize='micro'
+                  verticalAlign='center'
+                  className='reqore-statistic-trend'
+                >
+                  <ReqoreIcon icon={trendIcon!} size={secondarySize} intent={trendIntent} />
+                  {trend.value !== undefined && (
+                    <ReqoreSpan size={secondarySize} intent={trendIntent}>
+                      {trend.value}
+                    </ReqoreSpan>
+                  )}
+                </ReqoreControlGroup>
+              )}
+            </ReqoreControlGroup>
+          </ReqoreSurfaceProvider>
         </ReqoreTooltipComponent>
       );
     }
