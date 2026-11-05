@@ -699,10 +699,13 @@ export const SwipeSpringsBack: Story = {
 export const SwipeInProgress: Story = {
   parameters: {
     ...PHONE_VIEWPORT,
+    // A toast held a third of the way off the screen reads as an empty page in a
+    // still frame; what the swipe does is asserted in the play, not in a picture.
+    qlip: { ...PHONE_VIEWPORT.qlip, skip: true },
     docs: {
       description: {
         story:
-          'A toast on a phone caught mid-swipe: dragged 35% of its width to the right and still held, so it sits that far from where it started, carries `.reqore-notification-dragging`, and its fifteen-second timer line is paused. The one swipe story Qlip captures.',
+          'A toast on a phone caught mid-swipe: dragged 35% of its width to the right and still held, so it sits that far from where it started, carries `.reqore-notification-dragging`, and its fifteen-second timer line is paused. Asserted in the play; like the other swipe stories, not captured by Qlip.',
       },
     },
   },

@@ -172,6 +172,15 @@ every follow-up commit inflates the version history (a single iterative PR endin
 intermediate `0.72.1-0.72.4` was only ever a git tag on a feature branch, never a
 release on npm.
 
+**What happens after the publish.** `beta_release.yml` ends by telling the consumers
+(qorus-ide and toolkit-react) about the version with a `library-release` dispatch. Each
+answers with a `deps/reqore` PR that takes it, merges itself when its CI is green and Qlip
+saw no snapshot change, and comments the outcome on the PR behind the release. A consumer
+PR that stays open is a visual change in this release that someone has to review there.
+The dispatch needs the `qorus-github-bot` App secrets (`QORUS_BOT_APP_ID`,
+`QORUS_BOT_APP_PRIVATE_KEY`); when it fails the release is still fine, and the consumer's
+workflow can be run by hand.
+
 ### Testing Patterns
 - **Setup:** `__tests__/setup.js` disables console debug/info/error.
 - **Wrapper:** always wrap tests with

@@ -3065,7 +3065,16 @@ const expectFoldedActionsSay = async (
       canvasElement
     ).getBoundingClientRect();
     for (const button of buttonsIn(width)) {
-      await waitFor(() => expect(buttonSays(button)).toBe(folded));
+      /* The table folds once it has measured itself, which a ResizeObserver reports later, later still on
+         a busy machine. What a button says is no sign of that when its folded words are its label: wait
+         for the column to narrow too. */
+      await waitFor(
+        () => {
+          expect(buttonSays(button)).toBe(folded);
+          expect(button.getBoundingClientRect().width).toBeLessThan(wideWidth);
+        },
+        { timeout: 5000 }
+      );
       const text = button.querySelector<HTMLElement>(
         '.reqore-button-text-content:not([aria-hidden])'
       ) as HTMLElement;
