@@ -6,6 +6,7 @@ import React, { forwardRef, memo, useMemo, useState } from 'react';
 import { createGlobalStyle, css } from 'styled-components';
 import styled from '../helpers/styled';
 import ReqoreLayoutWrapper, { IReqoreLayoutWrapperProps } from '../components/Layout';
+import { CONTROL_GROUP_CHILD_MAX_WIDTH, CONTROL_GROUP_COLLAPSE_VARIABLE } from '../constants/controlGroup';
 import { getFontFamily } from '../constants/fonts';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
 import { IReqoreContext } from '../context/ReqoreContext';
@@ -60,6 +61,13 @@ export interface IReqoreUIProviderProps {
 export const WRAPPED_CONTROL_GROUP_CHILD_SELECTOR = ':where(.reqore-control-group-wrapped) > *';
 
 const GlobalStyle = createGlobalStyle`
+  /* It does not inherit: it says what one child's own margin takes, not what is inside that child. */
+  @property ${CONTROL_GROUP_COLLAPSE_VARIABLE} {
+    syntax: '<length>';
+    inherits: false;
+    initial-value: 0px;
+  }
+
   .reqore-blur-wrapper {
     position: fixed;
     top: 0;
@@ -81,7 +89,7 @@ const GlobalStyle = createGlobalStyle`
      stayed that wide, past the group and the card it was in: a data provider's path ran 487-712px wide in a 346px
      card on a phone (qorus#646). */
   ${WRAPPED_CONTROL_GROUP_CHILD_SELECTOR} {
-    max-width: 100%;
+    max-width: ${CONTROL_GROUP_CHILD_MAX_WIDTH};
     min-width: 0;
   }
 `;

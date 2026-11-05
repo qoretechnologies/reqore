@@ -941,3 +941,122 @@ export const WrappedGroupKeepsALongButtonInsideOnAPhone: Story = {
     expect(apply.right).toBeLessThanOrEqual(window.innerWidth);
   },
 };
+
+/** Every button label under `element`, with how much of it the button cuts. */
+const buttonLabels = (element: HTMLElement) =>
+  Array.from(element.querySelectorAll<HTMLElement>('.reqore-button-text-content')).map((label) => ({
+    label: label.textContent,
+    cut: label.scrollWidth > label.clientWidth,
+  }));
+
+/**
+ * Stacked wrapped groups the way a page's action rail draws them: as wide as what they hold, so a lone button fills
+ * its group exactly. Its width is fractional (the label's is), so nothing rounds the shortfall away.
+ */
+const StackedRails = () => (
+  <>
+    <div style={{ display: 'flex' }}>
+      <ReqoreControlGroup stack wrap className='rail-alone'>
+        <ReqoreButton icon='FileCopyLine' label='Clone' minimal flat={false} intent='info' />
+      </ReqoreControlGroup>
+    </div>
+    <ReqoreVerticalSpacer height={10} />
+    <div style={{ display: 'flex' }}>
+      <ReqoreControlGroup stack wrap className='rail-two'>
+        <ReqoreButton icon='FileCopyLine' label='Clone' minimal flat={false} intent='info' />
+        <ReqoreButton icon='EditLine' label='Edit' minimal flat={false} />
+      </ReqoreControlGroup>
+    </div>
+    <ReqoreVerticalSpacer height={10} />
+    <StoryRowBox className='rail-narrow-box' width={120.5} caption='A 120.5px box'>
+      <ReqoreControlGroup stack wrap className='rail-narrow'>
+        <ReqoreButton
+          icon='FileCopyLine'
+          label='A label far longer than this box has room for'
+          minimal
+          flat={false}
+        />
+      </ReqoreControlGroup>
+    </StoryRowBox>
+    <ReqoreVerticalSpacer height={10} />
+    <ReqoreControlGroup stack wrap fluid className='rail-rows'>
+      <ReqoreButton label='A row a button fills' />
+      <ReqoreControlGroup>
+        <ReqoreButton label='A row a group fills' />
+      </ReqoreControlGroup>
+      <ReqoreInput placeholder='A row an input fills' />
+    </ReqoreControlGroup>
+  </>
+);
+
+const expectStackedRails = async (canvasElement: HTMLElement) => {
+  const alone = canvasElement.querySelector<HTMLElement>('.rail-alone')!;
+  const button = alone.querySelector<HTMLElement>('.reqore-button')!;
+
+  await waitFor(() => expect(button.getBoundingClientRect().width).toBeGreaterThan(0));
+  // the case this is about: a width no pixel grid rounds away
+  expect(button.getBoundingClientRect().width % 1).not.toBe(0);
+
+  // what fits is not cut, alone in its group or beside another
+  expect(buttonLabels(alone)).toEqual([{ label: 'Clone', cut: false }]);
+  expect(buttonLabels(canvasElement.querySelector<HTMLElement>('.rail-two')!)).toEqual([
+    { label: 'Clone', cut: false },
+    { label: 'Edit', cut: false },
+  ]);
+  // and it fills its group, side to side, with the group's borders collapsed
+  const group = alone.getBoundingClientRect();
+  expect(Math.abs(button.getBoundingClientRect().left - group.left)).toBeLessThanOrEqual(0.05);
+  expect(Math.abs(button.getBoundingClientRect().right - group.right)).toBeLessThanOrEqual(0.05);
+
+  // what is too long is still cut, and stays inside the group and the box
+  const box = canvasElement.querySelector<HTMLElement>('.rail-narrow-box')!;
+  const narrow = canvasElement.querySelector<HTMLElement>('.rail-narrow')!;
+  expect(buttonLabels(narrow).map(({ cut }) => cut)).toEqual([true]);
+  const long = narrow.querySelector<HTMLElement>('.reqore-button')!.getBoundingClientRect();
+  expect(long.right).toBeLessThanOrEqual(narrow.getBoundingClientRect().right + 0.05);
+  expect(long.left).toBeGreaterThanOrEqual(box.getBoundingClientRect().left - 0.05);
+  await expectControlsInside(box);
+
+  // the rows of a stack that fill it end on one line, whatever fills them
+  const rail = canvasElement.querySelector<HTMLElement>('.rail-rows')!;
+  const rows = [
+    rail.querySelector(':scope > .reqore-button'),
+    rail.querySelector(':scope > .reqore-control-group'),
+    // what an input draws: its wrapper is the group's child, and has no margin of its own
+    rail.querySelector('input'),
+  ].map((row) => row!.getBoundingClientRect().right);
+  expect(new Set(rows).size).toBe(1);
+};
+
+export const StackedWrappedGroupKeepsALabelThatFits: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders stacked wrapped groups as a page draws its action rail: one button alone, two side by side, and in a 120.5px box one whose label is far too long, then rows that fill a group. A label that fits is said whole, the long one is cut inside the box, and the rows end on one line.',
+      },
+    },
+  },
+  render: () => <StackedRails />,
+  play: async ({ canvasElement }) => {
+    await expectStackedRails(canvasElement);
+  },
+};
+
+export const StackedWrappedGroupKeepsALabelThatFitsOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'The same stacked wrapped groups on a phone (390px): a label that fits is said whole, the long one is cut inside its box, and the rows end on one line.',
+      },
+    },
+  },
+  render: () => <StackedRails />,
+  play: async ({ canvasElement }) => {
+    await expectStackedRails(canvasElement);
+  },
+};
