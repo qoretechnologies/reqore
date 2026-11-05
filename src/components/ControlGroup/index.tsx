@@ -12,6 +12,7 @@ import React, {
 import { useMount, useUnmount } from 'react-use';
 import { css } from 'styled-components';
 import { ReqoreButton, ReqoreDrawer } from '../..';
+import { CONTROL_GROUP_COLLAPSE_VARIABLE } from '../../constants/controlGroup';
 import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import styled, { omitStyleProps } from '../../helpers/styled';
@@ -593,7 +594,18 @@ const ReqoreControlGroup = memo(
 
           const collapseMargin = needsCollapse
             ? wrap
-              ? { marginTop: -1, marginLeft: -1 }
+              ? {
+                  marginTop: -1,
+                  marginLeft: -1,
+                  // A child sized by its content needs 1px more than the group's content box, which
+                  // the margin above pulls it over. One that fills its row does not: the rows of a
+                  // stack line up with what `width: 100%` gives a group among them. See
+                  // `CONTROL_GROUP_COLLAPSE_VARIABLE`.
+                  ...(props?.style?.marginLeft === undefined &&
+                  !((props?.fluid ?? fluid) && !(props?.fixed ?? fixed))
+                    ? { [CONTROL_GROUP_COLLAPSE_VARIABLE]: '1px' }
+                    : {}),
+                }
               : !isFirstChild
                 ? isVertical
                   ? { marginTop: -1 }

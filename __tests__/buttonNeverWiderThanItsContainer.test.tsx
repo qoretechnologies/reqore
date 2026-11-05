@@ -4,6 +4,7 @@
 // that makes it.
 import { render } from '@testing-library/react';
 import { ReqoreButton, ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
+import { CONTROL_GROUP_CHILD_MAX_WIDTH } from '../src/constants/controlGroup';
 
 const inLayout = (node: React.ReactNode) =>
   render(
@@ -27,7 +28,7 @@ describe('a button', () => {
       <ReqoreButton {...props} label='omquser' description='The Qorus system datasource' />
     );
 
-    expect(maxWidthOf(container.querySelector('.reqore-button'))).toBe('100%');
+    expect(maxWidthOf(container.querySelector('.reqore-button'))).toBe(CONTROL_GROUP_CHILD_MAX_WIDTH);
   });
 
   test('with its own maxWidth keeps it', () => {

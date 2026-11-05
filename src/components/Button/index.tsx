@@ -5,6 +5,7 @@ import React, { forwardRef, memo, useCallback, useMemo } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { css, keyframes } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
+import { CONTROL_GROUP_CHILD_MAX_WIDTH } from '../../constants/controlGroup';
 import {
   CONTROL_HORIZONTAL_PADDING_FROM_SIZE,
   CONTROL_TEXT_FROM_SIZE,
@@ -452,13 +453,15 @@ export const StyledButton = styled(StyledEffect).withConfig({
   /* A button is never wider than its container, unless it sets its own maxWidth: fixed means it does not
      stretch, not that it may run past what holds it. A fixed button saying a value and its description stayed as
      wide as both on one line, 487-712px in a 346px card on a phone (qorus#646); capped, its label is clipped as any
-     button's is, and its description takes as many lines as it needs. */
+     button's is, and its description takes as many lines as it needs. Its container's width is what percentages
+     are measured against, so a wrapped stack that pulls the button over its padding adds that back: see
+     CONTROL_GROUP_CHILD_MAX_WIDTH. */
   max-width: ${({ square, maxWidth, size, verticalPadding = 'normal' }) =>
     square
       ? `${
           SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2
         }px`
-      : maxWidth || '100%'};
+      : maxWidth || CONTROL_GROUP_CHILD_MAX_WIDTH};
 
   ${({ wrap, description }) =>
     !wrap && !description
