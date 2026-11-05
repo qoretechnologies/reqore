@@ -1374,9 +1374,7 @@ const ReqoreButton = memo(
                         ? {
                             marginRight: iconsAlign !== 'center' || !_children ? 'auto' : undefined,
                             marginLeft:
-                              iconsAlign === 'center' ||
-                              !_children ||
-                              (textAlign === 'center' && !_children)
+                              iconsAlign === 'center' || !_children
                                 ? 'auto'
                                 : undefined,
                           }
