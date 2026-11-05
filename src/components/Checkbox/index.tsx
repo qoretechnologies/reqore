@@ -234,12 +234,16 @@ const StyledSwitchTextWrapper = styled(StyledTextEffect)`
   min-width: ${({ size }) => SWITCH_SIZE_TO_PX[size] - 4}px;
 `;
 
+/* Each word takes the color that reads on what is behind it. When a switch is on, the knob sits under the on
+   word and the track under the off word. In the filled look the knob is the surface and the track the text color,
+   so the on word reads against the surface and the off word against the fill: the other way round, both words of
+   a Yes / No switch were drawn in the color of what they sat on, and could not be read. */
 const StyledOnSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
   color: ${({ theme, checked, parentHasGradient }) =>
     !parentHasGradient &&
     getReadableColorFrom(
       checked && theme.switchOnLook === 'filled'
-        ? getSwitchFillColor(theme)
+        ? theme.originalMain || theme.main
         : checked
         ? changeLightness(theme.main, 0.25)
         : theme.originalMain
@@ -249,7 +253,13 @@ const StyledOnSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>
 const StyledOffSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
   color: ${({ theme, checked, parentHasGradient }) =>
     !parentHasGradient &&
-    getReadableColorFrom(checked ? theme.originalMain : changeLightness(theme.main, 0.2))};
+    getReadableColorFrom(
+      checked && theme.switchOnLook === 'filled'
+        ? getSwitchFillColor(theme)
+        : checked
+        ? theme.originalMain
+        : changeLightness(theme.main, 0.2)
+    )};
 `;
 
 // The row also receives what a `ReqoreControlGroup` hands every child (`fill`, `stack`, …);

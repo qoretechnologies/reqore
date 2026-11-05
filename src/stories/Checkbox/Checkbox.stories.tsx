@@ -404,7 +404,7 @@ export const SwitchFilledOn: Story = {
     docs: {
       description: {
         story:
-          'Two switches, on and off, under a theme with `switchOnLook: \'filled\'`: the on switch\'s track is filled with the text colour (white on a dark theme) and its knob is the surface, so on and off read apart without a colour; the off switch is unchanged.',
+          'Two switches, on and off, under a theme with `switchOnLook: \'filled\'`: the on switch\'s track is filled with the text colour (white on a dark theme) and its knob is the surface, so on and off read apart without a colour; the off switch is unchanged. Below them, a Yes / No switch that is on: Yes reads on the knob and No on the fill.',
       },
     },
   },
@@ -415,6 +415,16 @@ export const SwitchFilledOn: Story = {
     <ReqoreControlGroup vertical>
       <ReqoreCheckbox label='Share usage analytics' asSwitch checked className='switch-on' />
       <ReqoreCheckbox label='Send weekly digest' asSwitch checked={false} className='switch-off' />
+      <ReqoreCheckbox
+        label='Remote'
+        asSwitch
+        checked
+        onText='Yes'
+        offText='No'
+        checkedIcon='CheckLine'
+        uncheckedIcon='CloseLine'
+        className='switch-words'
+      />
     </ReqoreControlGroup>
   ),
   play: async () => {
@@ -424,6 +434,13 @@ export const SwitchFilledOn: Story = {
     const [r, g, b] = (track('.switch-on').backgroundColor.match(/\d+/g) ?? []).map(Number);
     await expect(Math.min(r, g, b)).toBeGreaterThan(128);
     await expect(track('.switch-off').backgroundColor).not.toBe(track('.switch-on').backgroundColor);
+    // Each word is a different color from what it sits on: Yes on the knob, No on the fill.
+    const words = document.querySelector('.switch-words .reqore-checkbox-box') as HTMLElement;
+    const [off, on] = [...words.children].slice(0, 2).map((el) => getComputedStyle(el).color);
+    const knob = getComputedStyle(words.lastElementChild as Element).backgroundColor;
+    await expect(on).not.toBe(knob);
+    await expect(off).not.toBe(getComputedStyle(words).backgroundColor);
+    await expect(on).not.toBe(off);
   },
 };
 
