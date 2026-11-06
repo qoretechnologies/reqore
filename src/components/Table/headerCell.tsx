@@ -12,7 +12,7 @@ import { getOneLessSize } from '../../helpers/utils';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
-import { IReqoreEffect } from '../Effect';
+import { IReqoreEffect, TReqoreHexColor } from '../Effect';
 import { TABLE_PIN_ATTRIBUTE, getColumnRenderedWidth, pinnedEdgeShadowSelector } from './helpers';
 import { TColumnsUpdater } from './header';
 
@@ -26,6 +26,8 @@ export interface IReqoreTableHeaderCellProps
   onFilterChange?: (dataId: string, filter: string) => void;
   pinOffset?: number;
   pinEdge?: boolean;
+  /** See `IReqoreTableProps.pinnedSurface`: what a pinned header cell paints. */
+  pinnedSurface?: TReqoreHexColor;
   hasColumns?: boolean;
   /**
    * Set by the parent `ReqoreTable` when its own `minimal` prop is enabled, so
@@ -176,6 +178,7 @@ export const ReqoreTableHeaderCell = memo(
     pin,
     pinOffset,
     pinEdge,
+    pinnedSurface,
     onSortChange,
     dataId,
     sortable,
@@ -313,10 +316,16 @@ export const ReqoreTableHeaderCell = memo(
     ]);
 
     const theme = useTheme() as IReqoreTheme | undefined;
-    /* A pinned header cell is drawn over the header cells that scroll under it, so it paints the theme's
-       main color - opaque, as a pinned body cell is. Without it the cells passing under showed through
-       ("ORDER DA" under "ACTIONS"). */
-    const pinnedFill = useMemo(() => (pin && theme?.main ? theme.main : undefined), [pin, theme]);
+    /* A pinned header cell is drawn over the header cells that scroll under it, so it paints an
+       opaque fill, as a pinned body cell does - without one the cells passing under showed through
+       ("ORDER DA" under "ACTIONS"). The SAME fill as the body's pinned cells: the surface the table
+       sits on (`pinnedSurface`, else the panel's). It used to be `theme.main`, a step darker than
+       the panel, so the header above a pinned actions column read as a black box beside the rest
+       of the header. */
+    const pinnedFill = useMemo(
+      () => (pin ? (pinnedSurface ?? (theme ? getPanelBackgroundColor(theme) : undefined)) : undefined),
+      [pin, pinnedSurface, theme]
+    );
     const pinStyle: React.CSSProperties = pin
       ? {
           position: 'sticky',

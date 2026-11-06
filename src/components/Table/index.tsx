@@ -1594,6 +1594,7 @@ const ReqoreTable = ({
           tableWidth={sizes.width}
           minimal={rest.minimal}
           headerEffect={headerEffect}
+          pinnedSurface={pinnedSurface}
           dividers={headerDividers}
           sortIndicator={sortIndicator}
           sortAscendingLabel={sortAscendingLabel}

@@ -1,4 +1,4 @@
-import type { IReqoreEffect } from '../Effect';
+import type { IReqoreEffect, TReqoreHexColor } from '../Effect';
 import { omit } from 'lodash';
 import { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
 import { css } from 'styled-components';
@@ -37,6 +37,7 @@ export interface IReqoreCustomHeaderCellProps
       | 'onFilterChange'
       | 'pinOffset'
       | 'pinEdge'
+      | 'pinnedSurface'
       | 'parentMinimal'
       | 'parentHeaderEffect'
       | 'dividers'
@@ -75,6 +76,8 @@ export interface IReqoreTableSectionProps extends IWithReqoreSize {
   minimal?: boolean;
   /** See `IReqoreTableProps.headerEffect`. */
   headerEffect?: IReqoreEffect;
+  /** See `IReqoreTableProps.pinnedSurface`: a pinned header cell paints it, as a pinned body cell does. */
+  pinnedSurface?: TReqoreHexColor;
   /** See `IReqoreTableProps.headerDividers`. */
   dividers?: boolean;
   /** See `IReqoreTableProps.sortIndicator`. */
@@ -201,6 +204,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
       tableWidth,
       minimal,
       headerEffect,
+      pinnedSurface,
       dividers,
       sortIndicator,
       sortAscendingLabel,
@@ -288,6 +292,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
         onFilterChange,
         pinOffset: pinInfo?.offset,
         pinEdge: pinInfo?.isEdge,
+        pinnedSurface,
         parentMinimal: minimal,
         parentHeaderEffect: headerEffect,
         dividers,
