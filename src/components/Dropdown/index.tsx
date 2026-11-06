@@ -55,6 +55,12 @@ export interface IReqoreDropdownProps
   scrollToSelected?: boolean;
   paging?: TReqorePaginationType<IReqoreDropdownItem>;
   customElements?: React.ReactNode[];
+  /**
+   * Where `customElements` sit: `'start'` (the default, unchanged) above the search and the items,
+   * `'end'` after the items. A row action menu whose custom elements are secondary (an
+   * enable / disable toggle) puts them last, so the actions people reach for come first.
+   */
+  customElementsPosition?: 'start' | 'end';
   listCustomTheme?: IReqoreCustomTheme;
   listIntent?: TReqoreIntent;
   showCaret?: boolean;
@@ -150,6 +156,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   show,
   onToggleChange,
   customElements,
+  customElementsPosition,
   wrapperProps,
   listCustomTheme,
   listIntent,
@@ -237,6 +244,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         noItemsFoundText={noItemsFoundText}
         filter={filter}
         customElements={customElements}
+        customElementsPosition={customElementsPosition}
         wrapperProps={wrapperProps}
         customTheme={listCustomTheme}
         intent={listIntent}
@@ -248,7 +256,14 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         onSelectedItemsChange={setSelectedItems}
       />
     ) : undefined;
-  }, [items, onItemSelect, customElements, selectedItems, handleNavigateToLevel]);
+  }, [
+    items,
+    onItemSelect,
+    customElements,
+    customElementsPosition,
+    selectedItems,
+    handleNavigateToLevel,
+  ]);
 
   return (
     <ReqorePopover

@@ -6,9 +6,9 @@ import {
   BADGE_SIZE_TO_PX,
   GAP_FROM_SIZE,
   PADDING_FROM_SIZE,
-  TAG_TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
+import { getTagTextSize } from '../../helpers/typeScale';
 import { formatShortcut, TReqoreKeyboardShortcut } from '../../helpers/shortcuts';
 import { getOneLessSize } from '../../helpers/utils';
 
@@ -51,7 +51,7 @@ const StyledShortcutKey = styled.span<IStyledShortcutKey>`
   height: ${({ _size }) => BADGE_SIZE_TO_PX[_size]}px;
   min-width: ${({ _size }) => BADGE_SIZE_TO_PX[_size]}px;
   padding: 0 ${({ _size, compact }) => PADDING_FROM_SIZE[_size] / (compact ? 3 : 2)}px;
-  font-size: ${({ _size }) => TAG_TEXT_FROM_SIZE[_size]}px;
+  font-size: ${({ _size, theme }) => getTagTextSize(theme, _size)}px;
   font-family: system-ui;
   font-weight: 500;
   line-height: 1;

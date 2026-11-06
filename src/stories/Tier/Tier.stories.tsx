@@ -4,6 +4,7 @@ import { ReqoreColumns, ReqoreControlGroup, ReqoreTier } from '../..';
 import { StoryMeta } from '../utils';
 import { expectModernRow, modernTiers, PRO, STARTER, THREE_PLANS } from './plans';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const meta = {
   title: 'Other/Tier',
   component: ReqoreTier,
@@ -307,6 +308,34 @@ export const ModernLight: Story = {
   play: async ({ canvasElement }) => expectModernRow(canvasElement, 3),
 };
 
+export const ModernNeutralSale: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A modern tier on sale with `saleIntent={null}`: the sale price ($19) is drawn in the tier\'s own text colour instead of green, and the struck-through $29 beside it still says it is a sale — for an app whose green means "healthy".',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreTier
+      {...PRO}
+      appearance='modern'
+      name='Pro (sale)'
+      price={29}
+      salePrice={19}
+      saleIntent={null}
+      badge='Save 34%'
+      style={{ maxWidth: '320px' }}
+    />
+  ),
+  play: async () => {
+    const sale = document.querySelector('.reqore-tier-price-value') as Element;
+    const name = document.querySelector('.reqore-tier-name') as Element;
+    await expect(getComputedStyle(sale).color).toBe(getComputedStyle(name).color);
+  },
+};
+
 export const ModernStates: Story = {
   parameters: {
     docs: {
@@ -433,4 +462,27 @@ export const ModernSizes: Story = {
       '48px',
     ]);
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a pricing tier on the default and on the themed surface: with `theme.panel` set the tier sits on the panel surface.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreTier
+        name='Basic'
+        nameDetail='For individuals'
+        price={3.99}
+        currency='$'
+        priceDetail='per month'
+        description='A basic tier with limited features.'
+      />
+    </ThemedSurfaceComparison>
+  ),
 };

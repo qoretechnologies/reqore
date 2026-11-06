@@ -13,7 +13,7 @@ import { IReqoreContext } from '../context/ReqoreContext';
 import { TReqoreDataAttributes } from '../types/global';
 import ThemeContext from '../context/ThemeContext';
 import { buildTheme, getMainBackgroundColor, getReadableColor } from '../helpers/colors';
-import ReqoreProvider from './ReqoreProvider';
+import ReqoreProvider, { IReqoreConfirmationDefaults } from './ReqoreProvider';
 import ReqoreThemeProvider from './ThemeProvider';
 
 export interface IReqoreOptions
@@ -32,6 +32,8 @@ export interface IReqoreOptions
   uiScale?: number;
   /** Defaults for every notification added through `addNotification`. */
   notifications?: IReqoreNotificationDefaults;
+  /** Defaults for every confirmation opened through `confirmAction`: its words, its look. */
+  confirmations?: IReqoreConfirmationDefaults;
 }
 /**
  * Props for the top-level UI provider that wires Reqore theme and global layout.
@@ -101,11 +103,18 @@ const StyledPortal = styled.div`
     color: ${getReadableColor(theme, undefined, undefined, true)};
   `}
 
-  /* The portal is outside the layout wrapper, so it names the theme's font itself. */
+  /* The portal is outside the layout wrapper, so it names the theme's font and line height
+     itself. */
   ${({ theme }) =>
     theme.fontFamily &&
     css`
       font-family: ${getFontFamily(theme.fontFamily)};
+    `}
+
+  ${({ theme }) =>
+    theme.typeScale?.lineHeight &&
+    css`
+      line-height: ${theme.typeScale.lineHeight};
     `}
 `;
 

@@ -17,7 +17,9 @@ import {
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
 import { dragPointer } from '../utils/pointer';
+import { PHONE_STORY } from '../utils/touchScreen';
 
+import { ThemedSurface } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreModalProps>();
 
 const meta = {
@@ -311,6 +313,118 @@ export const ConfirmationModal: Story = {
 
   args: {
     confirm: true,
+  },
+};
+
+/** Opens a destructive confirmation as a caller would, under the app's defaults. */
+const AsksToDelete = () => {
+  const confirmAction = useReqoreProperty('confirmAction');
+  useMount(() => {
+    confirmAction({
+      title: 'Delete this job?',
+      description: 'Its runs and their logs go with it.',
+      intent: 'danger',
+      confirmButtonIntent: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: noop,
+    });
+  });
+  return null;
+};
+
+export const ConfirmationWithAppDefaults: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A destructive confirmation under app-wide defaults (`options.confirmations`): a solid dialog (`surfaceOpacity: 1`) over an unblurred backdrop (`backdropBlur: 0`), the intent on the icon only (`intentLook: \'icon\'`), no "Are you sure you want to proceed?" line under a title that already asks (`content: null`), and the Cancel button in the app\'s own words (`cancelLabel: \'Keep it\'`). The call still names its own confirm label and intent.',
+      },
+    },
+  },
+  render: () => <AsksToDelete />,
+  args: {
+    options: {
+      confirmations: {
+        surfaceOpacity: 1,
+        backdropBlur: 0,
+        intentLook: 'icon',
+        content: null,
+        cancelLabel: 'Keep it',
+      },
+    },
+  },
+  play: async () => {
+    await _testsWaitForText('Delete this job?');
+    await _testsWaitForText('Keep it');
+    await expect(document.body).not.toHaveTextContent('Are you sure you want to proceed?');
+  },
+};
+
+/** A modal opened as a caller would, with a button to open it again after it closes. */
+const SearchDialog = ({ titleBar }: { titleBar?: boolean }) => {
+  const [isOpen, setIsOpen] = useState(true);
+  return (
+    <>
+      <ReqoreButton id='reopen' onClick={() => setIsOpen(true)}>
+        Open search
+      </ReqoreButton>
+      <ReqoreModal
+        isOpen={isOpen}
+        label='Search'
+        titleBar={titleBar}
+        onClose={() => setIsOpen(false)}
+        width='520px'
+      >
+        <ReqoreP>Type to search workflows, jobs and services.</ReqoreP>
+      </ReqoreModal>
+    </>
+  );
+};
+
+export const WithoutTitleBar: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A modal with `titleBar={false}`: no label, icon or close button above its content — for a dialog whose content already says what it is, such as a command palette. Escape still closes it, and its `label` ("Search") is the dialog\'s accessible name.',
+      },
+    },
+  },
+  render: () => <SearchDialog titleBar={false} />,
+  play: async () => {
+    await _testsWaitForText('Type to search workflows, jobs and services.');
+    await expect(document.querySelector('.reqore-modal .reqore-panel-title')).toBeNull();
+    await expect(document.querySelector('[role="dialog"][aria-label="Search"]')).not.toBeNull();
+    await fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() =>
+      expect(document.querySelector('[role="dialog"][aria-label="Search"]')).toBeNull()
+    );
+    // Open again, so the capture shows the dialog without its bar.
+    await _testsClickButton({ selector: '#reopen' });
+    await _testsWaitForText('Type to search workflows, jobs and services.');
+  },
+};
+
+export const OnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'A modal opened on a phone (390 px), asked to be 520px wide: it takes the screen less the page\'s 16px gutter each side (`phoneWidth`, held to `calc(100vw - 32px)`), where 80vw left about 40px each side and a third of the screen unused.',
+      },
+    },
+  },
+  render: () => <SearchDialog />,
+  play: async () => {
+    await _testsWaitForText('Type to search workflows, jobs and services.');
+    const { clientWidth } = document.documentElement;
+    await waitFor(() => {
+      const box = document.querySelector('.reqore-modal') as HTMLElement;
+      expect(Math.round(box.getBoundingClientRect().width)).toBe(clientWidth - 32);
+    });
   },
 };
 
@@ -1212,4 +1326,22 @@ export const IsNotDraggableUnlessAsked: Story = {
     await sleep(300);
     await expect(modalOffset()).toEqual({ x: 0, y: 0 });
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an open modal on the themed surface: with `theme.panel` set it is a panel like any other — the panel surface, title bar included, and the hairline.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurface>
+      <ReqoreModal isOpen label='A modal on the themed surface' width='420px'>
+        <ReqoreP>Modals are panels, so they follow theme.panel.</ReqoreP>
+      </ReqoreModal>
+    </ThemedSurface>
+  ),
 };

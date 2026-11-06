@@ -216,6 +216,12 @@ test("labelEffect styles a modern tier's name and descriptionEffect its descript
   expect(getComputedStyle(modernPart('description')).color).toBe('rgb(255, 0, 0)');
 });
 
+test("saleIntent: null draws a sale price in the tier's text colour, not green", () => {
+  const theme = { ...DEFAULT_THEME, intents: DEFAULT_INTENTS } as IReqoreTheme;
+  expect(getTierColors(theme).sale).not.toBe(getTierColors(theme).text);
+  expect(getTierColors(theme, undefined, null).sale).toBe(getTierColors(theme).text);
+});
+
 test("A modern tier's muted text keeps a 4.5:1 contrast on dark and light themes", () => {
   for (const main of ['#333333', '#121212', '#f4f4f4', '#ffffff'] as const) {
     const theme = { ...DEFAULT_THEME, main, intents: DEFAULT_INTENTS };

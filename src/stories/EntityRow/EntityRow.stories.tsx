@@ -24,6 +24,7 @@ import { buttonSays } from '../utils/buttonSays';
 import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import { withViewport } from '../utils/viewport';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const meta = {
   title: 'Display/Entity Row',
   component: ReqoreEntityRow,
@@ -1318,4 +1319,26 @@ export const NarrowContainerActionsStackOnTouch: Story = {
       expect(onEntityRowClick).not.toHaveBeenCalled();
     });
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders entity rows on the default and on the themed surface: with `theme.panel` set their edge is the panel hairline.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreEntityRow
+        label='Process Incoming Order'
+        description='Routes incoming orders into the warehouse pipeline'
+        metadata='Last run: success · just now'
+        icon='PlayCircleLine'
+        actions={[{ label: 'Run', icon: 'PlayLine' }]}
+      />
+    </ThemedSurfaceComparison>
+  ),
 };

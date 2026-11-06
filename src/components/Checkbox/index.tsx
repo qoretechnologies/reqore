@@ -2,13 +2,8 @@ import { rgba } from 'polished';
 import React, { forwardRef, memo, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { useMeasure } from 'react-use';
 import { css } from 'styled-components';
-import {
-  CONTROL_TEXT_FROM_SIZE,
-  PADDING_FROM_SIZE,
-  SIZE_TO_PX,
-  SWITCH_SIZE_TO_PX,
-  TSizes,
-} from '../../constants/sizes';
+import { PADDING_FROM_SIZE, SIZE_TO_PX, SWITCH_SIZE_TO_PX, TSizes } from '../../constants/sizes';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
@@ -116,6 +111,10 @@ export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
 /** The style of the groups a label that wraps is in: they shrink with the room the checkbox has. */
 const WRAPPING_LABEL_GROUP_STYLE: React.CSSProperties = { flexShrink: 1, minWidth: 0 };
 
+/** An on switch's track under `theme.switchOnLook: 'filled'`: the text colour of the surface. */
+const getSwitchFillColor = (theme: IReqoreTheme) =>
+  getReadableColor(theme, undefined, undefined, true, theme.originalMain);
+
 const StyledSwitchToggle = styled.div.withConfig({
   shouldForwardProp: omitStyleProps('width'),
 })`
@@ -180,6 +179,8 @@ const StyledSwitchToggle = styled.div.withConfig({
   background-color: ${({ theme, checked, transparent, parentEffect }) =>
     transparent
       ? 'transparent'
+      : checked && theme.switchOnLook === 'filled'
+      ? theme.originalMain || theme.main
       : !checked
       ? parentEffect?.gradient
         ? changeLightness(getNthGradientColor(theme, parentEffect?.gradient?.colors, 1), 0.2)
@@ -200,10 +201,17 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
   height: ${({ size }) => SWITCH_SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SWITCH_SIZE_TO_PX[size] * 1.8}px;
 
-  border: 1px solid ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.35 : 0.2)};
+  border: 1px solid
+    ${({ theme, checked }) =>
+      checked && theme.switchOnLook === 'filled'
+        ? getSwitchFillColor(theme)
+        : changeLightness(theme.main, checked ? 0.35 : 0.2)};
   border-radius: 50px;
 
-  background-color: ${({ theme }) => rgba(changeLightness(theme.main, 0.3), 0.1)};
+  background-color: ${({ theme, checked }) =>
+    checked && theme.switchOnLook === 'filled'
+      ? getSwitchFillColor(theme)
+      : rgba(changeLightness(theme.main, 0.3), 0.1)};
 
   ${StyledIconWrapper} {
     z-index: 1;
@@ -226,16 +234,32 @@ const StyledSwitchTextWrapper = styled(StyledTextEffect)`
   min-width: ${({ size }) => SWITCH_SIZE_TO_PX[size] - 4}px;
 `;
 
+/* Each word takes the color that reads on what is behind it. When a switch is on, the knob sits under the on
+   word and the track under the off word. In the filled look the knob is the surface and the track the text color,
+   so the on word reads against the surface and the off word against the fill: the other way round, both words of
+   a Yes / No switch were drawn in the color of what they sat on, and could not be read. */
 const StyledOnSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
   color: ${({ theme, checked, parentHasGradient }) =>
     !parentHasGradient &&
-    getReadableColorFrom(checked ? changeLightness(theme.main, 0.25) : theme.originalMain)};
+    getReadableColorFrom(
+      checked && theme.switchOnLook === 'filled'
+        ? theme.originalMain || theme.main
+        : checked
+        ? changeLightness(theme.main, 0.25)
+        : theme.originalMain
+    )};
 `;
 
 const StyledOffSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
   color: ${({ theme, checked, parentHasGradient }) =>
     !parentHasGradient &&
-    getReadableColorFrom(checked ? theme.originalMain : changeLightness(theme.main, 0.2))};
+    getReadableColorFrom(
+      checked && theme.switchOnLook === 'filled'
+        ? getSwitchFillColor(theme)
+        : checked
+        ? theme.originalMain
+        : changeLightness(theme.main, 0.2)
+    )};
 `;
 
 // The row also receives what a `ReqoreControlGroup` hands every child (`fill`, `stack`, …);
@@ -261,7 +285,7 @@ const StyledCheckbox = styled.div.withConfig({
       : css`
           height: ${SIZE_TO_PX[size]}px;
         `}
-  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getControlTextSize(theme, size)}px;
 
   max-width: ${({ fluid, fixed, $wrapLabel }) =>
     (fluid && !fixed) || $wrapLabel ? '100%' : undefined};
@@ -608,7 +632,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                 parentHasGradient={!!effect?.gradient}
                 effect={
                   {
-                    uppercase: true,
+                    uppercase: theme.uppercaseLabels !== false,
                     textSize: getOneLessSize(size),
                     weight: 'bold',
                     ...switchTextEffect,
@@ -637,7 +661,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                 hasMargin={onText || onText === 0}
                 effect={
                   {
-                    uppercase: true,
+                    uppercase: theme.uppercaseLabels !== false,
                     textSize: getOneLessSize(size),
                     weight: 'thick',
                     ...switchTextEffect,

@@ -10,7 +10,6 @@ import {
   BADGE_RADIUS_FROM_RADIUS_SIZE,
   BADGE_RADIUS_FROM_SIZE,
   BADGE_SIZE_TO_PX,
-  CONTROL_TEXT_FROM_SIZE,
   resolveRadius,
   TAG_HORIZONTAL_PADDING_FROM_SIZE,
   TAG_VERTICAL_PADDING_FROM_SIZE,
@@ -18,9 +17,9 @@ import {
   TAG_RADIUS_FROM_RADIUS_SIZE,
   TAG_RADIUS_FROM_SIZE,
   TAG_SIZE_TO_PX,
-  TAG_TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
+import { getControlTextSize, getTagTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
@@ -375,7 +374,7 @@ export const StyledTag = styled(StyledEffect).withConfig({
     `}
   overflow: hidden;
   vertical-align: ${({ verticalAlign = 'middle' }) => verticalAlign};
-  font-size: ${({ size }) => TAG_TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getTagTextSize(theme, size)}px;
   line-height: 1.1;
 
   min-width: ${({ size, asBadge }) => (asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size])}px;
@@ -767,7 +766,7 @@ const StyledButtonWrapper = styled.span.withConfig({
   shouldForwardProp: omitStyleProps('color'),
 })<IReqoreTagStyle>`
   flex-shrink: 0;
-  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getControlTextSize(theme, size)}px;
   width: ${({ size }) => BADGE_SIZE_TO_PX[size]}px;
   display: flex;
   justify-content: center;

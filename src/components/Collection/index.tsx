@@ -6,6 +6,8 @@ import { css } from 'styled-components';
 import { ReqoreErrorBoundary, ReqoreP, useReqoreProperty } from '../..';
 import { TReqorePaginationType } from '../../constants/paging';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
+import { IReqoreTheme } from '../../constants/theme';
+import { getPanelHairlineColor } from '../../helpers/colors';
 import { ReqorePaginationContainer } from '../../containers/Paging';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
@@ -34,21 +36,29 @@ import {
   TReqoreZoom,
 } from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
+import { useUppercaseLabels } from '../../hooks/useUppercaseLabels';
+import type { IReqoreEffect } from '../Effect';
 
-const CollectionGroupHeader = memo(({ name }: { name: string }) => (
-  <ReqoreP
-    style={{ gridColumn: '1 / -1' }}
-    effect={{
-      opacity: 0.8,
-      uppercase: true,
-      weight: 'bold',
-      textSize: 'small',
-      spaced: 1,
-    }}
-  >
-    {name}
-  </ReqoreP>
-));
+const CollectionGroupHeader = memo(
+  ({ name, effect }: { name: string; effect?: IReqoreEffect }) => {
+    const upper = useUppercaseLabels();
+    return (
+      <ReqoreP
+        style={{ gridColumn: '1 / -1' }}
+        effect={{
+          opacity: 0.8,
+          uppercase: upper,
+          weight: 'bold',
+          textSize: 'small',
+          spaced: upper ? 1 : 0,
+          ...effect,
+        }}
+      >
+        {name}
+      </ReqoreP>
+    );
+  }
+);
 
 export type TReqoreCollectionActions = (IReqorePanelAction & { position?: 'left' | 'right' })[];
 
@@ -85,6 +95,12 @@ export interface IReqoreCollectionProps
    *  Keys match group names found on items. Groups without an entry render
    *  with the default (flat header) styling for back-compat. */
   groups?: TReqoreCollectionGroups;
+  /**
+   * The effect of every group heading, over the default (bold, small, 0.8 opacity, and uppercase
+   * when the theme sets labels in uppercase); a group's own `groups[name].labelEffect` still wins.
+   * One heading style for the whole collection, without listing every group by name.
+   */
+  groupLabelEffect?: IReqoreEffect;
 
   filterable?: boolean;
   /**
@@ -127,8 +143,8 @@ export interface IReqoreCollectionProps
 }
 
 export const StyledCollectionWrapper = styled(StyledColumns).withConfig({
-  shouldForwardProp: omitStyleProps('fill', 'height'),
-})`
+  shouldForwardProp: omitStyleProps('fill', 'height', '$rows'),
+})<{ $rows?: boolean }>`
   height: ${({ height }) => (height ? `${height}` : 'auto')};
   flex: ${({ fill }) => (fill ? 1 : undefined)};
 
@@ -136,6 +152,17 @@ export const StyledCollectionWrapper = styled(StyledColumns).withConfig({
     (!rounded || stacked) &&
     css`
       border-radius: ${stacked && rounded ? '10px' : undefined};
+    `}
+
+  /* Stacked items in one column are one block: its rows divided by the panel hairline.
+     Without it, flat items lay one under another with nothing between them, and a list of
+     three-line items read as one long column of text. A grid is not rows, so it is left as is. */
+  ${({ $rows, theme }: { $rows?: boolean; theme: IReqoreTheme }) =>
+    $rows &&
+    css`
+      & > .reqore-collection-item + .reqore-collection-item {
+        border-top: 1px solid ${getPanelHairlineColor(theme)};
+      }
     `}
 
   overflow: auto;
@@ -184,6 +211,7 @@ export const ReqoreCollection = memo(
     sortKeys = {},
     sortByGroupFirst = true,
     groups: groupsConfig,
+    groupLabelEffect,
 
     onQueryChange,
     contentRenderer = (children, _items, searchInput) => (
@@ -215,6 +243,7 @@ export const ReqoreCollection = memo(
 
     ...rest
   }: IReqoreCollectionProps) => {
+    const uppercaseLabels = useUppercaseLabels();
     const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
     const [sort, setSort] = useState<'asc' | 'desc'>(defaultSort);
     const [sortBy, setSortBy] = useState<string>(defaultSortBy);
@@ -445,6 +474,7 @@ export const ReqoreCollection = memo(
                 columnsGap={stacked ? '0px' : columnsGap}
                 rounded={rounded}
                 stacked={stacked}
+                $rows={stacked && (columns || (_showAs === 'grid' ? 'auto-fit' : 1)) === 1}
                 fill={fill}
                 ref={setContentRef}
                 height={height}
@@ -472,7 +502,9 @@ export const ReqoreCollection = memo(
 
                       return (
                         <React.Fragment key={index}>
-                          {showHeader && <CollectionGroupHeader name={group} />}
+                          {showHeader && (
+                            <CollectionGroupHeader name={group} effect={groupLabelEffect} />
+                          )}
                           <ReqoreErrorBoundary {...errorBoundaryOptions}>
                             <ReqoreCollectionItem
                               size={zoomSize}
@@ -559,10 +591,11 @@ export const ReqoreCollection = memo(
                         {...groupConfig}
                         labelEffect={{
                           opacity: 0.8,
-                          uppercase: true,
+                          uppercase: uppercaseLabels,
                           weight: 'bold',
                           textSize: 'small',
-                          spaced: 1,
+                          spaced: uppercaseLabels ? 1 : 0,
+                          ...groupLabelEffect,
                           ...groupConfig?.labelEffect,
                         }}
                         key={groupName}
@@ -574,6 +607,9 @@ export const ReqoreCollection = memo(
                           columnsGap={stacked ? '0px' : columnsGap}
                           rounded={rounded}
                           stacked={stacked}
+                          $rows={
+                            stacked && (columns || (_showAs === 'grid' ? 'auto-fill' : 1)) === 1
+                          }
                           alignItems={alignItems}
                           minColumnWidth={minColumnWidth || zoomWidth}
                           maxColumnWidth={maxColumnWidth || zoomWidth}

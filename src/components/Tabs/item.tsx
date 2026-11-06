@@ -192,6 +192,11 @@ export const StyledTabListItem = styled.div.withConfig({
              label with it would collapse that distinction. */
           ${StyledButton} {
             color: ${getReadableColor(theme, undefined, undefined, false)} !important;
+            /* The bar again, on the button: the hover wash is the button's own
+               background, painted over the item's inset shadow, so hovering the
+               selected tab hid its bar — right after a click it looked unselected. */
+            box-shadow: inset ${vertical ? '-2px 0 0 0' : '0 -2px 0 0'}
+              ${activeColor || 'currentColor'} !important;
           }
         `}
       `}

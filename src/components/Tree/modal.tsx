@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { IReqoreTreeProps } from '.';
+import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { ReqoreTextarea } from '../..';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
@@ -54,6 +55,7 @@ export const ReqoreTreeManagementDialog = ({
   keyPlaceholder = 'Key',
   valuePlaceholder = 'Value',
 }: IReqoreTreeManagementDialog) => {
+  const primaryActionIntent = useReqoreProperty('theme')?.primaryActionIntent;
   const [key, setKey] = useState(data?.key);
   const [value, setValue] = useState<any>(data?.value);
 
@@ -66,7 +68,8 @@ export const ReqoreTreeManagementDialog = ({
       panelSize='small'
       actions={[
         {
-          intent: 'success',
+          // The app's primary when the theme names one, else green as before.
+          intent: primaryActionIntent ?? 'success',
           className: 'reqore-tree-save',
           disabled: type === 'object' ? !key || !value : !value,
           label: saveLabel,

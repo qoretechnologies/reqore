@@ -307,6 +307,14 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
   resizable?: boolean;
   onClose?: () => void;
   onHideToggle?: (isHidden: boolean) => void;
+  /**
+   * Whether the drawer (or modal) draws its title bar. Default `true`. `false` draws none — no
+   * label, icon, badge, close button or header actions — for a dialog whose content already says
+   * what it is (a search box, a command palette, whose heading would only repeat its input).
+   * Escape and a click on the backdrop still close it, and `label`, when it is a string, is the
+   * dialog's accessible name. Bottom actions are unaffected.
+   */
+  titleBar?: boolean;
   hasBackdrop?: boolean;
   size?: string | 'auto';
   panelSize?: IReqorePanelProps['size'];
@@ -600,6 +608,21 @@ const getSlideTransform = (slide: SpringValue<number>, position: TPosition) =>
     return `translate(${x}px, ${y}px)`;
   });
 
+/** A modal's width on a phone, and the most it may take there: the page's 16px gutter each side. */
+export const MODAL_PHONE_WIDTH = 'calc(100vw - 32px)';
+
+/** What a drawer hands its panel instead of the title bar's props when `titleBar` is `false`. */
+const NO_TITLE_BAR: Partial<IReqorePanelProps> = {
+  label: undefined,
+  icon: undefined,
+  badge: undefined,
+  breadcrumbs: undefined,
+  description: undefined,
+  collapsible: false,
+  onClose: undefined,
+  actions: [],
+};
+
 export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
   ({
     children,
@@ -615,6 +638,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     minWidth,
     minHeight,
     onClose,
+    titleBar = true,
     hasBackdrop = true,
     size: sizeProp,
     resizable: resizableProp = true,
@@ -1075,6 +1099,8 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
               className='reqore-drawer-wrapper'
               role={_isModal || hasBackdrop ? 'dialog' : undefined}
               aria-modal={_isModal || hasBackdrop ? 'true' : undefined}
+              // With no title bar, the label still names the dialog for a screen reader.
+              aria-label={!titleBar && typeof rest.label === 'string' ? rest.label : undefined}
             >
               <Resizable
                 className={`${className || ''} reqore-drawer-resizable${
@@ -1095,7 +1121,12 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                     : undefined
                 }
                 maxWidth={
-                  layout === 'vertical' || layout === 'center' ? maxSize || '90vw' : undefined
+                  layout === 'vertical'
+                    ? maxSize || '90vw'
+                    : layout === 'center'
+                    ? // A phone keeps the page's 16px gutter each side, not 90vw's ~20px.
+                      maxSize || (isMobile ? MODAL_PHONE_WIDTH : '90vw')
+                    : undefined
                 }
                 minWidth={
                   layout === 'center'
@@ -1156,6 +1187,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                     closeButtonProps={closeButtonProps}
                     className={`reqore-drawer`}
                     style={panelStyle}
+                    {...(titleBar ? {} : NO_TITLE_BAR)}
                   >
                     {children}
                   </ReqorePanel>

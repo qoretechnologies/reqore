@@ -382,6 +382,27 @@ export const PlainTextLabels: Story = {
   },
 };
 
+export const QuietLabels: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A description list whose labels read quieter than its values, set once with `labelEffect` (`{ opacity: 0.65, weight: \'normal\' }`) instead of per row — the calm read-only fact sheet.',
+      },
+    },
+  },
+  args: {
+    label: 'Quiet labels (labelEffect)',
+    uppercaseLabels: false,
+    labelEffect: { opacity: 0.65, weight: 'normal' },
+    items: lifecycleItems,
+  },
+  play: async () => {
+    const label = document.querySelector('.reqore-description-list-label p') as Element;
+    await expect(getComputedStyle(label).opacity).toBe('0.65');
+  },
+};
+
 export const CustomTheme: Story = {
   parameters: {
     docs: {
