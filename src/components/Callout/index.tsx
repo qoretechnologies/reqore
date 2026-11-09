@@ -313,7 +313,13 @@ const StyledCalloutContent = styled(StyledTextEffect)<{
      copy larger than the heading above it reads as the heading being the
      afterthought. */
   $underLabel?: boolean;
+  /* Set when the body is the callout's only content, a direct child of its row: it fills the
+     row, as the labelled body does. Without it the body shrank to its widest line, so anything
+     meant to span the callout (a full-width box, a table, a revealed panel) stopped at the width
+     of the sentence above it. */
+  $fill?: boolean;
 }>`
+  ${({ $fill }) => ($fill ? 'flex: 1 1 auto; min-width: 0;' : '')}
   color: ${({ theme }) => rgba(getReadableColor(theme, undefined, undefined, true), 0.84)};
   font-size: ${({ size = 'normal', $underLabel, theme }) =>
     getTextSize(theme, size as TSizes) * ($underLabel ? 1 : 1.2)}px;
@@ -472,6 +478,7 @@ export const ReqoreCallout = memo(
               as='div'
               theme={theme}
               size={size}
+              $fill
               effect={contentEffect || {}}
               className='reqore-callout-content'
             >

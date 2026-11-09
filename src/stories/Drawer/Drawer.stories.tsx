@@ -364,17 +364,18 @@ export const FrostedByAppDefaults: Story = {
       },
     },
   },
-  render: Template,
+  // The meta's own opacity and blur would win over the app's defaults, and Storybook drops an
+  // `undefined` arg rather than letting it override, so they are taken out here.
+  render: (args) => Template({ ...args, opacity: undefined, blur: undefined }),
   args: {
-    // the meta's own opacity and blur would win over the app's defaults
-    opacity: undefined,
-    blur: undefined,
     options: { dialogOpacity: 0.72, dialogBlur: 22, backdropBlur: 5 },
   },
   play: async () => {
     await _testsWaitForText('This is a test');
     const panel = document.querySelector('.reqore-drawer') as HTMLElement;
-    await expect(window.getComputedStyle(panel).backdropFilter).toBe('blur(22px)');
+    // the app's opacity reached the panel; the frost it turns on is asserted in
+    // __tests__/drawerDialogSurface.test.tsx (this runner's browser reports no backdrop filter)
+    await expect(window.getComputedStyle(panel).backgroundColor).toMatch(/, 0\.72\)$/);
   },
 };
 
