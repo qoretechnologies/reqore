@@ -366,7 +366,7 @@ export const FrostedByAppDefaults: Story = {
   },
   // The meta's own opacity and blur would win over the app's defaults, and Storybook drops an
   // `undefined` arg rather than letting it override, so they are taken out here.
-  render: (args) => Template({ ...args, opacity: undefined, blur: undefined }),
+  render: (args, context) => Template({ ...args, opacity: undefined, blur: undefined }, context),
   args: {
     options: { dialogOpacity: 0.72, dialogBlur: 22, backdropBlur: 5 },
   },
