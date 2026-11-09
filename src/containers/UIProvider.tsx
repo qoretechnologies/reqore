@@ -28,6 +28,8 @@ export interface IReqoreOptions
     | 'glowingIcons'
     | 'shortcutHints'
     | 'backdropBlur'
+    | 'dialogOpacity'
+    | 'dialogBlur'
   > {
   withSidebar?: boolean;
   uiScale?: number;

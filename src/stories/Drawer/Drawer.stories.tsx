@@ -355,6 +355,26 @@ export const Transparent: Story = {
   },
 };
 
+export const FrostedByAppDefaults: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Drawer as frosted glass decided once for the app: `options.dialogOpacity: 0.72` makes every dialog panel see-through and `options.dialogBlur: 22` blurs what shows through it, over a backdrop softened by `options.backdropBlur: 5`. The drawer passes none of them itself.',
+      },
+    },
+  },
+  render: Template,
+  args: {
+    options: { dialogOpacity: 0.72, dialogBlur: 22, backdropBlur: 5 },
+  },
+  play: async () => {
+    await _testsWaitForText('This is a test');
+    const panel = document.querySelector('.reqore-drawer') as HTMLElement;
+    await expect(window.getComputedStyle(panel).backdropFilter).toBe('blur(22px)');
+  },
+};
+
 export const WithSize: Story = {
   parameters: {
     docs: {

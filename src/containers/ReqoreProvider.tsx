@@ -331,6 +331,8 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
       glowingIcons: options?.glowingIcons ?? false,
       shortcutHints: options?.shortcutHints ?? true,
       backdropBlur: options?.backdropBlur,
+      dialogOpacity: options?.dialogOpacity,
+      dialogBlur: options?.dialogBlur,
       errorBoundaryOptions: options?.errorBoundaryOptions || DEFAULT_ERROR_BOUNDARY_OPTIONS,
     }),
     [options]
@@ -366,6 +368,8 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
         glowingIcons: resolvedOptions.glowingIcons,
         shortcutHints: resolvedOptions.shortcutHints,
         backdropBlur: resolvedOptions.backdropBlur,
+        dialogOpacity: resolvedOptions.dialogOpacity,
+        dialogBlur: resolvedOptions.dialogBlur,
         closePopoversOnEscPress: resolvedOptions.closePopoversOnEscPress,
         // ESC Closable modals management
         closeModalsOnEscPress: resolvedOptions.closeModalsOnEscPress,

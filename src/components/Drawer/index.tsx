@@ -668,6 +668,19 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     const animations = useReqoreProperty('animations');
     const confirmAction = useReqoreProperty('confirmAction');
     const customPortalId = useReqoreProperty('customPortalId');
+    // The app's dialog surface, decided once (`options.dialogOpacity` / `dialogBlur`): a call
+    // site's own `opacity` wins.
+    const dialogOpacity = useReqoreProperty('dialogOpacity');
+    const dialogBlur = useReqoreProperty('dialogBlur');
+    const panelOpacity = opacity ?? dialogOpacity;
+    // With a backdrop, `blur` is the backdrop's; the panel's own frost is `dialogBlur`, and only
+    // a see-through panel has anything to frost. (It was forced to 0, so a translucent drawer
+    // showed the page through its body, sharp.)
+    const panelBlur = hasBackdrop
+      ? panelOpacity !== undefined && panelOpacity < 1
+        ? dialogBlur
+        : 0
+      : blur;
     const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
     const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
     const isMobile = useReqoreProperty('isMobile');
@@ -1176,8 +1189,8 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                   <ReqorePanel
                     {...rest}
                     size={panelSize}
-                    opacity={opacity}
-                    blur={hasBackdrop ? 0 : blur}
+                    opacity={panelOpacity}
+                    blur={panelBlur}
                     actions={_actions}
                     customTheme={customTheme}
                     intent={intent}
