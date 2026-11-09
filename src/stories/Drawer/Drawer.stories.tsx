@@ -366,6 +366,9 @@ export const FrostedByAppDefaults: Story = {
   },
   render: Template,
   args: {
+    // the meta's own opacity and blur would win over the app's defaults
+    opacity: undefined,
+    blur: undefined,
     options: { dialogOpacity: 0.72, dialogBlur: 22, backdropBlur: 5 },
   },
   play: async () => {
