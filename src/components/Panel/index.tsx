@@ -615,6 +615,15 @@ export const StyledPanelTitleHeaderLabelAndBadge = styled.div`
   display: inline-flex;
   align-items: center;
   max-width: 100%;
+
+  /* A title and its count read as one line: the count sits on the title's baseline. Centred in
+     the row instead, a count smaller than its title floated above it, like a superscript,
+     because the title's text sits low in the taller heading box it is set in. The icon stays
+     centred. */
+  & > .reqore-panel-title-label-box,
+  & > .reqore-tag-group {
+    align-self: baseline;
+  }
 `;
 
 export type TPanelStyle = React.FC<
