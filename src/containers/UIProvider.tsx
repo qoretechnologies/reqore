@@ -27,6 +27,7 @@ export interface IReqoreOptions
     | 'errorBoundaryOptions'
     | 'glowingIcons'
     | 'shortcutHints'
+    | 'backdropBlur'
   > {
   withSidebar?: boolean;
   uiScale?: number;

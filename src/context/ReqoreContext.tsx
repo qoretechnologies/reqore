@@ -80,6 +80,12 @@ export interface IReqoreContext {
    * @default true
    */
   readonly shortcutHints?: boolean;
+  /**
+   * How much the page behind a modal's or drawer's backdrop is blurred, in px, when the modal or
+   * drawer passes no `blur` of its own. Decided once for an app (`options.backdropBlur`) so every
+   * dialog softens what is behind it the same way. Unset: no blur.
+   */
+  readonly backdropBlur?: number;
   readonly customPortalId?: string;
   readonly closePopoversOnEscPress?: boolean;
   readonly closeModalsOnEscPress?: boolean;
@@ -109,6 +115,7 @@ export default createContext<IReqoreContext>({
   closePopoversOnEscPress: true,
   closeModalsOnEscPress: true,
   shortcutHints: true,
+  backdropBlur: undefined,
   escClosableModals: [],
   addEscClosableModal: null,
   removeEscClosableModal: null,
