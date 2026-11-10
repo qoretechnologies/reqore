@@ -993,12 +993,7 @@ const ReqoreButton = memo(
                     textAlign !== 'left' || iconsAlign === 'center' || !_children
                       ? {
                           marginRight: iconsAlign !== 'center' || !_children ? 'auto' : undefined,
-                          marginLeft:
-                            iconsAlign === 'center' ||
-                            !_children ||
-                            (textAlign === 'center' && !_children)
-                              ? 'auto'
-                              : undefined,
+                          marginLeft: iconsAlign === 'center' || !_children ? 'auto' : undefined,
                         }
                       : undefined
                   }
