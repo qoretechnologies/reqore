@@ -675,12 +675,15 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     const panelOpacity = opacity ?? dialogOpacity;
     // With a backdrop, `blur` is the backdrop's; the panel's own frost is `dialogBlur`, and only
     // a see-through panel has anything to frost. (It was forced to 0, so a translucent drawer
-    // showed the page through its body, sharp.)
+    // showed the page through its body, sharp.) Without a backdrop, `blur` is the panel's own,
+    // and the app's `dialogBlur` frosts it when the call site sets none: a drawer with no
+    // backdrop is no less a dialog.
+    const seeThrough = panelOpacity !== undefined && panelOpacity < 1;
     const panelBlur = hasBackdrop
-      ? panelOpacity !== undefined && panelOpacity < 1
+      ? seeThrough
         ? dialogBlur
         : 0
-      : blur;
+      : (blur ?? (seeThrough ? dialogBlur : undefined));
     const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
     const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
     const isMobile = useReqoreProperty('isMobile');

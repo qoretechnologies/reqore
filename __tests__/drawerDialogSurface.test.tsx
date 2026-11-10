@@ -35,3 +35,16 @@ test('unset, a drawer stays as it was: solid, no frost', () => {
   renderDrawer({ animations: { dialogs: false } });
   expect(panelStyle().backdropFilter ?? '').not.toContain('blur');
 });
+
+test('a see-through drawer without a backdrop is frosted by options.dialogBlur too', () => {
+  renderDrawer({ dialogOpacity: 0.6, dialogBlur: 20, animations: { dialogs: false } }, { hasBackdrop: false });
+  expect(panelStyle().backdropFilter).toBe('blur(20px)');
+});
+
+test("without a backdrop, a call site's own blur still wins", () => {
+  renderDrawer(
+    { dialogOpacity: 0.6, dialogBlur: 20, animations: { dialogs: false } },
+    { hasBackdrop: false, blur: 8 }
+  );
+  expect(panelStyle().backdropFilter).toBe('blur(8px)');
+});
