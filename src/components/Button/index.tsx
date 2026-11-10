@@ -646,6 +646,34 @@ export const StyledButton = styled(StyledEffect).withConfig({
   &&[data-intent-text='icon']:focus-visible {
     color: var(--reqore-button-intent-text);
   }
+
+  /* An intent drawn as an outline (\`theme.buttons.intentLook\`): the intent at rest, labelled or
+     icon-only — its readable colour on the words and icons and a border in it, the fill left
+     ordinary. A flat button has no border to recolour, so it is drawn inside the edge and the
+     button keeps its size beside its siblings. Under the pointer the border is the full colour. */
+  &&[data-intent-text='outline'] {
+    color: var(--reqore-button-intent-text);
+    ${({ flat }) =>
+      flat
+        ? css`
+            box-shadow: inset 0 0 0 1px
+              color-mix(in srgb, var(--reqore-button-intent-text) 60%, transparent);
+          `
+        : css`
+            border-color: color-mix(in srgb, var(--reqore-button-intent-text) 60%, transparent);
+          `}
+  }
+  &&[data-intent-text='outline']:not(:disabled):hover,
+  &&[data-intent-text='outline']:focus-visible {
+    ${({ flat }) =>
+      flat
+        ? css`
+            box-shadow: inset 0 0 0 1px var(--reqore-button-intent-text);
+          `
+        : css`
+            border-color: var(--reqore-button-intent-text);
+          `}
+  }
 `;
 
 export const StyledButtonContent = styled.div.withConfig({
@@ -840,7 +868,9 @@ const ReqoreButton = memo(
       /* `theme.buttons.intentLook`: an intent the theme draws as TEXT is not a fill. The button is
          then the ordinary button (no intent below this point) and the intent is its foreground. */
       const baseTheme = useReqoreTheme('main', customTheme);
-      const intentAsText = !!intent && baseTheme.buttons?.intentLook?.[intent] === 'text';
+      const intentLook = intent ? baseTheme.buttons?.intentLook?.[intent] : undefined;
+      const intentAsOutline = intentLook === 'outline';
+      const intentAsText = intentLook === 'text' || intentAsOutline;
       const fillIntent = intentAsText ? undefined : intent;
       const theme = useReqoreTheme('main', customTheme, fillIntent);
       const fixedEffect = useReqoreEffect('buttons', theme, effect);
@@ -992,9 +1022,9 @@ const ReqoreButton = memo(
                caller's own `style` still wins. */
             ...(intentTextColor
               ? {
-                  'data-intent-text': _children ? 'label' : 'icon',
+                  'data-intent-text': intentAsOutline ? 'outline' : _children ? 'label' : 'icon',
                   style: {
-                    ...(_children ? { color: intentTextColor } : {}),
+                    ...(_children && !intentAsOutline ? { color: intentTextColor } : {}),
                     '--reqore-button-intent-text': intentTextColor,
                     ...rest.style,
                   },
