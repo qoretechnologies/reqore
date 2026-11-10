@@ -6,14 +6,35 @@ const Boom = () => {
   throw new Error('boom-from-child');
 };
 
-const renderBoundary = () =>
-  render(
-    <ReqoreUIProvider>
-      <ReqoreErrorBoundary>
-        <Boom />
-      </ReqoreErrorBoundary>
-    </ReqoreUIProvider>
-  );
+/**
+ * Renders a boundary around Boom. React, in development, reports the error the boundary catches as uncaught too, by
+ * dispatching it to the window, and jsdom printed every such report on the test run's output. The error is what these
+ * tests are about, so they take its report (cancelled, as a page that handles it does) and check it came.
+ */
+const renderBoundary = () => {
+  const reported: Error[] = [];
+  const onError = (event: ErrorEvent) => {
+    if (event.error instanceof Error && event.error.message === 'boom-from-child') {
+      reported.push(event.error);
+      event.preventDefault();
+    }
+  };
+  window.addEventListener('error', onError);
+  let rendered: ReturnType<typeof render>;
+  try {
+    rendered = render(
+      <ReqoreUIProvider>
+        <ReqoreErrorBoundary>
+          <Boom />
+        </ReqoreErrorBoundary>
+      </ReqoreUIProvider>
+    );
+  } finally {
+    window.removeEventListener('error', onError);
+  }
+  expect(reported.length).toBeGreaterThan(0);
+  return rendered;
+};
 
 test('ReqoreErrorBoundary logs the caught error to the console', () => {
   // React also logs caught errors in jsdom/dev; mute the noise but capture calls

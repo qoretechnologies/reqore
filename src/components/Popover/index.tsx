@@ -121,6 +121,12 @@ export interface IPopover
 }
 
 export interface IPopoverOptions extends IPopover {
+  /**
+   * The element the surface is placed against, where it is not the trigger the popover wraps: a menu that belongs to
+   * a field it does not wrap (a text editor's completion list, opened at its caret) is placed below the field and
+   * goes with it as the page scrolls. Without it, the surface is placed against the trigger. The trigger still opens
+   * and closes it.
+   */
   targetElement?: HTMLElement;
   passPopoverData?: (data: IPopoverControls) => void;
 }
@@ -168,6 +174,7 @@ export const ReqorePopover = memo(
         wrapperTag = 'span',
         wrapperStyle = {},
         passPopoverData,
+        targetElement,
         content,
         blur,
         closeOnOutsideClick = true,
@@ -871,7 +878,7 @@ export const ReqorePopover = memo(
           <>
             {isOpen && (
               <InternalPopover
-                targetElement={componentRef}
+                targetElement={targetElement ?? componentRef}
                 content={content}
                 placement={placement}
                 noArrow={noArrow}
@@ -924,7 +931,7 @@ export const ReqorePopover = memo(
         <>
           {isOpen && (
             <InternalPopover
-              targetElement={componentRef}
+              targetElement={targetElement ?? componentRef}
               content={content}
               placement={placement}
               noArrow={noArrow}

@@ -202,6 +202,34 @@ workflow can be run by hand.
   runner has none, so every later story in the page finds `(hover: none)` (it never shows on a Mac,
   which always reports a mouse). `.storybook/vitest.setup.ts` checks every story's browser is its
   project's: `(hover: hover) and (pointer: fine)`, or on the phone `(hover: none) and (pointer: coarse)`.
+- **Scrollbar stories:** Playwright launches Chromium with `--hide-scrollbars`, so in the
+  `storybook`, `storybook-touch` and `storybook-posix-locale` projects a scrollbar takes no room. A
+  story tagged `scrollbars` runs a second time in the `storybook-scrollbars` project, a desktop
+  browser that draws its scrollbars. On Linux (the CI runner) they are classic 15px scrollbars that
+  take room from what they scroll, as on Windows and on a Mac set to always show them. Tag a story
+  `scrollbars` when what its play checks depends on that room: a box sized to its content, a
+  measurement taken while the content overflows, or a width a scrollbar would narrow (`Form/TextArea
+  · Scaled To Its Text …`). A touch story is not tagged, because a phone draws its scrollbars over
+  the content. Write the tag in the story file, as `touch` is written: the projects read it from the
+  source. The project has no qlip plugin, so it makes no captures; the frames stay the desktop
+  project's. `.storybook/vitest.setup.ts` checks that scrollbars take no room in the other projects,
+  and that on Linux they do in this one. On a Mac that shows scrollbars only while scrolling they
+  take no room, so this project checks nothing there: run it on Linux (CI, or the Playwright image
+  in a container) to see it fail.
+- **POSIX-locale stories:** a Chromium that takes its language from the POSIX locale (`LC_ALL`, then
+  `LANG`: C, C.UTF-8, POSIX, or none, as in most Linux containers) reports `navigator.language` as
+  `en-US@posix`, which is no BCP 47 tag, and `Intl` throws on it. Not every build takes it from the
+  platform: the arm64 Linux one does, but the amd64 Linux one the CI runs reports `en-US` whatever
+  the locale or `--lang` says, as a Mac's takes the system's. So the other story projects never see
+  it, and a story tagged `posix-locale` runs a second time in the `storybook-posix-locale` project,
+  whose browser context is given that language itself (Playwright's `locale: 'en-US@posix'`,
+  `POSIX_LANGUAGE`): Chromium then reports it as it is, and Intl's default locale follows, on every
+  platform. Tag a story `posix-locale` when what it draws hands the browser's language (or a locale
+  a host passes) to `Intl` or a date library, as `ReqoreDatePicker` does (its stories are tagged in
+  their meta). Pass a locale on through `resolveLocale` / `toLanguageTag` (`src/helpers/locale.ts`),
+  never raw. A touch story is not run there. Write the tag in the story file, as `touch` is written:
+  the projects read it from the source. The project has no qlip plugin, so it makes no captures.
+  `.storybook/vitest.setup.ts` checks that its browser reports `en-US@posix`, on every platform.
 - **No layout change inside a ResizeObserver callback:** a story fails when the browser reports
   "ResizeObserver loop completed with undelivered notifications" (`.storybook/vitest.setup.ts`). It
   means a resize callback changed the layout it observes in the same frame, often by setting state
@@ -223,7 +251,7 @@ To prove the fix moved the pixels, compare the `md5` of that PNG against the sam
 the previous capture directory — identical hashes mean the render did not change.
 
 **Guardrails:**
-- **NEVER set `QLIP_UPLOAD_TOKEN` locally.** `vitest.config.ts` attaches qlip's `upload`
+- **NEVER set `QLIP_UPLOAD_TOKEN` locally.** `vitest.config.mts` attaches qlip's `upload`
   block only when that variable is present, and CI supplies it from the repo secret in
   `.github/workflows/tests.yml`. With it set, **every** `yarn test:stories` publishes a
   build the whole team then sees in review (the token was hardcoded here until July 2026 and

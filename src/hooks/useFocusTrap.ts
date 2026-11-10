@@ -94,11 +94,18 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
       previouslyFocusedRef.current = document.activeElement;
     }
 
+    // The container this activation traps: the one focus is given back from when it ends
+    const container = containerRef.current;
+
     // Auto-focus the first focusable element, but only if focus isn't already inside
     // This respects components that have their own autoFocus logic (e.g., Input with focusRules)
+    let autoFocusFrame: number | undefined;
+    // Content that is not there yet when the trap opens: its first focusable element takes focus when it appears
+    let awaitContent: MutationObserver | undefined;
     if (autoFocus) {
       // Use requestAnimationFrame to ensure the DOM is ready and any native autoFocus has fired
-      requestAnimationFrame(() => {
+      autoFocusFrame = requestAnimationFrame(() => {
+        autoFocusFrame = undefined;
         if (!containerRef.current) return;
 
         // Check if focus is already inside the container (e.g., from a component's own autoFocus)
@@ -111,9 +118,36 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
           if (focusableElements.length > 0) {
             focusableElements[0].focus();
           } else {
-            // If no focusable elements, focus the container itself
-            containerRef.current.setAttribute('tabindex', '-1');
-            containerRef.current.focus();
+            // If no focusable elements, focus the container itself...
+            const waiting = containerRef.current;
+            waiting.setAttribute('tabindex', '-1');
+            waiting.focus();
+            // ...until its content brings one, which then takes focus, as it would have had it been there when
+            // the trap opened. Unless the user has moved focus by then: focus that has left the container is
+            // left where it is. Which of the two a drawer ended with depended on whether its content had rendered
+            // by the first frame (qorus#646, a drawer captured with its first tab focused on one run and with the
+            // drawer focused on the next).
+            if (typeof MutationObserver !== 'undefined') {
+              awaitContent = new MutationObserver(() => {
+                if (document.activeElement !== waiting) {
+                  awaitContent?.disconnect();
+                  awaitContent = undefined;
+                  return;
+                }
+                const first = getFocusableElements()[0];
+                if (first) {
+                  awaitContent?.disconnect();
+                  awaitContent = undefined;
+                  first.focus();
+                }
+              });
+              awaitContent.observe(waiting, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['disabled', 'hidden', 'tabindex', 'href', 'style', 'class'],
+              });
+            }
           }
         }
       });
@@ -125,15 +159,32 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
 
-      // Restore focus to the previously focused element
-      if (restoreFocus && previouslyFocusedRef.current) {
+      // A trap that ends before its first frame does not pull focus into a container it no longer traps
+      if (autoFocusFrame !== undefined) {
+        cancelAnimationFrame(autoFocusFrame);
+      }
+      awaitContent?.disconnect();
+      awaitContent = undefined;
+
+      // Give focus back to what had it before the trap opened. Read here, not in the frame: the ref is cleared
+      // now, so a frame that read it found nothing and focus was never given back (qorus#646).
+      const previouslyFocused = previouslyFocusedRef.current;
+      previouslyFocusedRef.current = null;
+      if (restoreFocus && previouslyFocused) {
         // Use requestAnimationFrame to ensure the element is still in the DOM
         requestAnimationFrame(() => {
-          if (previouslyFocusedRef.current && document.body.contains(previouslyFocusedRef.current)) {
-            previouslyFocusedRef.current.focus();
+          if (!previouslyFocused.isConnected) return;
+          // Only focus the trap would otherwise lose: still in its container, or fallen back to the page
+          // because the container is gone. Focus the app has moved somewhere else since is left there.
+          const activeElement = document.activeElement;
+          const focusIsLost =
+            !activeElement ||
+            activeElement === document.body ||
+            !!container?.contains(activeElement);
+          if (focusIsLost) {
+            previouslyFocused.focus();
           }
         });
-        previouslyFocusedRef.current = null;
       }
     };
   }, [active, autoFocus, restoreFocus, containerRef, getFocusableElements, handleKeyDown]);

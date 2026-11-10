@@ -1,4 +1,4 @@
-import { expect, fireEvent, fn } from 'storybook/test';
+import { expect, fireEvent, fn, waitFor } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { useState } from 'react';
@@ -9,6 +9,7 @@ import {
 } from '../../components/DataView';
 import { StoryMeta } from '../utils';
 import { SizeArg, IntentArg, argManager } from '../utils/args';
+import { PHONE_STORY } from '../utils/touchScreen';
 
 const { createArg } = argManager<IReqoreDataViewProps>();
 
@@ -86,17 +87,106 @@ const sampleOrder = {
   ],
 };
 
+/** The gap between a key chip and its value: the record's column gap. */
+const KEY_VALUE_GAP_PX = 8;
+
+/** The key chip of a row, read-only or editable (the "Rename key" control wraps it). */
+const rowKey = (row: Element) =>
+  row.querySelector(
+    ':scope > .reqore-data-view-key, :scope > .reqore-data-view-key-shell'
+  ) as HTMLElement;
+
+const rowValue = (row: Element) =>
+  row.querySelector(':scope > .reqore-data-view-value-cell') as HTMLElement;
+
+/** A row whose value sits beside its key (not under it: a nested value, or a stacked record). */
+const isSideBySide = (row: Element) =>
+  rowValue(row).getBoundingClientRect().left > rowKey(row).getBoundingClientRect().left + 1;
+
+/**
+ * Every record's values start one gap after its widest key, in the same place on every
+ * row: the key column is the widest key chip (capped), never a fixed width. At least
+ * `minRecords` records must hold side-by-side rows, so the story measured something.
+ */
+const expectKeyColumnsFitKeys = async (container: Element, minRecords = 1) => {
+  await waitFor(() => {
+    let measured = 0;
+    container.querySelectorAll('.reqore-data-view-record').forEach((record) => {
+      const rows = Array.from(record.querySelectorAll(':scope > .reqore-data-view-row')).filter(
+        isSideBySide
+      );
+      if (!rows.length) {
+        return;
+      }
+      measured++;
+      const valueLefts = rows.map((row) => rowValue(row).getBoundingClientRect().left);
+      const widestKeyRight = Math.max(
+        ...rows.map((row) => rowKey(row).getBoundingClientRect().right)
+      );
+      // aligned: every value of the record starts at the same x
+      expect(Math.max(...valueLefts) - Math.min(...valueLefts)).toBeLessThanOrEqual(1);
+      // and that x is one gap after the widest key, not a fixed column's width away
+      expect(Math.abs(valueLefts[0] - widestKeyRight - KEY_VALUE_GAP_PX)).toBeLessThanOrEqual(1);
+    });
+    expect(measured).toBeGreaterThanOrEqual(minRecords);
+  });
+};
+
+/** The record row under `container` whose key is `name`. */
+const recordRow = (container: Element, name: string) =>
+  Array.from(container.querySelectorAll('.reqore-data-view-record > .reqore-data-view-row')).find(
+    (row) => rowKey(row)?.textContent === name
+  ) as HTMLElement;
+
+/** How far a stacked row's value is indented under its key, as a form's value on a phone. */
+const STACKED_VALUE_INDENT_PX = 12;
+
+/**
+ * The stacked row `name`'s value is on a line of its own under the key, at the left and
+ * indented under it: the value chip starts STACKED_VALUE_INDENT_PX after the key's left edge.
+ */
+const expectStackedValueIndented = async (container: Element, name: string) => {
+  await waitFor(() => {
+    const row = recordRow(container, name);
+    const value = rowValue(row);
+    const chip = value.querySelector('.reqore-data-view-value') as HTMLElement;
+    const keyBox = rowKey(row).getBoundingClientRect();
+    expect(value.getBoundingClientRect().top).toBeGreaterThanOrEqual(keyBox.bottom - 1);
+    expect(
+      Math.abs(chip.getBoundingClientRect().left - keyBox.left - STACKED_VALUE_INDENT_PX)
+    ).toBeLessThanOrEqual(1);
+  });
+};
+
+/** Every key/value row of every record in `container` has its value under its key. */
+const expectStacked = async (container: Element) => {
+  await waitFor(() => {
+    // record rows only: a list's items carry the row class too, and have no key
+    const rows = container.querySelectorAll('.reqore-data-view-record > .reqore-data-view-row');
+    expect(rows.length).toBeGreaterThan(0);
+    rows.forEach((row) => {
+      expect(rowValue(row).getBoundingClientRect().top).toBeGreaterThanOrEqual(
+        rowKey(row).getBoundingClientRect().bottom - 1
+      );
+    });
+  });
+};
+
 export const Basic: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'Renders DataView in its default configuration.',
+          'Renders DataView in its default configuration. Each record\'s values start 8px after its widest key, aligned on every row; the nested static_data and delivery records size their own key columns.',
       },
     },
   },
   args: {
     data: sampleOrder,
+  },
+  play: async ({ canvasElement }) => {
+    // the root record and the nested static_data and delivery records each fit their own keys
+    await expectKeyColumnsFitKeys(canvasElement, 3);
   },
 };
 
@@ -359,7 +449,7 @@ export const LongKey: Story = {
     docs: {
       description: {
         story:
-          'Renders DataView with an unusually long key.',
+          'Renders DataView with an unusually long key: the key column stops at min(34%, 220px) and the long key wraps inside its chip, while the values start 8px after the column.',
       },
     },
   },
@@ -375,6 +465,22 @@ export const LongKey: Story = {
       validated_against_local_terminology_dictionary: true,
       escalated_to_downstream_clinical_decision_support: false,
     },
+  },
+  play: async ({ canvasElement }) => {
+    await expectKeyColumnsFitKeys(canvasElement);
+    const key = (name: string) =>
+      Array.from(canvasElement.querySelectorAll('.reqore-data-view-key')).find(
+        (element) => element.textContent === name
+      ) as HTMLElement;
+    const longKey = key('escalated_to_downstream_clinical_decision_support');
+    const record = canvasElement.querySelector('.reqore-data-view-record') as HTMLElement;
+    // capped at min(34%, 220px) of the record, and wrapped onto more lines than a short key
+    expect(longKey.getBoundingClientRect().width).toBeLessThanOrEqual(
+      Math.min(record.clientWidth * 0.34, 220) + 1
+    );
+    expect(longKey.getBoundingClientRect().height).toBeGreaterThan(
+      key('device_id').getBoundingClientRect().height * 1.5
+    );
   },
 };
 
@@ -417,7 +523,7 @@ export const InNarrowContainer: Story = {
     docs: {
       description: {
         story:
-          'Renders DataView inside a narrow container.',
+          'Renders DataView inside a narrow (300px) container: every row puts its value under its key, indented under it.',
       },
     },
   },
@@ -438,6 +544,11 @@ export const InNarrowContainer: Story = {
       payload: HL7_PAYLOAD,
     },
   },
+  play: async ({ canvasElement }) => {
+    await expectStacked(canvasElement);
+    await expectStackedValueIndented(canvasElement, 'patient_ref');
+    await expectStackedValueIndented(canvasElement, 'normalized_observation_count');
+  },
 };
 
 export const WidthComparison: Story = {
@@ -445,7 +556,7 @@ export const WidthComparison: Story = {
     docs: {
       description: {
         story:
-          'Renders DataView at two widths side by side for comparison.',
+          'Renders DataView at 260, 360, 480 and 720px: the narrowest stacks each value under its key, indented under it, the wider ones put values 8px after the widest key.',
       },
     },
   },
@@ -454,6 +565,7 @@ export const WidthComparison: Story = {
       {[260, 360, 480, 720].map((width) => (
         <div
           key={width}
+          data-width={width}
           style={{
             width,
             border: '1px dashed rgba(255,255,255,0.2)',
@@ -480,6 +592,19 @@ export const WidthComparison: Story = {
         },
       ],
     },
+  },
+  play: async ({ canvasElement }) => {
+    const containers = Array.from(
+      canvasElement.querySelectorAll('[data-width]')
+    ) as HTMLElement[];
+    expect(containers.length).toBe(4);
+    // 260px stacks; at 480px and 720px values sit beside keys, one gap after the widest
+    await expectStacked(containers[0]);
+    await expectStackedValueIndented(containers[0], 'patient_ref');
+    await expectStackedValueIndented(containers[0], 'observation_count');
+    for (const container of containers.slice(2)) {
+      await expectKeyColumnsFitKeys(container);
+    }
   },
 };
 
@@ -608,7 +733,7 @@ export const EditableOpenApiSchema: Story = {
     docs: {
       description: {
         story:
-          'Renders DataView editing an OpenAPI schema.',
+          'Renders DataView editing an OpenAPI schema: in every editable record, the values start 8px after the widest key and line up on every row.',
       },
     },
   },
@@ -620,6 +745,10 @@ export const EditableOpenApiSchema: Story = {
     collapsibleRoot: false,
   },
   render: (args) => <EditableHarness {...args} />,
+  play: async ({ canvasElement }) => {
+    // the editable records (root, properties, each property) fit their keys too
+    await expectKeyColumnsFitKeys(canvasElement, 3);
+  },
 };
 
 /**
@@ -854,7 +983,7 @@ export const EditableKeyRename: Story = {
     docs: {
       description: {
         story:
-          'Renders an editable DataView whose keys are each a control as wide as the key itself. A click on display_name opens it for editing, and "label" typed with Enter renames it.',
+          'Renders an editable DataView whose keys are each a control as wide as the key itself. A click on display_name opens it for editing, and "label" typed with Enter renames it. While a key is renamed the values stay where they are, even as a key longer than any other is typed (the input scrolls); a cancel leaves them there, and a commit moves them once, to 8px after the new widest key.',
       },
     },
   },
@@ -900,5 +1029,186 @@ export const EditableKeyRename: Story = {
       | undefined;
     await expect(Object.keys(last ?? {})).toEqual(['label', 'retries']);
     await expect(last?.label).toBe('Customer');
+
+    // While a key is renamed the key column holds its width, so the values do not move as it is
+    // typed, even past the widest key; the input is the column's width and scrolls.
+    const LONG_KEY = 'a_key_much_longer_than_retries';
+    const valueLeft = () =>
+      rowValue(recordRow(canvasElement, 'retries')).getBoundingClientRect().left;
+    await waitFor(() => expect(recordRow(canvasElement, 'label')).toBeTruthy());
+    const before = valueLeft();
+    const openRename = async (name: string) => {
+      fireEvent.click(rowKey(recordRow(canvasElement, name)));
+      await waitFor(() =>
+        expect(canvasElement.querySelector('input.reqore-data-view-key-edit')).toBeTruthy()
+      );
+      return canvasElement.querySelector('input.reqore-data-view-key-edit') as HTMLInputElement;
+    };
+    const typeLongKey = async (input: HTMLInputElement) => {
+      const height = input.getBoundingClientRect().height;
+      await expect(document.activeElement).toBe(input);
+      // one character at a time, the value checked after each
+      for (let length = 1; length <= LONG_KEY.length; length++) {
+        fireEvent.change(input, { target: { value: LONG_KEY.slice(0, length) } });
+        await expect(input.value).toBe(LONG_KEY.slice(0, length));
+        await expect(valueLeft()).toBe(before);
+      }
+      await expect(input.value).toBe(LONG_KEY);
+      const column = input.closest('.reqore-data-view-key-edit-group') as HTMLElement;
+      await expect(input.getBoundingClientRect().right).toBeLessThanOrEqual(
+        column.getBoundingClientRect().right + 0.5
+      );
+      // one line that scrolls, not a wrap
+      await expect(input.scrollWidth).toBeGreaterThan(input.clientWidth);
+      await expect(input.getBoundingClientRect().height).toBe(height);
+    };
+
+    // Cancelled: nothing moved, and nothing moves after it.
+    let input = await openRename('label');
+    await expect(valueLeft()).toBe(before);
+    await typeLongKey(input);
+    fireEvent.keyDown(input, { key: 'Escape' });
+    await waitFor(() =>
+      expect(canvasElement.querySelector('input.reqore-data-view-key-edit')).toBeNull()
+    );
+    await expect(rowKey(recordRow(canvasElement, 'label'))).toBeTruthy();
+    await expect(valueLeft()).toBe(before);
+
+    // Committed: the column fits the new widest key, once.
+    input = await openRename('label');
+    await typeLongKey(input);
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(recordRow(canvasElement, LONG_KEY)).toBeTruthy());
+    await expect(valueLeft()).toBeGreaterThan(before);
+    await expectKeyColumnsFitKeys(canvasElement);
+  },
+};
+
+/** Letter spacings that give the key column fractional widths: widths the page reports to fewer
+ *  digits than it lays out (`85.2188px` for 85.21875), which a width read back and set again lost. */
+const FRACTIONAL_KEY_SPACINGS = [0.013, 0.021, 0.09, 0.137];
+
+export const EditableKeyRenameAtFractionalWidths: Story = {
+  parameters: {
+    // Interaction-only: the play is the guard; the rename is pictured by EditableKeyRename.
+    qlip: { skip: true },
+    docs: {
+      description: {
+        story:
+          'Renders four editable DataViews whose keys are spaced to fractional widths, and renames the widest key of each: the values stay exactly where they were, to the fraction of a pixel, while the rename is open and after it is cancelled.',
+      },
+    },
+  },
+  args: {
+    label: 'Fractional key widths',
+    data: { display_name: 'Customer', retries: 3, id: 7 },
+    collapsibleRoot: false,
+  },
+  render: (args) => (
+    <div style={{ display: 'flex', flexFlow: 'column', gap: 16 }}>
+      {FRACTIONAL_KEY_SPACINGS.map((spacing) => (
+        <div key={spacing} data-spacing={spacing} style={{ letterSpacing: `${spacing}px` }}>
+          <EditableHarness {...args} />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const views = Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-spacing]'));
+    await expect(views.length).toBe(FRACTIONAL_KEY_SPACINGS.length);
+    for (const view of views) {
+      await waitFor(() => expect(recordRow(view, 'retries')).toBeTruthy());
+      const valueLeft = () => rowValue(recordRow(view, 'retries')).getBoundingClientRect().left;
+      const before = valueLeft();
+      // the widest key, the one whose width the key column is
+      fireEvent.click(rowKey(recordRow(view, 'display_name')));
+      await waitFor(() =>
+        expect(view.querySelector('input.reqore-data-view-key-edit')).toBeTruthy()
+      );
+      const input = view.querySelector('input.reqore-data-view-key-edit') as HTMLInputElement;
+      await expect(valueLeft()).toBe(before);
+      fireEvent.change(input, { target: { value: 'display_name_and_then_some_more' } });
+      await expect(valueLeft()).toBe(before);
+      fireEvent.keyDown(input, { key: 'Escape' });
+      await waitFor(() => expect(view.querySelector('input.reqore-data-view-key-edit')).toBeNull());
+      await expect(valueLeft()).toBe(before);
+    }
+  },
+};
+
+/* -------------------------------------------------------------------------------------------
+ * Labels: every word the view draws is the consumer's, here in plain words for readers who are
+ * not programmers, with "Yes" / "No" for a yes/no value.
+ * ----------------------------------------------------------------------------------------- */
+
+const PLAIN_LABELS: IReqoreDataViewProps['labels'] = {
+  objectSection: (count) => (count === 1 ? '1 field' : `${count} fields`),
+  listSection: (count) => (count === 1 ? '1 entry' : `${count} entries`),
+  addPropertyLabel: 'New field',
+  addItemLabel: 'New entry',
+  booleanTrue: 'Yes',
+  booleanFalse: 'No',
+};
+
+/** The order with a yes as its first field, so the first screen shows a "Yes" and a "No". */
+const LABELLED_ORDER = { express: true, ...sampleOrder };
+
+/** What the labelled stories draw: the summaries, a yes/no in its words, and the add affordances. */
+const expectPlainLabels = async (canvasElement: HTMLElement) => {
+  await _testsWaitForText('workflow_instanceid');
+  const summaries = Array.from(canvasElement.querySelectorAll('summary')).map((summary) =>
+    (summary.textContent ?? '').trim()
+  );
+  const values = Array.from(canvasElement.querySelectorAll('.reqore-data-view-value')).map(
+    (value) => (value.textContent ?? '').trim()
+  );
+
+  await expect(summaries.some((summary) => summary.endsWith('9 fields'))).toBe(true);
+  await expect(summaries.some((summary) => summary.endsWith('3 entries'))).toBe(true);
+  await expect(summaries.some((summary) => /Object ·|List ·/.test(summary))).toBe(false);
+  await expect(values).toEqual(expect.arrayContaining(['Yes', 'No']));
+  await expect(values).not.toEqual(expect.arrayContaining(['true']));
+  await expect(canvasElement.textContent).toContain('New field');
+  await expect(canvasElement.textContent).toContain('New entry');
+};
+
+export const CustomLabels: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an editable DataView whose labels are plain words: "9 fields" and "3 entries" in its section summaries, "Yes" and "No" for its yes/no values in their usual colour, and "New field" / "New entry" on its add buttons.',
+      },
+    },
+  },
+  args: {
+    label: 'Order, in plain words',
+    data: LABELLED_ORDER,
+    labels: PLAIN_LABELS,
+    defaultExpandDepth: 99,
+  },
+  render: (args) => <EditableHarness {...args} />,
+  play: async ({ canvasElement }) => expectPlainLabels(canvasElement),
+};
+
+export const CustomLabelsOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders the same editable DataView with plain-word labels on a phone (390px): the summaries, "Yes" / "No" and the add buttons in its words, all of it inside the screen, each value under its key, indented under it.',
+      },
+    },
+  },
+  args: CustomLabels.args,
+  render: (args) => <EditableHarness {...args} />,
+  play: async ({ canvasElement }) => {
+    await expectPlainLabels(canvasElement);
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+    // stacked on the phone: a value sits under its key, indented under it
+    await expectStackedValueIndented(canvasElement, 'status');
   },
 };
