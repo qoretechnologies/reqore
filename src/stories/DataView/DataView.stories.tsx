@@ -138,26 +138,23 @@ const recordRow = (container: Element, name: string) =>
     (row) => rowKey(row)?.textContent === name
   ) as HTMLElement;
 
+/** How far a stacked row's value is indented under its key, as a form's value on a phone. */
+const STACKED_VALUE_INDENT_PX = 12;
+
 /**
- * The stacked row `name`'s value is on a line of its own under the key, set against the row's
- * right edge: the value chip ends where the row's content ends.
+ * The stacked row `name`'s value is on a line of its own under the key, at the left and
+ * indented under it: the value chip starts STACKED_VALUE_INDENT_PX after the key's left edge.
  */
-const expectStackedValueAtRightEdge = async (container: Element, name: string) => {
+const expectStackedValueIndented = async (container: Element, name: string) => {
   await waitFor(() => {
     const row = recordRow(container, name);
     const value = rowValue(row);
     const chip = value.querySelector('.reqore-data-view-value') as HTMLElement;
-    const rowBox = row.getBoundingClientRect();
-    const contentRight = rowBox.right - parseFloat(getComputedStyle(row).paddingRight);
-    expect(value.getBoundingClientRect().top).toBeGreaterThanOrEqual(
-      rowKey(row).getBoundingClientRect().bottom - 1
-    );
-    expect(Math.abs(value.getBoundingClientRect().right - contentRight)).toBeLessThanOrEqual(1);
-    expect(Math.abs(chip.getBoundingClientRect().right - contentRight)).toBeLessThanOrEqual(1);
-    // and only the box moved: the key still starts at the row's left
-    expect(chip.getBoundingClientRect().left).toBeGreaterThan(
-      rowKey(row).getBoundingClientRect().left + 1
-    );
+    const keyBox = rowKey(row).getBoundingClientRect();
+    expect(value.getBoundingClientRect().top).toBeGreaterThanOrEqual(keyBox.bottom - 1);
+    expect(
+      Math.abs(chip.getBoundingClientRect().left - keyBox.left - STACKED_VALUE_INDENT_PX)
+    ).toBeLessThanOrEqual(1);
   });
 };
 
@@ -526,7 +523,7 @@ export const InNarrowContainer: Story = {
     docs: {
       description: {
         story:
-          'Renders DataView inside a narrow (300px) container: every row puts its value under its key, a short value against the row\'s right edge.',
+          'Renders DataView inside a narrow (300px) container: every row puts its value under its key, indented under it.',
       },
     },
   },
@@ -549,8 +546,8 @@ export const InNarrowContainer: Story = {
   },
   play: async ({ canvasElement }) => {
     await expectStacked(canvasElement);
-    await expectStackedValueAtRightEdge(canvasElement, 'patient_ref');
-    await expectStackedValueAtRightEdge(canvasElement, 'normalized_observation_count');
+    await expectStackedValueIndented(canvasElement, 'patient_ref');
+    await expectStackedValueIndented(canvasElement, 'normalized_observation_count');
   },
 };
 
@@ -559,7 +556,7 @@ export const WidthComparison: Story = {
     docs: {
       description: {
         story:
-          'Renders DataView at 260, 360, 480 and 720px: the narrowest stacks each value under its key, a short value against the row\'s right edge (multi-line text keeps the full width), the wider ones put values 8px after the widest key.',
+          'Renders DataView at 260, 360, 480 and 720px: the narrowest stacks each value under its key, indented under it, the wider ones put values 8px after the widest key.',
       },
     },
   },
@@ -603,8 +600,8 @@ export const WidthComparison: Story = {
     expect(containers.length).toBe(4);
     // 260px stacks; at 480px and 720px values sit beside keys, one gap after the widest
     await expectStacked(containers[0]);
-    await expectStackedValueAtRightEdge(containers[0], 'patient_ref');
-    await expectStackedValueAtRightEdge(containers[0], 'observation_count');
+    await expectStackedValueIndented(containers[0], 'patient_ref');
+    await expectStackedValueIndented(containers[0], 'observation_count');
     for (const container of containers.slice(2)) {
       await expectKeyColumnsFitKeys(container);
     }
@@ -1202,7 +1199,7 @@ export const CustomLabelsOnAPhone: Story = {
     docs: {
       description: {
         story:
-          'Renders the same editable DataView with plain-word labels on a phone (390px): the summaries, "Yes" / "No" and the add buttons in its words, all of it inside the screen, each value under its key against the row\'s right edge.',
+          'Renders the same editable DataView with plain-word labels on a phone (390px): the summaries, "Yes" / "No" and the add buttons in its words, all of it inside the screen, each value under its key, indented under it.',
       },
     },
   },
@@ -1211,7 +1208,7 @@ export const CustomLabelsOnAPhone: Story = {
   play: async ({ canvasElement }) => {
     await expectPlainLabels(canvasElement);
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
-    // stacked on the phone: a value sits under its key, against the row's right edge
-    await expectStackedValueAtRightEdge(canvasElement, 'status');
+    // stacked on the phone: a value sits under its key, indented under it
+    await expectStackedValueIndented(canvasElement, 'status');
   },
 };

@@ -437,6 +437,12 @@ const KEY_COLUMN = 'fit-content(min(34%, 220px))';
 const KEY_VALUE_GAP_PX = 8;
 
 /**
+ * How far a stacked row's value is indented under its key: the indent toolkit-react's FormEngine
+ * gives a value under its label on a phone (COMPACT_STACKED_VALUE_INDENT), so the two read alike.
+ */
+const STACKED_VALUE_INDENT_PX = 12;
+
+/**
  * A record's columns, set on the record and shared by its rows.
  *
  * Every key/value row used to be a grid of its own, so no row could know how wide the
@@ -648,25 +654,14 @@ const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean; $stackedS
       padding-left: ${PADDING_FROM_SIZE[$size] + 6}px;
     `}
 
-  /* A stacked row (a narrow record) draws its value on a line of its own under the key. The
-     value is set against the row's far edge, so key and value read as a pair across the row
-     rather than as two left-aligned lines: a chip, or a value with its type chip, ends at the
-     right edge (and a row of chips that wraps justifies each line to it). Inside a value the
-     text keeps its own alignment: a value that wraps across lines reads left to right in a box
-     that sits at the right. What fills the width already — multi-line text, a parsed nested
-     record — is unchanged. */
+  /* A stacked row (a narrow record) draws its value on a line of its own under the key, at the
+     left and indented under it (STACKED_VALUE_INDENT_PX), so it reads as the key's: the layout
+     a form takes on a phone (toolkit-react's FormEngine). A parsed nested record keeps its own
+     inset above. */
   ${({ $stackedScalar }) =>
     $stackedScalar &&
     css`
-      text-align: end;
-
-      & > * {
-        text-align: start;
-      }
-
-      & > .reqore-control-group {
-        justify-content: flex-end;
-      }
+      padding-left: ${STACKED_VALUE_INDENT_PX}px;
     `}
 `;
 
