@@ -217,8 +217,18 @@ const StyledAccordionContentInner = styled.div<{ theme: IReqoreTheme; size: TSiz
   overflow: hidden;
 `;
 
-const StyledAccordionContentBody = styled.div<{ theme: IReqoreTheme; size: TSizes }>`
-  padding: ${({ size }) => `${PADDING_FROM_SIZE[size] * 3}px ${PADDING_FROM_SIZE[size] * 4.6}px`};
+const StyledAccordionContentBody = styled.div<{
+  theme: IReqoreTheme;
+  size: TSizes;
+  $cornerInset?: number;
+}>`
+  /* The body is indented past the header's chevron, to the header's text. When the header's sides
+     grow to clear the corner, the body moves by as much, so it stays under that text. */
+  padding: ${({ size, $cornerInset = 0 }) => {
+    const headerPadding = PADDING_FROM_SIZE[size] * 1.5;
+    const shift = clearCorner(headerPadding, $cornerInset) - headerPadding;
+    return `${PADDING_FROM_SIZE[size] * 3}px ${PADDING_FROM_SIZE[size] * 4.6 + shift}px`;
+  }};
   font-size: ${({ size, theme }) => getTextSize(theme, size)}px;
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   background-color: ${({ theme }) => rgba(getPanelBackgroundColor(theme), 1)};
@@ -324,6 +334,7 @@ const AccordionItemRenderer = memo(
             <StyledAccordionContentBody
               theme={theme}
               size={size}
+              $cornerInset={cornerInset}
               className='reqore-accordion-content'
             >
               {typeof item.content === 'string' ? (

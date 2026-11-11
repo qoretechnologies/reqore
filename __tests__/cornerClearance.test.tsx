@@ -66,9 +66,12 @@ describe("a container's label clears its corner", () => {
       </Wrapper>
     );
 
-    // Inside the 1px border: 13px of padding puts the title 14px from the panel's edge.
+    // Inside the 1px border: 13px of padding puts the title 14px from the panel's edge — and the
+    // content and the bottom actions with it, so the panel has one left edge.
     expect(style('.reqore-panel-title').paddingLeft).toBe('13px');
     expect(style('.reqore-panel-title').paddingRight).toBe('13px');
+    expect(style('.reqore-panel-content').paddingLeft).toBe('13px');
+    expect(style('.reqore-panel-content').paddingRight).toBe('13px');
     expect(style('.reqore-panel-bottom-actions').paddingLeft).toBe('13px');
     // The vertical padding is still the size's.
     expect(style('.reqore-panel-title').paddingTop).toBe(`${PADDING_FROM_SIZE.small}px`);
@@ -113,6 +116,8 @@ describe("a container's label clears its corner", () => {
     const [rounded, square] = Array.from(document.querySelectorAll('.reqore-panel-title'));
     expect(getComputedStyle(rounded).paddingLeft).toBe(`${PADDING_FROM_SIZE.normal}px`);
     expect(getComputedStyle(square).paddingLeft).toBe(`${PADDING_FROM_SIZE.small}px`);
+    const [roundedContent] = Array.from(document.querySelectorAll('.reqore-panel-content'));
+    expect(getComputedStyle(roundedContent).paddingLeft).toBe(`${PADDING_FROM_SIZE.normal}px`);
   });
 
   test('a panel with no surface and no edge draws no corner, and keeps its title flush', () => {
@@ -157,6 +162,10 @@ describe("a container's label clears its corner", () => {
     expect(headers).toHaveLength(2);
     // Every header alike, so the ones between the corners line up with the first and the last.
     headers.forEach((header) => expect(getComputedStyle(header).paddingLeft).toBe('13px'));
+    // The body is indented to the header's text, and moves in by as much as the header did
+    // (13px against the small size's 9px): 6 × 4.6 + 4.
+    const body = document.querySelector('.reqore-accordion-content')!;
+    expect(parseFloat(getComputedStyle(body).paddingLeft)).toBeCloseTo(6 * 4.6 + 4, 5);
   });
 
   test("a callout's padded sides start past its corner, and 'vertical' keeps them flush", () => {
@@ -213,8 +222,12 @@ describe('a stacked collection', () => {
       document.querySelectorAll('.reqore-collection-item > .reqore-panel-title')
     );
     expect(titles).toHaveLength(2);
-    // A flat row has no border of its own, so its title is padded the whole corner.
+    // A flat row has no border of its own, so its title is padded the whole corner — and its
+    // body with it.
     titles.forEach((title) => expect(getComputedStyle(title).paddingLeft).toBe('14px'));
+    Array.from(document.querySelectorAll('.reqore-collection-item > .reqore-panel-content')).forEach(
+      (content) => expect(getComputedStyle(content).paddingLeft).toBe('14px')
+    );
   });
 
   test('keeps its 10px corner where the theme names none', () => {

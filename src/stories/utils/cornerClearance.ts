@@ -93,3 +93,56 @@ export const expectLabelsClearTheirCorners = (root: ParentNode = document.body):
 
   return measured;
 };
+
+/** Within half a pixel: a box's edge lands on a subpixel where its column does. */
+const EDGE_TOLERANCE = 0.5;
+
+/** The left edge of `element`'s box, or NaN when there is none. */
+const leftOfBox = (element: Element | undefined | null): number =>
+  element ? element.getBoundingClientRect().left : NaN;
+
+/**
+ * A padded panel has one left edge: its title, the first block of its content and its first
+ * bottom action start the same distance in, however far the title had to move to clear the
+ * corner. Measured on the boxes, not the glyphs: a bold heading and a paragraph place their first
+ * glyph up to a pixel apart from the same edge, while the misalignment this guards against is the
+ * size's padding against the corner's — 4px and more. Checks every `.reqore-panel` matching
+ * `selector` under `root`, and returns how many it checked.
+ */
+export const expectPanelsShareOneLeftEdge = (
+  selector: string,
+  root: ParentNode = document.body
+): number => {
+  let measured = 0;
+
+  for (const panel of Array.from(root.querySelectorAll<HTMLElement>(selector))) {
+    const own = (part: string) =>
+      Array.from(panel.querySelectorAll<HTMLElement>(part)).filter(
+        (el) => el.closest('.reqore-panel') === panel
+      );
+    const header = own('.reqore-panel-title-header')[0];
+    const title = leftOfBox(header);
+    const content = leftOfBox(own('.reqore-panel-content')[0]?.firstElementChild);
+    const action = own('.reqore-panel-bottom-actions .reqore-button')[0];
+    const name = (header?.textContent ?? '').trim().slice(0, 40);
+
+    expect(Number.isFinite(title), `"${name}" has a title to measure`).toBe(true);
+    expect(Number.isFinite(content), `"${name}" has content to measure`).toBe(true);
+    expect(
+      Math.abs(content - title),
+      `"${name}": its content starts ${(content - title).toFixed(1)}px from its title`
+    ).toBeLessThanOrEqual(EDGE_TOLERANCE);
+
+    if (action) {
+      const left = leftOfBox(action);
+      expect(
+        Math.abs(left - title),
+        `"${name}": its bottom action starts ${(left - title).toFixed(1)}px from its title`
+      ).toBeLessThanOrEqual(EDGE_TOLERANCE);
+    }
+
+    measured += 1;
+  }
+
+  return measured;
+};

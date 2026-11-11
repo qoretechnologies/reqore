@@ -264,9 +264,9 @@ export interface IReqorePanelProps
   descriptionMaxHeight?: string;
   /**
    * The corner radius, in px, of a rounded container the panel sits flush in — a stacked
-   * `ReqoreCollection`, which clips its square rows into one rounded block. The title bar and the
-   * bottom actions clear that corner as they clear the panel's own (`clearCorner`). Unset, only
-   * the panel's own corner counts.
+   * `ReqoreCollection`, which clips its square rows into one rounded block. The title bar, the
+   * padded content and the bottom actions clear that corner as they clear the panel's own
+   * (`clearCorner`). Unset, only the panel's own corner counts.
    */
   enclosingRadius?: number;
   /**
@@ -400,8 +400,9 @@ export interface IStyledPanel extends Omit<IReqorePanelProps, 'accentSize'> {
    *  sticky header has no top corners to round. */
   $mediaAbove?: boolean;
   /** The panel's inner corner radius (its radius less its border), or 0 when it draws no
-   *  corner. The title bar and the bottom actions pad their sides by at least this, so what
-   *  they hold starts clear of the curve (`clearCorner`). */
+   *  corner. The title bar, the padded content and the bottom actions pad their sides by at
+   *  least this, so what they hold starts clear of the curve and on one left edge
+   *  (`clearCorner`). */
   $cornerInset?: number;
 }
 
@@ -1231,12 +1232,17 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
 
 export const StyledPanelContent = styled.div<IStyledPanel>`
   display: ${({ isCollapsed }) => (isCollapsed ? 'none !important' : undefined)};
-  padding: ${({ padded, size, noHorizontalPadding }) =>
+  /* The sides take the same corner clearance as the title bar and the bottom actions, so the
+     title, the content and the actions share one left edge. Unpadded content stays flush. */
+  padding: ${({ padded, size, noHorizontalPadding, $cornerInset = 0 }) =>
     !padded
       ? undefined
       : noHorizontalPadding
         ? `${getPaddingSize(padded, size)}px 0`
-        : `${getPaddingSize(padded, size)}px ${getPaddingSize(padded, size)}px`};
+        : `${getPaddingSize(padded, size)}px ${clearCorner(
+            getPaddingSize(padded, size),
+            $cornerInset
+          )}px`};
   flex: 1;
   /* A flex child's min-height defaults to its content size, so without this the
      scrollable content can't shrink: a panel/drawer body taller than the panel
@@ -2113,7 +2119,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
         )
       : 0;
-    // The title bar and the bottom actions start clear of that same inner curve, and of the
+    // The title bar, the padded content and the bottom actions start clear of that same inner
+    // curve — one left edge for all three — and of the
     // corner of a container the panel sits flush in (`enclosingRadius`), less the panel's own
     // border. A panel with no surface and no edge (`noHorizontalPadding`) draws no corner, and
     // keeps its bars flush.
@@ -2800,6 +2807,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               size={contentSize || panelSize}
               ref={getContentRef}
               noHorizontalPadding={noHorizontalPadding}
+              $cornerInset={cornerInset}
               stickyHeader={rest.stickyHeader}
             >
               {children}

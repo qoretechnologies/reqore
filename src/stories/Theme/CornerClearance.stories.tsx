@@ -14,7 +14,10 @@ import {
   ReqoreTestimonial,
 } from '../../index';
 import { StoryMeta } from '../utils';
-import { expectLabelsClearTheirCorners } from '../utils/cornerClearance';
+import {
+  expectLabelsClearTheirCorners,
+  expectPanelsShareOneLeftEdge,
+} from '../utils/cornerClearance';
 import { requiredElement } from '../utils/required';
 
 /** The calm theme's one corner for every card (the admin portal's and the IDE's). */
@@ -27,7 +30,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'What a rounded container draws at its corner starts clear of it: a panel\'s title, an accordion\'s header, a callout\'s icon and label, a tile\'s text start at least the corner\'s radius in from the container\'s edge (`clearCorner` in `constants/sizes`), whatever the size\'s own padding — the theme\'s `panel.radius` or a `radiusSize` decides the corner, and the size decided the padding, so a 14px corner on a small panel used to put its title 7px in.',
+          'What a rounded container draws at its corner starts clear of it: a panel\'s title, an accordion\'s header, a callout\'s icon and label, a tile\'s text start at least the corner\'s radius in from the container\'s edge (`clearCorner` in `constants/sizes`), whatever the size\'s own padding — the theme\'s `panel.radius` or a `radiusSize` decides the corner, and the size decided the padding, so a 14px corner on a small panel used to put its title 7px in. A panel keeps one left edge: its padded content and its bottom actions move in with its title.',
       },
     },
   },
@@ -62,7 +65,7 @@ export const PanelTitles: Story = {
     docs: {
       description: {
         story:
-          'Renders panels at four sizes (micro to big), with the theme\'s 14px corner and with `radiusSize` big (18px) and huge (26px), bordered and flat: every title (and its icon) starts at least its panel\'s corner radius in from the panel\'s edge. The last row is the control: a flat, transparent panel draws no corner and keeps its title flush, and `padded={false}` content stays flush with the panel\'s edge.',
+          'Renders panels at four sizes (micro to big), with the theme\'s 14px corner and with `radiusSize` big (18px) and huge (26px), bordered and flat: every title (and its icon) starts at least its panel\'s corner radius in from the panel\'s edge, and the content and the bottom action under it start on the same left edge. The last row is the control: a flat, transparent panel draws no corner and keeps its title flush, and `padded={false}` content stays flush with the panel\'s edge.',
       },
     },
   },
@@ -112,6 +115,8 @@ export const PanelTitles: Story = {
     await expect(canvasElement.querySelectorAll('.corner-clearance-case')).toHaveLength(24);
     // Every case is measured — none is skipped as cornerless — and every one clears its corner.
     await expect(expectLabelsClearTheirCorners(canvasElement)).toBe(24 + 1);
+    // ...and has one left edge: its content and its bottom action start where its title does.
+    await expect(expectPanelsShareOneLeftEdge('.corner-clearance-case', canvasElement)).toBe(24);
 
     // A container that draws no corner keeps its title where its padding puts it.
     const bare = requiredElement('.corner-clearance-bare', 'the cornerless panel', canvasElement);
@@ -133,7 +138,7 @@ export const OtherContainers: Story = {
     docs: {
       description: {
         story:
-          'Renders the other containers that draw at a corner, small, with the theme\'s 14px corner or a `radiusSize` well above their padding: callouts (micro and tiny, accent left and top), an accordion, a statistic, a feature card, a testimonial, and a stacked collection (its square rows clipped into one block that takes the theme\'s corner). Each starts its icon and its text at least its corner radius in from its edge.',
+          'Renders the other containers that draw at a corner, small, with the theme\'s 14px corner or a `radiusSize` well above their padding: callouts (micro and tiny, accent left and top), an accordion, a statistic, a feature card, a testimonial, and a stacked collection (its square rows clipped into one block that takes the theme\'s corner). Each starts its icon and its text at least its corner radius in from its edge; each stacked row\'s body starts where its title does.',
       },
     },
   },
@@ -219,5 +224,8 @@ export const OtherContainers: Story = {
     await expect(
       range.getBoundingClientRect().left - stack.getBoundingClientRect().left
     ).toBeGreaterThanOrEqual(THEME_RADIUS - 0.5);
+    // Each row has one left edge: its body starts where its title does.
+    await expect(expectPanelsShareOneLeftEdge('.reqore-collection-item', stack)).toBe(2);
+
   },
 };
