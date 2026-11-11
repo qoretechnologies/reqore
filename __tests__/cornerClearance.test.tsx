@@ -17,6 +17,7 @@ import { describe, expect, test } from 'vitest';
 import {
   ReqoreAccordion,
   ReqoreCallout,
+  ReqoreCollection,
   ReqoreContent,
   ReqoreDrawer,
   ReqoreLayoutContent,
@@ -189,6 +190,43 @@ describe("a container's label clears its corner", () => {
 
     // The massive corner is 36px, less the 1px border; the micro padding (3 × 5) was 15px.
     expect(style('.reqore-statistic').paddingLeft).toBe('35px');
+  });
+});
+
+describe('a stacked collection', () => {
+  test("takes the theme's corner, and its rows clear it", () => {
+    render(
+      <Wrapper theme={CALM}>
+        <ReqoreCollection
+          stacked
+          showAs='list'
+          items={[
+            { label: 'Orders', flat: true },
+            { label: 'Refunds', flat: true },
+          ]}
+        />
+      </Wrapper>
+    );
+
+    expect(style('.reqore-collection-content').borderRadius).toBe('14px');
+    const titles = Array.from(
+      document.querySelectorAll('.reqore-collection-item > .reqore-panel-title')
+    );
+    expect(titles).toHaveLength(2);
+    // A flat row has no border of its own, so its title is padded the whole corner.
+    titles.forEach((title) => expect(getComputedStyle(title).paddingLeft).toBe('14px'));
+  });
+
+  test('keeps its 10px corner where the theme names none', () => {
+    render(
+      <Wrapper>
+        <ReqoreCollection stacked showAs='list' items={[{ label: 'Orders' }]} />
+      </Wrapper>
+    );
+
+    expect(style('.reqore-collection-content').borderRadius).toBe('10px');
+    // A row is flat (no border of its own), so its title is padded the whole corner.
+    expect(style('.reqore-collection-item > .reqore-panel-title').paddingLeft).toBe('10px');
   });
 });
 

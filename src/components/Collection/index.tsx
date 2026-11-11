@@ -6,6 +6,7 @@ import { css } from 'styled-components';
 import { ReqoreErrorBoundary, ReqoreP, useReqoreProperty } from '../..';
 import { TReqorePaginationType } from '../../constants/paging';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreTheme } from '../../constants/theme';
 import { getPanelHairlineColor } from '../../helpers/colors';
 import { ReqorePaginationContainer } from '../../containers/Paging';
@@ -142,16 +143,26 @@ export interface IReqoreCollectionProps
   paging?: TReqorePaginationType<IReqoreCollectionItemProps>;
 }
 
+/** A stacked collection's corner when the theme names no `panel.radius`. */
+const STACKED_RADIUS = 10;
+
+/**
+ * The corner of a stacked collection: the square rows are clipped into one rounded block, which
+ * takes the theme's one card corner (`theme.panel.radius`) like every other panel. Its rows clear
+ * it (`enclosingRadius`).
+ */
+const getStackedRadius = (theme?: IReqoreTheme): number => theme?.panel?.radius ?? STACKED_RADIUS;
+
 export const StyledCollectionWrapper = styled(StyledColumns).withConfig({
-  shouldForwardProp: omitStyleProps('fill', 'height', '$rows'),
-})<{ $rows?: boolean }>`
+  shouldForwardProp: omitStyleProps('fill', 'height', '$rows', '$radius'),
+})<{ $rows?: boolean; $radius?: number }>`
   height: ${({ height }) => (height ? `${height}` : 'auto')};
   flex: ${({ fill }) => (fill ? 1 : undefined)};
 
-  ${({ rounded, stacked }: IReqoreCollectionProps) =>
+  ${({ rounded, stacked, $radius }: IReqoreCollectionProps & { $radius?: number }) =>
     (!rounded || stacked) &&
     css`
-      border-radius: ${stacked && rounded ? '10px' : undefined};
+      border-radius: ${stacked && rounded ? `${$radius ?? STACKED_RADIUS}px` : undefined};
     `}
 
   /* Stacked items in one column are one block: its rows divided by the panel hairline.
@@ -244,6 +255,8 @@ export const ReqoreCollection = memo(
     ...rest
   }: IReqoreCollectionProps) => {
     const uppercaseLabels = useUppercaseLabels();
+    const theme = useReqoreTheme();
+    const stackedRadius = getStackedRadius(theme);
     const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
     const [sort, setSort] = useState<'asc' | 'desc'>(defaultSort);
     const [sortBy, setSortBy] = useState<string>(defaultSortBy);
@@ -474,6 +487,7 @@ export const ReqoreCollection = memo(
                 columnsGap={stacked ? '0px' : columnsGap}
                 rounded={rounded}
                 stacked={stacked}
+                $radius={stackedRadius}
                 $rows={stacked && (columns || (_showAs === 'grid' ? 'auto-fit' : 1)) === 1}
                 fill={fill}
                 ref={setContentRef}
@@ -512,6 +526,7 @@ export const ReqoreCollection = memo(
                               {...item}
                               icon={item.icon || (item.selected ? selectedIcon : undefined)}
                               rounded={!stacked}
+                              enclosingRadius={stacked && rounded ? stackedRadius : undefined}
                               maxContentHeight={maxItemHeight}
                             />
                           </ReqoreErrorBoundary>
@@ -571,6 +586,7 @@ export const ReqoreCollection = memo(
                           {...item}
                           icon={item.icon || (item.selected ? selectedIcon : undefined)}
                           rounded={!stacked}
+                          enclosingRadius={stacked && rounded ? stackedRadius : undefined}
                           maxContentHeight={maxItemHeight}
                         />
                       </ReqoreErrorBoundary>
@@ -607,6 +623,7 @@ export const ReqoreCollection = memo(
                           columnsGap={stacked ? '0px' : columnsGap}
                           rounded={rounded}
                           stacked={stacked}
+                          $radius={stackedRadius}
                           $rows={
                             stacked && (columns || (_showAs === 'grid' ? 'auto-fill' : 1)) === 1
                           }
@@ -654,6 +671,7 @@ export const ReqoreCollection = memo(
       rounded,
       selectedIcon,
       stacked,
+      stackedRadius,
       zoom,
       groupsConfig,
     ]);
@@ -675,6 +693,7 @@ export const ReqoreCollection = memo(
             columnsGap={stacked ? '0px' : columnsGap}
             rounded={rounded}
             stacked={stacked}
+            $radius={stackedRadius}
             fill={fill}
             height={height}
             alignItems={alignItems}

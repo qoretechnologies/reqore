@@ -6,6 +6,7 @@ import ReqoreUIProvider from '../../containers/UIProvider';
 import {
   ReqoreAccordion,
   ReqoreCallout,
+  ReqoreCollection,
   ReqoreFeatureCard,
   ReqoreP,
   ReqorePanel,
@@ -132,7 +133,7 @@ export const OtherContainers: Story = {
     docs: {
       description: {
         story:
-          'Renders the other containers that draw at a corner, small, with the theme\'s 14px corner or a `radiusSize` well above their padding: callouts (micro and tiny, accent left and top), an accordion, a statistic, a feature card and a testimonial. Each starts its icon and its text at least its corner radius in from its edge.',
+          'Renders the other containers that draw at a corner, small, with the theme\'s 14px corner or a `radiusSize` well above their padding: callouts (micro and tiny, accent left and top), an accordion, a statistic, a feature card, a testimonial, and a stacked collection (its square rows clipped into one block that takes the theme\'s corner). Each starts its icon and its text at least its corner radius in from its edge.',
       },
     },
   },
@@ -176,11 +177,47 @@ export const OtherContainers: Story = {
         author='Dana'
         role='Operations'
       />
+      <ReqoreCollection
+        className='corner-clearance-stack'
+        stacked
+        showAs='list'
+        filterable={false}
+        sortable={false}
+        zoomable={false}
+        showLayoutSwitch={false}
+        minimal
+        transparent
+        flat
+        padded={false}
+        items={[
+          { label: 'Orders', content: 'Every order today.' },
+          { label: 'Refunds', content: 'What went back.' },
+        ]}
+      />
     </div>
   ),
   play: async ({ canvasElement }) => {
     // Two callouts, the accordion, the statistic, the feature card and the testimonial — and the
     // testimonial's attribution row is not a container of its own.
     await expect(expectLabelsClearTheirCorners(canvasElement)).toBe(6);
+
+    // A stacked collection draws its corner with its rows: the block takes the theme's 14px
+    // corner, and the first row's title starts at least that far in.
+    const stack = requiredElement(
+      '.corner-clearance-stack .reqore-collection-content',
+      'the stacked rows',
+      canvasElement
+    );
+    await expect(getComputedStyle(stack).borderTopLeftRadius).toBe(`${THEME_RADIUS}px`);
+    const firstTitle = requiredElement(
+      '.reqore-collection-item .reqore-panel-title-header',
+      "the first row's title",
+      stack
+    );
+    const range = document.createRange();
+    range.selectNodeContents(firstTitle);
+    await expect(
+      range.getBoundingClientRect().left - stack.getBoundingClientRect().left
+    ).toBeGreaterThanOrEqual(THEME_RADIUS - 0.5);
   },
 };

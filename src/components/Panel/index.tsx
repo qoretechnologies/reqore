@@ -263,6 +263,13 @@ export interface IReqorePanelProps
    */
   descriptionMaxHeight?: string;
   /**
+   * The corner radius, in px, of a rounded container the panel sits flush in — a stacked
+   * `ReqoreCollection`, which clips its square rows into one rounded block. The title bar and the
+   * bottom actions clear that corner as they clear the panel's own (`clearCorner`). Unset, only
+   * the panel's own corner counts.
+   */
+  enclosingRadius?: number;
+  /**
    * How many lines the title may wrap to before it is ellipsized. `1` (the default) is today's
    * behaviour: one line, cut with an ellipsis the moment it runs out of room.
    *
@@ -750,6 +757,7 @@ export const REQORE_PANEL_STYLE_PROPS = listReqoreStyleProps<
   descriptionMaxLines: true,
   descriptionPosition: true,
   disabled: true,
+  enclosingRadius: true,
   errorBoundaryOptions: true,
   expandTooltip: true,
   fill: true,
@@ -1411,6 +1419,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       descriptionPosition = 'inline',
       descriptionMaxLines = 2,
       descriptionMaxHeight,
+      enclosingRadius,
       labelMinTextSize,
       size: panelSize = 'normal',
       getContentRef,
@@ -2104,9 +2113,20 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
         )
       : 0;
-    // The title bar and the bottom actions start clear of that same inner curve. A panel with
-    // no surface and no edge (`noHorizontalPadding`) draws no corner, and keeps its bars flush.
-    const cornerInset = noHorizontalPadding ? 0 : mediaRadius;
+    // The title bar and the bottom actions start clear of that same inner curve, and of the
+    // corner of a container the panel sits flush in (`enclosingRadius`), less the panel's own
+    // border. A panel with no surface and no edge (`noHorizontalPadding`) draws no corner, and
+    // keeps its bars flush.
+    const cornerInset = noHorizontalPadding
+      ? 0
+      : Math.max(
+          mediaRadius,
+          clearCorner(
+            0,
+            enclosingRadius ?? 0,
+            hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0
+          )
+        );
     const hasMedia = media !== undefined && media !== null && media !== false && media !== '';
 
     const mediaNode = useMemo(
