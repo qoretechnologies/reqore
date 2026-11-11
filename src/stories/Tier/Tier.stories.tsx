@@ -273,8 +273,18 @@ export const PriceDetailEffectLight: Story = {
  * appearance="modern"
  * ---------------------------------------------------------------------------------------------- */
 
+/** The narrowest column of the modern plans' grid. */
+const MODERN_MIN_COLUMN_WIDTH = '260px';
+
+/** The modern plans' grid, as `expectModernRow` reads its rule. */
+const MODERN_GRID = { grid: '.reqore-columns', minColumnWidth: MODERN_MIN_COLUMN_WIDTH };
+
 const ModernPlans = () => (
-  <ReqoreColumns minColumnWidth='260px' columnsGap='20px' style={{ maxWidth: '1100px' }}>
+  <ReqoreColumns
+    minColumnWidth={MODERN_MIN_COLUMN_WIDTH}
+    columnsGap='20px'
+    style={{ maxWidth: '1100px' }}
+  >
     {THREE_PLANS.map((plan) => (
       <ReqoreTier key={plan.name} {...plan} appearance='modern' />
     ))}
@@ -291,7 +301,7 @@ export const Modern: Story = {
     },
   },
   render: ModernPlans,
-  play: async ({ canvasElement }) => expectModernRow(canvasElement, 3),
+  play: async ({ canvasElement }) => expectModernRow(canvasElement, 3, MODERN_GRID),
 };
 
 export const ModernLight: Story = {
@@ -305,7 +315,7 @@ export const ModernLight: Story = {
     },
   },
   render: ModernPlans,
-  play: async ({ canvasElement }) => expectModernRow(canvasElement, 3),
+  play: async ({ canvasElement }) => expectModernRow(canvasElement, 3, MODERN_GRID),
 };
 
 export const ModernNeutralSale: Story = {

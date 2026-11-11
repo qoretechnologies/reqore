@@ -30,6 +30,7 @@ export interface IReqoreOptions
     | 'backdropBlur'
     | 'dialogOpacity'
     | 'dialogBlur'
+    | 'schedule'
   > {
   withSidebar?: boolean;
   uiScale?: number;

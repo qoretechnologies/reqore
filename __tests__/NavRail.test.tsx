@@ -448,6 +448,61 @@ describe("showLabels='hover'", () => {
     expect(dashboard().textContent).toBe('');
   });
 
+  /** An app's clock: what waits on it, run when the test says. */
+  const appSchedule = () => {
+    const waiting: Array<{ ms: number; fire: () => void; cancelled: boolean }> = [];
+    const schedule = (ms: number, fire: () => void) => {
+      const wait = { ms, fire, cancelled: false };
+      waiting.push(wait);
+      return () => {
+        wait.cancelled = true;
+      };
+    };
+    return { waiting, schedule };
+  };
+
+  const renderRailOnSchedule = (schedule: (ms: number, fire: () => void) => () => void) =>
+    render(
+      <ReqoreUIProvider options={{ schedule }}>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreNavRail items={ITEMS} defaultActiveId='dashboard' showLabels='hover' />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+  test("the dwell waits on the app's schedule (options.schedule), not on the machine's clock", () => {
+    const { waiting, schedule } = appSchedule();
+    renderRailOnSchedule(schedule);
+    const nav = screen.getByRole('navigation');
+
+    fireEvent.mouseEnter(nav);
+    act(() => {
+      vi.advanceTimersByTime(60000);
+    });
+    // however long the machine waits, the labels wait for the app
+    expect(dashboard().textContent).toBe('');
+    expect(waiting.map(({ ms }) => ms)).toEqual([1500]);
+
+    act(() => waiting[0].fire());
+    expect(dashboard()).toHaveTextContent('Dashboard');
+
+    fireEvent.mouseLeave(nav);
+    expect(dashboard().textContent).toBe('');
+  });
+
+  test("leaving the rail cancels the dwell on the app's schedule", () => {
+    const { waiting, schedule } = appSchedule();
+    renderRailOnSchedule(schedule);
+    const nav = screen.getByRole('navigation');
+
+    fireEvent.mouseEnter(nav);
+    fireEvent.mouseLeave(nav);
+
+    expect(waiting.map(({ cancelled }) => cancelled)).toEqual([true]);
+  });
+
   test('a mouse dwells them open, its pointer event before its mouseenter', () => {
     renderRail(<ReqoreNavRail items={ITEMS} defaultActiveId='dashboard' showLabels='hover' />);
     const nav = screen.getByRole('navigation');

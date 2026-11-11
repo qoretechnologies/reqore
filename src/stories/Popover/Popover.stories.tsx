@@ -1870,3 +1870,83 @@ export const AScrolledAwayTriggerStillCloses: Story = {
     await waitFor(async () => expect(popoverSurfaces()).toHaveLength(0), { timeout: 4000 });
   },
 };
+
+/**
+ * The element a field's menu belongs to, which the popover does not wrap: the surface is placed against it, below it
+ * from the offset given, and goes with it as its box scrolls.
+ */
+const PlacedAgainstAnElementItDoesNotWrap = () => {
+  const [field, setField] = useState<HTMLElement | null>(null);
+  return (
+    <div
+      id='target-scroller'
+      style={{ width: 420, height: 260, overflow: 'auto', border: '1px dashed #888', padding: 16 }}
+    >
+      {/* the trigger, away from the field: the surface is placed against the field, not here */}
+      {field ? (
+        <ReqorePopover
+          component={ReqoreButton}
+          isReqoreComponent
+          handler='click'
+          openOnMount
+          targetElement={field}
+          placement='bottom-start'
+          offsetX={40}
+          noArrow
+          content='Placed below the field, 40px in'
+          componentProps={{ id: 'target-trigger', label: 'Trigger', compact: true }}
+        />
+      ) : null}
+      <div style={{ height: 40 }} />
+      <div
+        id='target-field'
+        ref={setField}
+        style={{ width: 300, height: 64, border: '1px solid #666', borderRadius: 4, padding: 8 }}
+      >
+        A field the menu belongs to
+      </div>
+      <div style={{ height: 600 }} />
+    </div>
+  );
+};
+
+export const PlacedAgainstATargetElement: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A popover given a targetElement it does not wrap - a field whose menu it is, as a text editor\'s completion list is - opens below that element, 40px in from its left (offsetX), not against its own trigger. The box the field is in then scrolls 30px: the surface goes with the field.',
+      },
+    },
+  },
+  render: () => <PlacedAgainstAnElementItDoesNotWrap />,
+  play: async () => {
+    const field = await waitFor(() => {
+      const found = document.querySelector<HTMLElement>('#target-field');
+      expect(found).toBeTruthy();
+      return found!;
+    });
+    const surface = () => popoverSurfaces()[0]?.getBoundingClientRect();
+    const isBelowTheField = () =>
+      waitFor(async () => {
+        const box = field.getBoundingClientRect();
+        const at = surface();
+        await expect(at, 'the surface').toBeTruthy();
+        // below the field, never over it
+        await expect(at!.top).toBeGreaterThanOrEqual(box.bottom);
+        await expect(at!.top - box.bottom).toBeLessThan(20);
+        // from its left, 40px in
+        await expect(Math.abs(at!.left - (box.left + 40))).toBeLessThanOrEqual(1);
+      });
+    await isBelowTheField();
+    const scroller = document.querySelector('#target-scroller') as HTMLElement;
+    const before = field.getBoundingClientRect().top;
+    scroller.scrollTop = 30;
+    fireEvent.scroll(scroller);
+    await waitFor(async () => expect(field.getBoundingClientRect().top).toBeLessThan(before));
+    await isBelowTheField();
+    scroller.scrollTop = 0;
+    fireEvent.scroll(scroller);
+    await isBelowTheField();
+  },
+};

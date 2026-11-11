@@ -342,13 +342,21 @@ export const isActionsMenuWidth = (column: IReqoreTableColumn, tableWidth?: numb
  * The ids of the columns whose actions fold at this table width. A list, not ids joined into one
  * string: a column's id is any string, a space in it too, and ids split back out of a joined string
  * named columns the table does not have.
+ *
+ * Only a column the table draws folds: a hidden (`show: false`) or disabled (`enabled: false`) one has
+ * no cells, so nothing of it folds. Folding one anyway had the table ask it for its actions on every
+ * row to measure them, and a consumer whose disabled column could not answer (its actions depended on
+ * a callback it was not given) threw and took the whole table down at phone width (qorus-ide #301).
  */
 export const getActionsMenuColumnIds = (
   columns: IReqoreTableColumn[],
   tableWidth?: number
 ): string[] =>
   flattenColumns(columns)
-    .filter((column) => isActionsMenuWidth(column, tableWidth))
+    .filter(
+      (column) =>
+        column.show !== false && column.enabled !== false && isActionsMenuWidth(column, tableWidth)
+    )
     .map((column) => column.dataId);
 
 /**
