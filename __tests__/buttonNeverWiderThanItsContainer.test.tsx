@@ -3,8 +3,9 @@
 // (Button · Fixed Button Stays Inside Its Container, and its phone story) measure the layout; these check the rule
 // that makes it.
 import { render } from '@testing-library/react';
+import { CSSProperties } from 'react';
 import { ReqoreButton, ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
-import { CONTROL_GROUP_CHILD_MAX_WIDTH } from '../src/constants/controlGroup';
+import { CONTROL_GROUP_COLLAPSE_VARIABLE } from '../src/constants/controlGroup';
 
 const inLayout = (node: React.ReactNode) =>
   render(
@@ -28,7 +29,19 @@ describe('a button', () => {
       <ReqoreButton {...props} label='omquser' description='The Qorus system datasource' />
     );
 
-    expect(maxWidthOf(container.querySelector('.reqore-button'))).toBe(CONTROL_GROUP_CHILD_MAX_WIDTH);
+    // CONTROL_GROUP_CHILD_MAX_WIDTH, its variables resolved: outside a wrapped stack nothing pulls the button over
+    expect(maxWidthOf(container.querySelector('.reqore-button'))).toBe('calc(100% + 0px)');
+  });
+
+  test('that a wrapped stack pulls over its padding reaches that much further', () => {
+    const { container } = inLayout(
+      <ReqoreButton
+        label='omquser'
+        style={{ [CONTROL_GROUP_COLLAPSE_VARIABLE]: '1px' } as CSSProperties}
+      />
+    );
+
+    expect(maxWidthOf(container.querySelector('.reqore-button'))).toBe('calc(100% + 1px)');
   });
 
   test('with its own maxWidth keeps it', () => {

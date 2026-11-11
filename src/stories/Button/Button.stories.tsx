@@ -91,8 +91,9 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
           minimal
           flat={false}
           iconColor='#38fdb2'
-          leftIconColor='#33023c:lighten:3'
-          rightIconColor='#0a487b:lighten:3'
+          // an icon color given as a hex is drawn as given: light, to stand out on every intent's wash
+          leftIconColor='#e0b8f5'
+          rightIconColor='#8cc8ff'
         >
           Minimal not flat
         </ReqoreButton>
@@ -220,7 +221,8 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
           leftIconProps={{ rotation: 180 }}
           rightIconProps={{ rotation: 270 }}
           description='This is a very interesting description for a button, I like it very much'
-          iconColor='#38fdb2'
+          // a theme color, drawn in the shade that stands out on each intent's fill (white, warning)
+          iconColor='success:lighten:2'
         >
           With Default Description
         </ReqoreButton>
@@ -271,8 +273,9 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
             },
           }}
           badge={{
+            // dark at both ends, so the badge's text reads on all of it
             effect: {
-              gradient: { colors: { 0: '#00fafd', 130: '#eb0e8c' }, direction: 'to right bottom' },
+              gradient: { colors: { 0: '#007f81', 130: '#a30a61' }, direction: 'to right bottom' },
               uppercase: true,
             },
             labelKey: 'Cool',
@@ -314,7 +317,7 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
             {
               effect: {
                 gradient: {
-                  colors: { 0: 'danger', 100: 'danger:darken:1:0.1' },
+                  colors: { 0: 'danger', 100: 'danger:darken:3' },
                   direction: 'to right bottom',
                 },
               },
@@ -335,7 +338,7 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
           {...buttonProps}
           badge={{
             effect: {
-              gradient: { colors: { 0: '#00fafd', 100: '#eb0e8c' }, direction: 'to right bottom' },
+              gradient: { colors: { 0: '#007f81', 100: '#a30a61' }, direction: 'to right bottom' },
             },
             labelKey: 'Cool',
             label: 1234,
@@ -553,7 +556,8 @@ export const GlobalEffect: Story = {
       buttons: {
         effect: {
           gradient: {
-            colors: 'info:darken:2:1',
+            // dark enough for the badges' washes to read on too
+            colors: 'info:darken:3:1',
             animate: 'active',
           },
         },
@@ -856,15 +860,15 @@ export const MultipleGradients: Story = {
               shape: 'ellipse',
               direction: 'at 0% 50%',
               colors: {
-                0: '#ffffff:darken:1:0.4',
-                65: '#ffffff:darken:1:0',
-                100: '#ffffff:darken:1:0',
+                0: '#000000:lighten:1:0.35',
+                65: '#000000:lighten:1:0',
+                100: '#000000:lighten:1:0',
               },
             },
             {
               type: 'linear',
               direction: 'to right',
-              colors: { 0: '#0066ff', 100: '#ff3da6' },
+              colors: { 0: '#0058db', 100: '#c2186e' },
               animate: 'hover',
             },
           ],

@@ -6,6 +6,7 @@ import {
   setupIntersectionMocking,
 } from 'react-intersection-observer/test-utils';
 import { afterEach, beforeEach, vi } from 'vitest';
+import { installComputedVariables } from './cssVariables';
 
 // Ensure a React symbol exists on the global for any module compiled with the
 // classic runtime (React.createElement without an explicit import).
@@ -43,6 +44,9 @@ beforeEach(() => {
 afterEach(() => {
   resetIntersectionMocking();
 });
+
+/* A property that reads a CSS variable is computed as a browser computes it (`cssVariables.ts`). */
+installComputedVariables();
 
 /* jsdom has no canvas: getContext printed "Not implemented" on the test run's output and gave nothing. A canvas here
    has no 2D context, which the code that measures text with one already handles (it measures nothing). A test that

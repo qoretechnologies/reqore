@@ -1,10 +1,19 @@
-import { rgba } from 'polished';
+import { getLuminance, rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import { css } from 'styled-components';
 import styled from '../../helpers/styled';
 import { RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { getColorFromMaybeString, getReadableColor } from '../../helpers/colors';
+import { useReqoreSurface } from '../../context/SurfaceContext';
+import {
+  getColorFromMaybeString,
+  getDrawnColor,
+  getReadableAlpha,
+  getReadableColor,
+  getReadableColorOn,
+  getThemeSurfaces,
+  isReadableColor,
+} from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -128,6 +137,10 @@ interface IStyledTrackProps {
   $disabled?: boolean;
 }
 
+/** The track's own color, under the segments: a 10% wash of the theme's text. */
+const getTrackColor = (theme: IReqoreTheme): string =>
+  rgba(getReadableColor(theme, undefined, undefined, true), 0.1);
+
 // Extends `StyledEffect` so the standard `effect` prop (gradients, glow,
 // filters, …) works exactly as it does on every other Reqore surface.
 const StyledStackedBarTrack = styled(StyledEffect)<IStyledTrackProps>`
@@ -139,9 +152,7 @@ const StyledStackedBarTrack = styled(StyledEffect)<IStyledTrackProps>`
   height: ${({ $height }) => $height}px;
   border-radius: ${({ $radius, $rounded }) => ($rounded === false ? 0 : `${$radius}px`)};
   background-color: ${({ theme, $transparent }) =>
-    $transparent
-      ? 'transparent'
-      : rgba(getReadableColor(theme, undefined, undefined, true), 0.1)};
+    $transparent ? 'transparent' : getTrackColor(theme)};
   border: ${({ $flat, theme }) =>
     $flat === false
       ? `1px solid ${rgba(getReadableColor(theme, undefined, undefined, true), 0.4)}`
@@ -155,6 +166,12 @@ interface IStyledSegmentProps {
   $color: string;
   $percent: number;
   $interactive: boolean;
+  /** The text that reads on the segment's color. */
+  $text: string;
+  /** How faint the segment's label is beside its value: as far as it stays readable. */
+  $labelOpacity: number;
+  /** A dark shadow under its text, which lifts light text off the segment; none under dark text. */
+  $shadow: boolean;
 }
 
 const StyledStackedBarSegment = styled.div<IStyledSegmentProps>`
@@ -169,9 +186,17 @@ const StyledStackedBarSegment = styled.div<IStyledSegmentProps>`
   gap: 1px;
   padding: 0 5px;
   overflow: hidden;
-  color: #ffffff;
+  color: ${({ $text }) => $text};
   line-height: 1;
-  text-shadow: 0 1px 1px ${rgba('#000000', 0.35)};
+  ${({ $shadow }) =>
+    $shadow &&
+    css`
+      text-shadow: 0 1px 1px ${rgba('#000000', 0.35)};
+    `}
+
+  .reqore-stacked-bar-segment-label {
+    opacity: ${({ $labelOpacity }) => $labelOpacity};
+  }
   white-space: nowrap;
   transition: width 0.3s ease-out, filter 0.15s ease-out;
   cursor: ${({ $interactive }) => ($interactive ? 'pointer' : 'default')};
@@ -203,12 +228,15 @@ const StyledSegmentLabel = styled.span`
   line-height: 1;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  opacity: 0.82;
 `;
 
 interface IResolvedSegment {
   key: string;
   color: string;
+  text: string;
+  /** A shadow under its text: only under light text. */
+  shadow: boolean;
+  labelOpacity: number;
   percent: number;
   value: number;
   label?: string;
@@ -259,6 +287,17 @@ const ReqoreStackedBar = memo(
       ref
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+      /* What the segments are drawn over: the track (unless transparent) over what the bar is
+         drawn on - every color of a gradient. A translucent segment's text is read on it as it
+         is drawn there. */
+      const around = useReqoreSurface();
+      const underSegments = useMemo(() => {
+        const surfaces = getThemeSurfaces(theme, around);
+
+        return transparent
+          ? surfaces
+          : surfaces.map((surface) => getDrawnColor(getTrackColor(theme), surface));
+      }, [theme, around, transparent]);
 
       const resolvedHeight = useMemo(() => {
         const base = height ?? STACKED_BAR_HEIGHT_FROM_SIZE[size];
@@ -293,9 +332,16 @@ const ReqoreStackedBar = memo(
             item.tooltip ??
             (item.label !== undefined ? `${item.label}: ${item.value}` : `${item.value}`);
           const fits = rawPercent >= valueLabelMinPercent;
+          // the segment as it is drawn (a translucent color over the track) and what reads on it
+          const drawn = underSegments.map((under) => getDrawnColor(color, under));
+          const text = getReadableColorOn(drawn);
           return {
             key: item.id ?? `${item.label ?? 'segment'}-${index}`,
             color,
+            text,
+            // the dark shadow only lifts light text: under dark text it blurred it
+            shadow: isReadableColor(text) && getLuminance(text) > 0.5,
+            labelOpacity: getReadableAlpha(text, drawn, 0.82),
             percent,
             value: item.value,
             label: item.label,
@@ -310,6 +356,7 @@ const ReqoreStackedBar = memo(
         resolvedTotal,
         minSegmentPercent,
         theme,
+        underSegments,
         showValues,
         showLabels,
         valueLabelMinPercent,
@@ -332,6 +379,8 @@ const ReqoreStackedBar = memo(
           $fluid={fluid}
           $raised={raised}
           $disabled={disabled}
+          // disabled says so; when not, the caller's own (it was spread above) stands
+          aria-disabled={disabled ? true : rest['aria-disabled']}
           className={`${className || ''} reqore-stacked-bar`}
           role='img'
         >
@@ -343,6 +392,10 @@ const ReqoreStackedBar = memo(
                   Component={StyledStackedBarSegment}
                   tooltip={segment.tooltip}
                   $color={segment.color}
+                  // written in what reads on the segment: white on a light one was 1.9:1
+                  $text={segment.text}
+                  $labelOpacity={segment.labelOpacity}
+                  $shadow={segment.shadow}
                   $percent={segment.percent}
                   $interactive={!!segment.onClick}
                   onClick={segment.onClick}
@@ -362,7 +415,9 @@ const ReqoreStackedBar = memo(
                 >
                   {segment.showValue ? <StyledSegmentValue>{segment.value}</StyledSegmentValue> : null}
                   {segment.showLabel ? (
-                    <StyledSegmentLabel>{segment.label}</StyledSegmentLabel>
+                    <StyledSegmentLabel className='reqore-stacked-bar-segment-label'>
+                      {segment.label}
+                    </StyledSegmentLabel>
                   ) : null}
                 </ReqoreTooltipComponent>
               ))}

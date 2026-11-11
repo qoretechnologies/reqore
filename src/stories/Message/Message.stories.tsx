@@ -1,7 +1,9 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
+import { expect, waitFor } from 'storybook/test';
 import ReqoreMessage, { IReqoreMessageProps } from '../../components/Message';
 import { StoryMeta } from '../utils';
+import { lowContrastTextIn } from '../utils/contrastGate';
 import { FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMessageProps>();
@@ -180,6 +182,35 @@ export const Muted: Story = {
   },
 };
 
+export const MutedRefusalOnThePage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a muted message with a lock icon, the title "Not allowed" and a line of text, on the dark page. Its title and text are drawn in colors that read on the message\'s translucent grey fill as it is drawn over the page.',
+      },
+    },
+  },
+  render: Template,
+  args: {
+    intent: 'muted',
+    icon: 'LockLine',
+    title: 'Not allowed',
+    children: 'You do not have a role with permission to view this interface.',
+  },
+  play: async ({ canvasElement }) => {
+    const message = await waitFor(() => {
+      const el = canvasElement.querySelector('.reqore-message');
+      if (!el) {
+        throw new Error('the message is not rendered');
+      }
+      return el;
+    });
+    // every text in it reads on the fill as drawn (axe color-contrast, against the composited background)
+    await expect(await lowContrastTextIn(message)).toEqual([]);
+  },
+};
+
 export const CustomTheme: Story = {
   parameters: {
     docs: {
@@ -245,8 +276,9 @@ export const Effect: Story = {
   args: {
     effect: {
       gradient: {
+        // dark enough at both ends for light text to read on all of it
         colors: {
-          0: '#eb0e8c',
+          0: '#c40b75',
           100: 'danger:darken:2',
         },
       },

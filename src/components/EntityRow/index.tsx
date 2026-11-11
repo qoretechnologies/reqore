@@ -4,7 +4,14 @@ import { css } from 'styled-components';
 import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TOUCH_TARGET_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getDrawnColor,
+  getMainBackgroundColor,
+  getReadableAlpha,
+  getReadableFadedColor,
+} from '../../helpers/colors';
+import { ReqoreSurfaceProvider } from '../../context/SurfaceContext';
 import {
   getOneLessSize,
   resolvePadding,
@@ -12,6 +19,7 @@ import {
   withStoppedPropagation,
 } from '../../helpers/utils';
 import { useNarrowContainer } from '../../hooks/useNarrowContainer';
+import { useReqoreDrawnSurface } from '../../hooks/useDrawnSurface';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -28,9 +36,15 @@ import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown, { IReqoreDropdownProps } from '../Dropdown';
-import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
+import {
+  IReqoreEffect,
+  StyledEffect,
+  TReqoreEffectColor,
+  TReqoreHexColor,
+} from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { IReqorePanelSubAction } from '../Panel';
+import { getCardHoverFill, getCardMarkColor, getDrawnEffectTextColor } from '../../helpers/surface';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import ReqoreRowActionsMenu, {
@@ -172,6 +186,10 @@ interface IStyledRowProps {
   theme: IReqoreTheme;
   $intent?: TReqoreIntent;
   $transparent?: boolean;
+  /** The row's text: what reads on the row as it is drawn, its gradient's colors included. */
+  $text?: TReqoreHexColor;
+  /** Each color the row is drawn in: an `effect.color` is read against them. */
+  $backgrounds?: TReqoreHexColor[];
   size: TSizes;
   $fluid?: boolean;
   flat?: boolean;
@@ -200,9 +218,28 @@ const tintedBgFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
     ? rgba(theme.intents[intent], 0.06)
     : rgba(changeLightness(getMainBackgroundColor(theme), 0.04), 1);
 
+/** The icon's tile: a wash of the intent, or the row's surface a step lighter. */
+const iconTileFillFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
+  intent
+    ? rgba(theme.intents[intent], 0.15)
+    : rgba(changeLightness(getMainBackgroundColor(theme), 0.06), 1);
+
 /* Wrapper the ResizeObserver measures. Width follows the row's `fluid` prop so a
    `fluid={false}` row nested in a flex parent still shrinks to content and the
    observer sees the shrunk width. Mirrors ReqoreSeverityRow. */
+/** The row's fill while hovered, when it is clickable: its rule paints it, and what it holds is read on it. */
+const getEntityRowHoverFill = (
+  theme: IReqoreTheme,
+  intent?: TReqoreIntent,
+  transparent?: boolean
+) =>
+  getCardHoverFill(
+    theme,
+    intent,
+    transparent,
+    changeLightness(getMainBackgroundColor(theme), 0.08)
+  );
+
 const StyledContainer = styled.div<{ $fluid: boolean }>`
   width: ${({ $fluid }) => ($fluid ? '100%' : 'auto')};
 `;
@@ -243,7 +280,7 @@ const StyledRow = styled(StyledEffect).withConfig({
         )}`};
   align-items: center;
   width: ${({ $fluid }) => ($fluid ? '100%' : 'auto')};
-  color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
+  color: ${({ $text }) => $text};
   transition: background-color 0.15s ease-out;
 
   /* Narrow-container layout, driven by the data-narrow attribute the row's
@@ -304,13 +341,7 @@ const StyledRow = styled(StyledEffect).withConfig({
     css`
       cursor: pointer;
       &:hover {
-        background-color: ${
-          $intent
-            ? rgba(theme.intents[$intent], $transparent ? 0.04 : 0.1)
-            : $transparent
-              ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
-              : rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 1)
-        };
+        background-color: ${getEntityRowHoverFill(theme, $intent, $transparent)};
       }
     `}
 
@@ -333,10 +364,7 @@ const StyledIconTile = styled.div<IStyledIconTileProps>`
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background-color: ${({ theme, $intent }) =>
-    $intent
-      ? rgba(theme.intents[$intent], 0.15)
-      : rgba(changeLightness(getMainBackgroundColor(theme), 0.06), 1)};
+  background-color: ${({ theme, $intent }) => iconTileFillFor(theme, $intent)};
 `;
 
 const StyledBody = styled.div`
@@ -376,6 +404,42 @@ const StyledTextSlot = styled.div<{ $wrap: boolean }>`
       }
     `}
 `;
+
+/**
+ * How an entity row writes its description or its metadata: fainter than its label (`opacity`), as far as it stays
+ * readable on the row. Its text is written in the faded color - not the slot faded as a whole - so what it holds
+ * with a color of its own (a tag, a link, readable on the row) is drawn as it is: faded twice, a warning tag read
+ * 4.0:1 (qorus#646). A color a caller gives is the caller's, faded as before, as far as that color stays readable.
+ * An opacity a caller gives (`effect.opacity`) is the caller's, as given.
+ */
+const getSecondaryTextEffect = (
+  theme: IReqoreTheme,
+  effect: IReqoreEffect | undefined,
+  opacity: number,
+  text: TReqoreHexColor,
+  backgrounds: TReqoreHexColor[]
+): IReqoreEffect => {
+  if (effect?.color) {
+    return {
+      ...effect,
+      opacity:
+        effect.opacity ??
+        getReadableAlpha(
+          getDrawnEffectTextColor(theme, effect.color, backgrounds) ?? text,
+          backgrounds,
+          opacity
+        ),
+    };
+  }
+
+  return {
+    ...effect,
+    opacity: undefined,
+    color: (effect?.opacity !== undefined
+      ? rgba(text, effect.opacity)
+      : getReadableFadedColor(text, backgrounds, opacity)) as TReqoreHexColor,
+  };
+};
 
 const ReqoreEntityRow = memo(
   forwardRef<HTMLDivElement, IReqoreEntityRowProps>(
@@ -451,11 +515,40 @@ const ReqoreEntityRow = memo(
       // an action on a line of its own: it is written out (an icon-only one says its tooltip), and may span it
       const actionsOnTheirOwnLine = actionsStacked || actionsSpanRow;
 
-      const resolvedIconColor: TReqoreEffectColor = useMemo(() => {
-        if (iconColor) return iconColor;
-        if (intent) return theme.intents[intent] as TReqoreEffectColor;
-        return getReadableColor(theme, undefined, undefined, true) as TReqoreEffectColor;
-      }, [iconColor, intent, theme]);
+      /* What the row is drawn on and in - its tint over what is under it, and the icon's tile over
+         that - and its text: what it holds, its fainter description and metadata and its icon are read
+         against them. */
+      const { backgrounds, text } = useReqoreDrawnSurface({
+        theme,
+        customTheme,
+        transparent,
+        fill: tintedBgFor(theme, intent),
+        effect,
+        // clickable, it is hovered too: what it holds is read on its hover fill as well
+        hoverFill: interactive ? getEntityRowHoverFill(theme, intent, transparent) : undefined,
+      });
+      /* The description and the metadata are fainter than the label, as far as they stay readable (see
+         getSecondaryTextEffect): one object while it holds, for memo components. */
+      const descriptionLook = useMemo(
+        () => getSecondaryTextEffect(theme, descriptionEffect, 0.7, text, backgrounds),
+        [theme, descriptionEffect, text, backgrounds]
+      );
+      const metadataLook = useMemo(
+        () => getSecondaryTextEffect(theme, metadataEffect, 0.5, text, backgrounds),
+        [theme, metadataEffect, text, backgrounds]
+      );
+      const iconBackgrounds = useMemo(
+        () =>
+          resolvedIconHasBackground
+            ? backgrounds.map((under) => getDrawnColor(iconTileFillFor(theme, intent), under))
+            : backgrounds,
+        [resolvedIconHasBackground, theme, intent, backgrounds]
+      );
+      // The icon is in its own color, or the intent's, in a shade that stands out by 3:1 from its tile.
+      const resolvedIconColor: TReqoreEffectColor = useMemo(
+        () => getCardMarkColor(theme, iconBackgrounds, text, iconColor, intent),
+        [iconColor, intent, theme, iconBackgrounds, text]
+      );
 
       return (
         <StyledContainer ref={containerRef} $fluid={fluid} className='reqore-entity-row-container'>
@@ -477,6 +570,8 @@ const ReqoreEntityRow = memo(
             theme={theme}
             $intent={intent}
             $transparent={transparent}
+            $text={text}
+            $backgrounds={backgrounds}
             size={size}
             $fluid={fluid}
             flat={flat}
@@ -484,6 +579,8 @@ const ReqoreEntityRow = memo(
             $raised={raised}
             $clickable={interactive}
             disabled={disabled}
+            // a disabled row says so; any other keeps what the caller says
+            aria-disabled={disabled ? true : rest['aria-disabled']}
             $hasIcon={hasIcon}
             $iconHasBackground={resolvedIconHasBackground}
             $padded={padded}
@@ -517,128 +614,131 @@ const ReqoreEntityRow = memo(
                   className={`reqore-entity-row-icon ${iconProps?.className || ''}`.trim()}
                 />
               ))}
-            <StyledBody className='reqore-entity-row-body'>
-              <StyledLabelLine $wrap={wrap} className='reqore-entity-row-label'>
-                <StyledTextSlot $wrap={wrap}>
-                  <ReqoreSpan size={size} effect={labelEffect}>
-                    {label}
-                  </ReqoreSpan>
-                </StyledTextSlot>
-                {hasBadge && <ButtonBadge size={size} content={badge} margin='none' />}
-              </StyledLabelLine>
-              {description && (
-                <StyledTextSlot $wrap={wrap}>
-                  <ReqoreP
-                    as={getReqoreTextElement(description)}
-                    size={secondarySize}
-                    effect={{ opacity: 0.7, ...descriptionEffect }}
-                    className='reqore-entity-row-description'
-                  >
-                    {description}
-                  </ReqoreP>
-                </StyledTextSlot>
-              )}
-              {metadata && (
-                <StyledTextSlot $wrap={wrap}>
-                  <ReqoreSpan
-                    size={secondarySize}
-                    effect={{ opacity: 0.5, ...metadataEffect }}
-                    className='reqore-entity-row-metadata'
-                  >
-                    {metadata}
-                  </ReqoreSpan>
-                </StyledTextSlot>
-              )}
-            </StyledBody>
-            {actionsAsMenu && (
-              <ReqoreRowActionsMenu
-                className='reqore-entity-row-actions'
-                actions={actions}
-                size={size}
-                intent={intent}
-                label={actionsMenuLabel}
-                rowLabel={rowLabelText(label)}
-              />
-            )}
-            {!actionsAsMenu && actions && actions.length > 0 && (
-              <ReqoreControlGroup
-                gapSize='small'
-                className='reqore-entity-row-actions'
-                /* narrow and stacked: one to a line, each the row's width in a container a phone's width or
-                   narrower and as wide as its label in a wider one; narrow in a row: as wide as they are, onto
-                   another line where they do not fit - a lone one the row's width as narrow as a phone */
-                vertical={actionsStacked}
-                fluid={actionsSpanRow}
-                wrap={isNarrow && !actionsStacked && !loneActionAtLineEnd}
-              >
-                {actions.map(
-                  ({ actions: subActions, actionsProps, shortLabel, ...action }, idx) => {
-                    /* At the end of a narrow row's label line, an action says its short label, or is its icon
-                     alone where it has a tooltip (`getCompactRowAction`): a long label took the line's room
-                     (David, qorus#646). On a line of its own, and wide, it says its label. */
-                    const compact = loneActionAtLineEnd
-                      ? getCompactRowAction({ ...action, shortLabel })
-                      : undefined;
-
-                    return subActions?.length ? (
-                      // An action carrying sub-actions is a menu, not a button — same
-                      // contract as ReqorePanel. The click is stopped here because the row
-                      // itself is commonly clickable: opening the menu must not also
-                      // trigger the row.
-                      <ReqoreDropdown
-                        key={idx}
-                        fixed
-                        size={size}
-                        intent={action.intent ?? intent}
-                        {...action}
-                        {...actionsProps}
-                        /* Stacked, a menu is a button like the others (the row's width in a phone-width container), and an
-                         icon-only one says what it is: its tooltip is its label, as a finger gets no tooltip
-                         to read. */
-                        {...(actionsOnTheirOwnLine
-                          ? {
-                              fluid: actionsSpanRow,
-                              fixed: !actionsSpanRow,
-                              label: hasRowActionLabel(action.label)
-                                ? action.label
-                                : getRowActionLabel({ tooltip: action.tooltip }),
-                            }
-                          : {})}
-                        {...compact}
-                        items={subActions.filter(isSubActionShown)}
-                        onClick={stopRowClick}
-                      />
-                    ) : (
-                      <ReqoreButton
-                        key={idx}
-                        size={size}
-                        intent={action.intent ?? intent}
-                        {...action}
-                        {...(actionsOnTheirOwnLine ? { fluid: actionsSpanRow, wrap: true } : {})}
-                        {...compact}
-                        // After the spread, so it wraps the consumer's handler rather
-                        // than being replaced by it. Applied even to an action with no
-                        // handler of its own: an action button is a control, and a click
-                        // that lands on one should never read as a click on the row.
-                        // Without it both fire, and an action that toggles what the row
-                        // toggles cancels itself out. Matches ReqoreSeverityRow.
-                        onClick={withStoppedPropagation<HTMLButtonElement>(action.onClick)}
-                      >
-                        {/* Stacked, an icon-only action is a button of its own line: its tooltip is its
-                          label, as a finger gets no tooltip to read. */}
-                        {compact
-                          ? compact.label
-                          : hasRowActionLabel(action.label)
-                            ? action.label
-                            : actionsOnTheirOwnLine
-                              ? getRowActionLabel({ tooltip: action.tooltip })
-                              : undefined}
-                      </ReqoreButton>
-                    );
-                  }
+            {/* its text and its actions are drawn on the row: they read against it, not what is around it */}
+            <ReqoreSurfaceProvider color={backgrounds}>
+              <StyledBody className='reqore-entity-row-body'>
+                <StyledLabelLine $wrap={wrap} className='reqore-entity-row-label'>
+                  <StyledTextSlot $wrap={wrap}>
+                    <ReqoreSpan size={size} effect={labelEffect}>
+                      {label}
+                    </ReqoreSpan>
+                  </StyledTextSlot>
+                  {hasBadge && <ButtonBadge size={size} content={badge} margin='none' />}
+                </StyledLabelLine>
+                {description && (
+                  <StyledTextSlot $wrap={wrap}>
+                    <ReqoreP
+                      as={getReqoreTextElement(description)}
+                      size={secondarySize}
+                      effect={descriptionLook}
+                      className='reqore-entity-row-description'
+                    >
+                      {description}
+                    </ReqoreP>
+                  </StyledTextSlot>
                 )}
-              </ReqoreControlGroup>
-            )}
+                {metadata && (
+                  <StyledTextSlot $wrap={wrap}>
+                    <ReqoreSpan
+                      size={secondarySize}
+                      effect={metadataLook}
+                      className='reqore-entity-row-metadata'
+                    >
+                      {metadata}
+                    </ReqoreSpan>
+                  </StyledTextSlot>
+                )}
+              </StyledBody>
+              {actionsAsMenu && (
+                <ReqoreRowActionsMenu
+                  className='reqore-entity-row-actions'
+                  actions={actions}
+                  size={size}
+                  intent={intent}
+                  label={actionsMenuLabel}
+                  rowLabel={rowLabelText(label)}
+                />
+              )}
+              {!actionsAsMenu && actions && actions.length > 0 && (
+                <ReqoreControlGroup
+                  gapSize='small'
+                  className='reqore-entity-row-actions'
+                  /* narrow and stacked: one to a line, each the row's width in a container a phone's width or
+                     narrower and as wide as its label in a wider one; narrow in a row: as wide as they are, onto
+                     another line where they do not fit - a lone one the row's width as narrow as a phone */
+                  vertical={actionsStacked}
+                  fluid={actionsSpanRow}
+                  wrap={isNarrow && !actionsStacked && !loneActionAtLineEnd}
+                >
+                  {actions.map(
+                    ({ actions: subActions, actionsProps, shortLabel, ...action }, idx) => {
+                      /* At the end of a narrow row's label line, an action says its short label, or is its icon
+                       alone where it has a tooltip (`getCompactRowAction`): a long label took the line's room
+                       (David, qorus#646). On a line of its own, and wide, it says its label. */
+                      const compact = loneActionAtLineEnd
+                        ? getCompactRowAction({ ...action, shortLabel })
+                        : undefined;
+
+                      return subActions?.length ? (
+                        // An action carrying sub-actions is a menu, not a button — same
+                        // contract as ReqorePanel. The click is stopped here because the row
+                        // itself is commonly clickable: opening the menu must not also
+                        // trigger the row.
+                        <ReqoreDropdown
+                          key={idx}
+                          fixed
+                          size={size}
+                          intent={action.intent ?? intent}
+                          {...action}
+                          {...actionsProps}
+                          /* Stacked, a menu is a button like the others (the row's width in a phone-width container), and an
+                           icon-only one says what it is: its tooltip is its label, as a finger gets no tooltip
+                           to read. */
+                          {...(actionsOnTheirOwnLine
+                            ? {
+                                fluid: actionsSpanRow,
+                                fixed: !actionsSpanRow,
+                                label: hasRowActionLabel(action.label)
+                                  ? action.label
+                                  : getRowActionLabel({ tooltip: action.tooltip }),
+                              }
+                            : {})}
+                          {...compact}
+                          items={subActions.filter(isSubActionShown)}
+                          onClick={stopRowClick}
+                        />
+                      ) : (
+                        <ReqoreButton
+                          key={idx}
+                          size={size}
+                          intent={action.intent ?? intent}
+                          {...action}
+                          {...(actionsOnTheirOwnLine ? { fluid: actionsSpanRow, wrap: true } : {})}
+                          {...compact}
+                          // After the spread, so it wraps the consumer's handler rather
+                          // than being replaced by it. Applied even to an action with no
+                          // handler of its own: an action button is a control, and a click
+                          // that lands on one should never read as a click on the row.
+                          // Without it both fire, and an action that toggles what the row
+                          // toggles cancels itself out. Matches ReqoreSeverityRow.
+                          onClick={withStoppedPropagation<HTMLButtonElement>(action.onClick)}
+                        >
+                          {/* Stacked, an icon-only action is a button of its own line: its tooltip is its
+                            label, as a finger gets no tooltip to read. */}
+                          {compact
+                            ? compact.label
+                            : hasRowActionLabel(action.label)
+                              ? action.label
+                              : actionsOnTheirOwnLine
+                                ? getRowActionLabel({ tooltip: action.tooltip })
+                                : undefined}
+                        </ReqoreButton>
+                      );
+                    }
+                  )}
+                </ReqoreControlGroup>
+              )}
+            </ReqoreSurfaceProvider>
           </ReqoreTooltipComponent>
         </StyledContainer>
       );

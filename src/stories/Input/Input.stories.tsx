@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { ReqoreButton, ReqoreControlGroup } from '../../index';
+import { REDUCED_MOTION_QUERY } from '../../hooks/usePrefersReducedMotion';
 import { StoryMeta } from '../utils';
 import { StoryForm, storyFormText } from '../utils/formPreview';
 import { ALL_SIZES, FlatArg, IconArg, MinimalArg, RadiusSizeArg, SizeArg } from '../utils/args';
@@ -69,7 +70,7 @@ const Template: StoryFn<typeof ReqoreInput> = (args: IReqoreInputProps) => {
           onClearClick={handleValueClear}
           onChange={handleValueChange}
           rightIcon='EraserFill'
-          rightIconColor='#8727b7'
+          rightIconColor='#b57edc'
           focusRules={{ type: 'keypress', shortcut: '.', doNotInsertShortcut: true }}
         />
         <ReqoreInput {...args} placeholder='Disabled Input' disabled onChange={handleValueChange} />
@@ -104,7 +105,7 @@ const Template: StoryFn<typeof ReqoreInput> = (args: IReqoreInputProps) => {
           tooltip="I'm a tooltip"
           onChange={handleValueChange}
           rightIcon='DragMoveLine'
-          rightIconColor='#eb0e8c'
+          rightIconColor='#ff7ac0'
           value={value}
         />
         <ReqoreInput
@@ -609,5 +610,42 @@ export const PasswordToggleMobile: Story = {
 
     const field = input.closest('.reqore-control-wrapper') as HTMLElement;
     expect(field.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+
+export const TransitionsUnderReducedMotion: Story = {
+  // the story run asks for reduced motion for it (.storybook/vitest.setup.ts)
+  tags: ['reduced-motion'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders an input holding a value, with its clear button, under prefers-reduced-motion: its transitions take no time, so the clear button stands at rest at once.",
+      },
+    },
+  },
+  render: (args) => {
+    const [value, setValue] = useState('Input value');
+
+    return (
+      <ReqoreInput
+        {...args}
+        value={value}
+        onChange={(event: React.ChangeEvent<HTMLInputElement>) => setValue(event.target.value)}
+        onClearClick={() => setValue('')}
+      />
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const clear = await waitFor(() => {
+      const button = canvasElement.querySelector('.reqore-clear-input-button') as HTMLElement;
+      expect(button).toBeTruthy();
+      return button;
+    });
+    // the clear button eases its opacity in 0.1s, which reduced motion takes to a hair: 0.01ms (not none, which
+    // would send no transitionend - and not what a capture tool that switches transitions off would leave)
+    // the story runs under reduced motion (`tags: ['reduced-motion']`): without it, it checks nothing
+    expect(window.matchMedia(REDUCED_MOTION_QUERY).matches).toBe(true);
+    expect(parseFloat(getComputedStyle(clear).transitionDuration)).toBeCloseTo(0.00001, 8);
   },
 };
