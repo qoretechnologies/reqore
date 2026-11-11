@@ -374,6 +374,21 @@ export const resolvePanelRadius = (
 ): number =>
   radiusSize ? resolveRadius(size, radiusSize) : (theme?.panel?.radius ?? RADIUS_FROM_SIZE[size]);
 
+/**
+ * The side padding that keeps a rounded container's label clear of its corner: the container's
+ * own `padding`, or as much as it takes for the label to start `radius` px in from the outer edge
+ * when that is more. `border` is the width of the edge the padding sits inside.
+ *
+ * Padding steps with the size (8px at `normal`, 6px at `small`) while a corner is the theme's
+ * (`panel.radius`) or `radiusSize`'s, so a 14px corner on a small panel put its title 7px in, under
+ * the curve. Every container that draws a label against its top-left corner — a panel's title bar
+ * and bottom actions, an accordion's headers, a callout, a statistic, a feature card, a
+ * testimonial — pads it through here. Pass `radius` 0 where the container draws no corner (not
+ * rounded, or neither a surface nor an edge), so a bare container keeps its label flush.
+ */
+export const clearCorner = (padding: number, radius: number, border = 0): number =>
+  Math.max(padding, radius - border);
+
 export const TAG_RADIUS_FROM_SIZE = {
   micro: 1,
   tiny: 2,

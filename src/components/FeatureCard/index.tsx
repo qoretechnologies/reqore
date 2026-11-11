@@ -176,12 +176,25 @@ const StyledFeatureCard = styled(StyledEffect).withConfig({
   gap: ${({ size = 'normal' }) => PADDING_FROM_SIZE[size]}px;
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   max-width: 100%;
-  padding: ${({ $padded, $paddingSize }) =>
+  padding: ${({
+    $padded,
+    $paddingSize,
+    rounded,
+    size = 'normal' as TSizes,
+    radiusSize,
+    flat,
+    $transparent,
+  }) =>
     resolvePadding({
       padded: $padded,
       paddingSize: $paddingSize,
       verticalMultiplier: 3,
       horizontalMultiplier: 3,
+      // A flat, transparent card draws no corner to clear.
+      cornerInset:
+        rounded === false || (flat && $transparent)
+          ? 0
+          : Math.max(0, resolveRadius(size, radiusSize) - (flat ? 0 : 1)),
     })};
   background-color: ${({ theme, $transparent }) =>
     $transparent ? 'transparent' : getPanelBackgroundColor(theme)};

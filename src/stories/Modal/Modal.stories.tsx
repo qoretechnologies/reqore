@@ -16,7 +16,9 @@ import {
 } from '../../index';
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
+import { expectLabelsClearTheirCorners } from '../utils/cornerClearance';
 import { dragPointer } from '../utils/pointer';
+import { requiredElement } from '../utils/required';
 import { PHONE_STORY } from '../utils/touchScreen';
 
 import { ThemedSurface } from '../utils/themedSurface';
@@ -357,6 +359,160 @@ export const ConfirmationWithAppDefaults: Story = {
     await _testsWaitForText('Delete this job?');
     await _testsWaitForText('Keep it');
     await expect(document.body).not.toHaveTextContent('Are you sure you want to proceed?');
+  },
+};
+
+/** A confirmation whose message is a warning the reader has to see whole before they confirm. */
+const RETRY_WARNING =
+  'If ReleaseSupplierPayment had already done part of its work before it failed — sent a ' +
+  'payment, or created a shipment — that part may happen again. Check the supplier’s account ' +
+  'and the carrier’s bookings first. Retry runs the order again from the step that failed, with ' +
+  'the data it has now.';
+
+/** A message no screen holds: it has to scroll, and the buttons must stay in reach. */
+const HUGE_MESSAGE = Array.from(
+  { length: 150 },
+  (_, line) => `Line ${line + 1} of a message that is genuinely huge.`
+).join(' ');
+
+/** The app defaults the IDE and the admin portal open every confirmation with. */
+const CALM_CONFIRMATIONS = {
+  content: null,
+  backdropBlur: 0,
+  intentLook: 'icon' as const,
+};
+
+const AsksToRetry = ({ description = RETRY_WARNING }: { description?: string }) => {
+  const confirmAction = useReqoreProperty('confirmAction');
+  useMount(() => {
+    confirmAction({
+      title: 'Retry this order?',
+      description,
+      intent: 'warning',
+      confirmLabel: 'Retry',
+      onConfirm: noop,
+    });
+  });
+  return null;
+};
+
+/** The confirmation's message box, once the dialog is open. */
+const confirmationMessage = async (): Promise<HTMLElement> => {
+  await _testsWaitForText('Retry this order?');
+  return requiredElement<HTMLElement>(
+    '.reqore-confirmation-modal .reqore-panel-title-description',
+    "the confirmation's message"
+  );
+};
+
+/** The message is there whole: not clamped, not clipped, every word of it rendered. */
+const expectWholeMessage = async (message: HTMLElement, text: string) => {
+  await expect(message.textContent).toBe(text);
+  await expect(getComputedStyle(message).webkitLineClamp).toMatch(/^(none|)$/);
+  await expect(message.scrollHeight).toBeLessThanOrEqual(message.clientHeight + 1);
+};
+
+/** How many lines `element`'s text is laid out on. */
+const linesOf = (element: HTMLElement): number => {
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  return new Set(Array.from(range.getClientRects(), (rect) => Math.round(rect.top))).size;
+};
+
+/** Both buttons are on screen, inside the viewport, where a reader can press them. */
+const expectButtonsInReach = async () => {
+  const buttons = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      '.reqore-confirmation-modal .reqore-panel-bottom-actions button'
+    )
+  );
+  for (const name of ['Cancel', 'Retry']) {
+    const button = buttons.find((candidate) => candidate.textContent?.trim() === name);
+    await expect(button, `the ${name} button`).toBeTruthy();
+    const rect = button!.getBoundingClientRect();
+    await expect(rect.height).toBeGreaterThan(0);
+    await expect(rect.top).toBeGreaterThanOrEqual(0);
+    await expect(rect.bottom).toBeLessThanOrEqual(window.innerHeight);
+  }
+};
+
+export const ConfirmationShowsItsWholeMessage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A retry confirmation whose message warns that a payment or a shipment may happen again: the whole message is shown under the title, wrapped, with no line clamp and nothing clipped, above Cancel and Retry. Its title starts clear of the dialog\'s 14px corner.',
+      },
+    },
+  },
+  render: () => <AsksToRetry />,
+  args: {
+    otherThemeOptions: { panel: { radius: 14 } },
+    options: { confirmations: CALM_CONFIRMATIONS },
+  },
+  play: async () => {
+    const message = await confirmationMessage();
+    await expectWholeMessage(message, RETRY_WARNING);
+    // More than two lines: a panel's default clamp of 2 would have cut it at "part of its…".
+    await expect(linesOf(message)).toBeGreaterThan(2);
+    // Measured once the dialog has finished opening: until then it is drawn scaled down.
+    await waitFor(async () => {
+      await expectButtonsInReach();
+      await expect(
+        expectLabelsClearTheirCorners(
+          requiredElement('.reqore-confirmation-modal', 'the confirmation')
+        )
+      ).toBe(1);
+    });
+  },
+};
+
+export const ConfirmationShowsItsWholeMessageOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'The same retry confirmation on a phone (390 px): the dialog takes the screen less a 16px gutter each side, and the message wraps to as many lines as it needs — shown whole, nothing clipped — with Cancel and Retry on screen under it.',
+      },
+    },
+  },
+  render: () => <AsksToRetry />,
+  args: {
+    otherThemeOptions: { panel: { radius: 14 } },
+    options: { confirmations: CALM_CONFIRMATIONS },
+  },
+  play: async () => {
+    const message = await confirmationMessage();
+    await expectWholeMessage(message, RETRY_WARNING);
+    // More than two lines: a panel's default clamp of 2 would have cut it at "If…".
+    await expect(linesOf(message)).toBeGreaterThan(2);
+    await waitFor(() => expectButtonsInReach());
+  },
+};
+
+export const ConfirmationWithAHugeMessage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A confirmation whose message is far longer than the screen: the message scrolls in its own box, at most half the screen tall, while the title above it and Cancel and Retry below it stay on screen.',
+      },
+    },
+  },
+  render: () => <AsksToRetry description={HUGE_MESSAGE} />,
+  args: {
+    options: { confirmations: CALM_CONFIRMATIONS },
+  },
+  play: async () => {
+    const message = await confirmationMessage();
+    await expect(message.textContent).toBe(HUGE_MESSAGE);
+    await expect(message.scrollHeight).toBeGreaterThan(message.clientHeight);
+    await expect(message.clientHeight).toBeLessThanOrEqual(window.innerHeight / 2 + 1);
+    await expect(getComputedStyle(message).overflowY).toBe('auto');
+    await waitFor(() => expectButtonsInReach());
   },
 };
 

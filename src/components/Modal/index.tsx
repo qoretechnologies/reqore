@@ -21,6 +21,22 @@ export interface IReqoreModalProps extends Omit<IReqoreDrawerProps, 'position' |
    */
   draggable?: boolean;
   /**
+   * How many lines the description may wrap to before it is ellipsized. Default `0`: none — a
+   * dialog's description is the message it exists to say (a confirmation's warning above all), so
+   * it is shown whole, wrapped. A panel's own default of 2 suits a subtitle in a crowded header,
+   * not a dialog. See `descriptionMaxHeight` for a message too long for the screen.
+   *
+   * @default 0
+   */
+  descriptionMaxLines?: number;
+  /**
+   * The height a whole description scrolls past, in its own box, with the title and the buttons
+   * left on screen. Default `'50vh'`: a message has to be genuinely huge to scroll.
+   *
+   * @default '50vh'
+   */
+  descriptionMaxHeight?: string;
+  /**
    * The modal's width on a phone (`isMobile`). Default `'100%'`, which the modal's phone maximum
    * (`MODAL_PHONE_WIDTH`, `calc(100vw - 32px)`) holds to the page's own 16px gutter each side,
    * where 80vw left ~40px and a third of the screen's width unused. (Not `calc()` itself: the
@@ -41,6 +57,8 @@ export const ReqoreModal = memo(
     confirmOnClose,
     draggable,
     phoneWidth = '100%',
+    descriptionMaxLines = 0,
+    descriptionMaxHeight = '50vh',
     ...rest
   }: IReqoreModalProps) => {
     const id = useMemo(() => nanoid(), []);
@@ -93,6 +111,8 @@ export const ReqoreModal = memo(
         confirmOnClose={confirmOnClose}
         width={isMobile && phoneWidth !== null ? phoneWidth : width}
         height={height}
+        descriptionMaxLines={descriptionMaxLines}
+        descriptionMaxHeight={descriptionMaxHeight}
         position='left'
         _isModal
         _draggable={draggable}

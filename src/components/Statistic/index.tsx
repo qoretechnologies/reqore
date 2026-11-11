@@ -321,6 +321,7 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
         paddingSize: $paddingSize,
         verticalMultiplier: 3,
         horizontalMultiplier: 5,
+        cornerInset: rounded ? Math.max(0, resolveRadius(size, radiusSize) - (flat ? 0 : 1)) : 0,
       })};
     `}
 

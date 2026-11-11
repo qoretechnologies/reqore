@@ -170,12 +170,17 @@ const StyledTestimonial = styled(StyledEffect).withConfig({
   gap: ${({ size }) => PADDING_FROM_SIZE[size] * 1.5}px;
   width: ${({ $fluid, $fixed }) => ($fluid && !$fixed ? '100%' : undefined)};
   max-width: 100%;
-  padding: ${({ $padded, $paddingSize }) =>
+  padding: ${({ $padded, $paddingSize, rounded, size, radiusSize, flat, $transparent }) =>
     resolvePadding({
       padded: $padded,
       paddingSize: $paddingSize,
       verticalMultiplier: 3,
       horizontalMultiplier: 3,
+      // A flat, transparent card draws no corner to clear.
+      cornerInset:
+        !rounded || (flat && $transparent)
+          ? 0
+          : Math.max(0, resolveRadius(size, radiusSize) - (flat ? 0 : 1)),
     })};
   background-color: ${({ theme, $intent, $transparent }) =>
     $transparent ? 'transparent' : tintedBgFor(theme, $intent)};

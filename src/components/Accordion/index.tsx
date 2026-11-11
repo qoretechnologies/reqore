@@ -2,7 +2,13 @@ import { rgba } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import { css } from 'styled-components';
 import styled from '../../helpers/styled';
-import { GAP_FROM_SIZE, PADDING_FROM_SIZE, resolvePanelRadius, TSizes } from '../../constants/sizes';
+import {
+  clearCorner,
+  GAP_FROM_SIZE,
+  PADDING_FROM_SIZE,
+  resolvePanelRadius,
+  TSizes,
+} from '../../constants/sizes';
 import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
@@ -107,6 +113,8 @@ interface IStyledAccordionItem {
 interface IStyledAccordionHeader {
   theme: IReqoreTheme;
   size: TSizes;
+  /** The accordion's inner corner radius, or 0 when it draws no corner (see `clearCorner`). */
+  $cornerInset?: number;
   $isOpen?: boolean;
   disabled?: boolean;
   intent?: string;
@@ -149,7 +157,12 @@ const StyledAccordionHeader = styled.div<IStyledAccordionHeader>`
   display: flex;
   align-items: center;
   gap: ${() => GAP_FROM_SIZE.normal}px;
-  padding: ${({ size }) => `${PADDING_FROM_SIZE[size] * 1.5}px ${PADDING_FROM_SIZE[size] * 1.5}px`};
+  /* Every header is padded alike, so the first and the last (which sit against the corners)
+     line up with the rest: the sides clear the accordion's corner. */
+  padding: ${({ size, $cornerInset = 0 }) => {
+    const padding = PADDING_FROM_SIZE[size] * 1.5;
+    return `${padding}px ${clearCorner(padding, $cornerInset)}px`;
+  }};
   cursor: pointer;
   user-select: none;
   transition: background-color 0.15s ease-out;
@@ -227,6 +240,7 @@ interface IAccordionItemRendererProps {
   effectiveOpacity?: number;
   isFirst: boolean;
   isLast: boolean;
+  cornerInset: number;
   onToggle: (index: number) => void;
   onKeyDown: (event: React.KeyboardEvent, index: number) => void;
 }
@@ -247,6 +261,7 @@ const AccordionItemRenderer = memo(
     effectiveOpacity,
     isFirst,
     isLast,
+    cornerInset,
     onToggle,
     onKeyDown,
   }: IAccordionItemRendererProps) => {
@@ -276,6 +291,7 @@ const AccordionItemRenderer = memo(
           flat={flat}
           minimal={minimal}
           opacity={effectiveOpacity}
+          $cornerInset={cornerInset}
           onClick={() => onToggle(index)}
           onKeyDown={(e) => onKeyDown(e, index)}
           tabIndex={isItemDisabled ? undefined : 0}
@@ -400,6 +416,12 @@ export const ReqoreAccordion = memo(
       }, [effect, intent, theme]);
 
       const effectiveOpacity = transparent ? 0 : opacity;
+      // The corner the headers clear: the wrapper's radius less its border. A flat, minimal
+      // accordion with no intent fills nothing and edges nothing, so it draws no corner.
+      const cornerInset =
+        rounded && (!flat || !minimal || !!intent)
+          ? Math.max(0, resolvePanelRadius(theme, undefined, size) - (flat ? 0 : 1))
+          : 0;
 
       return (
         <ReqoreTooltipComponent
@@ -435,6 +457,7 @@ export const ReqoreAccordion = memo(
               effectiveOpacity={effectiveOpacity}
               isFirst={index === 0}
               isLast={index === items.length - 1}
+              cornerInset={cornerInset}
               onToggle={handleToggle}
               onKeyDown={handleKeyDown}
             />

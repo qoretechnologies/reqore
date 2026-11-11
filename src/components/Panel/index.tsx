@@ -20,6 +20,7 @@ import { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
   ACCENT_SIZE_TO_PX,
+  clearCorner,
   GAP_FROM_SIZE,
   HEADER_LEVEL_TO_PX,
   HEADER_SIZE_TO_NUMBER,
@@ -253,6 +254,15 @@ export interface IReqorePanelProps
    */
   descriptionMaxLines?: number;
   /**
+   * The most height a description that is not clamped (`descriptionMaxLines={0}`, or a clamped
+   * one opened by a click) takes — any CSS length — before it scrolls in its own box, with the
+   * title above it and the actions below it left where they are. For a panel whose height is
+   * bounded, a dialog above all: there a message longer than the screen pushed the panel's own
+   * buttons out of reach. Unset, the description is as tall as its text. `ReqoreModal` sets
+   * `'50vh'`.
+   */
+  descriptionMaxHeight?: string;
+  /**
    * How many lines the title may wrap to before it is ellipsized. `1` (the default) is today's
    * behaviour: one line, cut with an ellipsis the moment it runs out of room.
    *
@@ -368,6 +378,8 @@ export interface IStyledPanel extends Omit<IReqorePanelProps, 'accentSize'> {
   $descriptionBelow?: boolean;
   /** Resolved line cap for the description, or 0 for "no cap". */
   $descriptionMaxLines?: number;
+  /** The height an unclamped description scrolls past, or unset for none. */
+  $descriptionMaxHeight?: string;
   /** Description size in px once the title has been fitted, or 0 to leave it at its own. */
   $descriptionFontPx?: number;
   /** Always a resolved pixel number — the component maps `TSizes` names before
@@ -380,6 +392,10 @@ export interface IStyledPanel extends Omit<IReqorePanelProps, 'accentSize'> {
   /** True when `media` sits above the title bar: the bar is not the panel's top edge, so a
    *  sticky header has no top corners to round. */
   $mediaAbove?: boolean;
+  /** The panel's inner corner radius (its radius less its border), or 0 when it draws no
+   *  corner. The title bar and the bottom actions pad their sides by at least this, so what
+   *  they hold starts clear of the curve (`clearCorner`). */
+  $cornerInset?: number;
 }
 
 /** Nearest scrollable ancestor of `node` (the element a `position: sticky`
@@ -730,6 +746,7 @@ export const REQORE_PANEL_STYLE_PROPS = listReqoreStyleProps<
   description: true,
   descriptionEffect: true,
   descriptionIntent: true,
+  descriptionMaxHeight: true,
   descriptionMaxLines: true,
   descriptionPosition: true,
   disabled: true,
@@ -1017,6 +1034,21 @@ export const StyledPanelTitle = styled.div.withConfig({
       }
     `}
 
+  ${({ $descriptionMaxHeight }) =>
+    !!$descriptionMaxHeight &&
+    css`
+      /* The whole message, wrapped, scrolling in its own box only past this height — so a
+         dialog's title and its buttons stay on screen whatever it has to say. */
+      .reqore-panel-title-description {
+        display: block;
+        max-height: ${$descriptionMaxHeight};
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+    `}
+
   ${({ $descriptionMaxLines }) =>
     !!$descriptionMaxLines &&
     css`
@@ -1034,9 +1066,19 @@ export const StyledPanelTitle = styled.div.withConfig({
     rgba(getPanelHeaderColor(theme), opacity)};
   justify-content: space-between;
 
-  padding: ${({ noHorizontalPadding, size, padded, opacity, flat, intent }: IStyledPanel) =>
+  /* The sides clear the panel's corner: a title (or a bottom action) starts at least the
+     corner's radius in from the panel's edge, however small the size's own padding is. */
+  padding: ${({
+    noHorizontalPadding,
+    size,
+    padded,
+    opacity,
+    flat,
+    intent,
+    $cornerInset = 0,
+  }: IStyledPanel) =>
     `${opacity === 0 && flat && !intent ? 0 : getPaddingSize(padded, size)}px ${
-      noHorizontalPadding ? 0 : `${getPaddingSize(padded, size)}px`
+      noHorizontalPadding ? 0 : `${clearCorner(getPaddingSize(padded, size), $cornerInset)}px`
     }`};
 
   align-items: center;
@@ -1368,6 +1410,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       labelMaxLines = 2,
       descriptionPosition = 'inline',
       descriptionMaxLines = 2,
+      descriptionMaxHeight,
       labelMinTextSize,
       size: panelSize = 'normal',
       getContentRef,
@@ -2061,6 +2104,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
         )
       : 0;
+    // The title bar and the bottom actions start clear of that same inner curve. A panel with
+    // no surface and no edge (`noHorizontalPadding`) draws no corner, and keeps its bars flush.
+    const cornerInset = noHorizontalPadding ? 0 : mediaRadius;
     const hasMedia = media !== undefined && media !== null && media !== false && media !== '';
 
     const mediaNode = useMemo(
@@ -2401,6 +2447,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               responsive={responsiveTitle}
               $descriptionBelow={descriptionBelow}
               $descriptionMaxLines={descriptionIsClamped ? descriptionClamp : 0}
+              $descriptionMaxHeight={descriptionIsClamped ? undefined : descriptionMaxHeight}
               $descriptionFontPx={descriptionFontPx}
               // Stamped for the same reason `EntityRow` stamps it: a narrow container is a fact
               // about the box, and a test or a story asserting the narrow treatment should read
@@ -2417,6 +2464,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               stickyHeaderInset={stickyInset}
               isStuck={isHeaderStuck}
               $mediaAbove={hasMedia && mediaPosition === 'top' && !_isCollapsed}
+              $cornerInset={cornerInset}
             >
               {hasTitleHeader && (
                 <StyledPanelTitleHeader className='reqore-panel-title-header'>
@@ -2748,6 +2796,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               opacity={minimal ? 0 : (opacity ?? 1)}
               size={contentSize || panelSize}
               noHorizontalPadding={noHorizontalPadding}
+              $cornerInset={cornerInset}
             >
               {hasNonResponsiveActions(leftBottomActions) ? (
                 <ReqoreControlGroup size={panelSize} style={{ marginRight: 'auto' }}>
