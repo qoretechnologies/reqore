@@ -70,6 +70,19 @@ export interface IReqoreGlowConfig {
 const GLOW_INHERIT_CHROMA_FLOOR = 0.02;
 const GLOW_INHERIT_CHROMA_SPAN = 0.06;
 
+/** A slow pulse — a live status, a recording, a process that is running. */
+const HeartbeatKeyframes = keyframes`
+  0%,
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+  50% {
+    scale: 1.3;
+    opacity: 0.55;
+  }
+`;
+
 const SpinKeyframes = keyframes`
   0% {
     rotate: 0deg;
@@ -144,6 +157,16 @@ export const StyledIconWrapper = styled(StyledEffect).withConfig({
     animation === 'spin' &&
     css`
       animation: ${SpinKeyframes} 1s linear infinite;
+    `}
+
+  ${({ animation }) =>
+    animation === 'heartbeat' &&
+    css`
+      animation: ${HeartbeatKeyframes} 2.4s ease-in-out infinite;
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+      }
     `}
 `;
 

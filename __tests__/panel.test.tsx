@@ -640,6 +640,57 @@ test('Panel accent strip rounds itself only when a sticky header stops the wrapp
   expect(declaration(getRuleFor(plain, '::before'), 'border-top-left-radius')).toBeUndefined();
 });
 
+test('Panel rounds a collapsed title\'s bottom corners, so the card keeps its shape', () => {
+  // A collapsed panel is its title alone. With the title's bottom corners square, its surface
+  // painted over the panel's rounded bottom edge — the panel does not clip while its header is
+  // sticky — and the card looked cut off along the bottom.
+  render(
+    <div style={{ width: '600px' }}>
+      <ReqoreUIProvider theme={{ panel: { radius: 14 } }}>
+        <ReqoreLayoutContent>
+          <ReqorePanel label='Collapsed' collapsible isCollapsed stickyHeader>
+            Body
+          </ReqorePanel>
+          <ReqorePanel label='Open' collapsible stickyHeader>
+            Body
+          </ReqorePanel>
+          <ReqorePanel label='Square' collapsible isCollapsed stickyHeader rounded={false}>
+            Body
+          </ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    </div>
+  );
+
+  const [collapsed, open, square] = Array.from(
+    document.querySelectorAll('.reqore-panel-title')
+  ) as HTMLElement[];
+  // jsdom computes no radius from a stylesheet, so the declarations are read from the rules
+  // generated for the title's own classes.
+  const corner = (el: HTMLElement, prop: string) => {
+    const classes = Array.from(el.classList);
+    for (const style of Array.from(document.querySelectorAll('style'))) {
+      for (const rule of Array.from((style.sheet as CSSStyleSheet).cssRules)) {
+        const { selectorText, cssText } = rule as CSSStyleRule;
+        if (!classes.some((c) => selectorText === `.${c}`)) continue;
+        const value = declaration(cssText, prop);
+        if (value) return value;
+      }
+    }
+    return undefined;
+  };
+  const corners = (el: HTMLElement) => [
+    corner(el, 'border-top-left-radius'),
+    corner(el, 'border-bottom-left-radius'),
+    corner(el, 'border-bottom-right-radius'),
+  ];
+
+  // inside the 1px border, like the top corners
+  expect(corners(collapsed)).toEqual(['13px', '13px', '13px']);
+  expect(corners(open)).toEqual(['13px', undefined, undefined]);
+  expect(corners(square)).toEqual([undefined, undefined, undefined]);
+});
+
 test('Does not forward the Panel accentPosition prop to the DOM', () => {
   // A resizable panel renders as a COMPONENT target, where styled-components forwards every
   // prop — re-resizable then spreads the leftovers onto its wrapper div.

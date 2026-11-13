@@ -81,6 +81,22 @@ export interface IReqoreContext {
    * @default true
    */
   readonly shortcutHints?: boolean;
+  /**
+   * How much the page behind a modal's or drawer's backdrop is blurred, in px, when the modal or
+   * drawer passes no `blur` of its own. Decided once for an app (`options.backdropBlur`) so every
+   * dialog softens what is behind it the same way. Unset: no blur.
+   */
+  readonly backdropBlur?: number;
+  /**
+   * A modal's or drawer's own panel opacity (0–1) when it passes no `opacity` of its own. Below
+   * 1 the panel is frosted glass: see-through, and blurred by `dialogBlur`. Unset: solid.
+   */
+  readonly dialogOpacity?: number;
+  /**
+   * How much a see-through modal or drawer panel blurs what shows through it, in px. Applies
+   * only below an opacity of 1 (a solid panel has nothing to blur). Unset: no frost.
+   */
+  readonly dialogBlur?: number;
   readonly customPortalId?: string;
   readonly closePopoversOnEscPress?: boolean;
   readonly closeModalsOnEscPress?: boolean;
@@ -115,6 +131,9 @@ export default createContext<IReqoreContext>({
   closePopoversOnEscPress: true,
   closeModalsOnEscPress: true,
   shortcutHints: true,
+  backdropBlur: undefined,
+  dialogOpacity: undefined,
+  dialogBlur: undefined,
   escClosableModals: [],
   addEscClosableModal: null,
   removeEscClosableModal: null,

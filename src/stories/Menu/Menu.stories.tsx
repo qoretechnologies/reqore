@@ -14,6 +14,7 @@ import {
 import { StoryMeta } from '../utils';
 import { IntentArg, argManager } from '../utils/args';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreMenuProps>();
 
 const meta = {
@@ -590,4 +591,24 @@ export const WithEffect: Story = {
       },
     },
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a menu on the default and on the themed surface: with `theme.panel` set the menu sits on the panel surface.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreMenu width='210px' rounded>
+        <ReqoreMenuItem icon='EditLine' label='Edit' />
+        <ReqoreMenuItem icon='FileCopyLine' label='Duplicate' />
+        <ReqoreMenuItem icon='DeleteBinLine' label='Delete' intent='danger' />
+      </ReqoreMenu>
+    </ThemedSurfaceComparison>
+  ),
 };

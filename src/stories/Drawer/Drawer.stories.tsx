@@ -22,6 +22,7 @@ import { FlatArg, IntentArg, argManager } from '../utils/args';
 import { IDragPointerOptions, dragPointer } from '../utils/pointer';
 import { PHONE_STORY } from '../utils/touchScreen';
 
+import { ThemedSurface } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreDrawerProps>();
 
 const meta = {
@@ -351,6 +352,30 @@ export const Transparent: Story = {
 
   args: {
     opacity: 0.5,
+  },
+};
+
+export const FrostedByAppDefaults: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Drawer as frosted glass decided once for the app: `options.dialogOpacity: 0.72` makes every dialog panel see-through and `options.dialogBlur: 22` blurs what shows through it, over a backdrop softened by `options.backdropBlur: 5`. The drawer passes none of them itself.',
+      },
+    },
+  },
+  // The meta's own opacity and blur would win over the app's defaults, and Storybook drops an
+  // `undefined` arg rather than letting it override, so they are taken out here.
+  render: (args, context) => Template({ ...args, opacity: undefined, blur: undefined }, context),
+  args: {
+    options: { dialogOpacity: 0.72, dialogBlur: 22, backdropBlur: 5 },
+  },
+  play: async () => {
+    await _testsWaitForText('This is a test');
+    const panel = document.querySelector('.reqore-drawer') as HTMLElement;
+    // the app's opacity reached the panel; the frost it turns on is asserted in
+    // __tests__/drawerDialogSurface.test.tsx (this runner's browser reports no backdrop filter)
+    await expect(window.getComputedStyle(panel).backgroundColor).toMatch(/, 0\.72\)$/);
   },
 };
 
@@ -921,4 +946,22 @@ export const FloatingSheetOnAPhone: Story = {
     });
     await expectSheet({ heightRatio: 0.9, edge: 'bottom' });
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an open drawer on the themed surface: with `theme.panel` set it is a panel like any other — the panel surface, title bar included, and the hairline.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurface>
+      <ReqoreDrawer isOpen position='right' size='420px' label='A drawer on the themed surface'>
+        <ReqoreP>Drawers are panels, so they follow theme.panel.</ReqoreP>
+      </ReqoreDrawer>
+    </ThemedSurface>
+  ),
 };

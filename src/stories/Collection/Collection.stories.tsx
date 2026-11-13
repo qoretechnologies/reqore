@@ -16,6 +16,7 @@ import { expectControlsInside } from '../utils/controlsInside';
 import { StoryRowBox } from '../utils/rowBoxes';
 import { PHONE_STORY } from '../utils/touchScreen';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 export interface IColumnsStoryArgs extends IReqoreColumnsProps {
   multipleColumns?: boolean;
 }
@@ -241,6 +242,33 @@ export const Stacked: Story = {
       { label: 'Custom action', icon: 'Home7Line', fixed: true },
       { actions: [{ label: 'Test' }] },
     ],
+  },
+};
+
+export const StackedList: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection stacked as a list: the items are one block of rows, without gaps, and each row after the first is divided from the one above by the panel hairline. Asserts the divider, which a stacked grid does not draw.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      const rows = canvasElement.querySelectorAll<HTMLElement>(
+        '.reqore-collection-content > .reqore-collection-item'
+      );
+      expect(rows.length).toBeGreaterThan(1);
+      expect(getComputedStyle(rows[0]).borderTopWidth).toBe('0px');
+      expect(getComputedStyle(rows[1]).borderTopWidth).toBe('1px');
+    });
+  },
+  args: {
+    label: 'Collection of items',
+    stacked: true,
+    showAs: 'list',
+    items,
   },
 };
 
@@ -771,6 +799,34 @@ export const WithConfiguredGroups: Story = {
   } as IReqoreCollectionProps,
 };
 
+export const GroupLabelEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A grouped collection with one `groupLabelEffect` for every heading (sentence case, no letter-spacing, full opacity), with no group listed by name in `groups`.',
+      },
+    },
+  },
+  args: {
+    label: 'Integrations',
+    items: [
+      { label: 'Send Email', groups: ['Communication'], content: 'Send an email through SMTP' },
+      { label: 'Run Query', groups: ['Database'], content: 'Execute a SQL query' },
+    ],
+    groupLabelEffect: { uppercase: false, spaced: 0, opacity: 1 },
+  } as IReqoreCollectionProps,
+  play: async () => {
+    await waitFor(() =>
+      expect(document.querySelectorAll('.reqore-collection-group').length).toBe(2)
+    );
+    document.querySelectorAll('.reqore-collection-group').forEach((group) => {
+      const heading = group.querySelector('h1, h2, h3, h4, h5, h6, .reqore-heading') as Element;
+      expect(getComputedStyle(heading).textTransform).not.toBe('uppercase');
+    });
+  },
+};
+
 export const SortByRelevanceAcrossGroups: Story = {
   parameters: {
     docs: {
@@ -1035,4 +1091,27 @@ export const NarrowContainerKeepsItsItemsInsideOnAPhone: Story = {
     });
     await expectFavoritesInside(content);
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a collection on the default and on the themed surface: with `theme.panel` set each item sits on the panel surface.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreCollection
+        label='Connections'
+        items={[
+          { label: 'Gmail', content: 'Reads the inbox' },
+          { label: 'Slack', content: 'Ops workspace' },
+          { label: 'Telegram', content: 'The bot connection' },
+        ]}
+      />
+    </ThemedSurfaceComparison>
+  ),
 };

@@ -194,15 +194,15 @@ const StyledSegmentValue = styled.span`
   line-height: 1;
 `;
 
-const StyledSegmentLabel = styled.span`
+const StyledSegmentLabel = styled.span<{ $upper: boolean }>`
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 9px;
   font-weight: 600;
   line-height: 1;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  letter-spacing: ${({ $upper }) => ($upper ? '0.07em' : '0')};
+  text-transform: ${({ $upper }) => ($upper ? 'uppercase' : 'none')};
   opacity: 0.82;
 `;
 
@@ -362,7 +362,9 @@ const ReqoreStackedBar = memo(
                 >
                   {segment.showValue ? <StyledSegmentValue>{segment.value}</StyledSegmentValue> : null}
                   {segment.showLabel ? (
-                    <StyledSegmentLabel>{segment.label}</StyledSegmentLabel>
+                    <StyledSegmentLabel $upper={theme.uppercaseLabels !== false}>
+                      {segment.label}
+                    </StyledSegmentLabel>
                   ) : null}
                 </ReqoreTooltipComponent>
               ))}

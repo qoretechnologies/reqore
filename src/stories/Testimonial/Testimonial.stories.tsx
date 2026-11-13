@@ -5,6 +5,7 @@ import { TSizes } from '../../constants/sizes';
 import { StoryMeta } from '../utils';
 import { ALL_SIZES } from '../utils/args';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const meta = {
   title: 'Display/Testimonial',
   component: ReqoreTestimonial,
@@ -575,5 +576,26 @@ export const RadiusSize: Story = {
         />
       ))}
     </ReqoreControlGroup>
+  ),
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a testimonial on the default and on the themed surface: with `theme.panel` set the card sits on the panel surface, edged with the hairline.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreTestimonial
+        quote='The calm theme made the whole app read as one product.'
+        author='Avery Chen'
+        role='Lead Engineer · Northwind'
+        avatarIcon='UserSmileLine'
+      />
+    </ThemedSurfaceComparison>
   ),
 };

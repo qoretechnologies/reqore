@@ -8,6 +8,7 @@ import { render } from '@testing-library/react';
 import { ReqoreLayoutContent, ReqorePanel, ReqoreTable, ReqoreUIProvider } from '../src';
 import { IReqoreTableColumn } from '../src/components/Table';
 import { DEFAULT_THEME } from '../src/constants/theme';
+import { getPanelBackgroundColor } from '../src/helpers/colors';
 import { requiredAttribute, requiredElement } from '../src/stories/utils/required';
 
 const markedColumn = (
@@ -117,14 +118,17 @@ describe('A panel with a sticky header', () => {
 });
 
 describe("A pinned column's header cell", () => {
-  test("paints the theme's main color, opaque as a pinned body cell is, above the cells that scroll under it", () => {
+  // Opaque, so the cells that scroll under it never show through - and the SAME fill a pinned body
+  // cell has (the surface the table sits on). It used to paint theme.main, a step darker than the
+  // panel, which read as a black box over a pinned actions column (tablePinnedHeaderSurface.test).
+  test('paints the surface a pinned body cell paints, opaque above the cells that scroll under it', () => {
     const { container } = renderTable(pinnedColumns);
     const cells = headerCells(container);
 
     for (const pinned of [cells.id, cells.address]) {
       expect(pinned.style.position).toBe('sticky');
       expect(pinned.style.zIndex).toBe('2');
-      expect(pinned.style.backgroundColor).toBe(rgbOf(DEFAULT_THEME.main));
+      expect(pinned.style.backgroundColor).toBe(rgbOf(getPanelBackgroundColor(DEFAULT_THEME)));
     }
     // the cells between them paint nothing of their own: what the header row is drawn on shows
     for (const unpinned of [cells.firstName, cells.lastName]) {

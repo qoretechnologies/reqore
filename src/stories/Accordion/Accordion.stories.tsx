@@ -3,6 +3,7 @@ import { IReqoreAccordionItem, ReqoreAccordion } from '../../components/Accordio
 import { ReqoreButton, ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const meta = {
   title: 'Navigation/Accordion',
   component: ReqoreAccordion,
@@ -515,5 +516,26 @@ export const SettingsExample: Story = {
         },
       ]}
     />
+  ),
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an accordion on the default and on the themed surface: with `theme.panel` set the items sit on the panel surface, edged with the hairline.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreAccordion
+        items={[
+          { label: 'What does the theme change?', content: 'The surface and the hairline.', isOpen: true },
+          { label: 'Does an intent still win?', content: 'Yes.' },
+        ]}
+      />
+    </ThemedSurfaceComparison>
   ),
 };

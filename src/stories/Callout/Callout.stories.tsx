@@ -8,6 +8,7 @@ import { DEFAULT_INTENTS } from '../../constants/theme';
 import { StoryMeta } from '../utils';
 import { ALL_SIZES, FlatArg, IntentArg, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreCalloutProps>();
 
 const meta = {
@@ -751,5 +752,57 @@ export const LabelOnly: Story = {
         expect(Math.abs(iconMid - textMid)).toBeLessThanOrEqual(1);
       });
     });
+  },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a neutral and a warning callout on the default and on the themed surface: the neutral one takes the panel surface and hairline, the warning one keeps its intent.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreCallout label='Neutral callout' description='Sits on the panel surface.' />
+      <ReqoreCallout intent='warning' label='Warning callout' description='Keeps its intent.' />
+    </ThemedSurfaceComparison>
+  ),
+};
+
+export const ContentFillsTheCallout: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a callout whose only content is a short sentence above a full-width box. The content fills the callout, so the box spans it rather than stopping at the width of the sentence.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreCallout intent='danger'>
+      <div>A short sentence.</div>
+      <div
+        data-testid='full-width-box'
+        style={{ width: '100%', padding: 8, border: '1px solid currentColor', boxSizing: 'border-box' }}
+      >
+        Full width
+      </div>
+    </ReqoreCallout>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('[data-testid="full-width-box"]') as HTMLElement;
+    const content = canvasElement.querySelector('.reqore-callout-content') as HTMLElement;
+    const callout = canvasElement.querySelector('.reqore-callout') as HTMLElement;
+    await waitFor(() => expect(box).toBeTruthy());
+    // the content is as wide as the callout leaves it (the icon aside), and the box fills it
+    await expect(content.getBoundingClientRect().width).toBeGreaterThan(
+      callout.getBoundingClientRect().width * 0.8
+    );
+    await expect(Math.round(box.getBoundingClientRect().width)).toBe(
+      Math.round(content.getBoundingClientRect().width)
+    );
   },
 };

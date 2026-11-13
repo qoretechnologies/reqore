@@ -20,22 +20,26 @@ import { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
   ACCENT_SIZE_TO_PX,
+  clearCorner,
   GAP_FROM_SIZE,
   HEADER_LEVEL_TO_PX,
   HEADER_SIZE_TO_NUMBER,
   ICON_FROM_HEADER_SIZE,
   PADDING_FROM_SIZE,
+  resolvePanelRadius,
   resolveRadius,
   SPECIAL_PADDING_FROM_SIZE,
-  TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
-  changeDarkness,
   changeLightness,
   getMainBackgroundColor,
+  getPanelBackgroundColor,
+  getPanelHairlineColor,
   getReadableColor,
+  getThemePanelSurface,
 } from '../../helpers/colors';
 import styled, {
   listReqoreStyleProps,
@@ -250,6 +254,22 @@ export interface IReqorePanelProps
    */
   descriptionMaxLines?: number;
   /**
+   * The most height a description that is not clamped (`descriptionMaxLines={0}`, or a clamped
+   * one opened by a click) takes — any CSS length — before it scrolls in its own box, with the
+   * title above it and the actions below it left where they are. For a panel whose height is
+   * bounded, a dialog above all: there a message longer than the screen pushed the panel's own
+   * buttons out of reach. Unset, the description is as tall as its text. `ReqoreModal` sets
+   * `'50vh'`.
+   */
+  descriptionMaxHeight?: string;
+  /**
+   * The corner radius, in px, of a rounded container the panel sits flush in — a stacked
+   * `ReqoreCollection`, which clips its square rows into one rounded block. The title bar, the
+   * padded content and the bottom actions clear that corner as they clear the panel's own
+   * (`clearCorner`). Unset, only the panel's own corner counts.
+   */
+  enclosingRadius?: number;
+  /**
    * How many lines the title may wrap to before it is ellipsized. `1` (the default) is today's
    * behaviour: one line, cut with an ellipsis the moment it runs out of room.
    *
@@ -365,6 +385,8 @@ export interface IStyledPanel extends Omit<IReqorePanelProps, 'accentSize'> {
   $descriptionBelow?: boolean;
   /** Resolved line cap for the description, or 0 for "no cap". */
   $descriptionMaxLines?: number;
+  /** The height an unclamped description scrolls past, or unset for none. */
+  $descriptionMaxHeight?: string;
   /** Description size in px once the title has been fitted, or 0 to leave it at its own. */
   $descriptionFontPx?: number;
   /** Always a resolved pixel number — the component maps `TSizes` names before
@@ -377,6 +399,11 @@ export interface IStyledPanel extends Omit<IReqorePanelProps, 'accentSize'> {
   /** True when `media` sits above the title bar: the bar is not the panel's top edge, so a
    *  sticky header has no top corners to round. */
   $mediaAbove?: boolean;
+  /** The panel's inner corner radius (its radius less its border), or 0 when it draws no
+   *  corner. The title bar, the padded content and the bottom actions pad their sides by at
+   *  least this, so what they hold starts clear of the curve and on one left edge
+   *  (`clearCorner`). */
+  $cornerInset?: number;
 }
 
 /** Nearest scrollable ancestor of `node` (the element a `position: sticky`
@@ -612,6 +639,15 @@ export const StyledPanelTitleHeaderLabelAndBadge = styled.div`
   display: inline-flex;
   align-items: center;
   max-width: 100%;
+
+  /* A title and its count read as one line: the count sits on the title's baseline. Centred in
+     the row instead, a count smaller than its title floated above it, like a superscript,
+     because the title's text sits low in the taller heading box it is set in. The icon stays
+     centred. */
+  & > .reqore-panel-title-label-box,
+  & > .reqore-tag-group {
+    align-self: baseline;
+  }
 `;
 
 export type TPanelStyle = React.FC<
@@ -650,6 +686,40 @@ const getPanelBorderBaseColor = (
   { intent, accentPosition }: Pick<IStyledPanel, 'intent' | 'accentPosition'>
 ) => (intent && !accentPosition ? theme.intents[intent] : getMainBackgroundColor(theme));
 
+/** The title bar: a band a step lighter than the page — or, with `theme.panel` named, the
+ *  panel's own surface, set apart from the body by the hairline under it alone. */
+const getPanelHeaderColor = (theme: IReqoreTheme, hovered?: boolean) => {
+  const themed = getThemePanelSurface(theme);
+
+  if (themed?.main) {
+    return hovered ? changeLightness(themed.main, 0.02) : themed.main;
+  }
+
+  return changeLightness(getMainBackgroundColor(theme), hovered ? 0.05 : 0.03);
+};
+
+/** The resting border: the intent's colour when the intent tints the edge, else the hairline
+ *  (`theme.panel.border` when the theme names one). */
+const getPanelBorderColor = (
+  theme: IReqoreTheme,
+  { intent, accentPosition }: Pick<IStyledPanel, 'intent' | 'accentPosition'>
+) =>
+  intent && !accentPosition
+    ? changeLightness(getPanelBorderBaseColor(theme, { intent, accentPosition }), 0.08)
+    : getPanelHairlineColor(theme);
+
+/** The border while the panel is hovered — a step brighter than at rest. */
+const getPanelHoverBorderColor = (
+  theme: IReqoreTheme,
+  { intent, accentPosition }: Pick<IStyledPanel, 'intent' | 'accentPosition'>
+) => {
+  const themed = !(intent && !accentPosition) ? getThemePanelSurface(theme) : undefined;
+
+  return themed?.border
+    ? changeLightness(themed.border, 0.12)
+    : changeLightness(getPanelBorderBaseColor(theme, { intent, accentPosition }), 0.25);
+};
+
 /**
  * Every panel prop that only styles or configures the panel. None of them reaches the rendered
  * element — the `div`, re-resizable's `Resizable` (which spreads every prop it does not know onto
@@ -684,9 +754,11 @@ export const REQORE_PANEL_STYLE_PROPS = listReqoreStyleProps<
   description: true,
   descriptionEffect: true,
   descriptionIntent: true,
+  descriptionMaxHeight: true,
   descriptionMaxLines: true,
   descriptionPosition: true,
   disabled: true,
+  enclosingRadius: true,
   errorBoundaryOptions: true,
   expandTooltip: true,
   fill: true,
@@ -756,15 +828,12 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
   ),
 })<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
-  border-radius: ${({ rounded, radiusSize }) =>
-    rounded ? resolveRadius('normal', radiusSize) : 0}px;
+    rgba(getPanelBackgroundColor(theme), opacity)};
+  border-radius: ${({ rounded, radiusSize, theme }) =>
+    rounded ? resolvePanelRadius(theme, radiusSize) : 0}px;
   border: ${({ theme, flat, intent, accentPosition }) =>
     hasPanelBorder({ flat, intent, accentPosition })
-      ? `1px solid ${changeLightness(
-          getPanelBorderBaseColor(theme, { intent, accentPosition }),
-          0.08
-        )}`
+      ? `1px solid ${getPanelBorderColor(theme, { intent, accentPosition })}`
       : undefined};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   ${({
@@ -796,7 +865,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
       stickyHeader && rounded
         ? Math.max(
             0,
-            resolveRadius('normal', radiusSize) -
+            resolvePanelRadius(theme, radiusSize) -
               (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
           )
         : 0;
@@ -886,7 +955,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
                 : rgba(
                     darken(
                       0.025,
-                      rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)
+                      rgba(getPanelBackgroundColor(theme), opacity)
                     ),
                     opacity
                   )
@@ -894,7 +963,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
 
             border-color: ${
               hasPanelBorder({ flat, intent, accentPosition })
-                ? changeLightness(getPanelBorderBaseColor(theme, { intent, accentPosition }), 0.25)
+                ? getPanelHoverBorderColor(theme, { intent, accentPosition })
                 : undefined
             };
 
@@ -907,7 +976,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
                     ${rgba(
                       darken(
                         0.025,
-                        rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)
+                        rgba(getPanelBackgroundColor(theme), opacity)
                       ),
                       opacity
                     )}
@@ -935,6 +1004,31 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
   ${({ disabled }) => disabled && DisabledElement}
 `;
 
+/**
+ * The bottom corners of a collapsed panel's title: the panel's inner radius (inset 1px past a
+ * visible border, as the top corners are), so the title alone keeps the card's shape. Only
+ * where the header is sticky and rounded — elsewhere the panel clips its title itself — and
+ * not while the header is stuck, when it is a full-width bar.
+ */
+const collapsedTitleRadius = ({
+  isCollapsed,
+  stickyHeader,
+  rounded,
+  radiusSize,
+  flat,
+  intent,
+  accentPosition,
+  isStuck,
+  theme,
+}: IStyledPanel): string | undefined =>
+  isCollapsed && stickyHeader && rounded && !isStuck
+    ? `${Math.max(
+        0,
+        resolvePanelRadius(theme, radiusSize) -
+          (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
+      )}px`
+    : undefined;
+
 export const StyledPanelTitle = styled.div.withConfig({
   shouldForwardProp: omitStyleProps('opacity'),
 })<IStyledPanel>`
@@ -948,12 +1042,12 @@ export const StyledPanelTitle = styled.div.withConfig({
   ${({ $descriptionFontPx }) =>
     !!$descriptionFontPx &&
     css`
-      /* The description is a fixed px from \`TEXT_FROM_SIZE\` and knows nothing about the title
-         having shrunk, so a fitted title crosses under it: at the 12px floor the support text
-         renders at 15px and outranks the heading it supports. Scaling it by the SAME factor the
-         title took keeps the two in their original proportion instead of giving the description
-         a fit of its own — which would size it against its own box and let the pair drift apart
-         again, in the other direction. */
+      /* The description is a fixed px from the type scale (\`getTextSize\`) and knows nothing
+         about the title having shrunk, so a fitted title crosses under it: at the 12px floor
+         the support text renders at 15px and outranks the heading it supports. Scaling it by
+         the SAME factor the title took keeps the two in their original proportion instead of
+         giving the description a fit of its own — which would size it against its own box and
+         let the pair drift apart again, in the other direction. */
       .reqore-panel-title-description {
         font-size: ${$descriptionFontPx}px;
       }
@@ -974,6 +1068,21 @@ export const StyledPanelTitle = styled.div.withConfig({
       }
     `}
 
+  ${({ $descriptionMaxHeight }) =>
+    !!$descriptionMaxHeight &&
+    css`
+      /* The whole message, wrapped, scrolling in its own box only past this height — so a
+         dialog's title and its buttons stay on screen whatever it has to say. */
+      .reqore-panel-title-description {
+        display: block;
+        max-height: ${$descriptionMaxHeight};
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+    `}
+
   ${({ $descriptionMaxLines }) =>
     !!$descriptionMaxLines &&
     css`
@@ -988,18 +1097,28 @@ export const StyledPanelTitle = styled.div.withConfig({
     `}
 
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
+    rgba(getPanelHeaderColor(theme), opacity)};
   justify-content: space-between;
 
-  padding: ${({ noHorizontalPadding, size, padded, opacity, flat, intent }: IStyledPanel) =>
+  /* The sides clear the panel's corner: a title (or a bottom action) starts at least the
+     corner's radius in from the panel's edge, however small the size's own padding is. */
+  padding: ${({
+    noHorizontalPadding,
+    size,
+    padded,
+    opacity,
+    flat,
+    intent,
+    $cornerInset = 0,
+  }: IStyledPanel) =>
     `${opacity === 0 && flat && !intent ? 0 : getPaddingSize(padded, size)}px ${
-      noHorizontalPadding ? 0 : `${getPaddingSize(padded, size)}px`
+      noHorizontalPadding ? 0 : `${clearCorner(getPaddingSize(padded, size), $cornerInset)}px`
     }`};
 
   align-items: center;
   border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
     !isCollapsed && !flat && opacity
-      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.08), opacity)}`
+      ? `1px solid ${rgba(getPanelHairlineColor(theme), opacity)}`
       : null};
   transition: background-color 0.2s ease-out;
   overflow: hidden;
@@ -1020,7 +1139,7 @@ export const StyledPanelTitle = styled.div.withConfig({
         }
 
         background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-          rgba(changeLightness(getMainBackgroundColor(theme), 0.05), opacity)};
+          rgba(getPanelHeaderColor(theme, true), opacity)};
       }
     `}
 `;
@@ -1069,13 +1188,14 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
     accentPosition,
     isStuck,
     $mediaAbove,
+    theme,
   }: IStyledPanel) =>
     stickyHeader && rounded
       ? isStuck || $mediaAbove
         ? '0px'
         : `${Math.max(
             0,
-            resolveRadius('normal', radiusSize) -
+            resolvePanelRadius(theme, radiusSize) -
               (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
           )}px`
       : undefined};
@@ -1088,18 +1208,24 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
     accentPosition,
     isStuck,
     $mediaAbove,
+    theme,
   }: IStyledPanel) =>
     stickyHeader && rounded
       ? isStuck || $mediaAbove
         ? '0px'
         : `${Math.max(
             0,
-            resolveRadius('normal', radiusSize) -
+            resolvePanelRadius(theme, radiusSize) -
               (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
           )}px`
       : undefined};
+  // A COLLAPSED panel is its title alone, so the title also meets the panel's bottom corners.
+  // Squared there, its surface painted over the panel's rounded bottom edge (a sticky header
+  // keeps the panel from clipping) and every collapsed card read as cut off along the bottom.
+  border-bottom-left-radius: ${(props: IStyledPanel) => collapsedTitleRadius(props)};
+  border-bottom-right-radius: ${(props: IStyledPanel) => collapsedTitleRadius(props)};
   background: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
+    rgba(getPanelHeaderColor(theme), opacity)};
   // When the header is sticky AND the panel is minimal / transparent (opacity === 0), the
   // header has no surface of its own — scrolling content slides straight under it and the
   // label / actions become illegible. Apply a backdrop blur so the underlying content stays
@@ -1130,18 +1256,23 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
     !flat
-      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.08), opacity)}`
+      ? `1px solid ${rgba(getPanelHairlineColor(theme), opacity)}`
       : null};
 `;
 
 export const StyledPanelContent = styled.div<IStyledPanel>`
   display: ${({ isCollapsed }) => (isCollapsed ? 'none !important' : undefined)};
-  padding: ${({ padded, size, noHorizontalPadding }) =>
+  /* The sides take the same corner clearance as the title bar and the bottom actions, so the
+     title, the content and the actions share one left edge. Unpadded content stays flush. */
+  padding: ${({ padded, size, noHorizontalPadding, $cornerInset = 0 }) =>
     !padded
       ? undefined
       : noHorizontalPadding
         ? `${getPaddingSize(padded, size)}px 0`
-        : `${getPaddingSize(padded, size)}px ${getPaddingSize(padded, size)}px`};
+        : `${getPaddingSize(padded, size)}px ${clearCorner(
+            getPaddingSize(padded, size),
+            $cornerInset
+          )}px`};
   flex: 1;
   /* A flex child's min-height defaults to its content size, so without this the
      scrollable content can't shrink: a panel/drawer body taller than the panel
@@ -1150,7 +1281,7 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
   min-height: 0;
   overflow: auto;
   overflow-wrap: anywhere;
-  font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getTextSize(theme, size)}px;
   /* Under a sticky header the body scrolls beneath it, and whatever in the body was positioned with a
      z-index as high as the header's (2) was drawn over it: a table's pinned columns are sticky at 2, and
      come later in the document. A stacking context of its own puts everything in the body in one layer
@@ -1228,7 +1359,7 @@ export const StyledFloatingActions = styled.div<{
   z-index: 999999;
   display: flex;
   padding: ${({ size }) => PADDING_FROM_SIZE[size]}px;
-  background-color: ${({ theme }) => rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), 1)};
+  background-color: ${({ theme }) => rgba(getPanelBackgroundColor(theme), 1)};
   border: ${({ theme, flat, intent }) =>
     flat && !intent
       ? undefined
@@ -1323,6 +1454,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       labelMaxLines = 2,
       descriptionPosition = 'inline',
       descriptionMaxLines = 2,
+      descriptionMaxHeight,
+      enclosingRadius,
       labelMinTextSize,
       size: panelSize = 'normal',
       getContentRef,
@@ -2012,10 +2145,25 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const mediaRadius = rounded
       ? Math.max(
           0,
-          resolveRadius('normal', rest.radiusSize) -
+          resolvePanelRadius(theme, rest.radiusSize) -
             (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
         )
       : 0;
+    // The title bar, the padded content and the bottom actions start clear of that same inner
+    // curve — one left edge for all three — and of the
+    // corner of a container the panel sits flush in (`enclosingRadius`), less the panel's own
+    // border. A panel with no surface and no edge (`noHorizontalPadding`) draws no corner, and
+    // keeps its bars flush.
+    const cornerInset = noHorizontalPadding
+      ? 0
+      : Math.max(
+          mediaRadius,
+          clearCorner(
+            0,
+            enclosingRadius ?? 0,
+            hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0
+          )
+        );
     const hasMedia = media !== undefined && media !== null && media !== false && media !== '';
 
     const mediaNode = useMemo(
@@ -2172,7 +2320,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       fitLabel && !descriptionEffect?.textSize && labelFitPx < labelNaturalPx
         ? Math.max(
             FIT_TEXT_FLOOR_PX,
-            Math.round((TEXT_FROM_SIZE[panelSize] ?? TEXT_FROM_SIZE.normal) * (labelFitPx / labelNaturalPx))
+            Math.round(
+              (getTextSize(theme, panelSize) ?? getTextSize(theme, 'normal')) *
+                (labelFitPx / labelNaturalPx)
+            )
           )
         : 0;
 
@@ -2353,6 +2504,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               responsive={responsiveTitle}
               $descriptionBelow={descriptionBelow}
               $descriptionMaxLines={descriptionIsClamped ? descriptionClamp : 0}
+              $descriptionMaxHeight={descriptionIsClamped ? undefined : descriptionMaxHeight}
               $descriptionFontPx={descriptionFontPx}
               // Stamped for the same reason `EntityRow` stamps it: a narrow container is a fact
               // about the box, and a test or a story asserting the narrow treatment should read
@@ -2369,6 +2521,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               stickyHeaderInset={stickyInset}
               isStuck={isHeaderStuck}
               $mediaAbove={hasMedia && mediaPosition === 'top' && !_isCollapsed}
+              $cornerInset={cornerInset}
             >
               {hasTitleHeader && (
                 <StyledPanelTitleHeader className='reqore-panel-title-header'>
@@ -2684,6 +2837,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               size={contentSize || panelSize}
               ref={getContentRef}
               noHorizontalPadding={noHorizontalPadding}
+              $cornerInset={cornerInset}
               stickyHeader={rest.stickyHeader}
             >
               {children}
@@ -2700,6 +2854,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               opacity={minimal ? 0 : (opacity ?? 1)}
               size={contentSize || panelSize}
               noHorizontalPadding={noHorizontalPadding}
+              $cornerInset={cornerInset}
             >
               {hasNonResponsiveActions(leftBottomActions) ? (
                 <ReqoreControlGroup size={panelSize} style={{ marginRight: 'auto' }}>

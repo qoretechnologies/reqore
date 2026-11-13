@@ -2,17 +2,14 @@ import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import { css } from 'styled-components';
 import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
-import {
-  PADDING_FROM_SIZE,
-  resolveRadius,
-  TEXT_FROM_SIZE,
-  TSizes,
-} from '../../constants/sizes';
+import { clearCorner, PADDING_FROM_SIZE, resolvePanelRadius, TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
 import {
-  changeDarkness,
   changeLightness,
   getMainBackgroundColor,
+  getPanelBackgroundColor,
+  getPanelHairlineColor,
   getReadableColor,
 } from '../../helpers/colors';
 import { getOneLessSize, resolveAccentSize, TReqorePadded } from '../../helpers/utils';
@@ -150,6 +147,9 @@ interface IStyledCalloutProps
   /** One piece of text and nothing else beside the icon — a label alone or a
    *  description alone. See the alignment note. */
   $loneText?: boolean;
+  /** The callout's inner corner radius, or 0 when it draws no corner. Its padded sides are at
+   *  least this, so the icon and the label start clear of the curve (`clearCorner`). */
+  $cornerInset?: number;
 }
 
 // Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
@@ -190,7 +190,7 @@ const StyledCallout = styled(StyledEffect).withConfig({
   gap: ${({ size = 'normal' }) => PADDING_FROM_SIZE[size] * 2}px;
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   max-width: 100%;
-  padding: ${({ $padded, $paddingSize, accentPosition = 'left', $accentSize }) => {
+  padding: ${({ $padded, $paddingSize, accentPosition = 'left', $accentSize, $cornerInset = 0 }) => {
     if ($padded === false) {
       // Even with no padding requested, the side that hosts the accent strip
       // must reserve `accentSize` so the content does not collide with it.
@@ -200,7 +200,8 @@ const StyledCallout = styled(StyledEffect).withConfig({
     }
     const v2_5 = PADDING_FROM_SIZE[$paddingSize] * 2.5;
     const v3 = PADDING_FROM_SIZE[$paddingSize] * 3;
-    const h3 = PADDING_FROM_SIZE[$paddingSize] * 3;
+    // A padded side clears the corner; an unpadded one (`'vertical'`) stays flush, as asked.
+    const h3 = clearCorner(PADDING_FROM_SIZE[$paddingSize] * 3, $cornerInset);
     const horizontalOnly = $padded === 'horizontal';
     const verticalOnly = $padded === 'vertical';
     if (accentPosition === 'left') {
@@ -208,7 +209,9 @@ const StyledCallout = styled(StyledEffect).withConfig({
       const top = horizontalOnly ? 0 : v2_5;
       const right = verticalOnly ? 0 : h3;
       const bottom = horizontalOnly ? 0 : v2_5;
-      const left = verticalOnly ? $accentSize : h3 + $accentSize;
+      const left = verticalOnly
+        ? $accentSize
+        : clearCorner(PADDING_FROM_SIZE[$paddingSize] * 3 + $accentSize, $cornerInset);
       return `${top}px ${right}px ${bottom}px ${left}px`;
     }
     // accentPosition === 'top' — top side hosts the strip
@@ -219,7 +222,7 @@ const StyledCallout = styled(StyledEffect).withConfig({
     return `${top}px ${right}px ${bottom}px ${left}px`;
   }};
   background-color: ${({ theme, $transparent }) =>
-    $transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
+    $transparent ? 'transparent' : getPanelBackgroundColor(theme)};
   border: ${({ theme, flat, intent }) =>
     flat
       ? 0
@@ -227,8 +230,8 @@ const StyledCallout = styled(StyledEffect).withConfig({
           intent ? theme.intents[intent] : getMainBackgroundColor(theme),
           0.08
         )}`};
-  border-radius: ${({ rounded, size = 'normal' as TSizes, radiusSize }) =>
-    rounded === false ? 0 : `${resolveRadius(size, radiusSize)}px`};
+  border-radius: ${({ rounded, size = 'normal' as TSizes, radiusSize, theme }) =>
+    rounded === false ? 0 : `${resolvePanelRadius(theme, radiusSize, size)}px`};
   overflow: hidden;
   flex: ${({ fluid }) => (fluid ? '1 auto' : '0 0 auto')};
   transition:
@@ -270,7 +273,7 @@ const StyledCallout = styled(StyledEffect).withConfig({
             background-color: ${intent
               ? rgba(theme.intents[intent], $transparent ? 0.04 : 0.1)
               : $transparent
-              ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
+              ? rgba(getPanelHairlineColor(theme), 0.08)
               : changeLightness(getMainBackgroundColor(theme), -0.32)};
           }
         `
@@ -316,10 +319,16 @@ const StyledCalloutContent = styled(StyledTextEffect)<{
      copy larger than the heading above it reads as the heading being the
      afterthought. */
   $underLabel?: boolean;
+  /* Set when the body is the callout's only content, a direct child of its row: it fills the
+     row, as the labelled body does. Without it the body shrank to its widest line, so anything
+     meant to span the callout (a full-width box, a table, a revealed panel) stopped at the width
+     of the sentence above it. */
+  $fill?: boolean;
 }>`
+  ${({ $fill }) => ($fill ? 'flex: 1 1 auto; min-width: 0;' : '')}
   color: ${({ theme }) => rgba(getReadableColor(theme, undefined, undefined, true), 0.84)};
-  font-size: ${({ size = 'normal', $underLabel }) =>
-    TEXT_FROM_SIZE[size] * ($underLabel ? 1 : 1.2)}px;
+  font-size: ${({ size = 'normal', $underLabel, theme }) =>
+    getTextSize(theme, size as TSizes) * ($underLabel ? 1 : 1.2)}px;
   line-height: 1.25;
 `;
 
@@ -375,6 +384,12 @@ export const ReqoreCallout = memo(
       const hasStructuredContent = !!label || !!description;
       // Exactly one piece of text beside the icon — see `StyledCallout`.
       const loneText = !children && !!label !== !!description;
+      // The corner the padded sides clear: the radius less the border. A flat, transparent
+      // callout has neither a surface nor an edge, so it draws no corner to clear.
+      const cornerInset =
+        rounded && (!flat || !transparent)
+          ? Math.max(0, resolvePanelRadius(theme, rest.radiusSize, size) - (flat ? 0 : 1))
+          : 0;
 
       const resolvedIconColor: TReqoreEffectColor = useMemo(() => {
         if (iconColor) return iconColor;
@@ -410,6 +425,7 @@ export const ReqoreCallout = memo(
           $padded={padded}
           $paddingSize={paddingSize ?? size}
           $loneText={loneText}
+          $cornerInset={cornerInset}
           className={`${className || ''} reqore-callout`}
         >
           {hasIcon && (
@@ -475,6 +491,7 @@ export const ReqoreCallout = memo(
               as='div'
               theme={theme}
               size={size}
+              $fill
               effect={contentEffect || {}}
               className='reqore-callout-content'
             >

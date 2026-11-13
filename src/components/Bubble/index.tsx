@@ -21,9 +21,9 @@ import {
   RADIUS_FROM_SIZE,
   resolveRadius,
   SIZE_TO_PX,
-  TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
@@ -175,7 +175,7 @@ export const StyledBubble = styled(StyledEffect)<IStyledBubbleProps>`
     `${Math.round(PADDING_FROM_SIZE[$size] * 1.3)}px ${Math.round(
       PADDING_FROM_SIZE[$size] * 1.85
     )}px`};
-  font-size: ${({ $size }) => TEXT_FROM_SIZE[$size]}px;
+  font-size: ${({ $size, theme }) => getTextSize(theme, $size)}px;
   line-height: 1.5;
   word-break: break-word;
   cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};

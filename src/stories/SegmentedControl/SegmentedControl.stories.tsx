@@ -1,10 +1,10 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, fireEvent, waitFor } from 'storybook/test';
 import ReqoreSegmentedControl, {
   IReqoreSegmentedControlProps,
 } from '../../components/SegmentedControl';
-import { ReqoreControlGroup } from '../../index';
+import { ReqoreControlGroup, ReqorePanel } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
@@ -459,6 +459,191 @@ export const Responsive: Story = {
         </div>
       </ReqoreControlGroup>
     );
+  },
+};
+
+// `data-value` lets the play find each segment by its value.
+const FILTER_ITEMS: IReqoreSegmentedControlProps['items'] = (
+  [
+    ['all', 'All', '13'],
+    ['failing', 'Failing', '3'],
+    ['look', 'Needs a look', '4'],
+    ['healthy', 'Healthy', '3'],
+    ['idle', 'No orders', '1'],
+    ['disabled', 'Disabled', '1'],
+    ['drafts', 'Drafts', '1'],
+  ] as const
+).map(([value, label, count]) => ({
+  value,
+  label,
+  badge: { label: count, appearance: 'text' as const },
+  props: { 'data-value': value },
+}));
+
+export const FoldToFit: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a seven-segment filter with counts, folding to fit the room its slot is given: at full width every segment shows at its own width; at 520px and 320px the segments that do not fit move into "More", each with its count. Asserts that no segment is cut off at the control\'s edge and that the narrow controls fold. Then picks a folded segment ("Drafts"): "More" takes its label and its count and is marked the way a visible selection is — the same highlight, never a fill.',
+      },
+    },
+  },
+  render: (args) => {
+    const [value, setValue] = useState('all');
+
+    return (
+      <ReqoreControlGroup vertical gapSize='big' fluid>
+        {[undefined, 520, 320].map((width) => (
+          <div key={width ?? 'full'} style={{ display: 'flex', width: width ?? '100%' }}>
+            <div style={{ flex: '1 1 0', minWidth: 0 }}>
+              <ReqoreSegmentedControl
+                {...args}
+                items={FILTER_ITEMS}
+                value={value}
+                onChange={setValue}
+                foldToFit
+                overflowLabel='More'
+              />
+            </div>
+          </div>
+        ))}
+      </ReqoreControlGroup>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const controls = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('.reqore-segmented-control'));
+    const width = (element: Element) => element.getBoundingClientRect().width;
+    const itemsOf = (control: HTMLElement) =>
+      Array.from(control.querySelectorAll<HTMLElement>('.reqore-segmented-control-item'));
+    // Folds only what does not fit: nothing is cut off at the control's edge, and the first
+    // folded segment (at the width the full row draws it) would not have fitted beside the
+    // ones shown. The frame is 3px of padding and a 1px border on each side.
+    const expectFoldsOnlyWhatDoesNotFit = () => {
+      const [full, ...narrow] = controls();
+      expect(narrow.length).toBe(2);
+      const drawn = Object.fromEntries(
+        itemsOf(full).map((item) => [item.dataset.value, width(item.parentElement!)])
+      );
+      for (const control of narrow) {
+        const room = width(control.parentElement!) - 8;
+        const shown = itemsOf(control).filter(
+          (item) => !item.classList.contains('reqore-segmented-control-more')
+        );
+        const more = control.querySelector('.reqore-segmented-control-more');
+        expect(more).toBeTruthy();
+        const used =
+          shown.reduce((sum, item) => sum + width(item.parentElement!), 0) +
+          width(more!.parentElement!);
+        expect(used).toBeLessThanOrEqual(room + 0.5);
+        const firstFolded = FILTER_ITEMS[shown.length].value;
+        expect(used + drawn[firstFolded]).toBeGreaterThan(room);
+      }
+    };
+
+    await waitFor(() => expectFoldsOnlyWhatDoesNotFit());
+
+    // Pick a folded segment: "More" takes its label, and the fold is measured again with it.
+    const more = controls()[1].querySelector<HTMLElement>('.reqore-segmented-control-more')!;
+    fireEvent.mouseEnter(more);
+    fireEvent.click(more);
+    const drafts = await waitFor(() => {
+      const item = Array.from(document.querySelectorAll<HTMLElement>('.reqore-menu-item')).find(
+        (menuItem) => menuItem.textContent?.includes('Drafts')
+      );
+      expect(item).toBeTruthy();
+      return item!;
+    });
+    fireEvent.click(drafts);
+    await waitFor(() => {
+      expect(controls()[1].querySelector('.reqore-segmented-control-more')?.textContent).toContain(
+        'Drafts'
+      );
+      expectFoldsOnlyWhatDoesNotFit();
+    });
+
+    // A folded selection is marked the way a visible one is: the highlight moves under "More",
+    // and "More" itself stays unfilled — never a second look for the same state.
+    await waitFor(() => {
+      const control = controls()[1];
+      const more = control.querySelector<HTMLElement>('.reqore-segmented-control-more')!;
+      const indicator = control.querySelector<HTMLElement>('.reqore-segmented-control-indicator');
+      expect(indicator).toBeTruthy();
+      const moreRect = more.parentElement!.getBoundingClientRect();
+      const indicatorRect = indicator!.getBoundingClientRect();
+      expect(Math.abs(indicatorRect.left - moreRect.left)).toBeLessThan(1);
+      expect(Math.abs(indicatorRect.width - moreRect.width)).toBeLessThan(1);
+      expect(getComputedStyle(more).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+      // and it keeps the segment's count, as the visible "Drafts 1" does
+      expect(more.textContent).toContain('1');
+    });
+  },
+};
+
+const METHOD_FILTERS: IReqoreSegmentedControlProps['items'] = (
+  [
+    ['all', 'All', '5'],
+    ['public', 'Public', '4'],
+    ['internal', 'Internal', '1'],
+  ] as const
+).map(([value, label, count]) => ({
+  value,
+  label,
+  badge: { label: count, appearance: 'text' as const },
+}));
+
+export const FoldToFitBesideATitle: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a folding filter as the action of a 330px panel titled "Methods", the width of a section heading on a phone. The title keeps its whole word and the filter folds into the room left beside it. Asserts the title is not squeezed and the filter folded: a fold slot used to report the full row of segments as the least it could do with, which left the title 0px wide.',
+      },
+    },
+  },
+  render: (args) => {
+    const [value, setValue] = useState('all');
+
+    return (
+      <div style={{ width: 330 }}>
+        <ReqorePanel
+          label='Methods'
+          transparent
+          flat
+          minimal
+          padded={false}
+          collapsible
+          responsiveActions={false}
+          actions={[
+            {
+              as: ReqoreSegmentedControl,
+              props: {
+                ...args,
+                items: METHOD_FILTERS,
+                value,
+                onChange: setValue,
+                foldToFit: true,
+                overflowLabel: 'More',
+              },
+            },
+          ]}
+        >
+          {null}
+        </ReqorePanel>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      const title = canvasElement.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+      const heading = title.querySelector<HTMLElement>('.reqore-heading')!;
+      // The whole word, on one line: not squeezed below what it needs.
+      expect(title.getBoundingClientRect().width).toBeGreaterThanOrEqual(heading.scrollWidth - 0.5);
+      expect(heading.getBoundingClientRect().height).toBeLessThan(30);
+      // and the filter folded into what was left, rather than holding the row
+      expect(canvasElement.querySelector('.reqore-segmented-control-more')).toBeTruthy();
+    });
   },
 };
 

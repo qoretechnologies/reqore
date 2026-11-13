@@ -1,4 +1,5 @@
 /* @flow */
+import type { IReqoreEffect, TReqoreHexColor } from '../Effect';
 import { TReqoreFilterRanking } from '../../helpers/search';
 import { size as count, isArray } from 'lodash';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
@@ -20,6 +21,7 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { useDragToScroll } from '../../hooks/useDragToScroll';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
+import { getTableColumnsPickerItems } from './helpers';
 import { IReqoreIntent, IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps, TReqoreBadge } from '../Button';
@@ -249,6 +251,12 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * `'Toggle selection on all data'`.
    */
   selectToggleAllTooltip?: string;
+  /**
+   * How a row's selection control is drawn. `'circle'` (default) is the round
+   * glyph the table has always drawn; `'checkbox'` is a square box — the shape
+   * a person expects when the column means "build a set of rows".
+   */
+  selectionStyle?: 'circle' | 'checkbox';
 
   /**
    * Renders the detail panel for an expanded row.
@@ -283,12 +291,33 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   /** Tooltip on an expanded row's expander. Defaults to `'Hide details'`. */
   collapseRowTooltip?: string;
   /**
+   * Where the expander goes when rows can open. `'start'` (default) prepends a
+   * column with a caret; `'end'` appends one after the last column; `'none'`
+   * draws no column at all. A row opens from its own click in every case, so
+   * `'none'` is for a table that wants the whole row as the control and nothing
+   * in the way of its first column.
+   */
+  expanderPosition?: 'start' | 'end' | 'none';
+  /**
    * Height a virtualised list assumes for a panel it has not measured yet.
    * Only affects the first frame after a row opens. Defaults to 200.
    */
   estimatedExpandedRowHeight?: number;
 
   striped?: boolean;
+  /**
+   * Whether rows are divided by a hairline. Default: the opposite of `flat`, as before — a flat
+   * table drew neither a panel border nor row dividers. Set it to keep the dividers on a `flat`
+   * table (a borderless list that still reads as rows), or to drop them on one that is not.
+   */
+  rowDividers?: boolean;
+  /**
+   * The surface behind the table, which a pinned column paints so the cells scrolling under it
+   * do not show through. Default: the panel surface, for a table inside a panel. A table drawn
+   * straight on the page (a `transparent` table) passes the page's colour, or its pinned columns
+   * read as a lighter block over the rows beside them.
+   */
+  pinnedSurface?: TReqoreHexColor;
   emptyMessage?: string;
   showHelp?: boolean;
   showColumnsOptions?: boolean;
@@ -443,6 +472,33 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    */
   onScrollChange?: (isScrolled: boolean) => void;
   headerCellComponent?: IReqoreCustomHeaderCellComponent;
+  /**
+   * Typography for every header cell, merged over the table's own default
+   * (upper-case, tracked, thick). A per-column `header.effect` still wins. Pass
+   * `{ uppercase: false, spaced: 0, weight: 'bold' }` for a sentence-case header.
+   */
+  headerEffect?: IReqoreEffect;
+  /**
+   * Whether the column dividers — the resize handles between header cells —
+   * are drawn at rest. `false` keeps the handles (columns still resize) but
+   * shows them only while the header is hovered, as `minimal` does. Default
+   * `true`.
+   */
+  headerDividers?: boolean;
+  /**
+   * When a row's action buttons (`cell.actions`) are shown in full. `'always'`
+   * (default) draws them as they are; `'hover'` dims them until their row is
+   * hovered or holds focus, so a column of three icons per row reads as the
+   * quiet affordance it is. On a device that cannot hover they stay in full.
+   */
+  actionsRevealOn?: 'always' | 'hover';
+  /**
+   * How the sorted column says so. `'wash'` (default) tints the header cell with the
+   * `info` colour; `'arrow'` draws an up / down arrow beside the label and leaves the
+   * colour alone — for a table where blue has a meaning of its own (a filter) and
+   * sorting narrows nothing.
+   */
+  sortIndicator?: 'wash' | 'arrow';
   rowComponent?: IReqoreTableRowOptions['rowComponent'];
   bodyCellComponent?: IReqoreTableRowOptions['cellComponent'];
   /**
@@ -494,6 +550,22 @@ export interface IReqoreTableSort {
 }
 
 const StyledTableWrapper = styled.div`
+  /* actionsRevealOn='hover': a row's action buttons rest at half strength and
+     come up with the row. Not on a device that cannot hover — there they would
+     never come up at all. */
+  &.reqore-table-actions-reveal-hover .reqore-table-cell-actions {
+    opacity: 0.5;
+    transition: opacity 0.12s ease;
+  }
+  &.reqore-table-actions-reveal-hover .reqore-table-row:hover .reqore-table-cell-actions,
+  &.reqore-table-actions-reveal-hover .reqore-table-row:focus-within .reqore-table-cell-actions {
+    opacity: 1;
+  }
+  @media (hover: none) {
+    &.reqore-table-actions-reveal-hover .reqore-table-cell-actions {
+      opacity: 1;
+    }
+  }
   display: flex;
   flex-flow: column;
   width: 100%;
@@ -556,6 +628,8 @@ const ReqoreTable = ({
   onRowClick,
   onScrollChange,
   striped,
+  rowDividers,
+  pinnedSurface,
   selectedRowIntent = 'info',
   size = 'normal',
   wrapperSize = 'normal',
@@ -571,6 +645,10 @@ const ReqoreTable = ({
   filterRanking = 'none',
   emptyMessage = 'No data in this table, try changing your search query or filters',
   headerCellComponent,
+  headerEffect,
+  headerDividers = true,
+  actionsRevealOn = 'always',
+  sortIndicator = 'wash',
   rowComponent,
   bodyCellComponent,
   getRowProps,
@@ -587,6 +665,7 @@ const ReqoreTable = ({
   rowHeight,
   overscanRowCount,
   selectToggleAllTooltip = 'Toggle selection on all data',
+  selectionStyle = 'circle',
   renderExpandedRow,
   defaultExpanded,
   expanded,
@@ -594,6 +673,7 @@ const ReqoreTable = ({
   expandSingle,
   expandRowTooltip = 'Show details',
   collapseRowTooltip = 'Hide details',
+  expanderPosition = 'start',
   estimatedExpandedRowHeight = 200,
   columnsToggleLabel = 'Show / hide columns',
   filterPlaceholder,
@@ -719,6 +799,14 @@ const ReqoreTable = ({
     300,
     onFilterChange
   );
+  // `filter` is the query whenever the caller changes it. It used to seed the query once,
+  // so a page that set or cleared the search from outside (a figure, a link, "Clear
+  // filters") changed nothing after the first render.
+  useUpdateEffect(() => {
+    const next = filter.toString();
+    setPreQuery(next);
+    setQuery(next);
+  }, [filter]);
   const normalizedQuery = useMemo(() => query.toString().toLowerCase(), [query]);
 
   // Column filters live in `columnModifiers` once the user edits them, and on the column
@@ -859,16 +947,17 @@ const ReqoreTable = ({
 
     return activeSelected.length === count(selectableData) ? 'all' : 'some';
   }, [activeSelected, selectableData]);
+  const box = selectionStyle === 'checkbox';
   const selectedIcon = useMemo(() => {
     switch (selectedQuant) {
       case 'all':
-        return 'CheckboxCircleLine';
+        return box ? 'CheckboxLine' : 'CheckboxCircleLine';
       case 'some':
-        return 'IndeterminateCircleLine';
+        return box ? 'CheckboxIndeterminateLine' : 'IndeterminateCircleLine';
       default:
-        return 'CheckboxBlankCircleLine';
+        return box ? 'CheckboxBlankLine' : 'CheckboxBlankCircleLine';
     }
-  }, [selectedQuant]);
+  }, [selectedQuant, box]);
 
   const updateSelected = useCallback(
     (
@@ -1014,7 +1103,11 @@ const ReqoreTable = ({
               icon: !_selectId
                 ? 'Forbid2Line'
                 : activeSelected?.find((s) => s.toString() === _selectId.toString())
-                ? 'CheckboxCircleLine'
+                ? box
+                  ? 'CheckboxLine'
+                  : 'CheckboxCircleLine'
+                : box
+                ? 'CheckboxBlankLine'
                 : 'CheckboxBlankCircleLine',
               intent: !_selectId ? 'muted' : undefined,
               onClick: _selectId ? () => handleSelectClick(_selectId) : undefined,
@@ -1026,9 +1119,11 @@ const ReqoreTable = ({
 
     /* Unshifted AFTER the select box so it ends up to its LEFT. The expander is
        about the row you are looking at; the checkbox is about a set you are
-       building. The one that acts on this row alone comes first. */
-    if (renderExpandedRow) {
-      fullColumns.unshift({
+       building. The one that acts on this row alone comes first. With
+       `expanderPosition='end'` it goes after the last column instead, pinned
+       there; with `'none'` there is no column and the row's own click opens it. */
+    if (renderExpandedRow && expanderPosition !== 'none') {
+      const expanderColumn: IReqoreTableColumn = {
         /* Wider than the select box's 20px. That column holds a checkbox glyph
            that happens to fit; this one holds a real icon button, and at 20px
            with no padding the chevron was clipped by its own cell and read as a
@@ -1074,7 +1169,13 @@ const ReqoreTable = ({
             ];
           },
         },
-      });
+      };
+
+      if (expanderPosition === 'end') {
+        fullColumns.push({ ...expanderColumn, pin: 'right' });
+      } else {
+        fullColumns.unshift(expanderColumn);
+      }
     }
 
     return foldActionsColumns(
@@ -1093,6 +1194,8 @@ const ReqoreTable = ({
     foldedTextWidths,
     selectable,
     selectedIcon,
+    box,
+    expanderPosition,
     selectToggleTooltip,
     selectToggleAllTooltip,
     activeSelected,
@@ -1205,43 +1308,15 @@ const ReqoreTable = ({
     }
   }, [searchShown, searchToggleId, searchFieldId, preQuery]);
 
-  const columnsList = useMemo(() => {
-    const _columnsList: IReqorePanelSubAction[] = [];
-
-    const addColumn = (column: IReqoreTableColumn) => {
-      _columnsList.push({
-        label: typeof column.header?.label === 'string' ? column.header.label : column.dataId,
-        selected: column.show !== false,
-        onClick: () =>
-          handleColumnsUpdate(column.dataId, 'show', column.show !== false ? false : true),
-        intent: column.show !== false ? 'info' : undefined,
-      });
-    };
-
-    finalColumns.forEach((column) => {
-      if (column.hideable === false || column.enabled === false) {
-        // If the column is not hideable or enabled, we skip it
-        return;
-      }
-
-      if (column.header?.columns) {
-        column.header?.columns.forEach((subColumn) => {
-          addColumn(subColumn);
-        });
-      } else {
-        addColumn(column);
-      }
-    });
-
-    if (count(_columnsList)) {
-      _columnsList.unshift({
-        divider: true,
-        label: columnsToggleLabel,
-      });
-    }
-
-    return _columnsList;
-  }, [finalColumns, columnsToggleLabel]);
+  const columnsList = useMemo(
+    () =>
+      getTableColumnsPickerItems(
+        finalColumns,
+        (dataId, show) => handleColumnsUpdate(dataId, 'show', show),
+        columnsToggleLabel
+      ),
+    [finalColumns, columnsToggleLabel, handleColumnsUpdate]
+  );
 
   const handleScrollToTop = useCallback(() => {
     mainTableRef.current?.scrollTo({
@@ -1474,6 +1549,9 @@ const ReqoreTable = ({
     return badgeList;
   }, [rest.badge, rest.label, transformedData]);
 
+  // The rows' own flatness: no divider under each row. Follows `flat` unless `rowDividers` says.
+  const rowsFlat = rowDividers === undefined ? rest.flat : !rowDividers;
+
   /* Under a coarse pointer, a row with its actions folded into a menu button is at least a finger
      tall, so the button is a finger's size both ways. The row's border is the 1px the body adds to a
      table that is not flat. */
@@ -1481,10 +1559,10 @@ const ReqoreTable = ({
     if (!touch || !actionsMenuColumnIds.length) {
       return rowHeight;
     }
-    const border = rest.flat ? 0 : 1;
+    const border = rowsFlat ? 0 : 1;
 
     return Math.max(rowHeight ?? TABLE_SIZE_TO_PX[zoomSize] + border, TOUCH_TARGET_PX + border);
-  }, [touch, actionsMenuColumnIds, rowHeight, zoomSize, rest.flat]);
+  }, [touch, actionsMenuColumnIds, rowHeight, zoomSize, rowsFlat]);
 
   const renderTable = (items: IReqoreTableRowData[]) => {
     if (count(finalColumns) === 0 || count(data) === 0) {
@@ -1494,7 +1572,9 @@ const ReqoreTable = ({
     return (
       <StyledTableWrapper
         ref={wrapperRef}
-        className={`reqore-table-wrapper${dragToScroll ? ' reqore-table-wrapper-draggable' : ''}`}
+        className={`reqore-table-wrapper${
+          actionsRevealOn === 'hover' ? ' reqore-table-actions-reveal-hover' : ''
+        }${dragToScroll ? ' reqore-table-wrapper-draggable' : ''}`}
         rounded={rest.rounded !== false && rest.flat !== false}
         size={rest.flat === false ? wrapperSize : zoomSize}
       >
@@ -1513,6 +1593,10 @@ const ReqoreTable = ({
           component={headerCellComponent}
           tableWidth={sizes.width}
           minimal={rest.minimal}
+          headerEffect={headerEffect}
+          pinnedSurface={pinnedSurface}
+          dividers={headerDividers}
+          sortIndicator={sortIndicator}
           sortAscendingLabel={sortAscendingLabel}
           sortDescendingLabel={sortDescendingLabel}
           pinLeftLabel={pinLeftLabel}
@@ -1537,7 +1621,8 @@ const ReqoreTable = ({
             selectedRowIntent={selectedRowIntent}
             size={zoomSize}
             striped={striped}
-            flat={rest.flat}
+            pinnedSurface={pinnedSurface}
+            flat={rowsFlat}
             wrap={wrap}
             maxCellHeight={maxCellHeight}
             expandHeightButtonProps={expandHeightButtonProps}
