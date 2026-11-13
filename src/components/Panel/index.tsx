@@ -1004,6 +1004,31 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
   ${({ disabled }) => disabled && DisabledElement}
 `;
 
+/**
+ * The bottom corners of a collapsed panel's title: the panel's inner radius (inset 1px past a
+ * visible border, as the top corners are), so the title alone keeps the card's shape. Only
+ * where the header is sticky and rounded — elsewhere the panel clips its title itself — and
+ * not while the header is stuck, when it is a full-width bar.
+ */
+const collapsedTitleRadius = ({
+  isCollapsed,
+  stickyHeader,
+  rounded,
+  radiusSize,
+  flat,
+  intent,
+  accentPosition,
+  isStuck,
+  theme,
+}: IStyledPanel): string | undefined =>
+  isCollapsed && stickyHeader && rounded && !isStuck
+    ? `${Math.max(
+        0,
+        resolvePanelRadius(theme, radiusSize) -
+          (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
+      )}px`
+    : undefined;
+
 export const StyledPanelTitle = styled.div.withConfig({
   shouldForwardProp: omitStyleProps('opacity'),
 })<IStyledPanel>`
@@ -1194,6 +1219,11 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
               (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
           )}px`
       : undefined};
+  // A COLLAPSED panel is its title alone, so the title also meets the panel's bottom corners.
+  // Squared there, its surface painted over the panel's rounded bottom edge (a sticky header
+  // keeps the panel from clipping) and every collapsed card read as cut off along the bottom.
+  border-bottom-left-radius: ${(props: IStyledPanel) => collapsedTitleRadius(props)};
+  border-bottom-right-radius: ${(props: IStyledPanel) => collapsedTitleRadius(props)};
   background: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(getPanelHeaderColor(theme), opacity)};
   // When the header is sticky AND the panel is minimal / transparent (opacity === 0), the
