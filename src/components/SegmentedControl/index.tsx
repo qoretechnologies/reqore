@@ -411,14 +411,26 @@ const ReqoreSegmentedControl = memo(
         if (selectedWrapper && container) {
           const containerRect = container.getBoundingClientRect();
           const itemRect = selectedWrapper.getBoundingClientRect();
+          // The rects are the DRAWN boxes, so a transformed ancestor scales them. A modal
+          // opens with a zoom from scale(0.5) and the control measures itself during it:
+          // the highlight came out about half as wide as its item and stayed that way,
+          // because a transform changes no layout size, so nothing measured again once the
+          // zoom ended. Dividing by the drawn-to-layout ratio gives layout pixels at any
+          // scale. `offsetWidth` is rounded to a whole pixel, so a difference under 1px is
+          // that rounding, not a transform, and the rects are used as they are.
+          const layoutWidth = container.offsetWidth;
+          const scale =
+            layoutWidth && containerRect.width && Math.abs(containerRect.width - layoutWidth) >= 1
+              ? containerRect.width / layoutWidth
+              : 1;
           setIndicatorStyle({
             // From the container's PADDING edge, which is where an absolutely positioned
             // child's `left: 0` sits: the border-box rect plus the border (`clientLeft`,
             // 0 when `flat`). Measured from the border edge and corrected by the padding
             // instead, the highlight landed `padding - border` px left of its item — 2px
             // with a border, 3px without — on every control since the component shipped.
-            left: itemRect.left - containerRect.left - container.clientLeft,
-            width: itemRect.width,
+            left: (itemRect.left - containerRect.left) / scale - container.clientLeft,
+            width: itemRect.width / scale,
           });
         }
       }, [_value, items, isSelectedHidden, visibleItems, measuredWidth]);

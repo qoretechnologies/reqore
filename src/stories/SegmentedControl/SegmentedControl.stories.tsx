@@ -4,7 +4,7 @@ import { expect, waitFor } from 'storybook/test';
 import ReqoreSegmentedControl, {
   IReqoreSegmentedControlProps,
 } from '../../components/SegmentedControl';
-import { ReqoreControlGroup } from '../../index';
+import { ReqoreControlGroup, ReqoreModal } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
@@ -518,5 +518,41 @@ export const ItemProps: Story = {
       segment.getAttribute('aria-label')
     );
     await expect(names).toEqual(['List view', 'Grid view', 'Board view']);
+  },
+};
+
+export const InsideModal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the control in a modal, which zooms in from half size as it opens. The control measures its highlight while that zoom runs; once the modal has opened, the highlight sits exactly under Week, as wide as it.',
+      },
+    },
+  },
+  render: (args) => (
+    <ReqoreModal isOpen label='Report period' width='420px'>
+      <InteractiveTemplate {...args} />
+    </ReqoreModal>
+  ),
+  args: {
+    value: 'week',
+    items: defaultItems,
+  },
+  play: async () => {
+    // Wait for the zoom to end: the active item is drawn at its layout width again. Before
+    // the highlight was measured in layout pixels, it kept the half size it was measured at.
+    await waitFor(
+      () => {
+        const active = document.querySelector<HTMLElement>(
+          '.reqore-segmented-control button[aria-checked="true"]'
+        )!;
+        expect(Math.abs(active.getBoundingClientRect().width - active.offsetWidth)).toBeLessThan(
+          0.5
+        );
+      },
+      { timeout: 3000 }
+    );
+    await expectHighlightUnderActiveItem();
   },
 };
