@@ -154,17 +154,18 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   border: ${({ flat, noWrapper, ...rest }: any) =>
     !flat && noWrapper ? `1px solid ${getPopoverArrowColor({ ...rest, flat })}` : undefined};
 
-  ${({ transparent, theme, flat }) =>
+  ${({ transparent, theme, $hairline }) =>
     !transparent &&
     css`
-      /* A hairline in the text colour and a deep drop shadow: the soft 10px glow in a
-         near-black tint was invisible on a dark page, so a tooltip had no edge at all.
-         The arrow gets the hairline as a rim only on a flat body; a bordered one
-         (flat={false}) keeps its arrow in the border's colour, which already is its edge. */
-      ${flat ? `--reqore-popover-rim: ${popoverHairline(theme)};` : ''}
-      box-shadow:
-        0 0 0 1px ${popoverHairline(theme)},
-        0 10px 28px rgba(0, 0, 0, 0.55);
+      /* A deep drop shadow: the soft 10px glow in a near-black tint was invisible on a dark
+         page. A popover that draws no edge of its own (a tooltip's flat body) also gets a
+         hairline in the text colour, and its arrow the same hairline as a rim. Anything that
+         has an edge already - a bordered body (flat={false}), or content that brings its own
+         surface (a dropdown's menu panel, a date picker) - keeps that edge alone: a hairline
+         round it drew a second border outside the first. */
+      ${$hairline ? `--reqore-popover-rim: ${popoverHairline(theme)};` : ''}
+      box-shadow: ${$hairline ? `0 0 0 1px ${popoverHairline(theme)}, ` : ''}0 10px 28px
+        rgba(0, 0, 0, 0.55);
     `}
 
   &[data-popper-placement^='top'] > ${StyledPopoverArrow} {
@@ -615,10 +616,16 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     // elsewhere, so the arrow was a lighter triangle on a darker tooltip. Read the surface the
     // message drew and hand it to the arrow; the formula stays the fallback for a content
     // with no message of its own.
+    //
+    // Only for the body the popover draws itself (a tooltip's message). Content that brings its
+    // own surface - a dropdown's menu panel - keeps its own edge, so it gets neither the hairline
+    // nor a measured arrow, and a message somewhere inside it is not the popover's body.
+    const ownBody = !noWrapper || isString(content);
+    const hairline = flat && ownBody && !transparent;
     useEffect(() => {
       if (!popperElement) return undefined;
       const frame = requestAnimationFrame(() => {
-        const surface = popperElement.querySelector('.reqore-message');
+        const surface = popperElement.querySelector('.reqore-popover-text');
         const style = surface ? getComputedStyle(surface) : undefined;
         const color = style?.backgroundColor ?? '';
         // A gradient body paints its colour as a background IMAGE, over a plain colour that is
@@ -627,14 +634,14 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
         const painted = !!style && style.backgroundImage !== 'none';
         // Only a flat body: a bordered one (flat={false}) draws its edge in the arrow's
         // formula colour, and the arrow continues that border (Qlip build 20261116-141018).
-        if (flat && !painted && color && color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)') {
+        if (hairline && !painted && color && color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)') {
           popperElement.style.setProperty('--reqore-popover-surface', color);
         } else {
           popperElement.style.removeProperty('--reqore-popover-surface');
         }
       });
       return () => cancelAnimationFrame(frame);
-    }, [popperElement, content, intent, flat, minimal, transparent, effect]);
+    }, [popperElement, content, intent, hairline, minimal, transparent, effect]);
 
     // Preserve the documented explicit update contract as a fallback for
     // content changes that do not affect the content box dimensions.
@@ -781,6 +788,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           intent={intent}
           flat={flat}
           noWrapper={noWrapper}
+          $hairline={hairline}
           dim={flat && !transparent && !effect && minimal}
           className='reqore-popover-content'
           ref={handleRef}

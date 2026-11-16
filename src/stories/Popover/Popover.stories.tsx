@@ -7,6 +7,7 @@ import { sleep } from '../../helpers/utils';
 import {
   ReqoreButton,
   ReqoreControlGroup,
+  ReqoreDropdown,
   ReqoreMenu,
   ReqoreMenuItem,
   ReqoreMessage,
@@ -1140,6 +1141,43 @@ export const ArrowIsTheTooltipsColour: Story = {
         ];
         expect(rimSides.some((color) => /^rgba\(.+, 0\.1\)$/.test(color))).toBe(true);
       });
+    });
+  },
+};
+
+const EXPORT_ITEMS = [
+  { label: 'Export current view', icon: 'Download2Line' as const },
+  { label: 'Export full data', icon: 'DownloadLine' as const },
+];
+
+export const AMenuKeepsItsOwnEdge: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a dropdown and opens it: the menu panel draws the only edge round the list, and the popover adds just a drop shadow, with no hairline ring outside the panel and no rim on its arrow.',
+      },
+    },
+  },
+  render: () => <ReqoreDropdown label='Export' className='export-dropdown' items={EXPORT_ITEMS} />,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(canvasElement.querySelector('.export-dropdown') as HTMLElement);
+    await waitFor(() => {
+      const popover = document.querySelector<HTMLElement>('.reqore-popover-content');
+      expect(popover).toHaveTextContent('Export current view');
+      const shadow = getComputedStyle(popover!).boxShadow;
+      // a shadow, but no 1px ring: the menu's own border is its edge
+      expect(shadow).not.toBe('none');
+      expect(shadow).not.toContain('0px 0px 0px 1px');
+      const arrow = popover!.querySelector('[data-popper-arrow]');
+      if (arrow) {
+        const rim = getComputedStyle(arrow, '::after');
+        expect(
+          [rim.borderTopColor, rim.borderBottomColor, rim.borderLeftColor, rim.borderRightColor].every(
+            (color) => color === 'rgba(0, 0, 0, 0)'
+          )
+        ).toBe(true);
+      }
     });
   },
 };
