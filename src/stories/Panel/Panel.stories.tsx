@@ -1929,7 +1929,8 @@ export const StickyHeaderTransparentBlur: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Renders Panel with a sticky, transparent, blurred header.',
+        story:
+          "Renders minimal sticky-header panels tall enough to pin, scrolled so the first panel's transparent header is pinned at the top and blurs its own text scrolling beneath it.",
       },
     },
     chromatic: {
@@ -1960,6 +1961,8 @@ export const StickyHeaderTransparentBlur: Story = {
             icon='PushpinLine'
             padded
             fluid
+            // Tall enough to pin in the 600px area (more than 1.5 screens of it).
+            contentStyle={STICKY_DEMO_BODY_STYLE}
           >
             {message}
           </ReqorePanel>
@@ -1976,9 +1979,17 @@ export const StickyHeaderTransparentBlur: Story = {
       return;
     }
 
-    container.scrollTop = 720;
+    // Into the first panel's text, so the text runs under its pinned header.
+    container.scrollTop = 160;
     fireEvent.scroll(container);
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    // The first panel's header is pinned at the top, over its own text scrolling beneath it.
+    const header = stickyHeaderOf(container.querySelector('.reqore-panel') as HTMLElement);
+    await waitFor(() => {
+      expect(header.getAttribute('data-pins-header')).toBe('true');
+      expect(
+        Math.abs(header.getBoundingClientRect().top - container.getBoundingClientRect().top)
+      ).toBeLessThanOrEqual(1);
+    });
   },
 };
 
