@@ -567,8 +567,13 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
       if (!popperElement) return undefined;
       const frame = requestAnimationFrame(() => {
         const surface = popperElement.querySelector('.reqore-message');
-        const color = surface ? getComputedStyle(surface).backgroundColor : '';
-        if (color && color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)') {
+        const style = surface ? getComputedStyle(surface) : undefined;
+        const color = style?.backgroundColor ?? '';
+        // A gradient body paints its colour as a background IMAGE, over a plain colour that is
+        // not what you see (an orange effect popover's is grey): the formula, which reads the
+        // gradient, stays the arrow's colour there.
+        const painted = !!style && style.backgroundImage !== 'none';
+        if (!painted && color && color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)') {
           popperElement.style.setProperty('--reqore-popover-surface', color);
         } else {
           popperElement.style.removeProperty('--reqore-popover-surface');
