@@ -154,12 +154,14 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   border: ${({ flat, noWrapper, ...rest }: any) =>
     !flat && noWrapper ? `1px solid ${getPopoverArrowColor({ ...rest, flat })}` : undefined};
 
-  ${({ transparent, theme }) =>
+  ${({ transparent, theme, flat }) =>
     !transparent &&
     css`
       /* A hairline in the text colour and a deep drop shadow: the soft 10px glow in a
-         near-black tint was invisible on a dark page, so a tooltip had no edge at all. */
-      --reqore-popover-rim: ${popoverHairline(theme)};
+         near-black tint was invisible on a dark page, so a tooltip had no edge at all.
+         The arrow gets the hairline as a rim only on a flat body; a bordered one
+         (flat={false}) keeps its arrow in the border's colour, which already is its edge. */
+      ${flat ? `--reqore-popover-rim: ${popoverHairline(theme)};` : ''}
       box-shadow:
         0 0 0 1px ${popoverHairline(theme)},
         0 10px 28px rgba(0, 0, 0, 0.55);
@@ -623,7 +625,9 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
         // not what you see (an orange effect popover's is grey): the formula, which reads the
         // gradient, stays the arrow's colour there.
         const painted = !!style && style.backgroundImage !== 'none';
-        if (!painted && color && color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)') {
+        // Only a flat body: a bordered one (flat={false}) draws its edge in the arrow's
+        // formula colour, and the arrow continues that border (Qlip build 20261116-141018).
+        if (flat && !painted && color && color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)') {
           popperElement.style.setProperty('--reqore-popover-surface', color);
         } else {
           popperElement.style.removeProperty('--reqore-popover-surface');
