@@ -41,13 +41,19 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
   // Store the element that was focused before the trap was activated
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
-  // Get all focusable elements within the container
+  // The tab stops within the container, in document order
   const getFocusableElements = useCallback((): HTMLElement[] => {
     if (!containerRef.current) return [];
 
     const elements = containerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
-    // Filter out elements that are not visible or have display:none
     return Array.from(elements).filter((el) => {
+      // A negative tabindex takes an element out of the tab order, whatever the selector it matched
+      // (`button`, `a[href]`, ...): the options of a radio group other than the checked one, for
+      // example. Counted here, the first of them took the trap's first focus instead of the checked
+      // option, and Tab stopped on options the group had taken out of the order.
+      const tabindex = Number.parseInt(el.getAttribute('tabindex') ?? '', 10);
+      if (tabindex < 0) return false;
+      // Filter out elements that are not visible or have display:none
       return el.offsetParent !== null && getComputedStyle(el).visibility !== 'hidden';
     });
   }, [containerRef]);
@@ -64,18 +70,26 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
       const lastElement = focusableElements[focusableElements.length - 1];
       const activeElement = document.activeElement as HTMLElement;
 
-      // If Shift+Tab on first element, move to last
-      if (event.shiftKey && activeElement === firstElement) {
-        event.preventDefault();
-        lastElement.focus();
-      }
-      // If Tab on last element, move to first
-      else if (!event.shiftKey && activeElement === lastElement) {
+      // If focus is outside the container, move it inside
+      if (!containerRef.current.contains(activeElement)) {
         event.preventDefault();
         firstElement.focus();
+        return;
       }
-      // If focus is outside the container, move it inside
-      else if (!containerRef.current.contains(activeElement)) {
+
+      // Wrap when no tab stop lies ahead of focus in the direction of travel, not only when
+      // focus is on the first or the last one: focus can sit on an element that is not a tab
+      // stop (one with tabindex -1 that a click focused, such as the container once it has
+      // waited for its content), and the browser would then take the Tab out of the container.
+      const follows = (el: HTMLElement, reference: HTMLElement) =>
+        !!(reference.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+      if (event.shiftKey) {
+        if (!focusableElements.some((el) => follows(activeElement, el))) {
+          event.preventDefault();
+          lastElement.focus();
+        }
+      } else if (!focusableElements.some((el) => follows(el, activeElement))) {
         event.preventDefault();
         firstElement.focus();
       }
