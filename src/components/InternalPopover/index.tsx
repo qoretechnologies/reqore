@@ -59,7 +59,7 @@ const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) =>
   );
 };
 
-/** The hairline round a tooltip: its body's edge, and the rim round its arrow. */
+/** The hairline round a tooltip: its body's edge, and the two outer sides of its arrow. */
 const popoverHairline = (theme: IReqoreTheme) => rgba(getReadableColor(theme), 0.1);
 
 const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
@@ -68,23 +68,52 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   position: absolute;
   z-index: -1;
 
-  &:before,
-  &:after {
+  &:before {
     content: '';
     display: block;
     width: 0;
     height: 0;
     position: absolute;
-  }
-
-  &:before {
     z-index: -1;
   }
+`;
 
-  /* The rim: a triangle 2px larger behind the arrow, in the body's hairline, so the arrow
-     carries the same edge as the body it points from. */
-  &:after {
-    z-index: -2;
+/** The side of a tooltip's arrow, square before it is turned 45deg. Turned, it reaches
+ *  side / sqrt(2) / 2 = 8.5px past its centre, and its centre is 1px outside the body (below),
+ *  so its point ends 9.5px out: short of the 10px gap to the target. A larger square ran its
+ *  point into the target's own border, and the two edges crossing there made a bright dot. */
+const HAIRLINE_ARROW_SIDE = 12;
+
+/** The arrow box (`StyledPopoverArrow`) is 10px square and centred on the body's edge. */
+const ARROW_BOX_CENTRE = 5;
+
+/**
+ * A tooltip's arrow, for a popover with a hairline: one square turned 45deg, in the body's
+ * colour, with the hairline on its two OUTER sides only. It replaces a triangle with a
+ * second, 2px larger triangle behind it as its rim. Those were two translucent layers, so
+ * where they overlapped each other and the body's ring the hairline was drawn twice, and the
+ * arrow's three points stood out brighter than its sides (Filip, 2026-11-16). One element
+ * draws one even 1px edge. Its centre sits 1px outside the body's edge, in the direction the
+ * arrow points (`outwards`): its borderless inner half covers the body's ring across the
+ * arrow's base, and its bordered sides start where the ring ends.
+ */
+const hairlineArrow = (
+  placement: 'top' | 'bottom' | 'left' | 'right',
+  [outwardsX, outwardsY]: [number, number],
+  sides: [string, string]
+) => css`
+  &[data-popper-placement^='${placement}'] > ${StyledPopoverArrow}:before {
+    width: ${HAIRLINE_ARROW_SIDE}px;
+    height: ${HAIRLINE_ARROW_SIDE}px;
+    box-sizing: border-box;
+    border: 0 solid var(--reqore-popover-rim);
+    ${sides.map((side) => `border-${side}-width: 1px;`).join('\n    ')}
+    /* the hairline sits over what is behind the arrow, as the body's ring does */
+    background-clip: padding-box;
+    background-color: var(--reqore-popover-surface, ${(props) => getPopoverArrowColor(props)});
+    transform: rotate(45deg);
+    top: ${ARROW_BOX_CENTRE + outwardsY - HAIRLINE_ARROW_SIDE / 2}px;
+    left: ${ARROW_BOX_CENTRE + outwardsX - HAIRLINE_ARROW_SIDE / 2}px;
   }
 `;
 
@@ -162,7 +191,8 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
          hairline in the text colour, and its arrow the same hairline as a rim. Anything that
          has an edge already - a bordered body (flat={false}), or content that brings its own
          surface (a dropdown's menu panel, a date picker) - keeps that edge alone: a hairline
-         round it drew a second border outside the first. */
+         round it drew a second border outside the first. The arrow's own edge is
+         hairlineArrow, after the placements. */
       ${$hairline ? `--reqore-popover-rim: ${popoverHairline(theme)};` : ''}
       box-shadow: ${$hairline ? `0 0 0 1px ${popoverHairline(theme)}, ` : ''}0 10px 28px
         rgba(0, 0, 0, 0.55);
@@ -179,15 +209,6 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
       top: 5px;
       left: -5px;
     }
-
-    &:after {
-      border-left: 12px solid transparent;
-      border-right: 12px solid transparent;
-      border-top: 12px solid var(--reqore-popover-rim, transparent);
-
-      top: 5px;
-      left: -7px;
-    }
   }
 
   &[data-popper-placement^='bottom'] > ${StyledPopoverArrow} {
@@ -201,15 +222,6 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
       top: -5px;
       left: -5px;
     }
-
-    &:after {
-      border-left: 12px solid transparent;
-      border-right: 12px solid transparent;
-      border-bottom: 12px solid var(--reqore-popover-rim, transparent);
-
-      top: -7px;
-      left: -7px;
-    }
   }
 
   &[data-popper-placement^='left'] > ${StyledPopoverArrow} {
@@ -221,15 +233,6 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
       border-left: 10px solid var(--reqore-popover-surface, ${(props) => getPopoverArrowColor(props)});
 
       top: -5px;
-      left: 5px;
-    }
-
-    &:after {
-      border-top: 12px solid transparent;
-      border-bottom: 12px solid transparent;
-      border-left: 12px solid var(--reqore-popover-rim, transparent);
-
-      top: -7px;
       left: 5px;
     }
   }
@@ -245,16 +248,16 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
       top: -5px;
       left: -5px;
     }
-
-    &:after {
-      border-top: 12px solid transparent;
-      border-bottom: 12px solid transparent;
-      border-right: 12px solid var(--reqore-popover-rim, transparent);
-
-      top: -7px;
-      left: -7px;
-    }
   }
+
+  ${({ $hairline }) =>
+    $hairline &&
+    css`
+      ${hairlineArrow('top', [0, 1], ['bottom', 'right'])}
+      ${hairlineArrow('bottom', [0, -1], ['top', 'left'])}
+      ${hairlineArrow('left', [1, 0], ['top', 'right'])}
+      ${hairlineArrow('right', [-1, 0], ['bottom', 'left'])}
+    `}
 
   &[data-popper-reference-hidden='true'] {
     visibility: hidden;

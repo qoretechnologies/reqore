@@ -1108,7 +1108,7 @@ export const ArrowIsTheTooltipsColour: Story = {
     docs: {
       description: {
         story:
-          "Renders a button with a hover's tooltip and opens it with the mouse: the tooltip's arrow is drawn in the colour of its body, and the tooltip and its arrow carry a hairline edge, with a drop shadow, so it stands off a dark page.",
+          "Renders a button with a hover's tooltip and opens it with the mouse: the tooltip's arrow is one square turned to a point, in the colour of its body, with a 1px hairline on its two outer sides only - the same edge the tooltip's body has - and a drop shadow, so it stands off a dark page with an even edge all round.",
       },
     },
   },
@@ -1122,25 +1122,77 @@ export const ArrowIsTheTooltipsColour: Story = {
         expect(tooltip).toHaveTextContent('What this button does');
         const body = getComputedStyle(tooltip!.querySelector('.reqore-message')!).backgroundColor;
         const arrow = getComputedStyle(tooltip!.querySelector('[data-popper-arrow]')!, '::before');
-        // whichever side points at the target is the one with a colour
-        const sides = [
-          arrow.borderTopColor,
-          arrow.borderBottomColor,
-          arrow.borderLeftColor,
-          arrow.borderRightColor,
-        ];
-        expect(sides).toContain(body);
+        // the arrow is filled with the body's colour, turned to a point
+        expect(arrow.backgroundColor).toBe(body);
+        expect(arrow.transform).not.toBe('none');
         expect(getComputedStyle(tooltip!).boxShadow).toContain('0px 0px 0px 1px');
-        // and the arrow carries the same edge: a rim behind it in the body's hairline
-        const rim = getComputedStyle(tooltip!.querySelector('[data-popper-arrow]')!, '::after');
-        const rimSides = [
-          rim.borderTopColor,
-          rim.borderBottomColor,
-          rim.borderLeftColor,
-          rim.borderRightColor,
-        ];
-        expect(rimSides.some((color) => /^rgba\(.+, 0\.1\)$/.test(color))).toBe(true);
+        // ONE edge: the hairline on exactly two sides of the one element, 1px each, and no
+        // second shape behind it whose overlap would draw the hairline twice
+        const edges = [
+          [arrow.borderTopWidth, arrow.borderTopColor],
+          [arrow.borderRightWidth, arrow.borderRightColor],
+          [arrow.borderBottomWidth, arrow.borderBottomColor],
+          [arrow.borderLeftWidth, arrow.borderLeftColor],
+        ].filter(([width]) => width !== '0px');
+        expect(edges).toHaveLength(2);
+        for (const [width, color] of edges) {
+          expect(width).toBe('1px');
+          expect(color).toMatch(/^rgba\(.+, 0\.1\)$/);
+        }
+        expect(getComputedStyle(tooltip!.querySelector('[data-popper-arrow]')!, '::after').content).toMatch(
+          /^(none|normal)$/
+        );
       });
+    });
+  },
+};
+
+const TOOLTIP_SIDES_STYLE = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, 240px)',
+  gap: '90px 220px',
+  padding: '70px 150px',
+};
+const TOOLTIP_SIDES = ['top', 'bottom', 'left', 'right'] as const;
+
+export const TooltipArrowOnEverySide: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders four tooltips held open, one on each side of its button: every arrow is the tooltip's colour with the same 1px hairline as the tooltip's body, an even edge from the body round the arrow's point and back, with no brighter dot at the point or where the arrow meets the body.",
+      },
+    },
+  },
+  render: () => (
+    <div style={TOOLTIP_SIDES_STYLE}>
+      {TOOLTIP_SIDES.map((placement) => (
+        <ReqorePopover
+          key={placement}
+          component={ReqoreButton}
+          componentProps={{ label: `Tooltip ${placement}`, className: `tooltip-side-${placement}` }}
+          content={`A tooltip on the ${placement}`}
+          placement={placement}
+          handler='click'
+          openOnMount
+          isReqoreComponent
+        />
+      ))}
+    </div>
+  ),
+  play: async () => {
+    await waitFor(() => {
+      const tooltips = Array.from(document.querySelectorAll<HTMLElement>('.reqore-popover-content'));
+      expect(tooltips).toHaveLength(TOOLTIP_SIDES.length);
+      for (const tooltip of tooltips) {
+        const shape = getComputedStyle(tooltip.querySelector('[data-popper-arrow]')!, '::before');
+        expect(shape.transform).not.toBe('none');
+        expect(
+          [shape.borderTopWidth, shape.borderRightWidth, shape.borderBottomWidth, shape.borderLeftWidth].filter(
+            (width) => width === '1px'
+          )
+        ).toHaveLength(2);
+      }
     });
   },
 };
@@ -1155,7 +1207,7 @@ export const AMenuKeepsItsOwnEdge: Story = {
     docs: {
       description: {
         story:
-          'Renders a dropdown and opens it: the menu panel draws the only edge round the list, and the popover adds just a drop shadow, with no hairline ring outside the panel and no rim on its arrow.',
+          "Renders a dropdown and opens it: the menu panel draws the only edge round the list, and the popover adds just a drop shadow, with no hairline ring outside the panel; its arrow stays the plain triangle, with no hairline edge of its own.",
       },
     },
   },
@@ -1171,12 +1223,10 @@ export const AMenuKeepsItsOwnEdge: Story = {
       expect(shadow).not.toContain('0px 0px 0px 1px');
       const arrow = popover!.querySelector('[data-popper-arrow]');
       if (arrow) {
-        const rim = getComputedStyle(arrow, '::after');
-        expect(
-          [rim.borderTopColor, rim.borderBottomColor, rim.borderLeftColor, rim.borderRightColor].every(
-            (color) => color === 'rgba(0, 0, 0, 0)'
-          )
-        ).toBe(true);
+        // the plain triangle: not the tooltip's turned square with a hairline edge
+        const shape = getComputedStyle(arrow, '::before');
+        expect(shape.transform).toBe('none');
+        expect(shape.backgroundColor).toBe('rgba(0, 0, 0, 0)');
       }
     });
   },
