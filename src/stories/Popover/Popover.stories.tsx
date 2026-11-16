@@ -1107,7 +1107,7 @@ export const ArrowIsTheTooltipsColour: Story = {
     docs: {
       description: {
         story:
-          "Renders a button with a hover's tooltip and opens it with the mouse: the tooltip's arrow is drawn in the colour of its body, and the tooltip carries a hairline edge and a drop shadow, so it stands off a dark page.",
+          "Renders a button with a hover's tooltip and opens it with the mouse: the tooltip's arrow is drawn in the colour of its body, and the tooltip and its arrow carry a hairline edge, with a drop shadow, so it stands off a dark page.",
       },
     },
   },
@@ -1130,6 +1130,15 @@ export const ArrowIsTheTooltipsColour: Story = {
         ];
         expect(sides).toContain(body);
         expect(getComputedStyle(tooltip!).boxShadow).toContain('0px 0px 0px 1px');
+        // and the arrow carries the same edge: a rim behind it in the body's hairline
+        const rim = getComputedStyle(tooltip!.querySelector('[data-popper-arrow]')!, '::after');
+        const rimSides = [
+          rim.borderTopColor,
+          rim.borderBottomColor,
+          rim.borderLeftColor,
+          rim.borderRightColor,
+        ];
+        expect(rimSides.some((color) => /^rgba\(.+, 0\.1\)$/.test(color))).toBe(true);
       });
     });
   },

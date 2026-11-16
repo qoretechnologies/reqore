@@ -59,19 +59,32 @@ const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) =>
   );
 };
 
+/** The hairline round a tooltip: its body's edge, and the rim round its arrow. */
+const popoverHairline = (theme: IReqoreTheme) => rgba(getReadableColor(theme), 0.1);
+
 const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   width: 10px;
   height: 10px;
   position: absolute;
   z-index: -1;
 
-  &:before {
+  &:before,
+  &:after {
     content: '';
     display: block;
     width: 0;
     height: 0;
     position: absolute;
+  }
+
+  &:before {
     z-index: -1;
+  }
+
+  /* The rim: a triangle 2px larger behind the arrow, in the body's hairline, so the arrow
+     carries the same edge as the body it points from. */
+  &:after {
+    z-index: -2;
   }
 `;
 
@@ -146,8 +159,9 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     css`
       /* A hairline in the text colour and a deep drop shadow: the soft 10px glow in a
          near-black tint was invisible on a dark page, so a tooltip had no edge at all. */
+      --reqore-popover-rim: ${popoverHairline(theme)};
       box-shadow:
-        0 0 0 1px ${rgba(getReadableColor(theme), 0.1)},
+        0 0 0 1px ${popoverHairline(theme)},
         0 10px 28px rgba(0, 0, 0, 0.55);
     `}
 
@@ -162,6 +176,15 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
       top: 5px;
       left: -5px;
     }
+
+    &:after {
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 12px solid var(--reqore-popover-rim, transparent);
+
+      top: 5px;
+      left: -7px;
+    }
   }
 
   &[data-popper-placement^='bottom'] > ${StyledPopoverArrow} {
@@ -174,6 +197,15 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
 
       top: -5px;
       left: -5px;
+    }
+
+    &:after {
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-bottom: 12px solid var(--reqore-popover-rim, transparent);
+
+      top: -7px;
+      left: -7px;
     }
   }
 
@@ -188,6 +220,15 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
       top: -5px;
       left: 5px;
     }
+
+    &:after {
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+      border-left: 12px solid var(--reqore-popover-rim, transparent);
+
+      top: -7px;
+      left: 5px;
+    }
   }
 
   &[data-popper-placement^='right'] > ${StyledPopoverArrow} {
@@ -200,6 +241,15 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
 
       top: -5px;
       left: -5px;
+    }
+
+    &:after {
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+      border-right: 12px solid var(--reqore-popover-rim, transparent);
+
+      top: -7px;
+      left: -7px;
     }
   }
 
