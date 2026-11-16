@@ -1569,6 +1569,8 @@ export const WithLongDescription: Story = {
 // panels in an outer scroll container. One story scrolls it (headers pinned →
 // square corners), the other leaves it at rest (headers rounded) — so the two
 // radius states are covered by reusing the exact same content.
+const STICKY_DEMO_BODY_STYLE = { minHeight: 960 };
+
 const renderStickyOutsideScroll = () => (
   <div
     style={{
@@ -1589,6 +1591,8 @@ const renderStickyOutsideScroll = () => (
         icon='PushpinLine'
         padded
         fluid
+        // Tall enough to pin in the 600px area (more than 1.5 screens of it).
+        contentStyle={STICKY_DEMO_BODY_STYLE}
       >
         {message}
       </ReqorePanel>
@@ -1686,7 +1690,10 @@ export const StickyHeaderInPaddedScrollport: Story = {
           // lands inside the stuck window at one width falls outside it at
           // another — which is exactly how this story passed locally and failed
           // in CI.
-          contentStyle={{ minHeight: 160 }}
+          // Tall enough to pin: a header pins only while its panel is more than
+          // STICKY_HEADER_TALL_SCREENS times the scrollport's visible height
+          // (272px here), so a 160px body no longer pins at all.
+          contentStyle={{ minHeight: 480 }}
         >
           {/* Sized deliberately: tall enough that a panel can scroll under its
               own header (so "stuck" is reachable and lasts), short enough that
@@ -1751,6 +1758,63 @@ export const StickyHeaderInPaddedScrollport: Story = {
       // would keep its rounded corners across the whole gap.
       await expect(getComputedStyle(header).borderTopLeftRadius).toBe('0px');
     });
+  },
+};
+
+const SHORT_AND_TALL_PANELS = [
+  { label: 'Short panel', height: 120 },
+  { label: 'Tall panel', height: 720 },
+  { label: 'Another short panel', height: 120 },
+];
+
+export const StickyHeaderPinsOnlyWhenTall: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders three sticky-header panels in a 320px scroll area: a short one, a tall one and another short one. Scrolled into the tall panel, its header pins at the top; the short panels' headers never pin and scroll away with their panels, because a heading pins only while its panel is more than one and a half times the height its scroll area shows.",
+      },
+    },
+    chromatic: { viewports: [600] },
+  },
+  render: () => (
+    <div
+      style={{ height: 320, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}
+      data-testid='short-and-tall-scrollport'
+    >
+      {SHORT_AND_TALL_PANELS.map(({ label, height }) => (
+        <ReqorePanel
+          key={label}
+          label={label}
+          stickyHeader
+          icon='PushpinLine'
+          padded
+          fluid
+          contentStyle={{ minHeight: height }}
+        >
+          {label}
+        </ReqorePanel>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const port = canvasElement.querySelector('[data-testid="short-and-tall-scrollport"]') as HTMLElement;
+    const headers = Array.from(port.querySelectorAll<HTMLElement>('.reqore-panel-title'));
+    await expect(headers).toHaveLength(SHORT_AND_TALL_PANELS.length);
+    const [short, tall, anotherShort] = headers;
+    await waitFor(() => expect(tall.getAttribute('data-pins-header')).toBe('true'));
+    await expect(short.getAttribute('data-pins-header')).toBe('false');
+    await expect(anotherShort.getAttribute('data-pins-header')).toBe('false');
+    await expect(getComputedStyle(short).position).not.toBe('sticky');
+
+    // Into the tall panel: its header holds the top of the scroll area.
+    const tallPanel = tall.closest('.reqore-panel') as HTMLElement;
+    port.scrollTop =
+      tallPanel.getBoundingClientRect().top - port.getBoundingClientRect().top + port.scrollTop + 200;
+    fireEvent.scroll(port);
+    await waitFor(() =>
+      expect(Math.abs(tall.getBoundingClientRect().top - port.getBoundingClientRect().top)).toBeLessThanOrEqual(1)
+    );
   },
 };
 

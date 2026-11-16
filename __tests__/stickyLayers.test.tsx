@@ -4,8 +4,9 @@
 // so the headers passing under it showed through. How the layers are drawn is checked in a browser by the stories
 // "Layout/Panel · Sticky Header Above Its Body" and "Collections/Table · Sticky Header Above Pinned Columns"; this
 // checks what they are drawn with.
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { ReqoreLayoutContent, ReqorePanel, ReqoreTable, ReqoreUIProvider } from '../src';
+import { STICKY_HEADER_TALL_SCREENS } from '../src/components/Panel';
 import { IReqoreTableColumn } from '../src/components/Table';
 import { DEFAULT_THEME } from '../src/constants/theme';
 import { getPanelBackgroundColor } from '../src/helpers/colors';
@@ -72,23 +73,62 @@ const headerCells = (container: HTMLElement): Record<string, HTMLElement> => {
 const rgbOf = (hex: string): string =>
   `rgb(${[1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16)).join(', ')})`;
 
+/** Every element measures `height` tall: jsdom lays nothing out, so a panel is 0px unless told. */
+const measureEverythingAs = (height: number) =>
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+    x: 0,
+    y: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: height,
+    width: 0,
+    height,
+    toJSON: () => ({}),
+  } as DOMRect);
+
 describe('A panel with a sticky header', () => {
-  test('draws its body in a stacking context of its own, under the header', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('pins its header, over its body in a stacking context of its own, when the panel is tall', async () => {
+    // Taller than one and a half screens of the window it scrolls in.
+    measureEverythingAs(window.innerHeight * STICKY_HEADER_TALL_SCREENS + 100);
     const { container } = render(
       <ReqoreUIProvider>
-        <ReqoreLayoutContent>
-          <ReqorePanel label='Sticky' stickyHeader>
-            Body
-          </ReqorePanel>
-        </ReqoreLayoutContent>
+        <ReqorePanel label='Sticky' stickyHeader>
+          Body
+        </ReqorePanel>
       </ReqoreUIProvider>
     );
 
     const header = requiredElement('.reqore-panel-title', "the panel's header", container);
     const body = requiredElement('.reqore-panel-content', "the panel's body", container);
 
-    expect(getComputedStyle(header).position).toBe('sticky');
+    await waitFor(() => expect(getComputedStyle(header).position).toBe('sticky'));
     expect(getComputedStyle(header).zIndex).toBe('2');
+    expect(header.getAttribute('data-pins-header')).toBe('true');
+    expect(getComputedStyle(body).isolation).toBe('isolate');
+  });
+
+  // Decision 028: a short panel's pinned header was a band with nothing under it to label.
+  test('lets a short panel scroll away with its header, which otherwise looks the same', async () => {
+    measureEverythingAs(window.innerHeight * STICKY_HEADER_TALL_SCREENS - 100);
+    const { container } = render(
+      <ReqoreUIProvider>
+        <ReqorePanel label='Short' stickyHeader>
+          Body
+        </ReqorePanel>
+      </ReqoreUIProvider>
+    );
+
+    const header = requiredElement('.reqore-panel-title', "the panel's header", container);
+    const body = requiredElement('.reqore-panel-content', "the panel's body", container);
+
+    await waitFor(() => expect(header.getAttribute('data-pins-header')).toBe('false'));
+    expect(getComputedStyle(header).position).not.toBe('sticky');
+    // the rest of the sticky treatment is unchanged, so the panel draws exactly as before
     expect(getComputedStyle(body).isolation).toBe('isolate');
   });
 

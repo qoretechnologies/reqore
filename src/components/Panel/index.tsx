@@ -380,6 +380,9 @@ export interface IStyledPanel extends Omit<IReqorePanelProps, 'accentSize'> {
    *  its visible top edge. Internal — the component measures it; callers use
    *  `stickyHeaderOffset` to shift a header deliberately. */
   stickyHeaderInset?: number;
+  /** The header is actually pinned: `stickyHeader` is on AND the panel is more than
+   *  `STICKY_HEADER_TALL_SCREENS` times the height of its scroll area. */
+  $pins?: boolean;
   /** True when the description is rendered as its own full-width row under the bar. The bar
    *  must wrap for that row to exist at all. */
   $descriptionBelow?: boolean;
@@ -427,6 +430,28 @@ const getScrollableAncestor = (node: HTMLElement | null): HTMLElement | null => 
     el = el.parentElement;
   }
   return null;
+};
+
+/**
+ * How many screens of its scroll area a panel must span before a `stickyHeader` pins.
+ *
+ * A pinned header is for finding your place in a long panel whose header has scrolled away. A
+ * panel that fits on the screen, or nearly does, never puts you there: its header pinned for
+ * the few pixels it overhung and drew a band with nothing under it to label (Filip,
+ * 2026-11-16: "it looks really dumb"). Just over one screen is not enough - a 311px card in a
+ * 264px area pinned for its 47px of overhang - so the line is one and a half. The rule is
+ * shared by every Qore app (instruction-files decision 028).
+ */
+export const STICKY_HEADER_TALL_SCREENS = 1.5;
+
+/** The height a scroll area shows: its client height less its own padding, or the window's
+ *  for the viewport. */
+const getScrollportVisibleHeight = (el: HTMLElement | null): number => {
+  if (!el) return window.innerHeight;
+  const style = getComputedStyle(el);
+  return (
+    el.clientHeight - (parseFloat(style.paddingTop) || 0) - (parseFloat(style.paddingBottom) || 0)
+  );
 };
 
 /** The distance from a scrollport's border-box top to the line a `position:
@@ -1157,7 +1182,11 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
       : minimal
         ? `${getPaddingSize(padded, size)}px`
         : undefined};
-  position: ${({ stickyHeader }) => (stickyHeader ? 'sticky' : 'relative')};
+  /* Pinned only while the panel is clearly taller than its scroll area (\`$pins\`, measured in
+     the component). The rest of the sticky treatment - the wrapper's visible overflow, the
+     header rounding its own corners - follows \`stickyHeader\`, so a short panel looks exactly
+     as it did and only stops pinning. */
+  position: ${({ $pins }) => ($pins ? 'sticky' : 'relative')};
   /* \`top: 0\` must mean "flush with the visible top edge of whatever scrolls",
      which is what every call site assumes. Sticky resolves against the scroll
      container's CONTENT box, so on a padded scrollport — which every default
@@ -1167,9 +1196,9 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
      that padding, measured from the real scroll ancestor at runtime;
      \`stickyHeaderOffset\` stays a deliberate caller offset on top of a now
      correct zero. */
-  top: ${({ stickyHeader, stickyHeaderOffset = 0, stickyHeaderInset = 0 }) =>
-    stickyHeader ? `${stickyHeaderOffset - stickyHeaderInset}px` : undefined};
-  z-index: ${({ stickyHeader }) => (stickyHeader ? 2 : undefined)};
+  top: ${({ $pins, stickyHeaderOffset = 0, stickyHeaderInset = 0 }) =>
+    $pins ? `${stickyHeaderOffset - stickyHeaderInset}px` : undefined};
+  z-index: ${({ $pins }) => ($pins ? 2 : undefined)};
   // A sticky header forces the panel wrapper to overflow visible (so the
   // header can stick), which stops the wrapper from clipping the header's top
   // corners — so without this the panel reads as square-topped even at rest.
@@ -1543,10 +1572,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const stickySentinelRef = useRef<HTMLDivElement>(null);
     const [isHeaderStuck, setIsHeaderStuck] = useState(false);
     const [stickyInset, setStickyInset] = useState(0);
+    // Whether the panel is tall enough for its sticky header to pin (STICKY_HEADER_TALL_SCREENS).
+    const [isTallEnoughToPin, setIsTallEnoughToPin] = useState(false);
 
     useEffect(() => {
       if (!rest.stickyHeader) {
         setIsHeaderStuck(false);
+        setIsTallEnoughToPin(false);
         return undefined;
       }
       const sentinel = stickySentinelRef.current;
@@ -1557,7 +1589,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       // Read once per layout change, not per scroll frame: `measure()` runs in a
       // rAF on every scroll and already forces a layout read.
       let inset = getScrollportInset(scrollParent);
+      let tall = false;
       setStickyInset(inset.padding);
+      const measureTall = () => {
+        const panelHeight = panelRef.current?.getBoundingClientRect().height ?? 0;
+        tall = panelHeight > getScrollportVisibleHeight(scrollParent) * STICKY_HEADER_TALL_SCREENS;
+        setIsTallEnoughToPin(tall);
+      };
       const measure = () => {
         frame = 0;
         const sentinelTop = sentinel.getBoundingClientRect().top;
@@ -1567,8 +1605,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         // radius through exactly the gap this fix closes.
         const rootTop = scrollParent ? scrollParent.getBoundingClientRect().top + inset.border : 0;
         // 1px deadzone so the exact at-rest position (sentinel flush against the
-        // top) never reads as stuck.
-        setIsHeaderStuck(sentinelTop < rootTop + offset - 1);
+        // top) never reads as stuck. A header that does not pin is never stuck:
+        // it scrolls away with its panel.
+        setIsHeaderStuck(tall && sentinelTop < rootTop + offset - 1);
       };
       const onScroll = () => {
         if (!frame) frame = requestAnimationFrame(measure);
@@ -1576,18 +1615,20 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       const onLayout = () => {
         inset = getScrollportInset(scrollParent);
         setStickyInset(inset.padding);
+        measureTall();
         onScroll();
       };
+      measureTall();
       measure();
       document.addEventListener('scroll', onScroll, { capture: true, passive: true });
       window.addEventListener('resize', onLayout, { passive: true });
       // Responsive padding changes the inset without a window resize or a
-      // scroll, and the header would stay compensated by the old value.
+      // scroll, and the header would stay compensated by the old value. The panel
+      // itself is watched too: rows arriving make a short panel tall.
       const observer =
-        scrollParent && typeof ResizeObserver !== 'undefined'
-          ? new ResizeObserver(onLayout)
-          : undefined;
-      observer?.observe(scrollParent as HTMLElement);
+        typeof ResizeObserver !== 'undefined' ? new ResizeObserver(onLayout) : undefined;
+      if (scrollParent) observer?.observe(scrollParent);
+      if (panelRef.current) observer?.observe(panelRef.current);
       return () => {
         document.removeEventListener('scroll', onScroll, true);
         window.removeEventListener('resize', onLayout);
@@ -2517,6 +2558,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               rounded={rounded}
               radiusSize={rest.radiusSize}
               stickyHeader={rest.stickyHeader}
+              $pins={!!rest.stickyHeader && isTallEnoughToPin}
+              data-pins-header={rest.stickyHeader ? String(isTallEnoughToPin) : undefined}
               stickyHeaderOffset={rest.stickyHeaderOffset}
               stickyHeaderInset={stickyInset}
               isStuck={isHeaderStuck}
