@@ -1,4 +1,4 @@
-import { expect, fireEvent, waitFor } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor } from 'storybook/test';
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { useState } from 'react';
@@ -12,6 +12,7 @@ import {
   ReqoreModal,
   ReqoreP,
   ReqorePanel,
+  ReqoreSegmentedControl,
   useReqoreProperty,
 } from '../../index';
 import { StoryMeta } from '../utils';
@@ -1213,3 +1214,46 @@ export const IsNotDraggableUnlessAsked: Story = {
     await expect(modalOffset()).toEqual({ x: 0, y: 0 });
   },
 };
+
+/** The element that has focus, read through the modal's own content: its label, or the option's. */
+const focusedLabel = () => {
+  const active = document.activeElement as HTMLElement | null;
+  return active?.closest('.reqore-modal') ? active.textContent?.trim() : undefined;
+};
+
+export const FocusesTheCheckedOption: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a modal with a period picker, Week checked, and a Save button. On opening, focus goes to Week, the picker\'s only option in the tab order. Shift+Tab then wraps to Save and Tab back to Week, never stopping on Day, Month or Year.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreModal
+      isOpen
+      label='Report period'
+      width='420px'
+      bottomActions={[{ label: 'Save', intent: 'info', position: 'right' }]}
+    >
+      <ReqoreSegmentedControl
+        value='week'
+        items={[
+          { value: 'day', label: 'Day' },
+          { value: 'week', label: 'Week' },
+          { value: 'month', label: 'Month' },
+          { value: 'year', label: 'Year' },
+        ]}
+      />
+    </ReqoreModal>
+  ),
+  play: async () => {
+    await waitFor(() => expect(focusedLabel()).toMatch(/^Week/), { timeout: 3000 });
+    await userEvent.tab({ shift: true });
+    await waitFor(() => expect(focusedLabel()).toMatch(/^Save/));
+    await userEvent.tab();
+    await waitFor(() => expect(focusedLabel()).toMatch(/^Week/));
+  },
+};
+
