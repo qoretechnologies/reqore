@@ -23,6 +23,7 @@ import {
   changeLightness,
   getColorFromMaybeString,
   getNotificationIntent,
+  getReadableColor,
 } from '../../helpers/colors';
 import { getPrimaryGradient } from '../Effect';
 import ReqoreMessage from '../Message';
@@ -140,10 +141,14 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   border: ${({ flat, noWrapper, ...rest }: any) =>
     !flat && noWrapper ? `1px solid ${getPopoverArrowColor({ ...rest, flat })}` : undefined};
 
-  ${({ transparent }) =>
+  ${({ transparent, theme }) =>
     !transparent &&
     css`
-      box-shadow: rgba(31, 26, 34, 0.7) 0px 0px 10px;
+      /* A hairline in the text colour and a deep drop shadow: the soft 10px glow in a
+         near-black tint was invisible on a dark page, so a tooltip had no edge at all. */
+      box-shadow:
+        0 0 0 1px ${rgba(getReadableColor(theme), 0.1)},
+        0 10px 28px rgba(0, 0, 0, 0.55);
     `}
 
   &[data-popper-placement^='top'] > ${StyledPopoverArrow} {
@@ -152,7 +157,7 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     &:before {
       border-left: 10px solid transparent;
       border-right: 10px solid transparent;
-      border-top: 10px solid ${(props) => getPopoverArrowColor(props)};
+      border-top: 10px solid var(--reqore-popover-surface, ${(props) => getPopoverArrowColor(props)});
 
       top: 5px;
       left: -5px;
@@ -165,7 +170,7 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     &:before {
       border-left: 10px solid transparent;
       border-right: 10px solid transparent;
-      border-bottom: 10px solid ${(props) => getPopoverArrowColor(props)};
+      border-bottom: 10px solid var(--reqore-popover-surface, ${(props) => getPopoverArrowColor(props)});
 
       top: -5px;
       left: -5px;
@@ -178,7 +183,7 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     &:before {
       border-top: 10px solid transparent;
       border-bottom: 10px solid transparent;
-      border-left: 10px solid ${(props) => getPopoverArrowColor(props)};
+      border-left: 10px solid var(--reqore-popover-surface, ${(props) => getPopoverArrowColor(props)});
 
       top: -5px;
       left: 5px;
@@ -191,7 +196,7 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     &:before {
       border-top: 10px solid transparent;
       border-bottom: 10px solid transparent;
-      border-right: 10px solid ${(props) => getPopoverArrowColor(props)};
+      border-right: 10px solid var(--reqore-popover-surface, ${(props) => getPopoverArrowColor(props)});
 
       top: -5px;
       left: -5px;
@@ -552,6 +557,25 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
         if (resizeObserver.current === observer) resizeObserver.current = null;
       };
     }, [forceUpdate, popperElement, targetElement]);
+
+    // The arrow is drawn in the colour the body is ACTUALLY drawn in. It had a formula of its
+    // own (the theme's main, lightened), while the body is a message whose surface is decided
+    // elsewhere, so the arrow was a lighter triangle on a darker tooltip. Read the surface the
+    // message drew and hand it to the arrow; the formula stays the fallback for a content
+    // with no message of its own.
+    useEffect(() => {
+      if (!popperElement) return undefined;
+      const frame = requestAnimationFrame(() => {
+        const surface = popperElement.querySelector('.reqore-message');
+        const color = surface ? getComputedStyle(surface).backgroundColor : '';
+        if (color && color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)') {
+          popperElement.style.setProperty('--reqore-popover-surface', color);
+        } else {
+          popperElement.style.removeProperty('--reqore-popover-surface');
+        }
+      });
+      return () => cancelAnimationFrame(frame);
+    }, [popperElement, content, intent, flat, minimal, transparent, effect]);
 
     // Preserve the documented explicit update contract as a fallback for
     // content changes that do not affect the content box dimensions.

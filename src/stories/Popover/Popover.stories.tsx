@@ -1102,6 +1102,39 @@ export const HoverTooltipOpensForAMouse: Story = {
   },
 };
 
+export const ArrowIsTheTooltipsColour: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a button with a hover's tooltip and opens it with the mouse: the tooltip's arrow is drawn in the colour of its body, and the tooltip carries a hairline edge and a drop shadow, so it stands off a dark page.",
+      },
+    },
+  },
+  render: () => <TooltipButtonsThatCount />,
+  play: async ({ canvasElement }) => {
+    const button = canvasElement.querySelector('.button-with-a-hover-tooltip') as HTMLElement;
+    await withMouse(async (mouse) => {
+      await mouse.restOn(button);
+      await waitFor(() => {
+        const tooltip = document.querySelector<HTMLElement>('.reqore-popover-content');
+        expect(tooltip).toHaveTextContent('What this button does');
+        const body = getComputedStyle(tooltip!.querySelector('.reqore-message')!).backgroundColor;
+        const arrow = getComputedStyle(tooltip!.querySelector('[data-popper-arrow]')!, '::before');
+        // whichever side points at the target is the one with a colour
+        const sides = [
+          arrow.borderTopColor,
+          arrow.borderBottomColor,
+          arrow.borderLeftColor,
+          arrow.borderRightColor,
+        ];
+        expect(sides).toContain(body);
+        expect(getComputedStyle(tooltip!).boxShadow).toContain('0px 0px 0px 1px');
+      });
+    });
+  },
+};
+
 const TARGET_RESIZES_FRAME_STYLE = { width: 600 };
 // a block as wide as its container, whose own content does not change as it narrows: nothing inside it
 // mutates, which the popover would see
