@@ -29,8 +29,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /* ------------------------------------------------------------------------------------------------
- * Fonts — buttons and inputs are in the page's font, or the theme's; tags and textareas keep
- * their own
+ * Fonts — buttons, inputs and textareas are in the page's font, or the theme's; tags keep their
+ * own, and a textarea that holds code asks for monospace
  * ---------------------------------------------------------------------------------------------- */
 
 const Controls = () => (
@@ -43,7 +43,13 @@ const Controls = () => (
         <ReqoreTag label='L-20931' appearance='soft' intent='info' />
       </ReqoreControlGroup>
       <ReqoreInput value='Resend the label' onChange={() => undefined} />
-      <ReqoreTextarea value='Notes for the warehouse' onChange={() => undefined} />
+      <ReqoreTextarea value='Warehouse notes' onChange={() => undefined} />
+      <ReqoreTextarea
+        className='story-code'
+        value='{ "labels": 2 }'
+        onChange={() => undefined}
+        effect={{ fontFamily: 'mono' }}
+      />
       <ReqoreControlGroup>
         <ReqoreButton intent='info' icon='PlayLine'>
           Resume
@@ -61,17 +67,18 @@ const INHERITING_SELECTORS = [
   '.reqore-panel-title .reqore-heading',
   '.reqore-paragraph',
   '.reqore-input',
+  '.reqore-textarea:not(.story-code)',
   '.reqore-button',
 ];
 
 /**
  * What keeps a face of its own, whatever the page or the theme is set in: tags and shortcut
- * keys name the platform UI font, a textarea keeps the browser's monospace.
+ * keys name the platform UI font, and a textarea that holds code asks for monospace.
  */
 const OWN_FONTS: [string, string][] = [
   ['.reqore-tag', 'system-ui'],
   ['.reqore-keyboard-shortcut-key', 'system-ui'],
-  ['.reqore-textarea', 'monospace'],
+  ['.reqore-textarea.story-code', MONO_FONT.replace(/'/g, '"')],
 ];
 
 const expectFonts = async (root: HTMLElement, inheritedFont: string) => {
@@ -97,7 +104,7 @@ export const PageFont: Story = {
     docs: {
       description: {
         story:
-          'Renders a panel with a paragraph, tags, an input, a textarea, buttons and a shortcut key on a page set in a serif font: the title, the paragraph, the input and the buttons are in the page\'s font, with no browser control font left over, while the tags and the shortcut key keep the platform UI font (system-ui) and the textarea keeps the browser\'s monospace, as they always had.',
+          'Renders a panel with a paragraph, tags, an input, two textareas, buttons and a shortcut key on a page set in a serif font: the title, the paragraph, the input, the notes textarea and the buttons are in the page\'s font, with no browser control font left over; the tags and the shortcut key keep the platform UI font (system-ui), and the textarea holding JSON asks for monospace with `effect={{ fontFamily: \'mono\' }}`.',
       },
     },
   },
@@ -119,7 +126,7 @@ export const ThemeFontFamily: Story = {
     docs: {
       description: {
         story:
-          'Renders the same panel under a provider with `theme.fontFamily: "mono"`: the layout wrapper sets the monospace stack and the title, the paragraph, the input and the buttons take it; the tags and the shortcut key stay in system-ui and the textarea in the browser\'s monospace, because the theme font excludes them.',
+          'Renders the same panel under a provider with `theme.fontFamily: "mono"`: the layout wrapper sets the monospace stack and the title, the paragraph, the input, the notes textarea and the buttons take it; the tags and the shortcut key stay in system-ui, because the theme font excludes them, and the JSON textarea is in monospace as it asked.',
       },
     },
   },
