@@ -1,5 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { expect, userEvent, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { useState } from 'react';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import { IReqoreSelectSingleProps, ReqoreSelect } from '../../components/Select';
@@ -8,6 +8,7 @@ import { MultiSelectItems } from '../../mock/multiSelect';
 import { IReqoreIconName } from '../../types/icons';
 import { StoryMeta } from '../utils';
 import { FlatArg, IconArg, MinimalArg, SizeArg, argManager } from '../utils/args';
+import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 
 const { createArg } = argManager<IReqoreSelectSingleProps>();
 
@@ -467,5 +468,77 @@ export const StructuredValueTooltipIsBounded: Story = {
     await expect(popover.getBoundingClientRect().height).toBeLessThan(
       window.innerHeight / 2
     );
+  },
+};
+
+/** The select's own text box, where it is typed in and tapped. */
+const selectInput = (canvasElement: HTMLElement) =>
+  canvasElement.querySelector('.reqore-input input, input') as HTMLInputElement;
+
+/** The list of choices, while it is open. */
+const choicesList = () => document.querySelector('.reqore-popover-content');
+
+export const FocusedThenTappedOnAPhoneKeepsItsChoices: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders an empty Select on a phone (390 px) whose box has the focus, as a form that focuses its first field leaves it, so its list of choices is already open. A finger taps the box, then taps it again: the list stays open both times, and a choice can still be seen and picked. A tap on a box that already has the focus sends only the click, and the list's click toggled it shut, so the choices a focus had shown went away at the first tap and never came back (board f63).",
+      },
+    },
+  },
+  render: Template,
+  args: {
+    value: undefined,
+  },
+  play: async ({ canvasElement }) => {
+    const input = selectInput(canvasElement);
+    input.focus();
+    await waitFor(() => expect(choicesList()).toBeTruthy());
+
+    await withTouchScreen(async (touch) => {
+      await touch.tap(input);
+      await waitFor(() => expect(choicesList()).toBeTruthy());
+      await touch.tap(input);
+      await waitFor(() => expect(choicesList()).toBeTruthy());
+
+      // a choice is there to read and to pick
+      await touch.tap(await waitFor(() => within(document.body).getByText('Existing item 3')));
+    });
+    await waitFor(() => expect(choicesList()).toBeNull());
+    await expect(canvasElement.querySelector('.reqore-tag')).toHaveTextContent('Existing item 3');
+  },
+};
+
+export const FocusedThenClickedKeepsItsChoices: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an empty Select whose box has the focus, so its list of choices is open, and clicks the box twice with the mouse: the list stays open. Only a click outside, Escape or a pick closes it - a click on the box it was opened from never does (board f63).',
+      },
+    },
+    // Interaction-only: the open list is pictured by `FocusedThenTappedOnAPhoneKeepsItsChoices`.
+    qlip: { skip: true },
+  },
+  render: Template,
+  args: {
+    value: undefined,
+  },
+  play: async ({ canvasElement }) => {
+    const input = selectInput(canvasElement);
+    input.focus();
+    await waitFor(() => expect(choicesList()).toBeTruthy());
+
+    await userEvent.click(input);
+    await waitFor(() => expect(choicesList()).toBeTruthy());
+    await userEvent.click(input);
+    await waitFor(() => expect(choicesList()).toBeTruthy());
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(choicesList()).toBeNull());
   },
 };
