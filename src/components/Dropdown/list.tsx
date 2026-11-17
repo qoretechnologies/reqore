@@ -84,6 +84,8 @@ export interface IReqoreDropdownListProps
    */
   filterRanking?: TReqoreFilterRanking;
   filter?: string | number;
+  /** The name of an opened level's back button. Defaults to `'Back'`. */
+  backLabel?: string;
   filterPlaceholder?: string;
   /**
    * Builder for the filter input's placeholder when `filterPlaceholder` is
@@ -210,6 +212,7 @@ const ReqoreDropdownList = memo(
     onFilterChange,
     filterPlaceholder,
     filterPlaceholderBuilder = (count) => `Search ${count} items...`,
+    backLabel = 'Back',
     noItemsFoundText = 'No items found',
     filter,
     customElements,
@@ -585,6 +588,7 @@ const ReqoreDropdownList = memo(
             onFilterChange,
             filterPlaceholder,
             filterPlaceholderBuilder,
+            backLabel,
             noItemsFoundText,
             filter,
             customTheme,
@@ -634,6 +638,9 @@ const ReqoreDropdownList = memo(
                   fixed={filterable}
                   onClick={goBackByClick}
                   className='reqore-dropdown-back-button'
+                  // An arrow alone named nothing for a screen reader.
+                  tooltip={backLabel}
+                  aria-label={backLabel}
                   customTheme={theme}
                   intent={intent}
                 />

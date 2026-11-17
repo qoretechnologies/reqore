@@ -606,3 +606,44 @@ export const CopiedWithoutClipboardApi: Story = {
     await expect(screen.queryByText('Could not copy')).toBeNull();
   },
 };
+
+export const ButtonsSayWhatTheyDo: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an editable tree with copy buttons. Each row\'s icon buttons say what they do, as a tooltip and to a screen reader: "Edit", "Delete", "Copy the value", and "Add an item" on an object and on the tree; `editLabel`, `deleteLabel`, `copyLabel` and `addLabel` translate them. No button in the tree is left without a name.',
+      },
+    },
+  },
+  args: {
+    data: { name: 'Order sync', retries: 3, tags: { region: 'eu' } },
+    expanded: true,
+    editable: true,
+    withLabelCopy: true,
+  },
+  play: async ({ canvasElement }) => {
+    const names = (selector: string) =>
+      Array.from(canvasElement.querySelectorAll(selector)).map((button) =>
+        button.getAttribute('aria-label')
+      );
+
+    await waitFor(() => expect(names('.reqore-tree-edit').length).toBeGreaterThan(0));
+    for (const [selector, name] of [
+      ['.reqore-tree-edit', 'Edit'],
+      ['.reqore-tree-delete', 'Delete'],
+      ['.reqore-tree-copy', 'Copy the value'],
+      ['.reqore-tree-add', 'Add an item'],
+    ]) {
+      await expect(names(selector).length, selector).toBeGreaterThan(0);
+      names(selector).forEach((label) => expect(label).toBe(name));
+    }
+    const unnamed = Array.from(canvasElement.querySelectorAll('button')).filter(
+      (button) =>
+        !button.getAttribute('aria-label') &&
+        !button.getAttribute('title') &&
+        !button.textContent?.trim()
+    );
+    await expect(unnamed.map((button) => button.className)).toEqual([]);
+  },
+};

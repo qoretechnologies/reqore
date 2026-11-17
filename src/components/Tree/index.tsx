@@ -83,6 +83,17 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize, IR
   /** Label of the "Show types" panel action. Defaults to `'Show types'`. */
   showTypesLabel?: string;
   /**
+   * The name of each editable row's edit button (its tooltip and accessible name: the button is
+   * an icon alone). Defaults to `'Edit'`.
+   */
+  editLabel?: string;
+  /** The name of each editable row's delete button. Defaults to `'Delete'`. */
+  deleteLabel?: string;
+  /** The name of the buttons that add an item (to an object, and to the tree). Defaults to `'Add an item'`. */
+  addLabel?: string;
+  /** The name of each row's copy button (`withLabelCopy`). Defaults to `'Copy the value'`. */
+  copyLabel?: string;
+  /**
    * Rendered when `data` is nullish. Defaults to a `<p>` containing `'No data'`.
    */
   noDataContent?: React.ReactNode;
@@ -174,6 +185,10 @@ export const ReqoreTree = ({
   expandAllLabel = 'Expand all',
   collapseAllLabel = 'Collapse all',
   showTypesLabel = 'Show types',
+  editLabel = 'Edit',
+  deleteLabel = 'Delete',
+  addLabel = 'Add an item',
+  copyLabel = 'Copy the value',
   noDataContent,
   copySuccessMessage = 'Successfully copied to clipboard',
   copyFailedTitle = 'Could not copy',
@@ -325,6 +340,9 @@ export const ReqoreTree = ({
             minimal
             className='reqore-tree-edit'
             icon='EditLine'
+            // An icon alone named nothing for a screen reader.
+            tooltip={editLabel}
+            aria-label={editLabel}
             flat
             size='tiny'
             onClick={(e) => {
@@ -363,6 +381,8 @@ export const ReqoreTree = ({
             transparent
             className='reqore-tree-delete'
             icon='IndeterminateCircleLine'
+            tooltip={deleteLabel}
+            aria-label={deleteLabel}
             intent='muted'
             flat
             size='tiny'
@@ -423,6 +443,8 @@ export const ReqoreTree = ({
                     flat
                     transparent
                     icon='AddCircleLine'
+                    tooltip={addLabel}
+                    aria-label={addLabel}
                     onClick={() => {
                       setManagementDialog({
                         open: true,
@@ -509,6 +531,8 @@ export const ReqoreTree = ({
                   icon='ClipboardLine'
                   size='tiny'
                   className='reqore-tree-copy'
+                  tooltip={copyLabel}
+                  aria-label={copyLabel}
                   onClick={() => void handleCopyValue(JSON.stringify(_data[key]))}
                 />
               )}
@@ -727,6 +751,8 @@ export const ReqoreTree = ({
             fixed
             className='reqore-tree-add'
             icon='AddCircleLine'
+            tooltip={addLabel}
+            aria-label={addLabel}
             onClick={() => {
               setManagementDialog({
                 open: true,

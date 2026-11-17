@@ -25,6 +25,11 @@ export interface IReqoreTabsListItem extends Omit<IReqoreButtonProps, 'id'> {
   onCloseClick?: (id: string | number) => any;
   activeIntent?: TReqoreIntent;
   closeIcon?: IReqoreIconName;
+  /**
+   * The name of the tab's close button (its tooltip and accessible name: the button is an icon
+   * alone). Defaults to `'Close <label>'`, or `'Close'` for a tab whose label is not text.
+   */
+  closeLabel?: string;
   loadingIconType?: IWithReqoreLoading['loadingIconType'];
   show?: boolean;
 }

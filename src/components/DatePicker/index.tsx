@@ -126,6 +126,11 @@ export interface IDatePickerProps<T extends TDateValue>
    * Defaults to `'Month'`. Override to translate.
    */
   monthLabel?: string;
+  /**
+   * The name of the clear button an `isClearable` picker with a value shows (its tooltip and
+   * accessible name: the button is an icon alone). Defaults to `'Clear'`.
+   */
+  clearLabel?: string;
 }
 
 const StyledRADatePicker: typeof RADatePicker = styled(RADatePicker)`
@@ -343,6 +348,7 @@ export const DatePicker = <T extends TDateValue>({
   timeAriaLabel = 'Time',
   monthNames,
   monthLabel = 'Month',
+  clearLabel = 'Clear',
   ...props
 }: IDatePickerProps<T>) => {
   /* What the field shows: the date as `readDate` reads it - with no zone, as local time - or nothing for a value it
@@ -672,6 +678,10 @@ export const DatePicker = <T extends TDateValue>({
                 <ReqoreButton
                   fixed
                   icon='CloseLine'
+                  // An icon alone named nothing for a screen reader.
+                  tooltip={clearLabel}
+                  aria-label={clearLabel}
+                  className='reqore-datepicker-clear'
                   size={size}
                   intent={intent}
                   flat={flat}

@@ -27,6 +27,11 @@ export interface IReqoreDropdownProps
   /** See `IReqoreDropdownListProps.filterRanking`. */
   filterRanking?: TReqoreFilterRanking;
   filter?: string | number;
+  /**
+   * The name of the back button an opened level of a nested list shows (its tooltip and accessible
+   * name: the button is an arrow alone). Defaults to `'Back'`.
+   */
+  backLabel?: string;
   filterPlaceholder?: string;
   /**
    * Builder for the filter input's placeholder when `filterPlaceholder` is
@@ -128,6 +133,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   onFilterChange,
   filterPlaceholder,
   filterPlaceholderBuilder,
+  backLabel,
   noItemsFoundText,
   filter,
   icon,
@@ -241,6 +247,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         onFilterChange={onFilterChange}
         filterPlaceholder={filterPlaceholder}
         filterPlaceholderBuilder={filterPlaceholderBuilder}
+        backLabel={backLabel}
         noItemsFoundText={noItemsFoundText}
         filter={filter}
         customElements={customElements}

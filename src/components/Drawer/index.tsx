@@ -305,6 +305,13 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
   isHidden?: boolean;
   position?: TPosition;
   hidable?: boolean;
+  /**
+   * The name of a `hidable` drawer's hide button (its tooltip and accessible name: the button is
+   * an arrow alone). Defaults to `'Hide'`.
+   */
+  hideLabel?: string;
+  /** The name of the button that shows a hidden drawer again. Defaults to `'Show'`. */
+  showLabel?: string;
   resizable?: boolean;
   onClose?: () => void;
   onHideToggle?: (isHidden: boolean) => void;
@@ -644,6 +651,8 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     size: sizeProp,
     resizable: resizableProp = true,
     hidable: hidableProp,
+    hideLabel = 'Hide',
+    showLabel = 'Show',
     onHideToggle,
     className,
     flat,
@@ -781,6 +790,9 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
         builtActions.push({
           responsive: false,
           icon: getHideShowIcon(position, _isHidden),
+          // An arrow alone named nothing for a screen reader.
+          tooltip: _isHidden ? showLabel : hideLabel,
+          'aria-label': _isHidden ? showLabel : hideLabel,
           onClick: () => {
             setIsHidden(!_isHidden);
 
@@ -793,7 +805,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
       }
 
       return builtActions;
-    }, [hidable, position, onClose, actions, _isHidden]);
+    }, [hidable, position, onClose, actions, _isHidden, hideLabel, showLabel]);
 
     const positions = useMemo(() => {
       /* Centering the modal. */
@@ -1202,6 +1214,8 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                       customTheme={theme}
                       className='reqore-drawer-control reqore-drawer-hide-button'
                       icon={getHideShowIcon(position, _isHidden)}
+                      tooltip={_isHidden ? showLabel : hideLabel}
+                      aria-label={_isHidden ? showLabel : hideLabel}
                       onClick={onHideToggleClick}
                     />
                   </StyledCloseWrapper>
