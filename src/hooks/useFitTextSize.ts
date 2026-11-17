@@ -35,14 +35,14 @@ export interface IUseFitTextSizeOptions {
   /** Floor in px. Defaults to `max * FIT_TEXT_MIN_RATIO`, never below `FIT_TEXT_FLOOR_PX`. */
   min?: number;
   /**
-   * How many lines the text may occupy. The fit measures against `available * lines`, so a
-   * label allowed to wrap keeps its natural size until it overruns BOTH lines — wrapping is
-   * cheaper than shrinking, so it should happen first.
+   * How many lines the text may occupy. A label allowed to wrap keeps its natural size while
+   * its words fit that many lines of `available` - wrapping is cheaper than shrinking, so it
+   * happens first - and shrinks only to make them fit.
    *
-   * A first-order approximation: a wrapped line breaks on a word and rarely fills to its last
-   * pixel, so the real capacity is a little under this. Being slightly optimistic is the right
-   * side to err on — whatever still overflows is ellipsized by the clamp, which is the end of
-   * the cascade anyway.
+   * The words are packed into lines the way the browser breaks them (greedily, at spaces), not
+   * poured in as one run: "Design changes built" in a 98px box is 156px, under two lines' 196px,
+   * but breaks "Design / changes / built" at 16px, so a clamp at two lines cut "built" from a
+   * title kept at full size (the admin portal's 200px tile). Shrinking comes before cutting.
    *
    * @default 1
    */
@@ -52,12 +52,100 @@ export interface IUseFitTextSizeOptions {
 }
 
 /**
+ * Whether words of these widths (in px at the size being tried) fit `lines` lines of
+ * `available` when packed the way a browser breaks them: greedily, a word to the next line when
+ * it does not fit beside the last. A word wider than a line on its own does not fit at all.
+ *
+ * One line keeps `FIT_TOLERANCE_PX` of slack, so a label that fits to the pixel is not shrunk
+ * by one for nothing. Several lines get none: the browser breaks a line at its edge, so a word
+ * judged to fit a line by a pixel of slack goes to the next one, and on the last line that is
+ * the word the clamp cuts ("changes built" at 103px in a 102px line, the portal's tile).
+ */
+export const wordsFitLines = (
+  words: number[],
+  space: number,
+  available: number,
+  lines: number
+): boolean => {
+  const room = lines > 1 ? available : available + FIT_TOLERANCE_PX;
+  let line = 1;
+  let used = 0;
+
+  for (const word of words) {
+    if (word > room) {
+      return false;
+    }
+
+    if (used === 0) {
+      used = word;
+    } else if (used + space + word <= room) {
+      used += space + word;
+    } else {
+      line += 1;
+      used = word;
+
+      if (line > lines) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+};
+
+/**
+ * The size to draw a text at: `max` when its words fit `lines` lines of `available` there, else
+ * the largest whole px down to `floor` at which they do, else `floor` (the clamp cuts what a
+ * floored size still cannot hold). `words` and `space` are widths at `max`.
+ */
+export const largestFittingTextSize = ({
+  words,
+  space,
+  available,
+  max,
+  floor,
+  lines = 1,
+}: {
+  words: number[];
+  space: number;
+  available: number;
+  max: number;
+  floor: number;
+  lines?: number;
+}): number => {
+  const capacity = Math.max(1, Math.floor(lines) || 1);
+  const fitsAt = (size: number) => {
+    const ratio = size / max;
+
+    return wordsFitLines(
+      words.map((word) => word * ratio),
+      space * ratio,
+      available,
+      capacity
+    );
+  };
+
+  if (fitsAt(max)) {
+    return max;
+  }
+
+  // Whole px below the natural size: a size that is itself fractional (a type scale's 14.4)
+  // still shrinks to whole px, which keeps snapshots stable across platforms.
+  for (let size = Math.ceil(max) - 1; size >= floor; size -= 1) {
+    if (fitsAt(size)) {
+      return size;
+    }
+  }
+
+  return floor;
+};
+
+/**
  * The largest whole px in `[min, max]` at which `text` fits `available`.
  *
- * Ratio, not search. Text width is linear in font size, so one measurement answers it:
- * `size = available / widthAtMax * max`, clamped — the same arithmetic
- * [fitty](https://github.com/rikschennink/fitty) settles on, where a binary search would take
- * ~10 iterations to reach the same number.
+ * Each word is measured once, at the natural size: text width is linear in font size, so a
+ * smaller size is arithmetic on those widths, packed into lines the way the browser breaks
+ * them (`largestFittingTextSize`), with no further measuring.
  *
  * Measured with `canvas.measureText` against the font of the element that PAINTS the text, so
  * there is no write-then-read cycle at all — the layout thrashing that makes fit-to-width
@@ -105,21 +193,18 @@ export const useFitTextSize = <T extends HTMLElement = HTMLDivElement>({
     const style = getComputedStyle((node.firstElementChild as HTMLElement) || node);
     // Letter-spacing is not part of the canvas font shorthand, so it is added back per
     // character. A spaced heading measured without it fits on paper and clips in the DOM.
-    const spacing = (parseFloat(style.letterSpacing) || 0) * text.length;
 
     context.font = `${style.fontStyle} ${style.fontWeight} ${max}px ${style.fontFamily}`;
-    const widthAtMax = context.measureText(text).width + spacing;
-    // The budget is the row width times the number of lines the label may use: the text is
-    // one continuous run being poured into `lines` boxes of `available` each.
-    const budget = available * Math.max(1, lines) + FIT_TOLERANCE_PX;
+    const letterSpacing = parseFloat(style.letterSpacing) || 0;
+    // Each word measured once, at the natural size; text width is linear in the font size, so
+    // every smaller size is these times its ratio.
+    const words = text
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((word) => context.measureText(word).width + letterSpacing * word.length);
+    const space = context.measureText(' ').width + letterSpacing;
 
-    if (widthAtMax <= budget) {
-      setSize(max);
-
-      return;
-    }
-
-    setSize(Math.max(floor, Math.min(max, Math.floor((budget / widthAtMax) * max))));
+    setSize(largestFittingTextSize({ words, space, available, max, floor, lines }));
   }, [text, available, max, floor, lines, enabled]);
 
   return [ref, size];

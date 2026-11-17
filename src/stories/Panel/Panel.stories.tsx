@@ -2536,6 +2536,48 @@ export const BadgesGiveWayToTheTitle: Story = {
 };
 
 
+export const ATitleShrinksBeforeItsWordsAreCut: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A 190px tile under the calm heading sizes (`typeScale.heading[3]: 16`), titled "Design changes built" with a "Last 30 days" badge, a help button and a "more" menu, as the admin portal draws it. The badge moves under the title, and the title has two lines of 98px. Its length (about 160px) fits those two lines, but its words do not: at 16px they break "Design / changes / built", and the clamp at two lines cut "built" from a title kept at full size. The fit now packs the words as the browser breaks them, so the title shrinks until they fit two lines, and reads whole (decision 029: wrap, then shrink, then cut).',
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: { typeScale: { heading: { 3: 16 }, headingWeight: 600 } },
+  },
+  render: () => (
+    <div data-tile='words' style={{ width: 190 }}>
+      <ReqorePanel
+        size='small'
+        label='Design changes built'
+        labelSize={3}
+        badge={TILE_BADGE}
+        actions={TILE_ACTIONS}
+        responsiveActions={false}
+        padded
+      >
+        12 designs
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const tile = canvasElement.querySelector('[data-tile="words"] .reqore-panel') as HTMLElement;
+
+    await expectBadgesUnderTitle(tile);
+    // every word of it, none cut
+    await expectTitleWhole(tile);
+
+    const heading = tile.querySelector('.reqore-panel-title .reqore-heading') as HTMLElement;
+
+    // ...because it shrank below the 16px it has with room, and no further than the floor
+    await waitFor(() => expect(parseFloat(getComputedStyle(heading).fontSize)).toBeLessThan(16));
+    expect(parseFloat(getComputedStyle(heading).fontSize)).toBeGreaterThanOrEqual(11);
+  },
+};
+
 /* ------------------------------------------------------------------------------------------------
  * media — a cover clipped to the panel's corners
  * ---------------------------------------------------------------------------------------------- */
