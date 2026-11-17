@@ -43,17 +43,19 @@ export interface IReqoreStatisticGroupProps
    */
   dividers?: boolean | 'between';
   /**
-   * How the group sits in a narrow container (at or below `narrowBelow`, measured on the group,
-   * not the window):
-   * - `'wrap'` (default): two figures to a row, the hairlines between them and between the rows;
-   * - `'scroll'`: one row that scrolls sideways, each figure at least `minItemWidth` wide.
+   * How the group lays out its figures:
+   * - `'scroll'` (default): always one row; the figures share it while each can be at least
+   *   `minItemWidth` wide, and past that the row scrolls sideways. A strip never breaks into two
+   *   rows on a small screen, and on a wide one nothing scrolls (decision 010, Filip 2026-11-17);
+   * - `'wrap'`: one row while the group is wider than `narrowBelow`, two figures to a row at or
+   *   below it. Kept for a host that has asked for it; no calm app uses it.
    *
-   * @default 'wrap'
+   * @default 'scroll'
    */
   narrowLayout?: 'wrap' | 'scroll';
   /** The group's width, in px, at or below which it is narrow. @default 480 */
   narrowBelow?: number;
-  /** The least a figure is wide in a `'scroll'` group, in px. @default 96 */
+  /** The least a figure is wide before a `'scroll'` group scrolls, in px. @default 96 */
   minItemWidth?: number;
   /**
    * The most figures drawn. A group shows at most five (decision 010); one given more draws the
@@ -176,9 +178,9 @@ const ITEM_DEFAULTS: Partial<IReqoreStatisticProps> = {
 
 /**
  * A strip of up to five figures with hairlines between them, and above and below: the calm KPI
- * strip (decision 010), drawn once here rather than by hand in every app. In a narrow container
- * it folds to two figures to a row, or scrolls sideways (`narrowLayout`). Measured on its own
- * width, so a strip in a drawer folds as one on a phone does.
+ * strip (decision 010), drawn once here rather than by hand in every app. One row, always: its
+ * figures share it while they fit and it scrolls sideways once they do not, measured on its own
+ * width, so a strip in a drawer behaves as one on a phone does (`narrowLayout`).
  */
 export const ReqoreStatisticGroup = memo(
   forwardRef<HTMLDivElement, IReqoreStatisticGroupProps>(
@@ -187,7 +189,7 @@ export const ReqoreStatisticGroup = memo(
         items,
         children,
         dividers = true,
-        narrowLayout = 'wrap',
+        narrowLayout = 'scroll',
         narrowBelow = NARROW_CONTAINER_BREAKPOINT_PX,
         minItemWidth = 96,
         max = STATISTIC_GROUP_MAX,
@@ -228,7 +230,8 @@ export const ReqoreStatisticGroup = memo(
         return all.slice(0, max);
       }, [items, children, max, size]);
 
-      const layout = !isNarrow ? 'row' : narrowLayout;
+      // One row that scrolls only when its figures do not fit, at every width; or the opt-in fold.
+      const layout = narrowLayout === 'scroll' ? 'scroll' : isNarrow ? 'wrap' : 'row';
 
       return (
         <StyledStatisticGroup

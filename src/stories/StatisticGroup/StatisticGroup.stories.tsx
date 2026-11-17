@@ -57,7 +57,7 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          'Renders a list page\'s five headline figures in one row: each figure over its label and the line saying what it counts, a hairline between the figures and one above and below the strip. The first figure starts on the strip\'s edge.',
+          'Renders a list page\'s five headline figures in one row: each figure over its label and the line saying what it counts, a hairline between the figures and one above and below the strip. The first figure starts on the strip\'s edge. With room for every figure, nothing scrolls.',
       },
     },
   },
@@ -71,6 +71,8 @@ export const Default: Story = {
 
     await waitFor(() => expect(items(group)).toHaveLength(5));
     expect(rowsOf(group)).toBe(1);
+    // A wide strip shares its row; it scrolls only when its figures do not fit.
+    expect(group.scrollWidth).toBeLessThanOrEqual(group.clientWidth + 1);
     expect(drawsHairline(group)).toBe(true);
     // A hairline before every figure but the first, which starts on the edge.
     expect(drawsHairline(items(group)[0])).toBe(false);
@@ -91,13 +93,13 @@ export const NarrowFoldsToTwoPerRow: Story = {
     docs: {
       description: {
         story:
-          'Renders the same five figures in a 360px box: narrower than 480px, the strip folds to two figures a row (three rows), a hairline between the two of a row and above every row after the first. Measured on the strip itself, so a strip in a drawer folds as one on a phone does.',
+          'Renders the same five figures in a 360px box with `narrowLayout="wrap"`: narrower than 480px, the strip folds to two figures a row (three rows), a hairline between the two of a row and above every row after the first. An opt-in kept for a host that asks for it; the default stays one row and scrolls (decision 010).',
       },
     },
   },
   render: () => (
     <div style={{ width: 360 }}>
-      <ReqoreStatisticGroup items={FIGURES} />
+      <ReqoreStatisticGroup items={FIGURES} narrowLayout='wrap' />
     </div>
   ),
   play: async ({ canvasElement }) => {
@@ -123,13 +125,13 @@ export const NarrowScrollsSideways: Story = {
     docs: {
       description: {
         story:
-          'Renders the five figures in a 360px box with `narrowLayout="scroll"`: one row that scrolls sideways, each figure at least 96px wide, the scrollbar hidden. The other way a strip can sit on a phone (BRAND_DESIGN §5: a row of peer glanceable tiles scrolls sideways).',
+          'Renders the five figures in a 360px box: one row that scrolls sideways, each figure at least 96px wide, the scrollbar hidden. The default: a strip never breaks into two rows (decision 010, BRAND_DESIGN §5).',
       },
     },
   },
   render: () => (
     <div style={{ width: 360 }}>
-      <ReqoreStatisticGroup items={FIGURES} narrowLayout='scroll' />
+      <ReqoreStatisticGroup items={FIGURES} />
     </div>
   ),
   play: async ({ canvasElement }) => {
@@ -151,7 +153,7 @@ export const OnAPhone: Story = {
     docs: {
       description: {
         story:
-          'Renders the five figures on a phone (390 px) with a 16px gutter: two figures to a row, three rows, every figure\'s words whole and nothing past the screen.',
+          'Renders the five figures on a phone (390 px) with a 16px gutter: one row that scrolls sideways inside the strip, every figure at least 96px wide, and nothing past the screen.',
       },
     },
   },
@@ -165,7 +167,9 @@ export const OnAPhone: Story = {
       const group = groupIn(canvasElement);
 
       await waitFor(() => expect(group.getAttribute('data-narrow')).toBe('true'));
-      expect(rowsOf(group)).toBe(3);
+      expect(rowsOf(group)).toBe(1);
+      // The strip scrolls inside itself; the page does not.
+      expect(group.scrollWidth).toBeGreaterThan(group.clientWidth);
       if (narrowed) {
         await waitFor(() =>
           expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1)

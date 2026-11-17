@@ -124,4 +124,15 @@ describe('ReqoreStatisticGroup', () => {
     // A light main makes the figure's words dark: the theme reached it.
     expect(valueColor()).not.toBe(onDefault);
   });
+
+  test('Is one row that scrolls when its figures do not fit, never two rows, by default', () => {
+    renderGroup(<ReqoreStatisticGroup items={FIGURES} />);
+
+    const group = document.querySelector('.reqore-statistic-group') as HTMLElement;
+    const style = getComputedStyle(group);
+
+    // One flex row at every width; past the figures' least width it scrolls inside itself.
+    expect(style.display).toBe('flex');
+    expect(style.overflowX).toBe('auto');
+  });
 });
