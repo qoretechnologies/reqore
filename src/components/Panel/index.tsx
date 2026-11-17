@@ -199,6 +199,11 @@ export interface IReqorePanelProps
   blur?: number;
   minimal?: boolean;
   labelSize?: 1 | 2 | 3 | 4 | 5 | 6;
+  /**
+   * @internal Set by ReqoreDrawer and ReqoreModal on their own panel: its title is a dialog's, drawn
+   * at `theme.typeScale.dialogHeading` px where the theme names it.
+   */
+  _dialogTitle?: boolean;
   contentSize?: TSizes;
   contentEffect?: IReqoreEffect;
   labelEffect?: IReqoreEffect;
@@ -811,6 +816,7 @@ export const REQORE_PANEL_STYLE_PROPS = listReqoreStyleProps<
   labelMinTextSize: true,
   labelProps: true,
   labelSize: true,
+  _dialogTitle: true,
   loading: true,
   loadingIconType: true,
   media: true,
@@ -1481,6 +1487,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       descriptionEffect = {},
       descriptionIntent,
       labelSize,
+      _dialogTitle,
       contentSize,
       minimal,
       badge,
@@ -2278,7 +2285,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
      * The title's natural size in px, from the heading level it renders at — the same
      * `labelSize || HEADER_SIZE_TO_NUMBER[panelSize]` the icon is sized from.
      */
+    // A dialog's own title takes the theme's dialog size where it names one (and no caller pinned
+    // a level); every other title, its heading level's px.
+    const dialogTitlePx =
+      _dialogTitle && !labelSize ? theme.typeScale?.dialogHeading : undefined;
     const labelNaturalPx =
+      dialogTitlePx ??
       getHeadingSize(theme, labelSize || HEADER_SIZE_TO_NUMBER[panelSize]) ??
       getHeadingSize(theme, 3)!;
     /**
@@ -2774,7 +2786,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                                   // disables the fit, so this never fights them.
                                   ...(fitLabel !== false && !labelEffect?.textSize
                                     ? { fontSize: `${labelFitPx}px` }
-                                    : {}),
+                                    : dialogTitlePx && !labelEffect?.textSize
+                                      ? { fontSize: `${dialogTitlePx}px` }
+                                      : {}),
                                 }}
                                 label={label}
                                 onSubmit={onLabelEdit}

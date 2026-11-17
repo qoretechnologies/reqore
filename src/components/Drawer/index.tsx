@@ -1223,6 +1223,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                 {!hidden && (
                   <ReqorePanel
                     {...rest}
+                    _dialogTitle
                     size={panelSize}
                     opacity={panelOpacity}
                     blur={panelBlur}

@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import {
   ReqoreCallout,
+  ReqoreDrawer,
   getControlTextSize,
   getTagTextSize,
   getTextSize,
@@ -210,5 +211,54 @@ describe('headings on the type scale', () => {
     expect(weightOf('.titled-panel .reqore-heading')).toBe('600');
     // A weight the heading is given still wins.
     expect(weightOf('.light-heading')).toBe('400');
+  });
+});
+
+describe('a dialog title on the type scale', () => {
+  test('a drawer\'s own title takes dialogHeading; a card\'s, inside it or not, its level\'s px', () => {
+    render(
+      <ReqoreUIProvider theme={{ typeScale: { heading: { 3: 16 }, headingWeight: 600, dialogHeading: 20 } }}>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqorePanel className='outside-card' label='Deliveries' fitLabel={false}>
+              Body
+            </ReqorePanel>
+            <ReqoreDrawer isOpen label='Order sync' fitLabel={false} hasBackdrop={false} onClose={() => undefined}>
+              <ReqorePanel className='inside-card' label='Settings' fitLabel={false}>
+                Body
+              </ReqorePanel>
+            </ReqoreDrawer>
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    const drawerTitle = Array.from(document.querySelectorAll<HTMLElement>('.reqore-drawer .reqore-heading')).find(
+      (heading) => heading.textContent?.includes('Order sync')
+    )!;
+
+    expect(getComputedStyle(drawerTitle).fontSize).toBe('20px');
+    expect(fontSizeOf('.outside-card .reqore-heading')).toBe('16px');
+    expect(fontSizeOf('.inside-card .reqore-heading')).toBe('16px');
+  });
+
+  test('without dialogHeading, a drawer\'s title is its level\'s px, as before', () => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreDrawer isOpen label='Order sync' fitLabel={false} hasBackdrop={false} onClose={() => undefined}>
+              Body
+            </ReqoreDrawer>
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    const drawerTitle = Array.from(document.querySelectorAll<HTMLElement>('.reqore-drawer .reqore-heading')).find(
+      (heading) => heading.textContent?.includes('Order sync')
+    )!;
+
+    expect(getComputedStyle(drawerTitle).fontSize).toBe(`${HEADER_LEVEL_TO_PX[3]}px`);
   });
 });

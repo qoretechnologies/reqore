@@ -1078,6 +1078,42 @@ export const SplitButtonKeepsItsWordsOnAPhone: Story = {
   },
 };
 
+export const CalmTitleSizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a drawer under the calm apps' heading sizes (`typeScale: { heading: { 3: 16 }, headingWeight: 600, dialogHeading: 20 }`): the drawer's own title at 20px, a card inside it at 16px, both at weight 600. A dialog's title is a step above a card's (board q54).",
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: { typeScale: { heading: { 3: 16 }, headingWeight: 600, dialogHeading: 20 } },
+  },
+  render: () => (
+    <ReqoreDrawer isOpen label='Order sync' position='right' size='600px' onClose={noop} hasBackdrop={false}>
+      <ReqorePanel label='Retry policy' className='story-card' flat={false} padded>
+        <ReqoreP>Three tries, a minute apart.</ReqoreP>
+      </ReqorePanel>
+    </ReqoreDrawer>
+  ),
+  play: async () => {
+    const title = await waitFor(() => {
+      const heading = Array.from(document.querySelectorAll<HTMLElement>('.reqore-drawer .reqore-heading')).find(
+        (element) => element.textContent?.includes('Order sync')
+      );
+      expect(heading).toBeTruthy();
+      return heading!;
+    });
+    const card = document.querySelector<HTMLElement>('.story-card .reqore-heading')!;
+
+    await expect(getComputedStyle(title).fontSize).toBe('20px');
+    await expect(getComputedStyle(card).fontSize).toBe('16px');
+    await expect(getComputedStyle(title).fontWeight).toBe('600');
+    await expect(getComputedStyle(card).fontWeight).toBe('600');
+  },
+};
+
 /** A page whose button opens a drawer with no backdrop, as a details panel beside a list. */
 const DetailsBesideThePage = () => {
   const [open, setOpen] = useState(false);

@@ -111,6 +111,12 @@ export interface IReqoreTypeScale {
   /** The weight every heading is drawn in. Unset, the browser's bold (700), as before. */
   headingWeight?: number;
   /**
+   * px of a drawer's or a modal's own title, which is a heading at its panel's level like a card's
+   * title (level 3 for a normal one): a calm theme draws a dialog's title a step above a card's
+   * (20 against 16, Filip 2026-11-17). Unset, a dialog's title is its level's px, as a card's is.
+   */
+  dialogHeading?: number;
+  /**
    * Unitless line height for running text, set where `theme.fontFamily` is set (the layout
    * wrapper and the portal popovers, modals and drawers render into) and inherited from there.
    * Unset, neither names one: the browser's `normal` applies, as before.
