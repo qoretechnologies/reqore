@@ -81,6 +81,8 @@ export { ReqoreEmptyState } from './components/EmptyState';
 export { ReqoreErrorBoundary } from './components/ErrorBoundary';
 export { ReqoreFadeScroller } from './components/FadeScroller';
 export { ReqoreFeatureCard } from './components/FeatureCard';
+export { ReqoreMarkdownBlock } from './components/MarkdownBlock';
+export type { IReqoreMarkdownBlockProps } from './components/MarkdownBlock';
 export { ReqoreModalsWrapper } from './components/GlobalModalsWrapper';
 export {
   ReqoreH1,
