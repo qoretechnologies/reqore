@@ -291,6 +291,15 @@ export const getPanelBackgroundColor = (theme: IReqoreTheme): TReqoreHexColor =>
   getThemePanelSurface(theme)?.main ?? changeDarkness(getMainBackgroundColor(theme), 0.03);
 
 /** The neutral 1px edge of a panel or panel-like container: `theme.panel.border`, or derived. */
+/**
+ * The keyboard focus ring, the one colour every control draws it in: the readable text colour at
+ * 0.7, so it stands at least 3:1 against the theme's surfaces (WCAG 1.4.11) on a dark theme and a
+ * light one alike. Rings drawn a shade off the surface (`changeLightness(main, 0.1-0.25)`) settled
+ * at about 1.4:1 on a calm near-black surface: a reader who paused could not see where focus was.
+ */
+export const getFocusRingColor = (theme: IReqoreTheme): string =>
+  rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.7);
+
 export const getPanelHairlineColor = (theme: IReqoreTheme): TReqoreHexColor =>
   getThemePanelSurface(theme)?.border ?? changeLightness(getMainBackgroundColor(theme), 0.08);
 

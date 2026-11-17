@@ -11,7 +11,7 @@ import {
 } from '../../constants/sizes';
 import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { changeLightness, getFocusRingColor, getReadableColor } from '../../helpers/colors';
 import styled, {
   listReqoreStyleProps,
   omitStyleProps,
@@ -126,7 +126,7 @@ export const StyledTextareaWrapper = styled.div.withConfig({
       display: flex;
     }
 
-    outline: 2px solid ${({ theme }) => changeLightness(theme.main, 0.25)};
+    outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
     outline-offset: -2px;
   }
 `;

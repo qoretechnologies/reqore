@@ -23,6 +23,7 @@ import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants
 import {
   changeLightness,
   getColorFromMaybeString,
+  getFocusRingColor,
   getGradientMix,
   getReadableAccentColor,
   getReadableColor,
@@ -619,13 +620,12 @@ export const StyledButton = styled(StyledEffect).withConfig({
         `
       : undefined}
 
-  &:focus,
-  &:active {
-    outline: 2px solid
-      ${({ theme, color, effect }) =>
-        changeLightness(getButtonMainColor(theme, color, effect), 0.1)};
-    border-color: ${({ minimal, theme, color, effect }) =>
-      minimal ? undefined : changeLightness(getButtonMainColor(theme, color, effect), 0.1)};
+  /* Where keyboard focus is, in the one ring every control draws (\`getFocusRingColor\`), and only
+     for the keyboard (\`:focus-visible\`): a ring a shade off the button's colour settled at about
+     1.4:1 on a calm surface, and \`:focus\` drew it after every mouse click too. */
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
+    outline-offset: 2px;
   }
 
   .reqore-button-description {

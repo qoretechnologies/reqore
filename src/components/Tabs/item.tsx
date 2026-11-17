@@ -8,6 +8,7 @@ import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import {
   changeLightness,
   getColorFromMaybeString,
+  getFocusRingColor,
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
@@ -164,7 +165,7 @@ export const StyledTabListItem = styled.div.withConfig({
         /* Keyboard users still need to see where they are; :focus-visible only
            matches keyboard focus, so this never returns on a mouse click. */
         ${StyledButton}:focus-visible {
-          outline: 2px solid ${activeColor || changeLightness(getMainBackgroundColor(theme), 0.4)} !important;
+          outline: 2px solid ${getFocusRingColor(theme)} !important;
           outline-offset: -2px;
         }
 

@@ -7,6 +7,7 @@ import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
+  getFocusRingColor,
   getNthGradientColor,
   getReadableColor,
   getReadableColorFrom,
@@ -217,10 +218,9 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
     z-index: 1;
   }
 
-  &:focus,
-  &:active {
-    outline: 2px solid ${({ theme }) => changeLightness(theme.main, 0.25)};
-    outline-offset: -2px;
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
+    outline-offset: 2px;
   }
 `;
 
@@ -334,9 +334,7 @@ const StyledCheckbox = styled.div.withConfig({
   /* Outside the box and in the text colour: a ring in a shade of the surface is lost
      around a box this small. */
   > .reqore-checkbox-input:focus-visible + .reqore-checkbox-box {
-    outline: 2px solid
-      ${({ theme }) =>
-        rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.7)};
+    outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
     outline-offset: 2px;
     border-radius: ${({ asSwitch }) => (asSwitch ? '50px' : '50%')};
   }

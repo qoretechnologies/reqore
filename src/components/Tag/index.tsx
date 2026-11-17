@@ -24,6 +24,7 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
   getColorFromMaybeString,
+  getFocusRingColor,
   getOpaqueColor,
   getReadableAccentColor,
   getReadableColor,
@@ -569,10 +570,9 @@ export const StyledTag = styled(StyledEffect).withConfig({
     }
   }
 
-  &:focus,
-  &:active {
-    outline: 2px solid ${({ theme, color }) => changeLightness(color || theme.main, 0.25)};
-    outline-offset: -2px;
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
+    outline-offset: 2px;
   }
 `;
 

@@ -5,7 +5,12 @@ import { useHoverGate } from '../../helpers/hoveringPointer';
 import styled from '../../helpers/styled';
 import { RADIUS_FROM_SIZE, RATING_GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getColorFromMaybeString, getReadableColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getColorFromMaybeString,
+  getFocusRingColor,
+  getReadableColor,
+} from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -93,7 +98,7 @@ const StyledRating = styled.div<IReqoreRatingStyle>`
     `}
 
   &:focus-visible {
-    outline: 2px solid ${({ theme }) => changeLightness(theme.main, 0.25)};
+    outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
     outline-offset: 2px;
     border-radius: ${({ size }) => RADIUS_FROM_SIZE[size]}px;
   }

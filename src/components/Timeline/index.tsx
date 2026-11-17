@@ -10,7 +10,7 @@ import {
 } from '../../constants/sizes';
 import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { changeLightness, getFocusRingColor, getReadableColor } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -312,7 +312,7 @@ const StyledTimelineItem = styled.li.withConfig({
       }
 
       &:focus-visible {
-        outline: 2px solid ${changeLightness(theme.main, 0.2)};
+        outline: 2px solid ${getFocusRingColor(theme)};
         outline-offset: 2px;
         border-radius: ${RADIUS_FROM_SIZE.normal}px;
       }

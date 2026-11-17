@@ -12,7 +12,7 @@ import {
 } from '../../constants/sizes';
 import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { changeLightness, getFocusRingColor, getReadableColor } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -143,7 +143,7 @@ export const StyledInputWrapper = styled.div.withConfig({
       display: flex;
     }
 
-    outline: 2px solid ${({ theme }) => changeLightness(theme.main, 0.25)};
+    outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
     outline-offset: -2px;
 
     ${ActiveIconScale}
