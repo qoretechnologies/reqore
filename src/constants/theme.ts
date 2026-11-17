@@ -103,6 +103,14 @@ export interface IReqoreTypeScale {
   /** px per size for tags, badges and keyboard keys. */
   tag?: Partial<Record<TSizes, number>>;
   /**
+   * px per heading level (1-6): ReqoreHeading and ReqoreH1-H6, and the title of a panel, card,
+   * drawer or modal, which is a heading at the level its size names (a `normal` panel's title is
+   * level 3). A level left out is Reqore's own: 30, 24, 19, 14, 11, 8.
+   */
+  heading?: Partial<Record<1 | 2 | 3 | 4 | 5 | 6, number>>;
+  /** The weight every heading is drawn in. Unset, the browser's bold (700), as before. */
+  headingWeight?: number;
+  /**
    * Unitless line height for running text, set where `theme.fontFamily` is set (the layout
    * wrapper and the portal popovers, modals and drawers render into) and inherited from there.
    * Unset, neither names one: the browser's `normal` applies, as before.

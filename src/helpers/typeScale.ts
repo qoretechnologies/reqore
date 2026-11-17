@@ -8,6 +8,7 @@
  */
 import {
   CONTROL_TEXT_FROM_SIZE,
+  HEADER_LEVEL_TO_PX,
   TAG_TEXT_FROM_SIZE,
   TEXT_FROM_SIZE,
   TSizes,
@@ -33,3 +34,10 @@ export const getControlTextSize = (theme: TReqoreTypeScaleTheme, size: TSizes): 
 /** px for a tag's, a badge's or a keyboard key's text at `size`. */
 export const getTagTextSize = (theme: TReqoreTypeScaleTheme, size: TSizes): number =>
   theme?.typeScale?.tag?.[size] ?? TAG_TEXT_FROM_SIZE[size];
+
+/**
+ * px for a heading at `level` (1-6): ReqoreHeading, and a panel's, card's, drawer's or modal's
+ * title. `undefined` for a level outside 1-6.
+ */
+export const getHeadingSize = (theme: TReqoreTypeScaleTheme, level: number): number | undefined =>
+  theme?.typeScale?.heading?.[level as 1 | 2 | 3 | 4 | 5 | 6] ?? HEADER_LEVEL_TO_PX[level];

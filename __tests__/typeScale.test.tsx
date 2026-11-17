@@ -7,13 +7,16 @@ import {
   ReqoreButton,
   ReqoreContent,
   ReqoreLayoutContent,
+  ReqoreH3,
   ReqoreP,
+  ReqorePanel,
   ReqoreTable,
   ReqoreTag,
   ReqoreUIProvider,
 } from '../src';
 import {
   CONTROL_TEXT_FROM_SIZE,
+  HEADER_LEVEL_TO_PX,
   SIZES,
   TAG_TEXT_FROM_SIZE,
   TEXT_FROM_SIZE,
@@ -167,5 +170,45 @@ describe('a callout on the type scale', () => {
     renderCallouts();
 
     expect(fontSizeOf('.bare .reqore-callout-content')).toBe(`${TEXT_FROM_SIZE.normal * 1.2}px`);
+  });
+});
+
+describe('headings on the type scale', () => {
+  const renderHeadings = (theme?: Partial<IReqoreTheme>) =>
+    render(
+      <ReqoreUIProvider theme={theme}>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreH3 className='plain-heading'>Order sync</ReqoreH3>
+            <ReqoreH3 className='light-heading' effect={{ weight: 'normal' }}>
+              Order sync
+            </ReqoreH3>
+            <ReqorePanel className='titled-panel' label='Customers' fitLabel={false}>
+              Body
+            </ReqorePanel>
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  const weightOf = (selector: string) =>
+    getComputedStyle(document.querySelector(selector) as HTMLElement).fontWeight;
+
+  test('without a heading scale, a heading and a panel title keep Reqore’s own size', () => {
+    renderHeadings();
+
+    expect(fontSizeOf('.plain-heading')).toBe(`${HEADER_LEVEL_TO_PX[3]}px`);
+    expect(fontSizeOf('.titled-panel .reqore-heading')).toBe(`${HEADER_LEVEL_TO_PX[3]}px`);
+    expect(weightOf('.plain-heading')).not.toBe('600');
+  });
+
+  test('with one, they take the theme’s px and weight', () => {
+    renderHeadings({ typeScale: { heading: { 3: 16 }, headingWeight: 600 } });
+
+    expect(fontSizeOf('.plain-heading')).toBe('16px');
+    expect(fontSizeOf('.titled-panel .reqore-heading')).toBe('16px');
+    expect(weightOf('.plain-heading')).toBe('600');
+    expect(weightOf('.titled-panel .reqore-heading')).toBe('600');
+    // A weight the heading is given still wins.
+    expect(weightOf('.light-heading')).toBe('400');
   });
 });

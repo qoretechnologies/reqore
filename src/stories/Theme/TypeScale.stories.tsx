@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import { expect, waitFor } from 'storybook/test';
 import {
   CONTROL_TEXT_FROM_SIZE,
+  HEADER_LEVEL_TO_PX,
   SIZE_TO_PX,
   TAG_TEXT_FROM_SIZE,
   TEXT_FROM_SIZE,
@@ -14,9 +15,11 @@ import {
   ReqoreCallout,
   ReqoreContent,
   ReqoreControlGroup,
+  ReqoreH3,
   ReqoreInput,
   ReqoreLayoutContent,
   ReqoreP,
+  ReqorePanel,
   ReqoreSpan,
   ReqoreTable,
   ReqoreTabs,
@@ -292,6 +295,56 @@ export const CalmScale: Story = {
       await expect(Math.round(tableRow.getBoundingClientRect().height), 'table row').toBe(
         SIZE_TO_PX.small + 1
       );
+    }
+  },
+};
+
+/** An example heading scale, not a decision: the sizes the calm apps take are Filip's (q54). */
+const EXAMPLE_HEADINGS: Partial<IReqoreTheme> = {
+  ...CALM_THEME,
+  typeScale: { ...CALM_TYPE_SCALE, heading: { 3: 16 }, headingWeight: 600 },
+};
+
+const Headings = () => (
+  <ReqoreControlGroup vertical gapSize='big' fluid>
+    <ReqoreH3 className='specimen-h3'>Order sync</ReqoreH3>
+    <ReqorePanel label='Customers' className='specimen-panel' flat={false} fitLabel={false}>
+      <ReqoreP size='small'>A normal panel: its title is a level 3 heading.</ReqoreP>
+    </ReqorePanel>
+  </ReqoreControlGroup>
+);
+
+export const HeadingsOnTheScale: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a level 3 heading and a normal panel's title twice: on the left at Reqore's own heading sizes (19px, the browser's bold), on the right under an example `theme.typeScale.heading` (`{ 3: 16 }`) with `headingWeight: 600`. Both take the theme's px and weight; a theme that names no heading sizes renders as before. The sizes the calm apps want are not decided here.",
+      },
+    },
+  },
+  render: () => (
+    <div style={{ display: 'flex', flexWrap: 'wrap', background: '#0c0c0e' }}>
+      <Side label="Reqore's own heading sizes" className='story-default' theme={DEFAULT_THEME}>
+        <Headings />
+      </Side>
+      <Side label='typeScale.heading (an example)' className='story-scaled' theme={EXAMPLE_HEADINGS}>
+        <Headings />
+      </Side>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const style = (side: string, selector: string) =>
+      getComputedStyle(find(canvasElement, `.${side} ${selector}`));
+
+    await waitFor(() => find(canvasElement, '.story-scaled .specimen-panel .reqore-heading'));
+    for (const selector of ['.specimen-h3', '.specimen-panel .reqore-heading']) {
+      await expect(style('story-default', selector).fontSize, selector).toBe(
+        `${HEADER_LEVEL_TO_PX[3]}px`
+      );
+      await expect(style('story-default', selector).fontWeight, selector).toBe('700');
+      await expect(style('story-scaled', selector).fontSize, selector).toBe('16px');
+      await expect(style('story-scaled', selector).fontWeight, selector).toBe('600');
     }
   },
 };

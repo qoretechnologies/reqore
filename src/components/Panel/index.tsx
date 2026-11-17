@@ -22,7 +22,6 @@ import {
   ACCENT_SIZE_TO_PX,
   clearCorner,
   GAP_FROM_SIZE,
-  HEADER_LEVEL_TO_PX,
   HEADER_SIZE_TO_NUMBER,
   ICON_FROM_HEADER_SIZE,
   PADDING_FROM_SIZE,
@@ -31,7 +30,7 @@ import {
   SPECIAL_PADDING_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
-import { getTextSize } from '../../helpers/typeScale';
+import { getHeadingSize, getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
@@ -2265,7 +2264,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
      * `labelSize || HEADER_SIZE_TO_NUMBER[panelSize]` the icon is sized from.
      */
     const labelNaturalPx =
-      HEADER_LEVEL_TO_PX[labelSize || HEADER_SIZE_TO_NUMBER[panelSize]] ?? HEADER_LEVEL_TO_PX[3];
+      getHeadingSize(theme, labelSize || HEADER_SIZE_TO_NUMBER[panelSize]) ??
+      getHeadingSize(theme, 3)!;
     /**
      * SECOND thing to give: the title's size. Once the actions are down to icons and the
      * row is still short, the title shrinks toward a floor rather than dropping characters
