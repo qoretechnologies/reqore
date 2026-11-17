@@ -105,7 +105,7 @@ const NO_CONFIRMATION_BODY = { display: 'none' } as const;
 
 const DEFAULT_ERROR_BOUNDARY_OPTIONS = {
   errorMessage:
-    'There was an error rendering this component. You can try resetting or refreshing the page.',
+    'This part of the page could not be shown. Try again, or reload the page.',
 };
 const DEFAULT_TOOLTIP_OPTIONS = { delay: 0 };
 const NOTIFICATION_POSITIONS: IReqoreNotificationsPosition[] = [

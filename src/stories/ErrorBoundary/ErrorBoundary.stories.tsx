@@ -146,7 +146,7 @@ export const Resets: Story = {
   play: async (args) => {
     await Throws.play(args);
 
-    await _testsClickButton({ label: 'Reset' });
+    await _testsClickButton({ label: 'Try again' });
     await _testsWaitForText('Throw error');
   },
 };

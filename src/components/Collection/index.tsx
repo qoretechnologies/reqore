@@ -129,6 +129,10 @@ export interface IReqoreCollectionProps
 
   onQueryChange?: (query: string | number) => void;
 
+  /**
+   * What an empty collection says. Defaults to
+   * `'Nothing to show. Try another search, or fewer filters.'`.
+   */
   emptyMessage?: string;
   sortButtonTooltip?: (sort?: 'asc' | 'desc') => string;
   displayButtonTooltip?: (display?: 'list' | 'grid') => string;
@@ -233,7 +237,7 @@ export const ReqoreCollection = memo(
       </>
     ),
     searchDelay = 300,
-    emptyMessage = 'No data in this collection, try changing your search query or filters',
+    emptyMessage = 'Nothing to show. Try another search, or fewer filters.',
     sortButtonTooltip = (sort) => (sort === 'desc' ? 'Sort ascending' : 'Sort descending'),
     displayButtonTooltip = (display) => (display === 'grid' ? 'Show as list' : 'Show as grid'),
     inputPlaceholder = (items) => `Search in ${size(items)} items`,

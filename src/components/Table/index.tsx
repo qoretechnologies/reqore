@@ -319,6 +319,10 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * read as a lighter block over the rows beside them.
    */
   pinnedSurface?: TReqoreHexColor;
+  /**
+   * What an empty table says. Defaults to
+   * `'Nothing to show. Try another search, or fewer filters.'`.
+   */
   emptyMessage?: string;
   showHelp?: boolean;
   showColumnsOptions?: boolean;
@@ -654,7 +658,7 @@ const ReqoreTable = ({
   onFilterChange,
   filterProps,
   filterRanking = 'none',
-  emptyMessage = 'No data in this table, try changing your search query or filters',
+  emptyMessage = 'Nothing to show. Try another search, or fewer filters.',
   headerCellComponent,
   headerEffect,
   headerDividers = true,

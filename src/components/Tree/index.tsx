@@ -76,9 +76,9 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize, IR
   KeyRenderer?: React.ComponentType<IReqoreTreeCustomRendererProps>;
   ValueRenderer?: React.ComponentType<IReqoreTreeCustomRendererProps>;
 
-  /** Label of the "Expand all" panel action. Defaults to `'Expand all'`. */
+  /** Label of the action that opens every level. Defaults to `'Show all'`. */
   expandAllLabel?: string;
-  /** Label of the "Collapse all" panel action. Defaults to `'Collapse all'`. */
+  /** Label of the action that closes every level. Defaults to `'Show top level'`. */
   collapseAllLabel?: string;
   /** Label of the "Show types" panel action. Defaults to `'Show types'`. */
   showTypesLabel?: string;
@@ -182,8 +182,8 @@ export const ReqoreTree = ({
   KeyRenderer,
   ValueRenderer,
   colorByType: colorByTypeProp,
-  expandAllLabel = 'Expand all',
-  collapseAllLabel = 'Collapse all',
+  expandAllLabel = 'Show all',
+  collapseAllLabel = 'Show top level',
   showTypesLabel = 'Show types',
   editLabel = 'Edit',
   deleteLabel = 'Delete',

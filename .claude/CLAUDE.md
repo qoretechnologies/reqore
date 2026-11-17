@@ -298,6 +298,14 @@ const StyledButton = styled.button<IReqoreButtonStyle>`
   for popover clicks.
 - **Auto-focus:** `useAutoFocus()` for modal/drawer focus management.
 
+### Default copy
+- A default label, tooltip, empty state or error message says what the reader wants, never what
+  the code does (Filip, 17 Nov 2026): "Hide", "Show all", "Try again", "Nothing to show". No
+  panel, drawer, row, component, collapse / expand, rendering or "the rest of the…" in it.
+- `__tests__/defaultCopySaysWhatTheReaderWants.test.ts` reads every default written as
+  `…Label`, `…Message`, `…Tooltip`, `…Text`, `…Title` or `…Placeholder` in `src/` (stories and
+  mock data left out) and fails on those words.
+
 ### Color Helpers (`src/helpers/colors.ts`)
 - **Text contrast:** `getReadableColor(theme)` returns light or dark based on `theme.main`.
 - **Gradients:** `getGradientMix()` blends multiple colors for effect gradients.

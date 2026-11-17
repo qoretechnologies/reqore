@@ -322,9 +322,12 @@ export interface IReqorePanelProps
   stickyHeader?: boolean;
   stickyHeaderOffset?: number;
   floatingActions?: boolean;
-  /** Tooltip for the collapse control when the panel is expanded. Defaults to `'Collapse'`. */
+  /**
+   * Tooltip for the collapse control while the content shows. Defaults to `'Hide'`: the
+   * reader's word for what it does, not the mechanism's (`'Collapse'`).
+   */
   collapseTooltip?: string;
-  /** Tooltip for the collapse control when the panel is collapsed. Defaults to `'Expand'`. */
+  /** Tooltip for the collapse control while the content is hidden. Defaults to `'Show'`. */
   expandTooltip?: string;
   /** Tooltip for the close (`×`) control. Defaults to `'Close'`. */
   closeTooltip?: string;
@@ -1520,8 +1523,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       skeleton,
       errorBoundaryOptions,
       floatingActions: floatingActionsProp,
-      collapseTooltip = 'Collapse',
-      expandTooltip = 'Expand',
+      collapseTooltip = 'Hide',
+      expandTooltip = 'Show',
       closeTooltip = 'Close',
       accentPosition,
       accentSize,
