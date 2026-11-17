@@ -119,7 +119,12 @@ export const StyledIconWrapper = styled(StyledEffect).withConfig({
   justify-content: center;
   align-items: center;
   vertical-align: text-bottom;
+  /* Everything but its scale eases: the scale a button, a tag or a field gives its icon on hover,
+     focus and active (0.85 -> 0.93) changes at once. Animating a transform promoted the icon to a
+     compositor layer that was demoted some time later, so a capture drew the icon's box a shade
+     apart run to run (Qlip: the focused-control stories alternated between two images). */
   transition: all 0.2s ease-out;
+  transition-property: color, background-color, border-color, opacity, filter, box-shadow, rotate;
   overflow: hidden;
 
   border-radius: ${({ rounded }) => (rounded ? '50%' : undefined)};
