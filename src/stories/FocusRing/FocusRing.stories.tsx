@@ -20,9 +20,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The colour of the nearest box behind `element` that paints one. */
-const surfaceBehind = (element: Element): string => {
-  for (let node: Element | null = element.parentElement; node; node = node.parentElement) {
+/** The colour of the nearest box that paints one, from `element` outwards. */
+const surfaceFrom = (element: Element | null): string => {
+  for (let node: Element | null = element; node; node = node.parentElement) {
     const { backgroundColor } = getComputedStyle(node);
     if (backgroundColor && !/rgba\(.*, 0\)$|transparent/.test(backgroundColor)) {
       return backgroundColor;
@@ -47,7 +47,20 @@ const ringOf = (focused: Element) => {
     : (focused as HTMLElement);
   const style = getComputedStyle(drawn);
 
-  return { drawn, width: parseFloat(style.outlineWidth), style: style.outlineStyle, color: style.outlineColor };
+  const width = parseFloat(style.outlineWidth);
+  // How far the ring reaches past the control's edge: 0 or less is a ring drawn inside it.
+  const reach = parseFloat(style.outlineOffset) + width;
+
+  return {
+    drawn,
+    width,
+    reach,
+    style: style.outlineStyle,
+    color: style.outlineColor,
+    // A ring inside the edge is seen against the control's own fill; one outside, against what is
+    // behind the control.
+    surface: reach <= 0 ? surfaceFrom(drawn) : surfaceFrom(drawn.parentElement),
+  };
 };
 
 export const DrawnForTheKeyboardOnly: Story = {
@@ -118,10 +131,13 @@ export const DrawnForTheKeyboardOnly: Story = {
 
       expect(ring.style, `${focused.className} draws a ring`).toBe('solid');
       expect(ring.width).toBeGreaterThanOrEqual(2);
-      expect(
-        getContrast(ringOnSurface(ring.color, surfaceBehind(ring.drawn)), surfaceBehind(ring.drawn)),
-        `${focused.className}'s ring stands out`
-      ).toBeGreaterThanOrEqual(3);
+      // Settled, not part way through the colour fading in.
+      await waitFor(() =>
+        expect(
+          getContrast(ringOnSurface(ringOf(focused).color, ring.surface), ring.surface),
+          `${focused.className}'s ring stands out`
+        ).toBeGreaterThanOrEqual(3)
+      );
       seen.push(focused.tagName);
     }
     expect(seen.length).toBe(5);
@@ -130,5 +146,58 @@ export const DrawnForTheKeyboardOnly: Story = {
     // input was a key, so its focus is drawn as the keyboard's.
     first.focus();
     await waitFor(() => expect(ringOf(first).style).toBe('solid'));
+  },
+};
+
+export const KeptInsideAClippingBox: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders three buttons and a tag flush in a box that clips (`overflow: hidden`, no padding), as a table cell, a field, a scrolling action group or a segmented control holds them. Tabbing to each draws its whole ring: the ring is inside the control\'s edge, so the box cannot cut any of it away. Captured with the middle button focused.',
+      },
+    },
+  },
+  render: () => (
+    <div className='story-clipping-box' style={{ overflow: 'hidden', display: 'inline-flex' }}>
+      <ReqoreControlGroup stack>
+        <ReqoreButton className='story-first'>Run</ReqoreButton>
+        <ReqoreButton className='story-middle' icon='PlayLine' tooltip='Start' />
+        <ReqoreButton>Stop</ReqoreButton>
+        <ReqoreTag label='Failing' onClick={() => undefined} />
+      </ReqoreControlGroup>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector<HTMLElement>('.story-clipping-box')!;
+    const first = await waitFor(() => {
+      const element = box.querySelector<HTMLButtonElement>('.story-first');
+      expect(element).toBeTruthy();
+      return element!;
+    });
+    const edge = box.getBoundingClientRect();
+
+    first.focus();
+    for (let index = 0; index < 4; index += 1) {
+      if (index > 0) {
+        await userEvent.tab();
+      }
+      const focused = document.activeElement as HTMLElement;
+      const ring = ringOf(focused);
+      const rect = focused.getBoundingClientRect();
+      const out = Math.max(0, ring.reach);
+
+      expect(box.contains(focused)).toBe(true);
+      expect(ring.style, `${focused.className} draws a ring`).toBe('solid');
+      // Every side of the ring is inside the clipping box.
+      expect(rect.left - out).toBeGreaterThanOrEqual(edge.left - 0.5);
+      expect(rect.top - out).toBeGreaterThanOrEqual(edge.top - 0.5);
+      expect(rect.right + out).toBeLessThanOrEqual(edge.right + 0.5);
+      expect(rect.bottom + out).toBeLessThanOrEqual(edge.bottom + 0.5);
+    }
+
+    const middle = box.querySelector<HTMLButtonElement>('.story-middle')!;
+    middle.focus();
+    await waitFor(() => expect(ringOf(middle).style).toBe('solid'));
   },
 };

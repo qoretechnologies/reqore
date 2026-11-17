@@ -220,7 +220,7 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
 
   &:focus-visible {
     outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
-    outline-offset: 2px;
+    outline-offset: -2px;
   }
 `;
 

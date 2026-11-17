@@ -439,6 +439,10 @@ export const StyledButton = styled(StyledEffect).withConfig({
         : CONTROL_HORIZONTAL_PADDING_FROM_SIZE[size]
     }px`};
   font-size: ${({ size, theme }) => getControlTextSize(theme, size)}px;
+  /* The ring's width and place at rest, and no colour: the button's \`transition: all\` then only
+     fades the ring's colour in, where it eased from the browser's 3px outline in the text colour. */
+  outline-width: 2px;
+  outline-color: transparent;
   outline-offset: -2px;
 
   min-height: ${({ size, verticalPadding = 'normal' }) =>
@@ -622,10 +626,12 @@ export const StyledButton = styled(StyledEffect).withConfig({
 
   /* Where keyboard focus is, in the one ring every control draws (\`getFocusRingColor\`), and only
      for the keyboard (\`:focus-visible\`): a ring a shade off the button's colour settled at about
-     1.4:1 on a calm surface, and \`:focus\` drew it after every mouse click too. */
+     1.4:1 on a calm surface, and \`:focus\` drew it after every mouse click too. Inside the edge:
+     a button sits flush in a clipping box often (a table cell, a field, a scrolling action group,
+     a segmented control), and one drawn outside was cut away there. */
   &:focus-visible {
     outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
-    outline-offset: 2px;
+    outline-offset: -2px;
   }
 
   .reqore-button-description {

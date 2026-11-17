@@ -123,6 +123,25 @@ The helpers are exported for a consumer's own hover:
   event after them, which reads what was noted once;
 - `watchHoverGate(target, gate)`: notes the pointer events on an element or the document.
 
+## Focus is drawn for the keyboard, in one ring (0.78.25)
+
+Every control draws keyboard focus in one ring (instruction-files decision 030):
+- **One colour**, `getFocusRingColor(theme)` (exported): the readable text colour at 0.7, at least 3:1 against
+  what it is drawn on, on a dark theme and a light one. It was a shade off each control's own colour, about
+  1.4:1 on a calm near-black surface. Use it for a ring an app draws itself.
+- **For the keyboard only** (`:focus-visible`) on `ReqoreButton`, `ReqoreTag` and `ReqoreCheckbox`: a mouse
+  click draws none, and a focused button's border keeps its colour. An input or a textarea draws it while it
+  holds the caret (`:focus-within`). Rating, Timeline, Tabs and Link take the colour.
+- **2px, inside the control's edge** (`outline-offset: -2px`) on buttons, tags and table rows: a control
+  sits flush in a box that clips often (a table cell, a field, a scrolling action group, a segmented control),
+  and a ring outside it was cut away there. A link in running text and the small box of a checkbox, radio or
+  switch keep theirs 2px outside, where one inside would cover the words or the box.
+- **No flash while it eases in**: a button and a tag set the outline's width and place at rest with no colour,
+  so their 0.2s transition fades only its colour in (it eased from the browser's 3px outline in the text
+  colour). A check that reads the ring right after `focus()` still sees it part way in: read it in `waitFor`.
+
+`Utilities/Focus Ring → Drawn For The Keyboard Only`, `→ Kept Inside A Clipping Box`; `__tests__/focusRing.test.ts`.
+
 ## Locales from a browser or a host (0.78.21)
 
 `Intl` throws a `RangeError` on a locale that is no BCP 47 tag, and browsers and hosts hand over POSIX locale

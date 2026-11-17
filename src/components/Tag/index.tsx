@@ -400,6 +400,10 @@ export const StyledTag = styled(StyledEffect).withConfig({
         : `${resolveRadius(size, radiusSize, TAG_RADIUS_FROM_SIZE, TAG_RADIUS_FROM_RADIUS_SIZE)}px`};
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
+  /* The focus ring's width and place at rest, so the transition fades only its colour in. */
+  outline-width: 2px;
+  outline-color: transparent;
+  outline-offset: -2px;
 
   ${({ align }) => {
     if (align === 'left') {
@@ -570,9 +574,10 @@ export const StyledTag = styled(StyledEffect).withConfig({
     }
   }
 
+  /* Inside the edge, where a clipping box around the tag (a cell, a scrolling group) cannot cut it. */
   &:focus-visible {
     outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
-    outline-offset: 2px;
+    outline-offset: -2px;
   }
 `;
 
