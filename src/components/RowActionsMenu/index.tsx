@@ -128,6 +128,40 @@ export const getCompactRowAction = (action: {
   return { label: hasRowActionLabel(label) ? label : undefined, tooltip, 'aria-label': ownName };
 };
 
+/**
+ * Whether an entity row's action destroys something: its intent is `danger`.
+ *
+ * Where a row's actions take the row's width - on a phone, under the label - a destructive one does
+ * not: a full-width Delete is a bigger target than the thing it destroys deserves (BRAND_DESIGN: a
+ * primary action that wraps takes the line, a secondary or destructive one stays as wide as it is).
+ * A lone one stays at the end of the label's line, so a row is about its subject, not a third of it
+ * a red bar under a thumb (r-qs-19, Dana on Qonsole's chat list).
+ *
+ * An entity row's only: on a severity row an action takes the severity's intent as the response to
+ * it (Investigate a critical incident), and there `danger` says nothing about destroying.
+ */
+export const isDestructiveRowAction = (action: { intent?: unknown } | undefined): boolean =>
+  action?.intent === 'danger';
+
+/**
+ * What an action on a line of its own is drawn with: written out, and the row's width where the
+ * row's actions span it (`actionsSpanRow`) - except a destructive one, which keeps its own width
+ * even in a stack that stretches the others (`isDestructiveRowAction`).
+ */
+export const ownLineRowActionProps = (
+  action: { intent?: unknown; style?: React.CSSProperties },
+  actionsSpanRow: boolean
+): { fluid: boolean; wrap: true; style?: React.CSSProperties } => {
+  const spans = actionsSpanRow && !isDestructiveRowAction(action);
+
+  return {
+    fluid: spans,
+    wrap: true,
+    // a stack that spans the row stretches what it holds; this one is held to its own width
+    ...(actionsSpanRow && !spans ? { style: { ...action.style, alignSelf: 'flex-start' } } : {}),
+  };
+};
+
 /** A row's label in words, where it is text: what its actions menu is named for (`rowLabel`). */
 export const rowLabelText = (label: React.ReactNode): string | undefined =>
   typeof label === 'number' || (typeof label === 'string' && label.trim())

@@ -1164,14 +1164,16 @@ const expectEntityActionsStacked = async (canvasElement: HTMLElement) => {
     boxes.slice(1).forEach((box, index) => {
       expect(box.top).toBeGreaterThanOrEqual(boxes[index].bottom - 0.5);
     });
-    // each the row's width at a phone's width, a finger's target; as wide as its label in a wider container
-    for (const box of boxes) {
-      if (atPhoneWidth) {
+    /* each the row's width at a phone's width, a finger's target; as wide as its label in a wider container. The
+       last, Remove, is destructive: it is as wide as its label even at a phone's width (r-qs-19). */
+    boxes.forEach((box, index) => {
+      const destructive = index === boxes.length - 1;
+      if (atPhoneWidth && !destructive) {
         expect(Math.abs(box.width - column.width)).toBeLessThan(1);
       } else {
         expect(box.width).toBeLessThan(column.width - 1);
       }
-    }
+    });
   });
   // the icon-only Remove reads its tooltip as its label
   expect(row.querySelector('.reqore-entity-row-actions')?.textContent).toContain('Remove');
@@ -1221,7 +1223,7 @@ export const NarrowContainerActionsStack: Story = {
     docs: {
       description: {
         story:
-          "Renders a row with three actions kept in sight (`narrowActions='stack'`) in a 320px container on a wide screen: they stack under the label, one to a line, each the row's width - a 320px container is a phone's width or narrower, where a control spans its row on any screen - the labels whole and the Remove icon labelled with its tooltip; none reaches past the row.",
+          "Renders a row with three actions kept in sight (`narrowActions='stack'`) in a 320px container on a wide screen: they stack under the label, one to a line, each the row's width - a 320px container is a phone's width or narrower, where a control spans its row on any screen - but Remove, which destroys, stays as wide as its label; the labels whole and the Remove icon labelled with its tooltip; none reaches past the row.",
       },
     },
   },
@@ -1341,4 +1343,70 @@ export const ThemedPanelSurface: Story = {
       />
     </ThemedSurfaceComparison>
   ),
+};
+
+const onDeleteChat = fn();
+
+export const ADestructiveActionKeepsItsSizeOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders two chat rows in a 320px card on a phone (390 px): one whose only action is Delete chat (a bin with that tooltip, intent danger), and one whose only action is Open. The Delete stays at the end of its row's label line, its bin alone at a finger's size, named Delete chat - the row is about the conversation. The Open still goes under the label and spans the row, the easiest target for a finger. Spanning, the bin had been written out as a red Delete chat bar under every row, a third of the row a destructive target under a thumb (r-qs-19; BRAND_DESIGN: a destructive button stays as wide as it is).",
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 320, maxWidth: '100%' }}>
+      <ReqoreControlGroup vertical fluid>
+        <ReqoreEntityRow
+          className='chat-row-delete'
+          label='Payment holds for over-limit payers'
+          description='Yesterday · 12 messages'
+          fluid
+          onClick={onEntityRowClick}
+          actions={[
+            { icon: 'DeleteBinLine', tooltip: 'Delete chat', intent: 'danger', onClick: onDeleteChat },
+          ]}
+        />
+        <ReqoreEntityRow
+          className='chat-row-open'
+          label='Inventory sync retries'
+          description='2 days ago · 4 messages'
+          fluid
+          actions={[{ label: 'Open', icon: 'ArrowRightLine' }]}
+        />
+      </ReqoreControlGroup>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    onDeleteChat.mockClear();
+    onEntityRowClick.mockClear();
+    await withTouchScreen(async (touch) => {
+      const deleteRow = await waitFor(() => {
+        const row = canvasElement.querySelector<HTMLElement>('.chat-row-delete[data-narrow="true"]');
+        expect(row).toBeTruthy();
+        return row!;
+      });
+      // at the end of the label's line, the bin alone, named by what it does
+      expect(deleteRow.getAttribute('data-actions')).toBe('end');
+      const bin = deleteRow.querySelector<HTMLElement>('.reqore-entity-row-actions .reqore-button')!;
+      expect(bin.getAttribute('aria-label')).toBe('Delete chat');
+      expect(bin.textContent?.trim()).toBe('');
+      const rowWidth = deleteRow.getBoundingClientRect().width;
+      expect(bin.getBoundingClientRect().width).toBeLessThan(rowWidth / 3);
+
+      // the other row's lone action still spans the row
+      const openRow = canvasElement.querySelector<HTMLElement>('.chat-row-open')!;
+      expect(openRow.getAttribute('data-actions')).toBe('row');
+      await expectLoneActionSpansTheRow(openRow, 'entity');
+
+      await touch.tap(bin);
+      await waitFor(() => expect(onDeleteChat).toHaveBeenCalledTimes(1));
+      expect(onEntityRowClick).not.toHaveBeenCalled();
+    });
+  },
 };

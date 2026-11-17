@@ -41,6 +41,8 @@ import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import ReqoreRowActionsMenu, {
   getCompactRowAction,
+  isDestructiveRowAction,
+  ownLineRowActionProps,
   getRowActionLabel,
   hasRowActionLabel,
   IReqoreRowActionShortLabel,
@@ -445,15 +447,22 @@ const ReqoreEntityRow = memo(
       /* Narrow, a row that folds two or more into a menu keeps its one action where the menu would be - only
          while its container is wider than a phone. As narrow as a phone, the action goes under the label and
          spans the row like any lone action there (David and Foxhoundn, qorus#646). */
+      /* A lone destructive action stays at the end of the label's line on a phone too, its icon alone where
+         it has one: spanning the row it was a red bar a third of the row's height, under every row (r-qs-19,
+         `isDestructiveRowAction`). */
+      const loneDestructive = loneAction && isDestructiveRowAction(actions?.[0]);
       const loneActionAtLineEnd =
-        isNarrow && !isPhoneWidth && narrowActions === 'menu' && loneAction;
+        isNarrow &&
+        loneAction &&
+        ((!isPhoneWidth && narrowActions === 'menu') || (isPhoneWidth && loneDestructive));
       // Narrow and stacked: one to a line. Otherwise narrow, they are a row of buttons under the label.
       const actionsStacked = isNarrow && narrowActions === 'stack';
       /* Under the label, stacked actions and a lone action are the row's width where the row's container is a
          phone's width or narrower - on a phone, or in as narrow a container on any screen - where a full-width
          row is the easiest target there is (Fitts's law). In a container wider than a phone, each is as wide as
          its label (David's width rule, qorus#646). The container is measured, not the screen. */
-      const actionsSpanRow = isNarrow && isPhoneWidth && (actionsStacked || loneAction);
+      const actionsSpanRow =
+        isNarrow && isPhoneWidth && (actionsStacked || loneAction) && !loneActionAtLineEnd;
       // an action on a line of its own: it is written out (an icon-only one says its tooltip), and may span it
       const actionsOnTheirOwnLine = actionsStacked || actionsSpanRow;
 
@@ -603,8 +612,8 @@ const ReqoreEntityRow = memo(
                          to read. */
                         {...(actionsOnTheirOwnLine
                           ? {
-                              fluid: actionsSpanRow,
-                              fixed: !actionsSpanRow,
+                              ...ownLineRowActionProps(action, actionsSpanRow),
+                              fixed: !ownLineRowActionProps(action, actionsSpanRow).fluid,
                               label: hasRowActionLabel(action.label)
                                 ? action.label
                                 : getRowActionLabel({ tooltip: action.tooltip }),
@@ -620,7 +629,7 @@ const ReqoreEntityRow = memo(
                         size={size}
                         intent={action.intent ?? intent}
                         {...action}
-                        {...(actionsOnTheirOwnLine ? { fluid: actionsSpanRow, wrap: true } : {})}
+                        {...(actionsOnTheirOwnLine ? ownLineRowActionProps(action, actionsSpanRow) : {})}
                         {...compact}
                         // After the spread, so it wraps the consumer's handler rather
                         // than being replaced by it. Applied even to an action with no
