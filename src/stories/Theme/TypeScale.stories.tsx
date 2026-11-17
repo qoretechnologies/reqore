@@ -11,6 +11,7 @@ import { IReqoreTheme, IReqoreTypeScale } from '../../constants/theme';
 import ReqoreUIProvider from '../../containers/UIProvider';
 import {
   ReqoreButton,
+  ReqoreCallout,
   ReqoreContent,
   ReqoreControlGroup,
   ReqoreInput,
@@ -94,6 +95,10 @@ const Specimen = () => (
       value='Resend the label'
       onChange={() => undefined}
     />
+    {/* A callout with no label: its own size on a scale, 1.2 times it without one. */}
+    <ReqoreCallout size='small' className='specimen-callout'>
+      Labels print again only once the carrier confirms the first one.
+    </ReqoreCallout>
     <ReqoreTable
       size='small'
       className='specimen-table'
@@ -135,6 +140,8 @@ const MEASURED: {
   selector: string;
   kind: keyof Omit<IReqoreTypeScale, 'lineHeight'>;
   size: keyof typeof TEXT_FROM_SIZE;
+  /** Its px on Reqore's own scale, where that is not the scale's step. */
+  defaultPx?: number;
 }[] = [
   { name: 'paragraph', selector: '.specimen-paragraph', kind: 'text', size: 'small' },
   { name: 'span', selector: '.specimen-span', kind: 'text', size: 'small' },
@@ -149,6 +156,14 @@ const MEASURED: {
     size: 'small',
   },
   { name: 'input', selector: '.specimen-input', kind: 'control', size: 'small' },
+  // Its own size on the scale (1.2 times it drew 15.6px on a 13px body); as before without one.
+  {
+    name: 'callout without a label',
+    selector: '.specimen-callout .reqore-callout-content',
+    kind: 'text',
+    size: 'small',
+    defaultPx: 14.4, // 12px × 1.2
+  },
   // A table's header cells are one size below the table's: `tiny` for a `small` table.
   {
     name: 'table header cell',
@@ -200,7 +215,7 @@ export const CalmScale: Story = {
     docs: {
       description: {
         story:
-          "Renders a paragraph, a span, buttons, tags, tabs, an input and a small table twice: on the left at Reqore's own type scale, on the right under `theme.typeScale` with 13px running text at line height 1.45, 12px controls and 12px table headers. Buttons, inputs, tags and table rows keep their heights on both sides, with their text centred.",
+          "Renders a paragraph, a span, buttons, tags, tabs, an input, a callout without a label and a small table twice: on the left at Reqore's own type scale, on the right under `theme.typeScale` with 13px running text at line height 1.45, 12px controls and 12px table headers. The callout's words are its own size under the type scale (13px on the right), where 1.2 times it drew 15.6px; on Reqore's own scale it is 1.2 times its size, as before. Buttons, inputs, tags and table rows keep their heights on both sides, with their text centred.",
       },
     },
   },
@@ -225,7 +240,7 @@ export const CalmScale: Story = {
       ],
     }));
 
-    for (const { name, selector, kind, size } of MEASURED) {
+    for (const { name, selector, kind, size, defaultPx } of MEASURED) {
       await expect(
         getComputedStyle(find(sides.calm, selector)).fontSize,
         `${name} on the calm scale`
@@ -233,7 +248,7 @@ export const CalmScale: Story = {
       await expect(
         getComputedStyle(find(sides.default, selector)).fontSize,
         `${name} on the default scale`
-      ).toBe(`${DEFAULT_SCALE[kind][size]}px`);
+      ).toBe(`${defaultPx ?? DEFAULT_SCALE[kind][size]}px`);
     }
 
     // Running text takes the theme's line height on the calm side; the default names none.

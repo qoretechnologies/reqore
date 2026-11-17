@@ -313,11 +313,11 @@ const StyledCalloutLabelRow = styled.div`
 const StyledCalloutContent = styled(StyledTextEffect)<{
   size: IReqoreCalloutProps['size'];
   theme: IReqoreTheme;
-  /* Set when the body sits under a label. A callout with no label has nothing
-     for its body to be smaller than, so the body is the callout's voice and
-     runs a step above the base size; under a label it is body copy, and body
+  /* Set when the body sits under a label. Without a type scale, a callout with no
+     label has nothing for its body to be smaller than, so the body is the callout's
+     voice and runs 1.2 times the base size; under a label it is body copy, and body
      copy larger than the heading above it reads as the heading being the
-     afterthought. */
+     afterthought. Under a type scale it is body copy either way. */
   $underLabel?: boolean;
   /* Set when the body is the callout's only content, a direct child of its row: it fills the
      row, as the labelled body does. Without it the body shrank to its widest line, so anything
@@ -327,8 +327,11 @@ const StyledCalloutContent = styled(StyledTextEffect)<{
 }>`
   ${({ $fill }) => ($fill ? 'flex: 1 1 auto; min-width: 0;' : '')}
   color: ${({ theme }) => rgba(getReadableColor(theme, undefined, undefined, true), 0.84)};
+  /* Under a theme's own type scale a callout's words are body text at its own size, never louder
+     than the body (the calm rule): 1.2 times the step drew 15.6px on a 13px body, a size no other
+     text has. A theme without a scale renders as before, as \`typeScale\` promises. */
   font-size: ${({ size = 'normal', $underLabel, theme }) =>
-    getTextSize(theme, size as TSizes) * ($underLabel ? 1 : 1.2)}px;
+    getTextSize(theme, size as TSizes) * ($underLabel || theme.typeScale?.text ? 1 : 1.2)}px;
   line-height: 1.25;
 `;
 

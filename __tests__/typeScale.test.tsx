@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react';
 import {
+  ReqoreCallout,
   getControlTextSize,
   getTagTextSize,
   getTextSize,
@@ -140,5 +141,31 @@ describe('type scale helpers', () => {
       expect(getControlTextSize(theme, size)).toBe(CALM.control[size]);
       expect(getTagTextSize(theme, size)).toBe(CALM.tag[size]);
     });
+  });
+});
+
+describe('a callout on the type scale', () => {
+  const renderCallouts = (theme?: Partial<IReqoreTheme>) =>
+    render(
+      <ReqoreUIProvider theme={theme}>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreCallout className='bare'>No records match the filters.</ReqoreCallout>
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+  test('with no label, its words are body text at its own size on the theme’s scale', () => {
+    renderCallouts({ typeScale: { text: { normal: 13, big: 15 } } });
+
+    // 1.2 times the 13px step drew 15.6px, on no scale and louder than the body.
+    expect(fontSizeOf('.bare .reqore-callout-content')).toBe('13px');
+  });
+
+  test('without a type scale, it renders as before', () => {
+    renderCallouts();
+
+    expect(fontSizeOf('.bare .reqore-callout-content')).toBe(`${TEXT_FROM_SIZE.normal * 1.2}px`);
   });
 });
