@@ -20,7 +20,9 @@ import {
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
 import { IDragPointerOptions, dragPointer } from '../utils/pointer';
-import { PHONE_STORY } from '../utils/touchScreen';
+import { expectBadgesUnderTitle, expectTitleWhole } from '../utils/titleBadges';
+import { PHONE_STORY, PHONE_VIEWPORT as PHONE_SCREEN } from '../utils/touchScreen';
+import { withViewport } from '../utils/viewport';
 
 import { ThemedSurface } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreDrawerProps>();
@@ -964,4 +966,47 @@ export const ThemedPanelSurface: Story = {
       </ReqoreDrawer>
     </ThemedSurface>
   ),
+};
+
+export const TitleBadgesBelowOnAPhone: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders a template drawer on a phone (390 px): an icon, the title "Order Sync Template", three badges (its status, version and kind), a description, a copy button and the close button. The badges do not fit beside the title, so they move to a line under it, on its left edge, and the title is whole: every word on screen, none cut.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreDrawer
+      isOpen
+      responsiveLayout
+      size='600px'
+      position='right'
+      label='Order Sync Template'
+      description='by Jane Novak · 12 Nov 2026'
+      icon='FileListLine'
+      onClose={noop}
+      badge={[
+        { label: 'In review', icon: 'TimeLine', appearance: 'text' },
+        { label: 'v3', appearance: 'soft' },
+        { label: 'workflow', appearance: 'soft' },
+      ]}
+      actions={[{ icon: 'FileCopyLine', tooltip: 'Copy ID', 'aria-label': 'Copy ID', flat: true }]}
+    >
+      <ReqoreP>The template's states and comments.</ReqoreP>
+    </ReqoreDrawer>
+  ),
+  play: async () => {
+    await withViewport(PHONE_SCREEN.width, PHONE_SCREEN.height, async () => {
+      await waitFor(() => expect(document.querySelector('.reqore-drawer')).toBeTruthy());
+
+      const drawer = document.querySelector('.reqore-drawer') as HTMLElement;
+
+      await expectBadgesUnderTitle(drawer);
+      await expectTitleWhole(drawer);
+    });
+  },
 };

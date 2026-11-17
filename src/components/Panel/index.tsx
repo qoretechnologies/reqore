@@ -93,6 +93,7 @@ import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 import { LabelEditor } from './LabelEditor';
 import { ReqorePanelNonResponsiveActions } from './NonResponsiveActions';
+import { ReqoreTitleAndBadges, TITLE_AND_BADGES_CLASS } from './TitleAndBadges';
 
 const getPaddingSize = (padded: boolean | TSizes, size: TSizes): number =>
   typeof padded === 'string' ? SPECIAL_PADDING_FROM_SIZE[padded] : PADDING_FROM_SIZE[size];
@@ -478,11 +479,14 @@ const getScrollportInset = (el: HTMLElement | null): { padding: number; border: 
  * opening a line box around the inline-flex heading — a block wrapper adds the row's leading on
  * top of the heading's own box, which made a `tiny` panel 3px taller than it used to be.
  */
-const StyledPanelTitleLabelBox = styled.div<{ $clampLines: number }>`
+const StyledPanelTitleLabelBox = styled.div<{ $clampLines: number; $ownLine?: boolean }>`
   display: flex;
   min-width: 0;
   overflow: hidden;
-  flex: 0 1 auto;
+  /* A title shrunk below its natural size takes its line whole, so its badges stay under it: it
+     shrank because it did not fit the line on its own, and a smaller font must not make room for
+     them beside it again. Badges give way before the title gives anything. */
+  flex: ${({ $ownLine }) => ($ownLine ? '1 1 100%' : '0 1 auto')};
 
   ${({ $clampLines }) =>
     $clampLines > 1 &&
@@ -669,8 +673,7 @@ export const StyledPanelTitleHeaderLabelAndBadge = styled.div`
      the row instead, a count smaller than its title floated above it, like a superscript,
      because the title's text sits low in the taller heading box it is set in. The icon stays
      centred. */
-  & > .reqore-panel-title-label-box,
-  & > .reqore-tag-group {
+  & > .${TITLE_AND_BADGES_CLASS} {
     align-self: baseline;
   }
 `;
@@ -2413,13 +2416,27 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       const padding =
         (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
       const gap = parseFloat(style.columnGap) || parseFloat(style.gap) || 0;
-      // A badge sits beside the title in the same box and takes real width.
-      const siblings = Array.from(parent.children).reduce(
-        (total, child) =>
-          child === node ? total : total + (child as HTMLElement).getBoundingClientRect().width,
-        0
+      /* A badge beside the title takes real width from it. A badge on the line under it takes
+         none: the badges move there before the title gives anything, so the title then has the
+         whole line. Which line a badge is on is read from the layout, after the line has taken
+         its items at their full width, and the title's natural size decides it: a title shrinks
+         only once its badges are below it, and then keeps them there (`$ownLine`). */
+      const nodeBox = node.getBoundingClientRect();
+      const besideTitle = Array.from(parent.children).filter(
+        (child) => child !== node && child.getBoundingClientRect().top < nodeBox.bottom - 1
       );
-      const gaps = gap * Math.max(0, parent.children.length - 1);
+      // By the room each takes on the line: a text badge is pulled back by its padding.
+      const siblings = besideTitle.reduce((total, child) => {
+        const { marginLeft, marginRight } = getComputedStyle(child);
+
+        return (
+          total +
+          child.getBoundingClientRect().width +
+          (parseFloat(marginLeft) || 0) +
+          (parseFloat(marginRight) || 0)
+        );
+      }, 0);
+      const gaps = gap * besideTitle.length;
       /* What the title could still gain, which the box measured above does not show: the box is
          only as wide as the title at its present size, so a title shrunk on a narrow bar measured
          that small box when the bar widened again, and stayed shrunk however wide the bar became
@@ -2634,67 +2651,72 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                       const labelRow = (
                         <StyledPanelTitleHeaderLabelAndBadge className='reqore-panel-title-label-row'>
                           {inlineWithLabel && panelIcon}
-                          {hideTitleText ? null : typeof label === 'string' ? (
-                            // The measured box is this wrapper, not the heading: as a
-                            // `min-width: 0` flex child it reports the width the row actually
-                            // left for the title, where the heading would report what the text
-                            // wants. `overflow: hidden` is what makes it shrinkable at all.
-                            // `display: flex` keeps the wrapper from opening a line box around
-                            // the inline-flex heading: a block wrapper adds the row's leading on
-                            // top of the heading's own box, which made a `tiny` panel 3px taller
-                            // than it was before this wrapper existed.
-                            <StyledPanelTitleLabelBox
-                              ref={labelFitRef}
-                              className='reqore-panel-title-label-box'
-                              $clampLines={clampLines}
-                            >
-                            <LabelEditor
-                              size={labelSize || panelSize}
-                              customTheme={theme}
-                              effect={{
-                                // `noWrap` pins the heading to one line; a clamped title is
-                                // allowed to wrap, and the clamp brings its own ellipsis.
-                                noWrap: clampLines === 1,
-                                ...labelEffect,
-                              }}
-                              style={{
-                                // A clamped title takes its display from the box above, which
-                                // sets `-webkit-box`. Naming a display here would beat that
-                                // rule and quietly turn the clamp off.
-                                ...(clampLines > 1
-                                  ? {}
-                                  : { display: 'inline-flex', alignItems: 'center' }),
-                                minWidth: 0,
-                                // Capped to the measured wrapper so the heading's own
-                                // `text-overflow: ellipsis` (from `noWrap`) has a box to overflow.
-                                // An `inline-flex` heading otherwise sizes to its text, and the
-                                // wrapper clips it mid-word with no ellipsis at all.
-                                maxWidth: '100%',
-                                // Inline, not through `effect.textSize`: `StyledHeader` sets its
-                                // own `font-size` from the heading level in a rule that lands
-                                // after the effect's, so the effect could never win. An inline
-                                // style beats both. A caller pinning `labelEffect.textSize`
-                                // disables the fit, so this never fights them.
-                                ...(fitLabel !== false && !labelEffect?.textSize
-                                  ? { fontSize: `${labelFitPx}px` }
-                                  : {}),
-                              }}
-                              label={label}
-                              onSubmit={onLabelEdit}
-                              tooltip={showLabelTooltip ? customLabelTooltip || label : undefined}
-                            />
-                            </StyledPanelTitleLabelBox>
-                          ) : (
-                            label
-                          )}
-                          {badge || badge === 0 ? (
-                            <ButtonBadge
-                              size={getOneHigherSize(panelSize)}
-                              content={badge}
-                              wrapGroup={isSmall}
-                              margin={label ? 'left' : 'none'}
-                            />
-                          ) : null}
+                          <ReqoreTitleAndBadges
+                            badge={badge}
+                            badgeSize={getOneHigherSize(panelSize)}
+                            // The room the badges keep from the title, which a spacer before them
+                            // used to hold.
+                            gap={PADDING_FROM_SIZE[getOneHigherSize(panelSize)]}
+                          >
+                            {hideTitleText ? null : typeof label === 'string' ? (
+                              // The measured box is this wrapper, not the heading: as a
+                              // `min-width: 0` flex child it reports the width the row actually
+                              // left for the title, where the heading would report what the text
+                              // wants. `overflow: hidden` is what makes it shrinkable at all.
+                              // `display: flex` keeps the wrapper from opening a line box around
+                              // the inline-flex heading: a block wrapper adds the row's leading on
+                              // top of the heading's own box, which made a `tiny` panel 3px taller
+                              // than it was before this wrapper existed.
+                              <StyledPanelTitleLabelBox
+                                ref={labelFitRef}
+                                className='reqore-panel-title-label-box'
+                                $clampLines={clampLines}
+                                $ownLine={
+                                  fitLabel !== false &&
+                                  !labelEffect?.textSize &&
+                                  labelFitPx < labelNaturalPx
+                                }
+                              >
+                              <LabelEditor
+                                size={labelSize || panelSize}
+                                customTheme={theme}
+                                effect={{
+                                  // `noWrap` pins the heading to one line; a clamped title is
+                                  // allowed to wrap, and the clamp brings its own ellipsis.
+                                  noWrap: clampLines === 1,
+                                  ...labelEffect,
+                                }}
+                                style={{
+                                  // A clamped title takes its display from the box above, which
+                                  // sets `-webkit-box`. Naming a display here would beat that
+                                  // rule and quietly turn the clamp off.
+                                  ...(clampLines > 1
+                                    ? {}
+                                    : { display: 'inline-flex', alignItems: 'center' }),
+                                  minWidth: 0,
+                                  // Capped to the measured wrapper so the heading's own
+                                  // `text-overflow: ellipsis` (from `noWrap`) has a box to overflow.
+                                  // An `inline-flex` heading otherwise sizes to its text, and the
+                                  // wrapper clips it mid-word with no ellipsis at all.
+                                  maxWidth: '100%',
+                                  // Inline, not through `effect.textSize`: `StyledHeader` sets its
+                                  // own `font-size` from the heading level in a rule that lands
+                                  // after the effect's, so the effect could never win. An inline
+                                  // style beats both. A caller pinning `labelEffect.textSize`
+                                  // disables the fit, so this never fights them.
+                                  ...(fitLabel !== false && !labelEffect?.textSize
+                                    ? { fontSize: `${labelFitPx}px` }
+                                    : {}),
+                                }}
+                                label={label}
+                                onSubmit={onLabelEdit}
+                                tooltip={showLabelTooltip ? customLabelTooltip || label : undefined}
+                              />
+                              </StyledPanelTitleLabelBox>
+                            ) : (
+                              label
+                            )}
+                          </ReqoreTitleAndBadges>
                         </StyledPanelTitleHeaderLabelAndBadge>
                       );
 

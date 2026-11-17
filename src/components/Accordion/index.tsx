@@ -31,10 +31,11 @@ import {
   IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { ButtonBadge, TReqoreBadge } from '../Button';
+import { TReqoreBadge } from '../Button';
 import { IReqoreEffect, patchPrimaryGradient, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { StyledIconWrapper } from '../Icon';
+import { ReqoreTitleAndBadges } from '../Panel/TitleAndBadges';
 import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -320,14 +321,22 @@ const AccordionItemRenderer = memo(
               className='reqore-accordion-icon'
             />
           )}
-          <ReqoreHeading
-            size={getOneLessSize(size)}
-            effect={item.labelEffect}
-            className='reqore-accordion-title'
+          {/* The heading and its badges share one line, and the badges move under the heading
+              before it wraps, as in a panel's title. The room between them is what the header's
+              gap and a spacer kept before. */}
+          <ReqoreTitleAndBadges
+            badge={item.badge}
+            badgeSize={size}
+            gap={GAP_FROM_SIZE.normal * 2 + PADDING_FROM_SIZE[size]}
           >
-            {item.label}
-          </ReqoreHeading>
-          {(item.badge || item.badge === 0) && <ButtonBadge content={item.badge} size={size} />}
+            <ReqoreHeading
+              size={getOneLessSize(size)}
+              effect={item.labelEffect}
+              className='reqore-accordion-title'
+            >
+              {item.label}
+            </ReqoreHeading>
+          </ReqoreTitleAndBadges>
         </StyledAccordionHeader>
         <StyledAccordionContentWrapper theme={theme} size={size} $isOpen={isOpen}>
           <StyledAccordionContentInner theme={theme} size={size}>

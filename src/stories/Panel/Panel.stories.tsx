@@ -2,8 +2,9 @@ import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { useEffect, useState } from 'react';
 import { expect, fireEvent, userEvent, waitFor } from 'storybook/test';
-import ReqoreButton from '../../components/Button';
+import ReqoreButton, { TReqoreBadge } from '../../components/Button';
 import ReqoreControlGroup from '../../components/ControlGroup';
+import { ReqoreH4 } from '../../components/Header';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
 import { ReqoreP } from '../../components/Paragraph';
@@ -22,6 +23,11 @@ import {
 } from '../utils/args';
 import { requiredElement } from '../utils/required';
 import { findDrawnOverStickyHeader, stickyHeaderOf } from '../utils/stickyStacking';
+import {
+  expectBadgesBesideTitle,
+  expectBadgesUnderTitle,
+  expectTitleWhole,
+} from '../utils/titleBadges';
 
 import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const { createArg } = argManager<IReqorePanelProps>();
@@ -2358,6 +2364,101 @@ export const CompactTitleWhenNarrow: Story = {
       </div>
     </ReqoreControlGroup>
   ),
+};
+
+/** A tile's title bar, as a dashboard draws it: a quiet period after the title, a help button and
+ *  one "more" menu. */
+const TILE_BADGE: TReqoreBadge = {
+  label: 'Last 30 days',
+  appearance: 'text',
+  labelEffect: { weight: 'normal' },
+};
+
+const TILE_ACTIONS: IReqorePanelAction[] = [
+  { icon: 'QuestionLine', tooltip: 'What this counts', minimal: true, flat: true },
+  {
+    icon: 'MoreLine',
+    tooltip: 'More',
+    minimal: true,
+    flat: true,
+    actions: [{ label: 'Copy a link to this view', icon: 'LinksLine' }],
+  },
+];
+
+const TILE_TITLE = 'Deliveries by channel';
+
+const TILE_VARIANTS: {
+  id: string;
+  width: number;
+  label: IReqorePanelProps['label'];
+  icon?: IReqoreIconName;
+}[] = [
+  { id: 'string', width: 200, label: TILE_TITLE },
+  {
+    id: 'element',
+    width: 200,
+    // A title the caller draws itself, as the admin portal's tiles do: one line, cut by its own
+    // ellipsis when it has to be.
+    label: (
+      <ReqoreH4
+        effect={{ noWrap: true }}
+        style={{ display: 'block', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}
+      >
+        Deliveries
+      </ReqoreH4>
+    ),
+  },
+  { id: 'icon', width: 200, label: TILE_TITLE, icon: 'MailLine' },
+  { id: 'wide', width: 480, label: TILE_TITLE },
+];
+
+export const BadgesGiveWayToTheTitle: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a dashboard tile at 200px three ways — a plain title, a title the caller draws itself (a `ReactElement`), and a title with an icon — each with a quiet "Last 30 days" badge, a help button and a "more" menu, then the same tile at 480px. At 200px the title and the badge do not fit on one line, so the badge moves to a line under the title, its words on the title\'s left edge (past the icon), and the title is whole at its natural size. At 480px the badge sits beside the title.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big' verticalAlign='flex-start'>
+      {TILE_VARIANTS.map(({ id, width, label, icon }) => (
+        <div key={id} data-tile={id} style={{ width }}>
+          <ReqorePanel
+            size='small'
+            label={label}
+            icon={icon}
+            badge={TILE_BADGE}
+            actions={TILE_ACTIONS}
+            responsiveActions={false}
+            padded
+          >
+            {width}px
+          </ReqorePanel>
+        </div>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const tile = (id: string) =>
+      canvasElement.querySelector(`[data-tile="${id}"] .reqore-panel`) as HTMLElement;
+
+    for (const id of ['string', 'element', 'icon']) {
+      await expectBadgesUnderTitle(tile(id));
+      await expectTitleWhole(tile(id));
+    }
+
+    await expectBadgesBesideTitle(tile('wide'));
+    await expectTitleWhole(tile('wide'));
+
+    // The badge moved before the title shrank: it is at the size it has with room to spare.
+    const fontSize = (id: string) =>
+      getComputedStyle(tile(id).querySelector('.reqore-panel-title .reqore-heading') as HTMLElement)
+        .fontSize;
+
+    expect(fontSize('string')).toBe(fontSize('wide'));
+  },
 };
 
 

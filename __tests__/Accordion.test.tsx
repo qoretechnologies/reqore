@@ -438,3 +438,31 @@ test('Minimal accordion with item intent renders a tinted header background', ()
   expect(dangerBg).not.toBe(plainBg);
   expect(dangerBg).not.toMatch(/transparent|rgba\(0, 0, 0, 0\)/);
 });
+
+test("A header's heading and its badges share one wrapping line, the heading first", () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreAccordion
+            items={[
+              { label: 'Delivery retries', content: 'Body', icon: 'RepeatLine', badge: ['2 failing'] },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const header = document.querySelector('.reqore-accordion-header') as HTMLElement;
+  const line = header.querySelector('.reqore-panel-title-label-and-badges') as HTMLElement;
+
+  // The badges move under the heading before it wraps: the line wraps, the heading leads it, and
+  // the icon stays outside so badges below line up with the heading.
+  expect(getComputedStyle(line).flexWrap).toBe('wrap');
+  expect(line.firstElementChild!.classList.contains('reqore-accordion-title')).toBe(true);
+  expect(line.lastElementChild!.textContent).toBe('2 failing');
+  expect(line.querySelector('.reqore-accordion-icon')).toBeNull();
+  // The room between them is what the header's gap and the badge's spacer kept: 5 + 8 + 5.
+  expect(getComputedStyle(line).columnGap).toBe('18px');
+});

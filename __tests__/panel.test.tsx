@@ -850,3 +850,86 @@ describe('narrow action labels', () => {
     mockedPanelWidth = 0;
   });
 });
+
+describe('a title and its badges', () => {
+  const renderTitle = (ui: React.ReactNode) =>
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>{ui}</ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+  test('Share one wrapping line, the title first: the badges move under it before it is cut', () => {
+    renderTitle(
+      <ReqorePanel label='Deliveries by channel' badge='Last 30 days' icon='MailLine'>
+        Body
+      </ReqorePanel>
+    );
+
+    const line = document.querySelector('.reqore-panel-title-label-and-badges') as HTMLElement;
+    const style = getComputedStyle(line);
+
+    expect(style.flexWrap).toBe('wrap');
+    // The room the badges keep from the title is a gap, drawn only between items on one line,
+    // so badges on a line of their own start on the title's edge.
+    expect(style.columnGap).toBe('11px');
+    expect(line.firstElementChild!.classList.contains('reqore-panel-title-label-box')).toBe(true);
+    expect(line.firstElementChild!.textContent).toBe('Deliveries by channel');
+    expect(line.lastElementChild!.classList.contains('reqore-tag-group')).toBe(true);
+    expect(line.lastElementChild!.textContent).toBe('Last 30 days');
+    expect(line.children).toHaveLength(2);
+    // The icon is outside the line: badges below the title line up with the title, not the icon.
+    expect(line.querySelector('.reqore-panel-title-icon')).toBeNull();
+    expect(line.parentElement!.querySelector(':scope > .reqore-panel-title-icon')).not.toBeNull();
+  });
+
+  test('Take a title the caller draws itself the same way', () => {
+    renderTitle(
+      <ReqorePanel
+        label={<h4 className='my-title'>Deliveries</h4>}
+        badge={['Last 30 days', 'Soon']}
+        actions={[{ icon: 'QuestionLine' }]}
+      >
+        Body
+      </ReqorePanel>
+    );
+
+    const line = document.querySelector('.reqore-panel-title-label-and-badges') as HTMLElement;
+
+    expect(line.firstElementChild!.classList.contains('my-title')).toBe(true);
+    expect(line.lastElementChild!.textContent).toBe('Last 30 daysSoon');
+    // A group of badges folds onto further lines rather than running past the bar.
+    expect(getComputedStyle(line.lastElementChild as HTMLElement).flexWrap).toBe('wrap');
+  });
+
+  test("Pull a text badge back by its padding, so its words start on the title's edge", () => {
+    renderTitle(
+      <>
+        <ReqorePanel
+          className='text-badge'
+          label='Deliveries'
+          badge={{ label: 'Last 30 days', appearance: 'text' }}
+        >
+          Body
+        </ReqorePanel>
+        <ReqorePanel className='chip-badge' label='Deliveries' badge='Last 30 days'>
+          Body
+        </ReqorePanel>
+      </>
+    );
+
+    const line = (panel: string) =>
+      document.querySelector(`.${panel} .reqore-panel-title-label-and-badges`) as HTMLElement;
+    const badges = (panel: string) => line(panel).querySelector('.reqore-tag-group') as HTMLElement;
+
+    // A normal panel's text badge is a `normal` tag, 6px in from its edge: pulled back by 6px,
+    // with the gap widened by as much, so beside the title the room is what it was.
+    expect(getComputedStyle(badges('text-badge')).marginLeft).toBe('-6px');
+    expect(getComputedStyle(line('text-badge')).columnGap).toBe('17px');
+    // A chip's edge is its box: nothing moves.
+    expect(getComputedStyle(badges('chip-badge')).marginLeft).not.toBe('-6px');
+    expect(getComputedStyle(line('chip-badge')).columnGap).toBe('11px');
+  });
+});
