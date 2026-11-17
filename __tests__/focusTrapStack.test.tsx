@@ -2,6 +2,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useRef, useState } from 'react';
 import { ReqoreDrawer, ReqoreUIProvider } from '../src';
+import { useReqoreProperty } from '../src/hooks/useReqoreContext';
 import { useFocusTrap } from '../src/hooks/useFocusTrap';
 
 beforeEach(() => {
@@ -90,4 +91,35 @@ test('A drawer without a backdrop takes focus when it opens and gives it back wh
   fireEvent.keyDown(document, { key: 'Escape' });
   await waitFor(() => expect(document.querySelector('.reqore-drawer-wrapper')).toBeNull());
   await waitFor(() => expect(document.activeElement).toBe(opener));
+});
+
+/** Opens a confirmation from a button. */
+const Asks = () => {
+  const confirmAction = useReqoreProperty('confirmAction');
+
+  return (
+    <button onClick={() => confirmAction({ title: 'Delete it?', onConfirm: () => undefined })}>
+      Ask
+    </button>
+  );
+};
+
+test('A confirmation opens with Cancel focused, not the x in its title bar', async () => {
+  render(
+    <ReqoreUIProvider>
+      <Asks />
+    </ReqoreUIProvider>
+  );
+
+  fireEvent.click(screen.getByText('Ask'));
+  await screen.findByText('Delete it?');
+
+  // The x is there (Escape and it cancel), but focus opens on the least destructive answer.
+  const modal = document.querySelector<HTMLElement>('.reqore-confirmation-modal')!;
+  const buttons = () => Array.from(modal.querySelectorAll<HTMLButtonElement>('button'));
+
+  expect(modal.querySelector('[aria-label="Close"]')).not.toBeNull();
+  await waitFor(() =>
+    expect(document.activeElement).toBe(buttons().find((button) => button.textContent?.includes('Cancel')))
+  );
 });

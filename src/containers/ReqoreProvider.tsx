@@ -152,6 +152,9 @@ export const modalStore = create<{
     }),
 }));
 
+/** Marks the element a dialog's focus trap gives focus to when it opens (see useFocusTrap). */
+const INITIAL_FOCUS: Record<string, unknown> = { 'data-reqore-initial-focus': true };
+
 const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options = {} }) => {
   const [notifications, setNotifications] = useState<IReqoreNotificationData[] | null>([]);
   const { addModal, removeModal } = modalStore();
@@ -490,6 +493,9 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
                    nowhere. Pinned before the caller's props, so a caller that
                    wants the icon alone can still ask for it. */
                 responsive: false,
+                /* The dialog opens with Cancel focused, its least destructive answer, ahead of
+                   the x its title bar has for Escape's sake (the x came first in the tab order). */
+                ...INITIAL_FOCUS,
                 ...(confirmationDefaults?.cancelButtonProps || {}),
                 ...(confirmationModal.cancelButtonProps || {}),
                 onClick: () => {

@@ -15,6 +15,14 @@ const FOCUSABLE_SELECTOR = [
   'details > summary:first-of-type',
 ].join(',');
 
+/**
+ * The element a trap gives focus to when it opens: the one its content marks with
+ * `data-reqore-initial-focus` (a confirmation's Cancel, ahead of the x in its title bar: a dialog
+ * that asks opens on its least destructive answer), else the first focusable one.
+ */
+const initialOf = (focusable: HTMLElement[]): HTMLElement =>
+  focusable.find((element) => element.hasAttribute('data-reqore-initial-focus')) ?? focusable[0];
+
 export interface IUseFocusTrapOptions {
   /** Whether the focus trap is active */
   active?: boolean;
@@ -166,7 +174,7 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
         } else if (!focusAlreadyInside) {
           const focusableElements = getFocusableElements();
           if (focusableElements.length > 0) {
-            focusableElements[0].focus();
+            initialOf(focusableElements).focus();
           } else {
             // If no focusable elements, focus the container itself...
             const waiting = containerRef.current;
@@ -184,7 +192,8 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
                   awaitContent = undefined;
                   return;
                 }
-                const first = getFocusableElements()[0];
+                const focusable = getFocusableElements();
+                const first = focusable.length ? initialOf(focusable) : undefined;
                 if (first) {
                   awaitContent?.disconnect();
                   awaitContent = undefined;

@@ -956,7 +956,7 @@ export const EscapeCancelsAConfirmation: Story = {
     docs: {
       description: {
         story:
-          'Renders a modal with a confirmation over it. Escape cancels the confirmation, as its Cancel does (APG alertdialog), and leaves the modal under it open: only the dialog in front answers Escape.',
+          'Renders a modal with a confirmation over it. The confirmation opens with Cancel focused, its least destructive answer, though the x in its title bar comes first. Escape cancels it, as its Cancel does (APG alertdialog), and leaves the modal under it open: only the dialog in front answers Escape.',
       },
     },
     chromatic: { disable: true },
@@ -964,6 +964,15 @@ export const EscapeCancelsAConfirmation: Story = {
   play: async ({ canvasElement }) => {
     await _testsWaitForText('Tell me something');
     await expect(document.querySelectorAll('.reqore-modal')).toHaveLength(2);
+    const confirmation = document.querySelector<HTMLElement>('.reqore-confirmation-modal')!;
+    await expect(confirmation.querySelector('[aria-label="Close"]')).not.toBeNull();
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        Array.from(confirmation.querySelectorAll('button')).find((button) =>
+          button.textContent?.includes('Cancel')
+        )
+      )
+    );
 
     await fireEvent.keyDown(canvasElement, { key: 'Escape' });
 
