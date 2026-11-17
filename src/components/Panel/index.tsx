@@ -493,7 +493,8 @@ const StyledPanelTitleLabelBox = styled.div<{ $clampLines: number; $ownLine?: bo
   overflow: hidden;
   /* A title shrunk below its natural size takes its line whole, so its badges stay under it: it
      shrank because it did not fit the line on its own, and a smaller font must not make room for
-     them beside it again. Badges give way before the title gives anything. */
+     them beside it again. Badges give way before the title gives anything. The line stays the
+     title's once it fits there again (see \`ownLine\`). */
   flex: ${({ $ownLine }) => ($ownLine ? '1 1 100%' : '0 1 auto')};
 
   ${({ $clampLines }) =>
@@ -558,6 +559,23 @@ const getWidthAboveMinimum = (element: HTMLElement): number => {
 
   return Math.max(0, width - minimum);
 };
+
+/**
+ * What a panel's badges say, as one comparable value: a caller that builds its `badge` array in
+ * render hands over a new array every time, and an effect keyed on that array ran after every
+ * render. Two effects that measure the title read this instead, so they run when a badge changes,
+ * not whenever the panel draws.
+ */
+const badgeSignature = (badge: unknown): string =>
+  (Array.isArray(badge) ? badge : badge === undefined || badge === null ? [] : [badge])
+    .map((item) =>
+      item !== null && typeof item === 'object'
+        ? `${String((item as { label?: unknown }).label ?? '')}:${String(
+            (item as { icon?: unknown }).icon ?? ''
+          )}`
+        : String(item)
+    )
+    .join('|');
 
 export const StyledPanelTitleHeader = styled.div`
 
@@ -2387,6 +2405,36 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       lines: clampLines,
       enabled: fitLabel !== false && typeof label === 'string' && !labelEffect?.textSize,
     });
+    const badgeKey = badgeSignature(badge);
+    const fitsLabel = fitLabel !== false && !labelEffect?.textSize;
+
+    /**
+     * The line a title took for its own once its badges went under it, and kept.
+     *
+     * A title shrinks because it does not fit beside its badges; shrunk, it takes its line whole and
+     * its badges go under it (`$ownLine`). On that line it may fit at its natural size again, and if
+     * that was what put its badges back beside it, they came back, it no longer fitted, it shrank,
+     * they went under it: the title and its badges swapped lines on every render, forever. A title
+     * whose box is sized by what it holds (a title bar laid out as a column, as qlip-ui's pages do on
+     * a phone) did it at "Notifications" beside "this browser", and under React's `act` a story's
+     * page never came back (board f64).
+     *
+     * So the line is kept: by this title with these badges at this size, until the bar is wider than
+     * it was when the line was taken - more room is the one thing that can let the badges back.
+     */
+    const [ownLine, setOwnLine] = useState<{ key: string; width: number } | undefined>(undefined);
+    const ownLineKey = [typeof label === 'string' ? label : '', badgeKey, labelNaturalPx, clampLines].join(
+      '\u0000'
+    );
+    const titleShrunk = fitsLabel && labelFitPx < labelNaturalPx;
+    const keepsOwnLine = !!ownLine && ownLine.key === ownLineKey && (width || 0) <= ownLine.width;
+    const titleOwnsLine = titleShrunk || (fitsLabel && keepsOwnLine);
+
+    useLayoutEffect(() => {
+      if (titleShrunk && !keepsOwnLine) {
+        setOwnLine({ key: ownLineKey, width: width || 0 });
+      }
+    }, [titleShrunk, keepsOwnLine, ownLineKey, width]);
 
     /** Only while the title is actually below its natural size, and never over a caller who
      *  pinned the description's own size. */
@@ -2496,7 +2544,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       );
 
       setLabelAvailable((current) => (current === next ? current : next));
-    }, [fitLabel, label, width, badge, actions, panelSize, description, clampLines, isNarrow]);
+    }, [fitLabel, label, width, badgeKey, actions, panelSize, description, clampLines, isNarrow]);
 
     /**
      * Where the icon goes once the badges move under the title: beside the title, centred on it.
@@ -2536,7 +2584,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       }
 
       setIconBesideTitle((current) => (current === next ? current : next));
-    }, [width, label, badge, labelFitPx, icon, iconImage, iconVerticalAlign, description]);
+    }, [width, label, badgeKey, labelFitPx, icon, iconImage, iconVerticalAlign, description, titleOwnsLine]);
 
     const iconTooltip = useMemo(
       () => ({
@@ -2754,11 +2802,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                                 ref={labelFitRef}
                                 className='reqore-panel-title-label-box'
                                 $clampLines={clampLines}
-                                $ownLine={
-                                  fitLabel !== false &&
-                                  !labelEffect?.textSize &&
-                                  labelFitPx < labelNaturalPx
-                                }
+                                $ownLine={titleOwnsLine}
                               >
                               <LabelEditor
                                 size={labelSize || panelSize}

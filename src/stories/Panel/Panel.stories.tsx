@@ -1,6 +1,6 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
-import { useEffect, useState } from 'react';
+import { Profiler, useEffect, useState } from 'react';
 import { expect, fireEvent, userEvent, waitFor } from 'storybook/test';
 import ReqoreButton, { TReqoreBadge } from '../../components/Button';
 import ReqoreControlGroup from '../../components/ControlGroup';
@@ -2575,6 +2575,90 @@ export const ATitleShrinksBeforeItsWordsAreCut: Story = {
     // ...because it shrank below the 16px it has with room, and no further than the floor
     await waitFor(() => expect(parseFloat(getComputedStyle(heading).fontSize)).toBeLessThan(16));
     expect(parseFloat(getComputedStyle(heading).fontSize)).toBeGreaterThanOrEqual(11);
+  },
+};
+
+/** The panels of `ATitleSettlesWhenItsBoxFollowsItsText`, and how many times each has drawn. */
+const SETTLING_TITLES = ['Notifications', 'Reviewers', 'Tokens', 'Preferences'];
+const settlingCommits = new Map<string, number>();
+/** More draws than this is not a panel settling: it is a panel that never will. */
+const SETTLING_COMMIT_BOUND = 60;
+
+/**
+ * Counts each panel's draws, and stops one that will not stop. Under React's `act`, as a story's
+ * play runs, a panel that kept measuring itself into a new state blocked the page for good: no
+ * timer of the test's could fire, and the run hung on the file instead of failing. Thrown here, in
+ * the commit, the loop ends with an error the story reports.
+ */
+const countSettlingCommits = (title: string) => {
+  const commits = (settlingCommits.get(title) ?? 0) + 1;
+
+  settlingCommits.set(title, commits);
+
+  if (commits > SETTLING_COMMIT_BOUND) {
+    throw new Error(`"${title}" is still drawing itself after ${commits} commits`);
+  }
+};
+
+export const ATitleSettlesWhenItsBoxFollowsItsText: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Four collapsed panels at a phone\'s width (343px), each with a "this browser" badge, in a host that lays its title bars out as a column, so a title\'s box is as wide as what it holds - as qlip-ui\'s pages do on a phone. Each title and its badge settle: the badge goes under the title, the title keeps that line at its own size, and each panel draws a handful of times and stops. A title that shrank to fit beside its badge took its line, fitted there at full size, gave the line back, no longer fitted, and shrank again, forever: "Notifications", "Reviewers" and "Tokens" did, and under the play\'s `act` the page never came back (board f64).',
+      },
+    },
+  },
+  beforeEach: () => {
+    settlingCommits.clear();
+  },
+  render: () => (
+    <div className='column-title-bars' style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* the host's own layout of a title bar, which Reqore does not draw itself */}
+      <style>
+        {'.column-title-bars .reqore-panel-title { flex-direction: column; align-items: flex-start; gap: 8px; }'}
+      </style>
+      {SETTLING_TITLES.map((title) => (
+        <div key={title} data-settling={title} style={{ width: 343 }}>
+          <Profiler id={title} onRender={() => countSettlingCommits(title)}>
+            <ReqorePanel
+              label={title}
+              icon='Notification3Line'
+              collapsible
+              isCollapsed
+              flat
+              padded='normal'
+              rounded
+              badge={[{ label: 'this browser', intent: 'muted' }]}
+            >
+              Preferences are kept in this browser.
+            </ReqorePanel>
+          </Profiler>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const drawn = () => SETTLING_TITLES.map((title) => settlingCommits.get(title) ?? 0);
+
+    // every panel has drawn, and a little later none has drawn again
+    await waitFor(() => expect(drawn().every((commits) => commits > 0)).toBe(true));
+    let before: number[] = [];
+    await waitFor(
+      async () => {
+        before = drawn();
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        expect(drawn()).toEqual(before);
+      },
+      { timeout: 5000 }
+    );
+    before.forEach((commits) => expect(commits).toBeLessThan(SETTLING_COMMIT_BOUND));
+
+    for (const title of SETTLING_TITLES) {
+      const panel = canvasElement.querySelector(`[data-settling="${title}"] .reqore-panel`) as HTMLElement;
+      // the title reads whole, whichever line its badge settled on
+      await expectTitleWhole(panel);
+    }
   },
 };
 

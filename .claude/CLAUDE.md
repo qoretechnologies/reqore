@@ -230,6 +230,13 @@ workflow can be run by hand.
   never raw. A touch story is not run there. Write the tag in the story file, as `touch` is written:
   the projects read it from the source. The project has no qlip plugin, so it makes no captures.
   `.storybook/vitest.setup.ts` checks that its browser reports `en-US@posix`, on every platform.
+- **A measurement settles:** an effect that measures the layout and sets state from it must
+  reach a state it leaves alone. A choice it makes from a measurement (a title taking its own
+  line, a fold) must not be undone by the very measurement it changes, or the two take turns for
+  ever: under the play's `act` that is a synchronous loop, and the run hangs on the file rather
+  than failing. Gate it with a React `Profiler` whose `onRender` counts the commits and throws
+  past a bound, which ends the loop as a failure (`Layout/Panel · A Title Settles When Its Box
+  Follows Its Text`, board f64).
 - **No layout change inside a ResizeObserver callback:** a story fails when the browser reports
   "ResizeObserver loop completed with undelivered notifications" (`.storybook/vitest.setup.ts`). It
   means a resize callback changed the layout it observes in the same frame, often by setting state
