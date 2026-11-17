@@ -88,6 +88,34 @@ export const expectBadgesUnderTitle = async (panel: HTMLElement) => {
   });
 };
 
+/** Reused: allocating a canvas per measurement is the expensive part. */
+let fontCanvas: HTMLCanvasElement | undefined;
+
+/**
+ * Where the first line of `element`'s text sits: the top of its first text's box plus its font's
+ * ascent. Read without touching the page, because a check that adds an element inside `waitFor`
+ * wakes `waitFor` again and, while it fails, never lets it give up.
+ */
+export const baselineOf = (element: HTMLElement): number => {
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+    acceptNode: (node) =>
+      node.textContent?.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT,
+  });
+  const text = walker.nextNode() as Text;
+  const range = document.createRange();
+
+  range.selectNodeContents(text);
+  const box = Array.from(range.getClientRects()).find((rect) => rect.width > 0)!;
+  const style = getComputedStyle(text.parentElement!);
+
+  fontCanvas = fontCanvas || document.createElement('canvas');
+  const context = fontCanvas.getContext('2d')!;
+
+  context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+
+  return box.top + context.measureText(text.data).fontBoundingBoxAscent;
+};
+
 /** The badges share the title's line, after it. */
 export const expectBadgesBesideTitle = async (panel: HTMLElement) => {
   await waitFor(() => {
@@ -100,6 +128,22 @@ export const expectBadgesBesideTitle = async (panel: HTMLElement) => {
 
       expect(box.top).toBeLessThan(titleBox.bottom - 1);
       expect(box.left).toBeGreaterThanOrEqual(titleBox.right);
+      // On the title's baseline, a badge with an icon too.
+      expect(Math.abs(baselineOf(badge) - baselineOf(title))).toBeLessThanOrEqual(1);
     });
+  });
+};
+
+/** The title's icon sits beside the title, centred on it, not on the title and the badges under it. */
+export const expectIconBesideTitle = async (panel: HTMLElement) => {
+  await waitFor(() => {
+    const { title } = titleAndBadges(panel);
+    const icon = panel.querySelector('.reqore-panel-title-icon') as HTMLElement;
+    const titleBox = title.getBoundingClientRect();
+    const iconBox = icon.getBoundingClientRect();
+
+    expect(
+      Math.abs(iconBox.top + iconBox.height / 2 - (titleBox.top + titleBox.height / 2))
+    ).toBeLessThanOrEqual(2);
   });
 };

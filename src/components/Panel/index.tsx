@@ -2468,6 +2468,46 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       setLabelAvailable((current) => (current === next ? current : next));
     }, [fitLabel, label, width, badge, actions, panelSize, description, clampLines, isNarrow]);
 
+    /**
+     * Where the icon goes once the badges move under the title: beside the title, centred on it.
+     * Centred on the whole label as before, it sat beside the badges' line ("Order Sync Template"
+     * on a phone, its kind icon next to "In review"), as if it were theirs. The offset, in px from
+     * the top of the title's row, is measured: the title may be one line or two, and at any size.
+     * Only for the centred icon (the default); `iconVerticalAlign` 'top' or 'bottom' is the
+     * caller's choice and stays.
+     */
+    const titleLineRef = useRef<HTMLDivElement>(null);
+    const [iconBesideTitle, setIconBesideTitle] = useState<number | undefined>(undefined);
+
+    useLayoutEffect(() => {
+      const line = titleLineRef.current;
+      const title = line?.firstElementChild;
+      const iconElement = line
+        ?.closest('.reqore-panel-title-header')
+        ?.querySelector<HTMLElement>('.reqore-panel-title-icon');
+      let next: number | undefined;
+
+      if (line && title && iconElement && iconVerticalAlign === 'center') {
+        const titleBox = title.getBoundingClientRect();
+        const badgesBelow = Array.from(line.children)
+          .slice(1)
+          .some((child) => child.getBoundingClientRect().top >= titleBox.bottom - 1);
+
+        if (badgesBelow) {
+          next = Math.max(
+            0,
+            Math.round(
+              titleBox.top -
+                line.getBoundingClientRect().top +
+                (titleBox.height - iconElement.getBoundingClientRect().height) / 2
+            )
+          );
+        }
+      }
+
+      setIconBesideTitle((current) => (current === next ? current : next));
+    }, [width, label, badge, labelFitPx, icon, iconImage, iconVerticalAlign, description]);
+
     const iconTooltip = useMemo(
       () => ({
         content: label,
@@ -2640,6 +2680,18 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                             opacity: CONTROL_ICON_OPACITY,
                           }}
                           {...iconProps}
+                          style={
+                            iconBesideTitle === undefined
+                              ? iconProps?.style
+                              : {
+                                  ...iconProps?.style,
+                                  // Beside the title, not the badges under it: on the title's
+                                  // row alone, from its top.
+                                  alignSelf: 'flex-start',
+                                  gridRow: useOuterGrid ? '1' : undefined,
+                                  marginTop: iconBesideTitle,
+                                }
+                          }
                           animation={loading ? 'spin' : iconProps?.animation}
                           icon={
                             loading ? `Loader${loadingIconType || ''}Line` : icon || iconProps?.icon
@@ -2652,6 +2704,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                         <StyledPanelTitleHeaderLabelAndBadge className='reqore-panel-title-label-row'>
                           {inlineWithLabel && panelIcon}
                           <ReqoreTitleAndBadges
+                            ref={titleLineRef}
                             badge={badge}
                             badgeSize={getOneHigherSize(panelSize)}
                             // The room the badges keep from the title, which a spacer before them

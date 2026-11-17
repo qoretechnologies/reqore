@@ -1,4 +1,4 @@
-import { memo, ReactNode, useMemo } from 'react';
+import { forwardRef, memo, ReactNode, useMemo } from 'react';
 import { css } from 'styled-components';
 import { TAG_HORIZONTAL_PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import styled from '../../helpers/styled';
@@ -60,6 +60,14 @@ const StyledTitleAndBadges = styled.div<{ $gap: number; $textLead: number }>`
   min-width: 0;
   flex: 0 1 auto;
 
+  /* A badge's baseline is its words. A tag lays out [icon][words], and with no item taking part
+     in baseline alignment its baseline is its first item's: the icon's lower edge, about 2px
+     under the words. A title beside "⚠ Action needed" sank to meet it. Its words take part, so
+     they set it; the words' box fills the tag's height already, so nothing in the tag moves. */
+  & .reqore-tag > .reqore-tag-content {
+    align-self: baseline;
+  }
+
   ${({ $textLead }) =>
     $textLead > 0 &&
     css`
@@ -86,34 +94,37 @@ export interface IReqoreTitleAndBadgesProps {
  * and card built on it) and the accordion's headers.
  */
 export const ReqoreTitleAndBadges = memo(
-  ({ children, badge, badgeSize, gap, className }: IReqoreTitleAndBadgesProps) => {
-    const hasBadge = !!badge || badge === 0;
-    const textLead = useMemo(
-      () => (hasBadge ? getTextBadgeLead(badge, badgeSize) : 0),
-      [hasBadge, badge, badgeSize]
-    );
+  forwardRef<HTMLDivElement, IReqoreTitleAndBadgesProps>(
+    ({ children, badge, badgeSize, gap, className }, ref) => {
+      const hasBadge = !!badge || badge === 0;
+      const textLead = useMemo(
+        () => (hasBadge ? getTextBadgeLead(badge, badgeSize) : 0),
+        [hasBadge, badge, badgeSize]
+      );
 
-    return (
-      <StyledTitleAndBadges
-        className={`${TITLE_AND_BADGES_CLASS} ${className || ''}`.trim()}
-        $gap={gap}
-        $textLead={textLead}
-      >
-        {children}
-        {hasBadge ? (
-          <ButtonBadge
-            size={badgeSize}
-            content={badge}
-            // A group sits beside the title only at its full width, so it wraps only on a line
-            // of its own, where badges wider than the line fold onto another rather than run
-            // past the bar.
-            wrapGroup
-            margin='none'
-          />
-        ) : null}
-      </StyledTitleAndBadges>
-    );
-  }
+      return (
+        <StyledTitleAndBadges
+          ref={ref}
+          className={`${TITLE_AND_BADGES_CLASS} ${className || ''}`.trim()}
+          $gap={gap}
+          $textLead={textLead}
+        >
+          {children}
+          {hasBadge ? (
+            <ButtonBadge
+              size={badgeSize}
+              content={badge}
+              // A group sits beside the title only at its full width, so it wraps only on a line
+              // of its own, where badges wider than the line fold onto another rather than run
+              // past the bar.
+              wrapGroup
+              margin='none'
+            />
+          ) : null}
+        </StyledTitleAndBadges>
+      );
+    }
+  )
 );
 
 ReqoreTitleAndBadges.displayName = 'ReqoreTitleAndBadges';

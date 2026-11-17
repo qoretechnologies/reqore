@@ -552,7 +552,7 @@ const BADGED_ITEMS: IReqoreAccordionItem[] = [
     content: 'How often a failed delivery is tried again.',
     icon: 'RepeatLine',
     badge: [
-      { label: '2 failing', intent: 'danger', appearance: 'soft' },
+      { label: '2 failing', intent: 'danger', appearance: 'soft', icon: 'AlertLine' },
       { label: 'since Monday', appearance: 'text' },
     ],
   },
@@ -569,7 +569,7 @@ export const BadgesGiveWayToTheHeading: Story = {
     docs: {
       description: {
         story:
-          'Renders the same two accordion items at 220px and at 560px, each heading with badges ("2 failing" and "since Monday", then "Last 30 days"). At 220px the badges do not fit beside the heading, so they move to a line under it, on its left edge (a text badge by its words), and the heading stays on one line. At 560px they sit beside it.',
+          'Renders the same two accordion items at 220px and at 560px, each heading with badges ("⚠ 2 failing" and "since Monday", then "Last 30 days"). At 220px the badges do not fit beside the heading, so they move to a line under it, on its left edge (a text badge by its words), and the heading stays on one line. At 560px they sit beside it, on the heading\'s baseline (the one with an icon too).',
       },
     },
   },

@@ -20,7 +20,11 @@ import {
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
 import { IDragPointerOptions, dragPointer } from '../utils/pointer';
-import { expectBadgesUnderTitle, expectTitleWhole } from '../utils/titleBadges';
+import {
+  expectBadgesUnderTitle,
+  expectIconBesideTitle,
+  expectTitleWhole,
+} from '../utils/titleBadges';
 import { PHONE_STORY, PHONE_VIEWPORT as PHONE_SCREEN } from '../utils/touchScreen';
 import { withViewport } from '../utils/viewport';
 
@@ -975,7 +979,7 @@ export const TitleBadgesBelowOnAPhone: Story = {
     docs: {
       description: {
         story:
-          'Renders a template drawer on a phone (390 px): an icon, the title "Order Sync Template", three badges (its status, version and kind), a description, a copy button and the close button. The badges do not fit beside the title, so they move to a line under it, on its left edge, and the title is whole: every word on screen, none cut.',
+          'Renders a template drawer on a phone (390 px): an icon, the title "Order Sync Template", three badges (its status, version and kind), a description, a copy button and the close button. The badges do not fit beside the title, so they move to a line under it, on its left edge; the kind icon stays beside the title, and the title is whole: every word on screen, none cut.',
       },
     },
   },
@@ -1007,6 +1011,7 @@ export const TitleBadgesBelowOnAPhone: Story = {
 
       await expectBadgesUnderTitle(drawer);
       await expectTitleWhole(drawer);
+      await expectIconBesideTitle(drawer);
     });
   },
 };

@@ -26,6 +26,7 @@ import { findDrawnOverStickyHeader, stickyHeaderOf } from '../utils/stickyStacki
 import {
   expectBadgesBesideTitle,
   expectBadgesUnderTitle,
+  expectIconBesideTitle,
   expectTitleWhole,
 } from '../utils/titleBadges';
 
@@ -2417,7 +2418,7 @@ export const BadgesGiveWayToTheTitle: Story = {
     docs: {
       description: {
         story:
-          'Renders a dashboard tile at 200px three ways — a plain title, a title the caller draws itself (a `ReactElement`), and a title with an icon — each with a quiet "Last 30 days" badge, a help button and a "more" menu, then the same tile at 480px. At 200px the title and the badge do not fit on one line, so the badge moves to a line under the title, its words on the title\'s left edge (past the icon), and the title is whole at its natural size. At 480px the badge sits beside the title.',
+          'Renders a dashboard tile at 200px three ways — a plain title, a title the caller draws itself (a `ReactElement`), and a title with an icon — each with a quiet "Last 30 days" badge, a help button and a "more" menu, then the same tile at 480px. At 200px the title and the badge do not fit on one line, so the badge moves to a line under the title, its words on the title\'s left edge (past the icon, which stays centred on the title), and the title is whole at its natural size. At 480px the badge sits beside the title.',
       },
     },
   },
@@ -2448,6 +2449,9 @@ export const BadgesGiveWayToTheTitle: Story = {
       await expectBadgesUnderTitle(tile(id));
       await expectTitleWhole(tile(id));
     }
+
+    // The icon stays beside the title, not the badge's line under it.
+    await expectIconBesideTitle(tile('icon'));
 
     await expectBadgesBesideTitle(tile('wide'));
     await expectTitleWhole(tile('wide'));
