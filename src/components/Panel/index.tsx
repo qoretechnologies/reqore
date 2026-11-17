@@ -1304,6 +1304,14 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
             getPaddingSize(padded, size),
             $cornerInset
           )}px`};
+  /* That side inset, said, for a child that bleeds to the panel's edges (a list whose bands and
+     hairlines reach the sides): \`margin-inline: calc(-1 * var(--reqore-panel-inset-x))\`. It
+     changes with the panel's size and its corner (13px for a small panel under a 14px radius), so
+     a child that took back a fixed 16px ran 3px past both sides. 0 when the content is unpadded. */
+  --reqore-panel-inset-x: ${({ padded, size, noHorizontalPadding, $cornerInset = 0 }) =>
+    !padded || noHorizontalPadding
+      ? '0px'
+      : `${clearCorner(getPaddingSize(padded, size), $cornerInset)}px`};
   flex: 1;
   /* A flex child's min-height defaults to its content size, so without this the
      scrollable content can't shrink: a panel/drawer body taller than the panel

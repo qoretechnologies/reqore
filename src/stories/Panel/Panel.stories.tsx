@@ -2413,6 +2413,76 @@ const TILE_VARIANTS: {
   { id: 'wide', width: 480, label: TILE_TITLE },
 ];
 
+export const AFullBleedChildMeetsItsEdges: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a small and a normal bordered panel under a theme with a 14px panel corner, each holding a list whose rows reach the panel's sides: the list takes back the inset the panel says it padded its content by (`margin-inline: calc(-1 * var(--reqore-panel-inset-x))`). The small panel pads 13px to clear its corner, not its size's padding, and the rows still meet both sides exactly; a list that took back a fixed 16px ran 3px past them.",
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: { panel: { radius: 14 } },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      {(['small', 'normal'] as const).map((size) => (
+        <div key={size} style={{ width: 480 }}>
+          <ReqorePanel label={`Set (${size})`} size={size} flat={false} className={`story-${size}`}>
+            <div
+              className='story-bleed'
+              style={{ margin: '0 calc(-1 * var(--reqore-panel-inset-x))' }}
+            >
+              {['Client name', 'Redirect URI', 'Scopes'].map((name) => (
+                <div
+                  key={name}
+                  className='story-bleed-row'
+                  style={{
+                    padding: '10px var(--reqore-panel-inset-x)',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+                  }}
+                >
+                  {name}
+                </div>
+              ))}
+            </div>
+          </ReqorePanel>
+        </div>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const size of ['small', 'normal']) {
+      const content = await waitFor(() =>
+        requiredElement<HTMLElement>(
+          `.story-${size} .reqore-panel-content`,
+          `the ${size} panel's content`,
+          canvasElement
+        )
+      );
+      const style = getComputedStyle(content);
+      const inset = style.getPropertyValue('--reqore-panel-inset-x').trim();
+      const edge = content.getBoundingClientRect();
+
+      // The inset said is the inset padded.
+      await expect(inset, size).toBe(style.paddingLeft);
+      for (const row of content.querySelectorAll<HTMLElement>('.story-bleed-row')) {
+        const rect = row.getBoundingClientRect();
+
+        await expect(Math.abs(rect.left - edge.left), `${size} row's left`).toBeLessThanOrEqual(0.5);
+        await expect(Math.abs(rect.right - edge.right), `${size} row's right`).toBeLessThanOrEqual(
+          0.5
+        );
+      }
+      // Under the 14px corner the small panel pads to clear it, past its size's padding.
+      if (size === 'small') {
+        await expect(parseFloat(inset)).toBeGreaterThanOrEqual(13);
+      }
+    }
+  },
+};
+
 export const BadgesGiveWayToTheTitle: Story = {
   parameters: {
     docs: {
