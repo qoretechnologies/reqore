@@ -40,16 +40,16 @@ export type TPosition = 'top' | 'bottom' | 'left' | 'right';
  * number qorus-ide converged on for every one of its drawers: a 620–720px
  * side panel in a 900px window leaves a sliver of page that is not usable
  * anyway, so the sheet is the honest layout there. The provider's own
- * `isMobile` (≤ 480px) is too narrow for drawers that wide — at 600px such a
+ * `isMobile` (< 600px) is too narrow for drawers that wide — at 700px such a
  * panel covers the viewport with its handle off-screen — and
- * `isMobileOrTablet` (≤ 1200px) would put sheets on landscape tablets.
+ * `isMobileOrTablet` (< 1200px) would put sheets on landscape tablets.
  */
 export const DRAWER_SHEET_BREAKPOINT = 900;
 
 /**
  * Which viewport width switches a `responsiveLayout` drawer into a sheet:
- * `'mobile'` is the provider's `isMobile` (≤ 480px), `'tablet'` is its
- * `isMobileOrTablet` (≤ 1200px), and a number is a width in px, inclusive.
+ * `'mobile'` is the provider's `isMobile` (< 600px), `'tablet'` is its
+ * `isMobileOrTablet` (< 1200px), and a number is a width in px, inclusive.
  * Omitted, it is `DRAWER_SHEET_BREAKPOINT`. Reqore owns these numbers; a
  * consumer never carries a media query of its own for this.
  */
@@ -385,7 +385,7 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
    * whole viewport, its resize handle sits off-screen and nothing says why
    * the page behind it stopped responding. With `responsiveLayout`, at or
    * below the breakpoint — `DRAWER_SHEET_BREAKPOINT` (900px) unless `below`
-   * says `'mobile'` (≤ 480px), `'tablet'` (≤ 1200px) or a px number — the
+   * says `'mobile'` (< 600px), `'tablet'` (< 1200px) or a px number — the
    * drawer attaches to the bottom edge (or the `position` given), takes
    * `100%` of that axis (or the `size` given) up to a `maxSize` of `90vh`
    * (or the one given; `'100%'` for edge to edge), and drops the affordances

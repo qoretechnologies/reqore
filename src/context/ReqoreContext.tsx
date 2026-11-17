@@ -1,4 +1,5 @@
 import { IReqoreMarqueeOptions } from '../hooks/useMarqueeOnHover';
+import { TReqoreWindowSizeClass } from '../constants/breakpoints';
 import { createContext } from 'use-context-selector';
 import { IReqoreErrorBoundaryProps } from '../components/ErrorBoundary';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
@@ -22,9 +23,19 @@ export interface IReqoreContext {
   ) => string;
   readonly removeModal?: (id: string) => void;
   readonly removeNotification?: (id: string) => any;
+  /** A phone: the window is narrower than 600px (`windowSizeClass` 'compact'). */
   readonly isMobile?: boolean;
+  /** A tablet: 600-1199px (`windowSizeClass` 'medium' or 'expanded'). */
   readonly isTablet?: boolean;
+  /** A phone or a tablet: narrower than 1200px. */
   readonly isMobileOrTablet?: boolean;
+  /**
+   * The window's size class, Material 3's: `compact` (< 600px, a phone), `medium` (600-839),
+   * `expanded` (840-1199), `large` (1200-1599, a desktop), `extraLarge` (>= 1600). The numbers
+   * are `REQORE_BREAKPOINTS`, and `reqoreMedia` gives the same classes as CSS media queries.
+   * In jsdom, where no query can be answered, it is `extraLarge` (every flag above false).
+   */
+  readonly windowSizeClass?: TReqoreWindowSizeClass;
   /**
    * Whether the primary pointer can hover — `true` for a mouse, `false` for touch.
    *

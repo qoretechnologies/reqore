@@ -57,6 +57,24 @@ export {
   MODAL_MIN_HEIGHT,
   MODAL_MIN_WIDTH,
 } from './components/Drawer';
+/* The window size classes (Material 3's, decision 031): the numbers, the media queries and the
+   class of a width. Apps read these instead of writing a width of their own; the provider's
+   `windowSizeClass`, `isMobile` and `isTablet` answer the same queries. The container rules
+   below them are a component's own box, not the window. */
+export {
+  REQORE_BREAKPOINTS,
+  REQORE_BREAKPOINT_EDGE_PX,
+  getReqoreWindowSizeClass,
+  reqoreMedia,
+} from './constants/breakpoints';
+export type { TReqoreBreakpoint, TReqoreWindowSizeClass } from './constants/breakpoints';
+/* A media query answered live, safe to hydrate: with `reqoreMedia`, how an app asks a window
+   size class the provider's flags do not name (`useReqoreMedia(reqoreMedia.from('extraLarge'))`). */
+export { useReqoreMedia } from './hooks/useReqoreMedia';
+export {
+  NARROW_CONTAINER_BREAKPOINT_PX,
+  SEVERITY_ROW_NARROW_BREAKPOINT_PX,
+} from './hooks/useNarrowContainer';
 /* The sheet decision behind `responsiveLayout`, published so a consumer that
    lays out AROUND a drawer (a docked bar, a page offset) can ask the same
    question Reqore does instead of re-deriving the breakpoint locally. */

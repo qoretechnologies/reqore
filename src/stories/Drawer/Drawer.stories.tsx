@@ -527,7 +527,7 @@ export const ResponsiveSheetBelowBreakpoint: Story = {
     docs: {
       description: {
         story:
-          'The same drawer in an 800px window: wider than the provider’s 480px mobile breakpoint, narrower than the 900px sheet breakpoint (`DRAWER_SHEET_BREAKPOINT`, the number qorus-ide uses for all of its drawers). It is still a sheet — a 720px panel would leave 80px of page here, which is no page at all.',
+          'The same drawer in an 800px window: wider than the provider’s 600px phone breakpoint, narrower than the 900px sheet breakpoint (`DRAWER_SHEET_BREAKPOINT`, the number qorus-ide uses for all of its drawers). It is still a sheet — a 720px panel would leave 80px of page here, which is no page at all.',
       },
     },
   },
@@ -542,7 +542,7 @@ export const ResponsiveSheetProviderBreakpoint: Story = {
     docs: {
       description: {
         story:
-          'The same 800px window with `responsiveLayout={{ below: "mobile" }}`: the switch now follows the provider’s phone breakpoint (≤ 480px) instead of the 900px default, so at 800px the caller’s 720px right-hand panel renders unchanged, hide control included. Compare with the story above, which differs only in `below`.',
+          'The same 800px window with `responsiveLayout={{ below: "mobile" }}`: the switch now follows the provider’s phone breakpoint (< 600px) instead of the 900px default, so at 800px the caller’s 720px right-hand panel renders unchanged, hide control included. Compare with the story above, which differs only in `below`.',
       },
     },
   },

@@ -318,8 +318,13 @@ const StyledButton = styled.button<IReqoreButtonStyle>`
 4. **Portal:** modals/notifications render via `customPortalId` or default DOM portal.
 
 ### Responsive Breakpoints
-- **Mobile:** `isMobile` (width ≤ 480px).
-- **Tablet:** `isTablet` (width ≤ 1024px).
+- **Window size classes** are Material 3's (decision 031): `compact` below 600px (`isMobile`),
+  `medium` 600–839 and `expanded` 840–1199 (`isTablet`), `large` 1200–1599, `extraLarge` from 1600.
+  The provider's `windowSizeClass` names the class; `isMobileOrTablet` is below 1200px.
+- **One source:** `src/constants/breakpoints.ts` (`REQORE_BREAKPOINTS`, `reqoreMedia`,
+  `getReqoreWindowSizeClass`), exported. Never write a window width in a component; a component's own
+  box keeps its container rule (`NARROW_CONTAINER_BREAKPOINT_PX` 480, `SEVERITY_ROW_NARROW_BREAKPOINT_PX`
+  640, `DRAWER_SHEET_BREAKPOINT` 900).
 - **Usage:** conditional rendering; affects dropdown/menu positioning.
 
 ### Icon System (`src/types/icons.ts`)

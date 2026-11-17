@@ -1,4 +1,5 @@
 import { useMarqueeOnHover } from '../hooks/useMarqueeOnHover';
+import { reqoreMedia, TReqoreWindowSizeClass } from '../constants/breakpoints';
 import { last, size } from 'lodash';
 import { nanoid } from 'nanoid';
 import React, { memo, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -165,8 +166,23 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
 
   // Live media queries in a browser, fixed defaults in jsdom — see
   // `useReqoreMedia` for why that is decided once per module load.
-  const isMobile = useReqoreMedia('(max-width: 480px)');
-  const isTablet = useReqoreMedia('(min-width: 480px) and (max-width: 1200px)');
+  // One chain of "narrower than" queries, so a width is in exactly one window size class (the
+  // flags were two ranges that were both true at 480px). Material 3's classes, decision 031.
+  const isBelowMedium = useReqoreMedia(reqoreMedia.below('medium'));
+  const isBelowExpanded = useReqoreMedia(reqoreMedia.below('expanded'));
+  const isBelowLarge = useReqoreMedia(reqoreMedia.below('large'));
+  const isBelowExtraLarge = useReqoreMedia(reqoreMedia.below('extraLarge'));
+  const windowSizeClass: TReqoreWindowSizeClass = isBelowMedium
+    ? 'compact'
+    : isBelowExpanded
+      ? 'medium'
+      : isBelowLarge
+        ? 'expanded'
+        : isBelowExtraLarge
+          ? 'large'
+          : 'extraLarge';
+  const isMobile = windowSizeClass === 'compact';
+  const isTablet = windowSizeClass === 'medium' || windowSizeClass === 'expanded';
   const isMobileOrTablet = isMobile || isTablet;
   // Pointer CAPABILITY, not viewport width — the two disagree often enough to
   // matter (a narrow desktop window hovers; a large tablet does not). Defaults to
@@ -371,6 +387,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
         isMobile,
         isTablet,
         isMobileOrTablet,
+        windowSizeClass,
         isHoverCapable,
         latestZIndex: latestZIndex.current,
         getAndIncreaseZIndex,
@@ -403,6 +420,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
       isMobile,
       isTablet,
       isMobileOrTablet,
+      windowSizeClass,
       isHoverCapable,
       latestZIndex,
       getAndIncreaseZIndex,
