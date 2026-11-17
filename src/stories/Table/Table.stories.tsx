@@ -2818,7 +2818,7 @@ export const TitleWordWiderThanItsSpace: Story = {
     docs: {
       description: {
         story:
-          "Renders a searchable table in a 320px box whose title is one word wider than the space left beside its search button and more button: only then is the word broken, and it stays inside the title's box, as the controls stay inside the panel.",
+          "Renders a searchable table in a 320px box and in a 220px box, titled with one word wider than the space left beside its search button and more button. At 320px the word shrinks until it fits whole (a title keeps its words: it wraps, then shrinks, then is cut - decision 029). At 220px it is too wide even at the smallest size a title takes, so only then is it broken, and it stays inside the title's box, as the controls stay inside the panel.",
       },
     },
   },
@@ -2828,22 +2828,40 @@ export const TitleWordWiderThanItsSpace: Story = {
     height: 400,
   },
   render: (args) => (
-    <div className='narrow-table-box' style={{ width: 320 }}>
-      <ReqoreTable {...args} />
-    </div>
+    <ReqoreControlGroup vertical gapSize='big'>
+      <div className='narrow-table-box' style={{ width: 320 }}>
+        <ReqoreTable {...args} />
+      </div>
+      <div className='narrower-table-box' style={{ width: 220 }}>
+        <ReqoreTable {...args} />
+      </div>
+    </ReqoreControlGroup>
   ),
   play: async ({ canvasElement }) => {
-    const box = canvasElement.querySelector('.narrow-table-box') as HTMLElement;
-    // narrow, the search is its button until it is used
-    await waitFor(() => expect(box.querySelector('.reqore-table-search-toggle')).toBeTruthy());
-    await expectControlsInside(box, box.querySelector('.reqore-panel-title') as HTMLElement);
-    const label = box.querySelector('.reqore-panel-title-label-box') as HTMLElement;
-    // broken, because it does not fit whole: not cut off at the box's edge
+    for (const selector of ['.narrow-table-box', '.narrower-table-box']) {
+      const box = canvasElement.querySelector(selector) as HTMLElement;
+      // narrow, the search is its button until it is used
+      await waitFor(() => expect(box.querySelector('.reqore-table-search-toggle')).toBeTruthy());
+      await expectControlsInside(box, box.querySelector('.reqore-panel-title') as HTMLElement);
+      const heading = box.querySelector('.reqore-panel-title-label-box .reqore-heading') as HTMLElement;
+      // never cut off at the box's edge
+      expect(heading.scrollWidth).toBeLessThanOrEqual(heading.clientWidth + 1);
+    }
+
+    const label = (selector: string) =>
+      canvasElement.querySelector(`${selector} .reqore-panel-title-label-box`) as HTMLElement;
+    const fontPx = (selector: string) =>
+      parseFloat(getComputedStyle(label(selector).querySelector('.reqore-heading') as HTMLElement).fontSize);
+
+    // 320px: whole, because it shrank to fit
+    await waitFor(() => expect(wordsBrokenAcrossLines(label('.narrow-table-box'))).toEqual([]));
+    // 220px: broken, because it does not fit whole even at the smallest size
     await waitFor(() =>
-      expect(wordsBrokenAcrossLines(label)).toEqual(['Supercalifragilisticexpialidocious'])
+      expect(wordsBrokenAcrossLines(label('.narrower-table-box'))).toEqual([
+        'Supercalifragilisticexpialidocious',
+      ])
     );
-    const heading = label.querySelector('.reqore-heading') as HTMLElement;
-    expect(heading.scrollWidth).toBeLessThanOrEqual(heading.clientWidth + 1);
+    expect(fontPx('.narrower-table-box')).toBeLessThanOrEqual(fontPx('.narrow-table-box'));
   },
 };
 
