@@ -21,6 +21,7 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { useDragToScroll } from '../../hooks/useDragToScroll';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
+import { IReqoreTableControls } from './controls';
 import { getTableColumnsPickerItems } from './helpers';
 import { IReqoreIntent, IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -321,6 +322,14 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   emptyMessage?: string;
   showHelp?: boolean;
   showColumnsOptions?: boolean;
+  /**
+   * Drives the column picker and the export from outside the table, from a page's own toolbar:
+   * the result of `useReqoreTableControls()`. The table hands them over and draws neither in its
+   * own toolbar (whatever `showColumnsOptions` and `exportable` say), nor a "⋯" just for the
+   * column reset, so a table with nothing else in its toolbar starts with its headers. Put the
+   * controls' `menuActions` in the page's "⋯".
+   */
+  controls?: IReqoreTableControls;
 
   /**
    * Divider label at the top of the "show / hide columns" dropdown.
@@ -658,6 +667,7 @@ const ReqoreTable = ({
   exportMapper,
   showHelp,
   showColumnsOptions,
+  controls,
   virtualized,
   wrap,
   maxCellHeight,
@@ -1327,6 +1337,39 @@ const ReqoreTable = ({
     setIsScrolled(false);
   }, []);
 
+  /* The column picker and the export handed to a page that keeps them in its own toolbar
+     (`controls`). Handed over whenever they change; the controls draw the page again only when
+     what they show does. */
+  const connectControls = controls?.connect;
+  const shownColumnsCount =
+    getColumnsCount(getOnlyShownColumns(finalColumns, sizes.width)) - (selectable ? 1 : 0);
+  const hasColumnChanges = !!count(columnModifiers);
+  const columnsHidden = hasHiddenColumns(finalColumns);
+  const resetColumns = useCallback(() => setColumnModifiers({}), []);
+  const openExport = useCallback((type: 'current' | 'full') => setShowExportModal(type), []);
+
+  useEffect(() => {
+    connectControls?.({
+      columns: columnsList,
+      shownColumns: shownColumnsCount,
+      hasHiddenColumns: columnsHidden,
+      hasColumnChanges,
+      resetColumns,
+      openExport,
+    });
+  }, [
+    connectControls,
+    columnsList,
+    shownColumnsCount,
+    columnsHidden,
+    hasColumnChanges,
+    resetColumns,
+    openExport,
+  ]);
+
+  // Handed back on unmount, so the page's menu does not offer a table that is gone.
+  useEffect(() => () => connectControls?.(undefined), [connectControls]);
+
   const tableActions = useMemo<IReqorePanelAction[]>(() => {
     const finalActions: IReqorePanelAction[] = [...actions];
 
@@ -1334,7 +1377,7 @@ const ReqoreTable = ({
       return finalActions;
     }
 
-    if (count(columnsList) && showColumnsOptions) {
+    if (count(columnsList) && showColumnsOptions && !controls) {
       let columnsCount = getColumnsCount(getOnlyShownColumns(finalColumns, sizes.width));
 
       if (selectable) {
@@ -1417,10 +1460,14 @@ const ReqoreTable = ({
       });
     }
 
-    if (count(columnModifiers) || zoomable || filterable || exportable || showHelp) {
+    // With `controls` the export and the column reset are the page's: they do not open a "⋯" here.
+    const ownExport = exportable && !controls;
+    const ownColumnChanges = !controls && !!count(columnModifiers);
+
+    if (ownColumnChanges || zoomable || filterable || ownExport || showHelp) {
       let moreActions: IReqorePanelSubAction[] = [];
 
-      if (exportable) {
+      if (ownExport) {
         moreActions = [
           ...moreActions,
           ...getExportActions((type) => setShowExportModal(type)),
@@ -1442,7 +1489,7 @@ const ReqoreTable = ({
         actions: [],
       };
 
-      if (count(columnModifiers) || zoomable || filterable || exportable) {
+      if (ownColumnChanges || zoomable || filterable || ownExport) {
         moreActionsWrapper.actions = [
           ...moreActions,
           {
@@ -1501,6 +1548,7 @@ const ReqoreTable = ({
     addModal,
     columnModifiers,
     columnsList,
+    controls,
     data,
     exportable,
     filterProps,

@@ -222,16 +222,22 @@ export const zoomToWidth: Record<number, string> = SIZES.reduce(
 
 export const getExportActions = (
   onClick: (type: 'current' | 'full') => void,
-  withLabels: boolean = true
+  withLabels: boolean = true,
+  {
+    current = 'Export current view',
+    full = 'Export full data',
+  }: { current?: string; full?: string } = {}
 ): IReqorePanelSubAction[] => [
   {
-    label: withLabels ? 'Export current view' : undefined,
+    label: withLabels ? current : undefined,
     icon: 'Download2Line',
+    className: 'reqore-table-export-current',
     onClick: () => onClick('current'),
   },
   {
-    label: withLabels ? 'Export full data' : undefined,
+    label: withLabels ? full : undefined,
     icon: 'DownloadLine',
+    className: 'reqore-table-export-full',
     onClick: () => onClick('full'),
   },
 ];
@@ -770,6 +776,12 @@ export const getTableColumnsPickerItems = (
   const items: IReqorePanelSubAction[] = [];
 
   const addColumn = (column: IReqoreTableColumn) => {
+    // A column with no name (a row's actions) is not one a person can pick by name: it was a
+    // blank row in the picker.
+    if (column.header?.label === '') {
+      return;
+    }
+
     items.push({
       label: typeof column.header?.label === 'string' ? column.header.label : column.dataId,
       selected: column.show !== false,

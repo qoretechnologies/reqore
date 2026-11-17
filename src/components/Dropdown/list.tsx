@@ -34,6 +34,11 @@ export interface IReqoreDropdownItem<Metadata extends Record<string, any> = Reco
   metadata?: Metadata;
   items?: TReqoreDropdownItems;
   onClick?: TDropdownItemOnClick;
+  /**
+   * Choosing this item leaves the menu open, as every item of a `multiSelect` list does: for a
+   * toggle among several in an ordinary menu, such as a column picker in a page's "⋯".
+   */
+  keepOpen?: boolean;
   divider?: boolean;
   dividerAlign?: 'left' | 'center' | 'right';
   dividerPadded?: 'top' | 'bottom' | 'both' | 'none';
@@ -231,7 +236,24 @@ const ReqoreDropdownList = memo(
     // Determine which item is currently selected based on selectedItems stack
     const currentSelectedItem = useMemo(() => {
       if (_level < selectedItems.length) {
-        return selectedItems[_level];
+        const opened = selectedItems[_level];
+
+        /* The opened level as the items are NOW: the stack keeps the item as it was clicked, so a
+           level whose items changed while it was open (a column picker, its checks following the
+           columns) showed them as they were. Matched by identity, else by id, value or label. */
+        return opened
+          ? items?.find((item) => item === opened) ??
+              items?.find(
+                (item) =>
+                  !!size(item.items) &&
+                  (opened.id !== undefined
+                    ? item.id === opened.id
+                    : opened.value !== undefined
+                      ? item.value === opened.value
+                      : item.label === opened.label)
+              ) ??
+              opened
+          : opened;
       }
       // If no selected item at this level, auto-select first item with subitems if at root level
       if (size(items) === 1 && size(items[0].items) && !items[0]?.disabled && _level === 0) {
@@ -324,10 +346,12 @@ const ReqoreDropdownList = memo(
 
     const handleItemSelectClick = useCallback(
       (item: IReqoreDropdownItem, event: React.MouseEvent<HTMLElement>): void => {
+        const staysOpen = multiSelect || item.keepOpen;
+
         if (item.onClick) {
           item.onClick(item, event);
 
-          if (!multiSelect) {
+          if (!staysOpen) {
             closePopover?.();
           }
         }
@@ -335,7 +359,7 @@ const ReqoreDropdownList = memo(
         if (onItemSelect) {
           onItemSelect(item, event);
 
-          if (!multiSelect) {
+          if (!staysOpen) {
             closePopover?.();
           }
         }

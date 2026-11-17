@@ -1,8 +1,18 @@
 import { StoryObj } from '@storybook/react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import styled from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableProps, IReqoreTableRowData } from '../../components/Table';
-import { ReqoreControlGroup, ReqoreIcon, ReqoreP, ReqoreSpan, ReqoreTable, ReqoreTag } from '../../index';
+import {
+  ReqoreControlGroup,
+  ReqoreDropdown,
+  ReqoreH3,
+  ReqoreIcon,
+  ReqoreP,
+  ReqoreSpan,
+  ReqoreTable,
+  ReqoreTag,
+  useReqoreTableControls,
+} from '../../index';
 import { StoryMeta } from '../utils';
 import { THEMED_SURFACE, ThemedSurface } from '../utils/themedSurface';
 
@@ -481,5 +491,103 @@ export const PinnedActions: Story = {
     await waitFor(() => expect(getComputedStyle(pinned, '::after').opacity).toBe('0'));
     host.style.width = '100%';
     await waitFor(() => expect(body.getAttribute('data-reqore-table-overflow')).toBeNull());
+  },
+};
+
+/** The rows of the open menu: the menu is drawn in a popover, outside the page. */
+const openMenuItems = () =>
+  Array.from(document.querySelectorAll<HTMLElement>('.reqore-popover-content .reqore-menu-item'));
+
+const openMenuItem = (label: string) =>
+  openMenuItems().find((item) => item.textContent?.trim().startsWith(label));
+
+const headerLabels = (table: HTMLElement) =>
+  Array.from(table.querySelectorAll('.reqore-table-header-cell')).map((cell) => cell.textContent);
+
+const PageWithItsOwnToolbar = () => {
+  const tableControls = useReqoreTableControls();
+
+  return (
+    <ThemedSurface>
+      <ReqoreControlGroup vertical fluid>
+        <ReqoreControlGroup fluid className='page-toolbar'>
+          <ReqoreH3>Workflows</ReqoreH3>
+          <ReqoreDropdown
+            icon='MoreLine'
+            className='page-more'
+            aria-label='More'
+            fixed
+            flat
+            items={tableControls.menuActions}
+          />
+        </ReqoreControlGroup>
+        <ReqoreTable
+          {...TABLE_PROPS}
+          minimal
+          headerEffect={{ uppercase: false, spaced: 0, weight: 'bold', color: TEXT_3 }}
+          headerDividers={false}
+          selectionStyle='checkbox'
+          expanderPosition='none'
+          // Both asked for, and both moved to the page's "⋯" by `controls`.
+          showColumnsOptions
+          exportable
+          controls={tableControls}
+        />
+      </ReqoreControlGroup>
+    </ThemedSurface>
+  );
+};
+
+export const ColumnsAndExportFromThePage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a list page whose own toolbar has a "⋯" holding the table\'s column picker and export (`useReqoreTableControls`, given to the table as `controls`). The table starts with its headers: no toolbar row of its own. "Export current view" opens the table\'s export dialog. Captured with the column picker open after "Orders, last 24 hours" was hidden from it (the menu stays open between toggles), its "Reset columns" entry below.',
+      },
+    },
+  },
+  render: () => <PageWithItsOwnToolbar />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getByText('Chargeback Handler')).toBeInTheDocument());
+
+    const table = canvasElement.querySelector('.reqore-table') as HTMLElement;
+
+    // The card starts with its headers: the table draws no toolbar of its own.
+    expect(table.querySelector('.reqore-panel-title')).toBeNull();
+    expect(headerLabels(table).some((label) => label?.includes('Last order'))).toBe(true);
+
+    const more = () => canvasElement.querySelector<HTMLElement>('.page-toolbar .page-more')!;
+
+    // Export opens the table's own export dialog.
+    await userEvent.click(more());
+    await waitFor(() => expect(openMenuItem('Export current view')).toBeTruthy());
+    expect(openMenuItem('Export full data')).toBeTruthy();
+    await userEvent.click(openMenuItem('Export current view')!);
+    await waitFor(() => expect(canvas.getByText('Export data')).toBeInTheDocument());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(canvas.queryByText('Export data')).toBeNull());
+
+    // Columns opens the picker; a column toggles and the menu stays open for the next.
+    await userEvent.click(more());
+    await waitFor(() => expect(openMenuItem('Columns')).toBeTruthy());
+    await userEvent.click(openMenuItem('Columns')!);
+    await waitFor(() => expect(openMenuItem('Orders, last 24 hours')).toBeTruthy());
+    await userEvent.click(openMenuItem('Orders, last 24 hours')!);
+    await waitFor(() =>
+      expect(headerLabels(table).some((label) => label?.includes('Orders, last 24'))).toBe(false)
+    );
+    await userEvent.click(openMenuItem('Last order')!);
+    await waitFor(() =>
+      expect(headerLabels(table).some((label) => label?.includes('Last order'))).toBe(false)
+    );
+    await userEvent.click(openMenuItem('Last order')!);
+    await waitFor(() =>
+      expect(headerLabels(table).some((label) => label?.includes('Last order'))).toBe(true)
+    );
+    // A changed column offers the reset in the picker, and still opens nothing in the table.
+    await waitFor(() => expect(openMenuItem('Reset columns')).toBeTruthy());
+    expect(table.querySelector('.reqore-panel-title')).toBeNull();
   },
 };

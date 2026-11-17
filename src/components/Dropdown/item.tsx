@@ -27,7 +27,7 @@ export const ReqoreDropdownItem = memo(
     // year by `button[value="2030"]`, and withholding every value fixed the
     // object case by breaking that one. So this asks what the value IS rather
     // than dropping the prop outright.
-    const { value, metadata: _metadata, items: _items, ...rest } = item;
+    const { value, metadata: _metadata, items: _items, keepOpen: _keepOpen, ...rest } = item;
     const menuItem = value !== null && typeof value === 'object' ? rest : { ...rest, value };
 
     return (
