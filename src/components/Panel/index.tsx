@@ -38,6 +38,7 @@ import {
   getPanelBackgroundColor,
   getPanelHairlineColor,
   getReadableColor,
+  getSecondaryTextEffect,
   getThemePanelSurface,
 } from '../../helpers/colors';
 import styled, {
@@ -2344,7 +2345,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       ref: descriptionRef,
       className: 'reqore-panel-title-description',
       size: panelSize,
-      effect: { opacity: 0.7, ...descriptionEffect },
+      effect: { ...getSecondaryTextEffect(theme, 0.7), ...descriptionEffect },
       intent: descriptionIntent,
       onClick: handleDescriptionClick,
       ...(descriptionIsInteractive

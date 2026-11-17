@@ -9,6 +9,7 @@ import {
   getMainBackgroundColor,
   getPanelHairlineColor,
   getReadableColor,
+  getSecondaryTextEffect,
 } from '../../helpers/colors';
 import {
   getOneLessSize,
@@ -569,7 +570,7 @@ const ReqoreSeverityRow = memo(
                   <ReqoreP
                     as={getReqoreTextElement(description)}
                     size={secondarySize}
-                    effect={{ opacity: 0.6, ...descriptionEffect }}
+                    effect={{ ...getSecondaryTextEffect(theme, 0.6), ...descriptionEffect }}
                     className='reqore-severity-row-description'
                   >
                     {description}

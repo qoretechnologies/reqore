@@ -10,6 +10,7 @@ import {
   transparentize,
 } from 'polished';
 import {
+  IReqoreEffect,
   TReqoreEffectColor,
   TReqoreEffectColorList,
   TReqoreEffectGradientColors,
@@ -446,4 +447,41 @@ export const getGradientMix = (
       gradientColor2 === '#00000000' ? theme.main : gradientColor2
     ) as TReqoreHexColor
   );
+};
+
+/**
+ * The theme's secondary text color (`theme.text.secondary`), where it reads at least 3:1 on the
+ * surface the text is drawn on (`theme.main`, the component's own); else `undefined`, and the
+ * component keeps its own derivation. A calm palette names its secondary grey once (#a6a6af), and
+ * Markdown prose, descriptions and statistic labels match it instead of each being the readable
+ * color at an opacity of its own (admin portal: a template's description read brighter than the
+ * drawer's other secondary text).
+ */
+export const getSecondaryTextColor = (
+  theme: Pick<IReqoreTheme, 'text' | 'main'> | undefined
+): TReqoreHexColor | undefined => {
+  const secondary = theme?.text?.secondary;
+
+  if (!secondary || !theme?.main) {
+    return undefined;
+  }
+
+  try {
+    return getContrast(secondary, theme.main) >= 3 ? secondary : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * The effect secondary text is drawn with: the theme's secondary color where it reads, else the
+ * readable color at `opacity` (each component's own default, as before).
+ */
+export const getSecondaryTextEffect = (
+  theme: Pick<IReqoreTheme, 'text' | 'main'> | undefined,
+  opacity: number
+): IReqoreEffect => {
+  const color = getSecondaryTextColor(theme);
+
+  return color ? { color } : { opacity };
 };

@@ -4,7 +4,11 @@ import { MONO_FONT } from '../../constants/fonts';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { getPanelHairlineColor, getReadableColor } from '../../helpers/colors';
+import {
+  getPanelHairlineColor,
+  getReadableColor,
+  getSecondaryTextColor,
+} from '../../helpers/colors';
 import styled from '../../helpers/styled';
 import { getTextSize } from '../../helpers/typeScale';
 import { getOneHigherSize, getOneLessSize } from '../../helpers/utils';
@@ -36,7 +40,10 @@ export interface IReqoreMarkdownBlockStyle {
 }
 
 const primary = ({ theme }: IReqoreMarkdownBlockStyle) => getReadableColor(theme);
-const secondary = ({ theme }: IReqoreMarkdownBlockStyle) => rgba(getReadableColor(theme), 0.75);
+/* The theme's secondary text color where it names one (a calm palette's grey), else the readable
+   color at 0.75, as before. */
+const secondary = ({ theme }: IReqoreMarkdownBlockStyle) =>
+  getSecondaryTextColor(theme) ?? rgba(getReadableColor(theme), 0.75);
 const text = (step: 'up' | 'same' | 'down') => ({ theme, $size }: IReqoreMarkdownBlockStyle) =>
   `${getTextSize(
     theme,

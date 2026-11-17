@@ -124,6 +124,14 @@ export interface IReqoreTheme {
   text?: {
     color?: TReqoreHexColor;
     dim?: boolean;
+    /**
+     * The color of secondary text, the words under or beside the primary ones: a panel's, a row's
+     * and a callout's description, a statistic's label and description, Markdown prose. Unset,
+     * each draws its words in the readable color at its own opacity, as before. Used only where
+     * it reads (3:1) on the surface it is drawn on, so a component on a light custom surface keeps
+     * its own. (`getSecondaryTextColor`, `getSecondaryTextEffect`.)
+     */
+    secondary?: TReqoreHexColor;
   };
   /**
    * The font Reqore renders in — set on the layout wrapper and the portal that popovers, modals

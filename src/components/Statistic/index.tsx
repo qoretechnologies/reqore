@@ -9,6 +9,7 @@ import {
   getPanelBackgroundColor,
   getPanelHairlineColor,
   getReadableColor,
+  getSecondaryTextEffect,
 } from '../../helpers/colors';
 import {
   alignToFlexAlign,
@@ -510,7 +511,7 @@ const ReqoreStatistic = memo(
           size={secondarySize}
           className='reqore-statistic-label'
           effect={{
-            opacity: 0.7,
+            ...getSecondaryTextEffect(theme, 0.7),
             uppercase: theme.uppercaseLabels !== false,
             spaced: theme.uppercaseLabels !== false ? 1 : 0,
             ...labelEffect,
@@ -638,7 +639,7 @@ const ReqoreStatistic = memo(
               <ReqoreSpan
                 size={secondarySize}
                 className='reqore-statistic-description'
-                effect={{ opacity: 0.6, ...descriptionEffect }}
+                effect={{ ...getSecondaryTextEffect(theme, 0.6), ...descriptionEffect }}
               >
                 {description}
               </ReqoreSpan>

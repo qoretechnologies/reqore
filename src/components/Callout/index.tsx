@@ -11,6 +11,7 @@ import {
   getPanelBackgroundColor,
   getPanelHairlineColor,
   getReadableColor,
+  getSecondaryTextEffect,
 } from '../../helpers/colors';
 import { getOneLessSize, resolveAccentSize, TReqorePadded } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -458,7 +459,7 @@ export const ReqoreCallout = memo(
                 <ReqoreP
                   as={getReqoreTextElement(description)}
                   size={descriptionSize}
-                  effect={{ opacity: 0.78, ...descriptionEffect }}
+                  effect={{ ...getSecondaryTextEffect(theme, 0.78), ...descriptionEffect }}
                   className='reqore-callout-description'
                 >
                   {description}

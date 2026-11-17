@@ -9,6 +9,7 @@ import {
   getMainBackgroundColor,
   getPanelHairlineColor,
   getReadableColor,
+  getSecondaryTextEffect,
 } from '../../helpers/colors';
 import {
   getOneLessSize,
@@ -536,7 +537,7 @@ const ReqoreEntityRow = memo(
                   <ReqoreP
                     as={getReqoreTextElement(description)}
                     size={secondarySize}
-                    effect={{ opacity: 0.7, ...descriptionEffect }}
+                    effect={{ ...getSecondaryTextEffect(theme, 0.7), ...descriptionEffect }}
                     className='reqore-entity-row-description'
                   >
                     {description}

@@ -142,6 +142,18 @@ Every control draws keyboard focus in one ring (instruction-files decision 030):
 
 `Utilities/Focus Ring → Drawn For The Keyboard Only`, `→ Kept Inside A Clipping Box`; `__tests__/focusRing.test.ts`.
 
+## Secondary text from the theme (0.78.25)
+
+`theme.text.secondary` names the color of secondary text once: a panel's, a row's (`ReqoreEntityRow`,
+`ReqoreSeverityRow`) and a callout's description, a statistic's label and description, and
+`ReqoreMarkdownBlock` prose draw in it. Each was the readable color at an opacity of its own (0.6 to 0.78), so a
+calm palette's grey (#a6a6af) could not be matched, and Markdown prose read brighter than the drawer's other
+secondary text (admin portal, f57). Unset, each component draws as before. It is used only where it reads at
+least 3:1 on the component's own surface, so a component on a light custom surface keeps its own derivation.
+Helpers: `getSecondaryTextColor(theme)` (the color, or `undefined`) and `getSecondaryTextEffect(theme, opacity)`
+(an effect: the color, or the opacity it falls back to). `Theme/Text roles → Secondary Text From The Theme`;
+`__tests__/secondaryText.test.tsx`.
+
 ## Locales from a browser or a host (0.78.21)
 
 `Intl` throws a `RangeError` on a locale that is no BCP 47 tag, and browsers and hosts hand over POSIX locale
