@@ -192,6 +192,12 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
     }));
   }, []);
 
+  /* Escape or the × on a confirmation cancels it, as its Cancel does. */
+  const cancelConfirmationModal = useCallback((): void => {
+    closeConfirmationModal();
+    confirmationModal?.onCancel?.();
+  }, [closeConfirmationModal, confirmationModal]);
+
   const addEscClosableModal = useCallback((id: string): void => {
     setEscClosableModals((cur) => [...cur, id]);
   }, []);
@@ -465,6 +471,9 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
             description={confirmationModal.description ?? confirmationDefaults?.description}
             icon={confirmationModal.icon || confirmationDefaults?.icon || 'ErrorWarningFill'}
             className='reqore-confirmation-modal'
+            /* Escape cancels, as its Cancel does (APG alertdialog), and only it: it is on top of
+               the Escape stack, so the drawer or modal under it stays. */
+            onClose={cancelConfirmationModal}
             bottomActions={[
               {
                 label:

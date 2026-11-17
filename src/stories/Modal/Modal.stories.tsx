@@ -950,27 +950,25 @@ export const EscKeyClosestOnlyTopModalWithConfirmation: Story = {
   },
 };
 
-export const CanNotBeClosedWithEscKeyIfUnclosable: Story = {
+export const EscapeCancelsAConfirmation: Story = {
   ...ConfirmationModal,
   parameters: {
     docs: {
       description: {
         story:
-          'Renders Modal in unclosable mode — Escape does not close it.',
+          'Renders a modal with a confirmation over it. Escape cancels the confirmation, as its Cancel does (APG alertdialog), and leaves the modal under it open: only the dialog in front answers Escape.',
       },
     },
     chromatic: { disable: true },
   },
   play: async ({ canvasElement }) => {
     await _testsWaitForText('Tell me something');
-
-    await sleep(1000);
+    await expect(document.querySelectorAll('.reqore-modal')).toHaveLength(2);
 
     await fireEvent.keyDown(canvasElement, { key: 'Escape' });
 
-    await sleep(1000);
-
-    await expect(document.querySelectorAll('.reqore-modal')).toHaveLength(2);
+    await waitFor(() => expect(document.querySelector('.reqore-confirmation-modal')).toBeNull());
+    await expect(document.querySelectorAll('.reqore-modal')).toHaveLength(1);
   },
 };
 

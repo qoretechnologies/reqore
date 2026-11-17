@@ -22,7 +22,27 @@ export interface IUseFocusTrapOptions {
   restoreFocus?: boolean;
   /** Whether to auto-focus the first focusable element when activated */
   autoFocus?: boolean;
+  /**
+   * Whether Tab is kept inside the container (a modal dialog). Off, the container only takes focus
+   * when it activates and gives it back when it ends (a dialog that is not modal: a drawer with no
+   * backdrop, beside a page that stays usable). Default true.
+   */
+  trap?: boolean;
+  /**
+   * What takes focus when it activates: the first focusable element (`'first'`, the default), or
+   * the container itself (`'container'`, focused without a ring or a scroll), so a dialog that is
+   * not modal does not act on its first control for the reader.
+   */
+  initialFocus?: 'first' | 'container';
 }
+
+/**
+ * The traps that hold Tab, innermost last. Only the last one answers a Tab: two active traps
+ * fought, the outer pulling focus to its first element and the inner pulling it back (a
+ * confirmation over a drawer with a backdrop). When the inner one ends, the one under it answers
+ * again.
+ */
+const trapStack: symbol[] = [];
 
 /**
  * Hook that traps focus within a container element.
@@ -36,7 +56,15 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
   containerRef: RefObject<T>,
   options: IUseFocusTrapOptions = {}
 ): void {
-  const { active = true, restoreFocus = true, autoFocus = true } = options;
+  const {
+    active = true,
+    restoreFocus = true,
+    autoFocus = true,
+    trap = true,
+    initialFocus = 'first',
+  } = options;
+  // This trap's place in the stack.
+  const trapId = useRef(Symbol('focus-trap')).current;
 
   // Store the element that was focused before the trap was activated
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
@@ -62,6 +90,8 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key !== 'Tab' || !containerRef.current) return;
+      // Only the innermost trap holds Tab.
+      if (trapStack[trapStack.length - 1] !== trapId) return;
 
       const focusableElements = getFocusableElements();
       if (focusableElements.length === 0) return;
@@ -127,7 +157,13 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
         const focusAlreadyInside = activeElement && containerRef.current.contains(activeElement);
 
         // Only auto-focus if focus is not already inside the container
-        if (!focusAlreadyInside) {
+        if (!focusAlreadyInside && initialFocus === 'container') {
+          // A dialog that is not modal takes focus as a whole: its box, not its first control.
+          const box = containerRef.current;
+          box.setAttribute('tabindex', '-1');
+          box.style.outline = 'none';
+          box.focus({ preventScroll: true });
+        } else if (!focusAlreadyInside) {
           const focusableElements = getFocusableElements();
           if (focusableElements.length > 0) {
             focusableElements[0].focus();
@@ -167,11 +203,18 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
       });
     }
 
-    // Add the keydown listener
-    document.addEventListener('keydown', handleKeyDown);
+    // Add the keydown listener, and take the top of the stack, when this trap holds Tab
+    if (trap) {
+      trapStack.push(trapId);
+      document.addEventListener('keydown', handleKeyDown);
+    }
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      const place = trapStack.indexOf(trapId);
+      if (place !== -1) {
+        trapStack.splice(place, 1);
+      }
 
       // A trap that ends before its first frame does not pull focus into a container it no longer traps
       if (autoFocusFrame !== undefined) {
@@ -201,7 +244,17 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
         });
       }
     };
-  }, [active, autoFocus, restoreFocus, containerRef, getFocusableElements, handleKeyDown]);
+  }, [
+    active,
+    autoFocus,
+    restoreFocus,
+    trap,
+    initialFocus,
+    trapId,
+    containerRef,
+    getFocusableElements,
+    handleKeyDown,
+  ]);
 }
 
 export default useFocusTrap;

@@ -3243,6 +3243,76 @@ export const RowActionsMenuFromTheKeyboard: Story = {
   },
 };
 
+/* Three plain columns, so a row holds nothing of its own to tab to. */
+const KEYBOARD_COLUMNS: IReqoreTableColumn[] = [
+  { dataId: 'firstName', header: { label: 'First name' }, grow: 1 },
+  { dataId: 'lastName', header: { label: 'Last name' }, grow: 1 },
+  { dataId: 'address', header: { label: 'Address' }, grow: 2 },
+];
+
+export const RowsOpenFromTheKeyboard: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a table whose rows open on a click (`onRowClick`). Each row is a tab stop: Enter opens the focused row, Tab moves to the next row (past the second, which is disabled and opens on no click) and Space opens that one. The focused row draws the focus ring inside its edge, where the scroll area cannot cut it off, and the toolbar\'s icon buttons say what they are ("Show / hide columns", "More").',
+      },
+    },
+  },
+  args: {
+    columns: KEYBOARD_COLUMNS,
+    data: slice(tableData.data, 0, 4),
+    sort: undefined,
+    height: 300,
+    label: 'Customers',
+    exportable: true,
+    showColumnsOptions: true,
+    onRowClick: fn(),
+  },
+  render: (args) => (
+    <div style={{ width: 720 }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement, args }) => {
+    const rows = await waitFor(() => {
+      const found = Array.from(canvasElement.querySelectorAll<HTMLElement>('.reqore-table-row'));
+
+      expect(found).toHaveLength(4);
+
+      return found;
+    });
+    const opened = () => (args.onRowClick as ReturnType<typeof fn>).mock.calls.map(([row]) => row);
+
+    // The second row is disabled (`_disabled`): it opens on no click, so it is no tab stop.
+    expect(rows.map((row) => row.getAttribute('tabindex'))).toEqual(['0', null, '0', '0']);
+
+    rows[0].focus();
+    await userEvent.keyboard('{Enter}');
+    expect(opened()).toHaveLength(1);
+    expect(rows[0].textContent).toContain(opened()[0].firstName);
+
+    await userEvent.tab();
+    expect(document.activeElement).toBe(rows[2]);
+    await userEvent.keyboard(' ');
+    expect(opened()).toHaveLength(2);
+    expect(rows[2].textContent).toContain(opened()[1].firstName);
+
+    // The ring sits inside the row: the scroll area around the rows would cut one drawn outside.
+    expect(rows[2].matches(':focus-visible')).toBe(true);
+    const ring = getComputedStyle(rows[2]);
+    expect(ring.outlineStyle).toBe('solid');
+    expect(ring.outlineWidth).toBe('2px');
+    expect(parseFloat(ring.outlineOffset)).toBe(-2);
+
+    expect(canvasElement.querySelector('.reqore-table-columns-options')).toHaveAttribute(
+      'aria-label',
+      'Show / hide columns'
+    );
+    expect(canvasElement.querySelector('.reqore-table-more')).toHaveAttribute('aria-label', 'More');
+  },
+};
+
 export const RowActionsMenuOnATouchScreen: Story = {
   tags: ['touch'],
   globals: PHONE_STORY.globals,

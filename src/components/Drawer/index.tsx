@@ -19,6 +19,7 @@ import type { IReqoreConfirmationModal } from '../../containers/ReqoreProvider';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { getSwipeStep } from '../../helpers/gestures';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useReqoreEscClose } from '../../hooks/useReqoreEscClose';
 import {
   DRAG_CONTROL_SELECTOR,
   IPointerDragDelta,
@@ -735,9 +736,15 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     // By default, enable focus trap for modals and drawers with backdrop
     const shouldTrapFocus = focusTrap ?? (_isModal || hasBackdrop);
 
-    // Use focus trap to keep focus within the drawer when open
+    /* Focus goes into every open drawer and back to what had it when the drawer closes. A modal one
+       (a modal, a drawer with a backdrop) also keeps Tab inside and focuses its first control; one
+       that is not modal (no backdrop, the page beside it stays usable) takes focus as a whole, its
+       box, and lets Tab leave. A drawer without a backdrop used to neither take focus nor give it
+       back, so a keyboard user opened it and stayed on the page behind it. */
     useFocusTrap(drawerRef, {
-      active: isOpen && shouldTrapFocus && !hidden,
+      active: isOpen && !hidden,
+      trap: shouldTrapFocus,
+      initialFocus: shouldTrapFocus ? 'first' : 'container',
       restoreFocus: true,
       autoFocus: true,
     });
@@ -803,6 +810,16 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
         left: position === 'left' || layout === 'horizontal' ? (floating ? '10px' : 0) : undefined,
       };
     }, [_isModal, position, layout, floating]);
+
+    // Escape closes the drawer in front, through the provider's stack: a modal, a confirmation
+    // over a drawer, nested drawers - only the top one closes.
+    useReqoreEscClose({
+      isOpen,
+      onClose,
+      disabled: rest.disabled,
+      closeOnEscPress: rest.closeOnEscPress,
+      confirmOnClose,
+    });
 
     const handleClose = onClose
       ? () => {
@@ -1113,7 +1130,8 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
               ref={drawerRef}
               zIndex={wrapperZIndex}
               className='reqore-drawer-wrapper'
-              role={_isModal || hasBackdrop ? 'dialog' : undefined}
+              // A dialog either way; only one with a backdrop is modal.
+              role='dialog'
               aria-modal={_isModal || hasBackdrop ? 'true' : undefined}
               // With no title bar, the label still names the dialog for a screen reader.
               aria-label={!titleBar && typeof rest.label === 'string' ? rest.label : undefined}

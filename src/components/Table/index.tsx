@@ -355,6 +355,8 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   searchToggleLabel?: string;
   /** Tooltip on the "scroll to top" action. Defaults to `'Scroll to top'`. */
   scrollToTopTooltip?: string;
+  /** The name of the toolbar's "⋯" (its tooltip and accessible name). Defaults to `'More'`. */
+  moreActionsLabel?: string;
   /** Label of the "Reset all" more-menu action. Defaults to `'Reset all'`. */
   resetAllLabel?: string;
   /** Label of the "Help" more-menu action. Defaults to `'Help'`. */
@@ -691,6 +693,7 @@ const ReqoreTable = ({
   searchToggleLabel = 'Search',
   scrollToTopTooltip = 'Scroll to top',
   resetAllLabel = 'Reset all',
+  moreActionsLabel = 'More',
   helpLabel = 'Help',
   helpModalLabel = 'Table help',
   helpContent,
@@ -1386,6 +1389,9 @@ const ReqoreTable = ({
 
       finalActions.push({
         icon: 'LayoutColumnLine',
+        // An icon alone named nothing for a screen reader: it says what it opens.
+        tooltip: columnsToggleLabel,
+        'aria-label': columnsToggleLabel,
         className: 'reqore-table-columns-options',
         badge: columnsCount,
         active: hasHiddenColumns(finalColumns) ? true : undefined,
@@ -1485,6 +1491,8 @@ const ReqoreTable = ({
 
       const moreActionsWrapper: IReqorePanelAction = {
         icon: 'MoreLine',
+        tooltip: moreActionsLabel,
+        'aria-label': moreActionsLabel,
         className: 'reqore-table-more',
         actions: [],
       };
@@ -1548,6 +1556,7 @@ const ReqoreTable = ({
     addModal,
     columnModifiers,
     columnsList,
+    columnsToggleLabel,
     controls,
     data,
     exportable,
@@ -1569,6 +1578,7 @@ const ReqoreTable = ({
     zoomable,
     scrollToTopTooltip,
     resetAllLabel,
+    moreActionsLabel,
     helpLabel,
     helpModalLabel,
     helpContent,

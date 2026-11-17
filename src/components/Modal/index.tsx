@@ -1,5 +1,4 @@
-import { nanoid } from 'nanoid';
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo } from 'react';
 import { useReqoreProperty } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../Drawer';
@@ -61,48 +60,10 @@ export const ReqoreModal = memo(
     descriptionMaxHeight = '50vh',
     ...rest
   }: IReqoreModalProps) => {
-    const id = useMemo(() => nanoid(), []);
+    /* Escape is the drawer's: a modal is a drawer, and the drawer closes on Escape itself
+       (`useReqoreEscClose`), the app's `closeModalsOnEscPress` unless the modal says. */
     const isMobile = useReqoreProperty('isMobile');
-    const escClosableModals = useReqoreProperty('escClosableModals');
     const closeModalsOnEscPress = useReqoreProperty('closeModalsOnEscPress');
-    const add = useReqoreProperty('addEscClosableModal');
-    const remove = useReqoreProperty('removeEscClosableModal');
-
-    const isEscClosable =
-      rest.isOpen &&
-      rest.onClose &&
-      !rest.disabled &&
-      (rest.closeOnEscPress ?? closeModalsOnEscPress);
-
-    // Close last popover when ESC is pressed
-    const handleKeyDown = useCallback(
-      (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-          remove(id, rest.onClose, confirmOnClose);
-        }
-      },
-      [id, rest.onClose, remove, confirmOnClose]
-    );
-
-    useEffect(() => {
-      if (isEscClosable) {
-        document.addEventListener('keydown', handleKeyDown);
-      }
-
-      return () => {
-        document.removeEventListener('keydown', handleKeyDown);
-      };
-    }, [escClosableModals, isEscClosable, handleKeyDown]);
-
-    useEffect(() => {
-      if (rest.isOpen) {
-        add(id);
-      }
-
-      return () => {
-        remove(id);
-      };
-    }, [id, rest.isOpen]);
 
     return (
       <ReqoreDrawer

@@ -1,5 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { expect, fireEvent, waitFor } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor } from 'storybook/test';
 import { noop } from 'lodash';
 import { useLayoutEffect, useState } from 'react';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
@@ -1013,5 +1013,61 @@ export const TitleBadgesBelowOnAPhone: Story = {
       await expectTitleWhole(drawer);
       await expectIconBesideTitle(drawer);
     });
+  },
+};
+
+/** A page whose button opens a drawer with no backdrop, as a details panel beside a list. */
+const DetailsBesideThePage = () => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <ReqoreButton className='story-open-details' onClick={() => setOpen(true)}>
+        Open details
+      </ReqoreButton>
+      {open ? (
+        <ReqoreDrawer
+          isOpen
+          hasBackdrop={false}
+          size='400px'
+          label='Order details'
+          onClose={() => setOpen(false)}
+        >
+          <ReqoreP>Order 1042, shipped yesterday.</ReqoreP>
+          <ReqoreButton>Track it</ReqoreButton>
+        </ReqoreDrawer>
+      ) : null}
+    </>
+  );
+};
+
+export const KeyboardOpensAndClosesADrawer: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a page whose "Open details" button opens a drawer with no backdrop. From the keyboard: Enter opens it and focus moves into it (the drawer as a whole, not its first control), Escape closes it and focus returns to "Open details", drawn with the keyboard\'s ring. Captured after the close.',
+      },
+    },
+  },
+  render: () => <DetailsBesideThePage />,
+  play: async () => {
+    const opener = await waitFor(() =>
+      document.querySelector<HTMLButtonElement>('.story-open-details')!
+    );
+
+    opener.focus();
+    await userEvent.keyboard('{Enter}');
+    const wrapper = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>('.reqore-drawer-wrapper');
+      expect(element).not.toBeNull();
+      expect(document.activeElement).toBe(element);
+      return element!;
+    });
+    expect(wrapper.getAttribute('role')).toBe('dialog');
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.querySelector('.reqore-drawer-wrapper')).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(opener));
   },
 };

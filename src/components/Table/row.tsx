@@ -12,6 +12,7 @@ import {
 import { ReqoreButton, ReqoreControlGroup, ReqoreIcon } from '../..';
 import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
+import { getFocusRingColor } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -230,6 +231,13 @@ export const StyledTableRow = styled.div.withConfig({
         `
       : ''}
   `}
+
+  /* A row that opens is a tab stop; the keyboard's ring is drawn inside its edge, where the scroll
+     area clipping the rows cannot cut it off. */
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
+    outline-offset: -2px;
+  }
 `;
 
 export interface IReqoreTableCellStyle {
@@ -695,8 +703,30 @@ const ReqoreTableRow = memo(
       ...consumerAttrs
     } = consumerRowProps ?? {};
 
+    /* A row that opens or expands on a click opens on Enter or Space too, and is a tab stop: no list
+       row could be opened from the keyboard, and only the scroll area took focus. Keys pressed in a
+       cell's own controls (its buttons, a checkbox) stay theirs. A caller's own `tabIndex` or
+       `onKeyDown` (`getRowProps`) wins. */
+    const rowActivates = (!!onRowClick || canExpand) && !data[index]._disabled && !isStatic;
+    const handleRowKeyDown = useCallback(
+      (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) {
+          return;
+        }
+        event.preventDefault();
+        if (canExpand) {
+          onExpandClick?.(expandId);
+        } else {
+          onRowClick?.(data[index]);
+        }
+      },
+      [canExpand, onExpandClick, expandId, onRowClick, data, index]
+    );
+
     const row = (
       <RowComponent
+        tabIndex={rowActivates ? 0 : undefined}
+        onKeyDown={rowActivates ? handleRowKeyDown : undefined}
         {...consumerAttrs}
         style={renderExpandedRow ? undefined : mergedStyle}
         className={mergedClassName}
