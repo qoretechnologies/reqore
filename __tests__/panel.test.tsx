@@ -849,6 +849,65 @@ describe('narrow action labels', () => {
     expect(bar.textContent).not.toContain('Preview');
     mockedPanelWidth = 0;
   });
+
+  test("Keeps a split button's words in a narrow bottom bar when they ask to", () => {
+    // A split button: its words (`responsive: false`) and a caret with a menu (qlip-ui's
+    // review drawer on a phone). The words were not drawn at all, at any width.
+    mockedPanelWidth = 360;
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqorePanel
+            label='Review'
+            bottomActions={[
+              {
+                responsive: false,
+                group: [
+                  { label: 'Reject', icon: 'CloseLine', responsive: false, className: 'reject' },
+                  {
+                    icon: 'ArrowDownSLine',
+                    className: 'more',
+                    actions: [{ label: 'Reject and comment' }],
+                  },
+                ],
+              },
+            ]}
+          >
+            Body
+          </ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    expect(document.querySelector('.reject')?.textContent).toContain('Reject');
+    expect(document.querySelector('.more')).not.toBeNull();
+    mockedPanelWidth = 0;
+  });
+
+  test("Folds a group child's words in a narrow bar when it does not ask to keep them", () => {
+    mockedPanelWidth = 360;
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqorePanel
+            label='Review'
+            bottomActions={[
+              {
+                responsive: false,
+                group: [{ label: 'Reject', icon: 'CloseLine', className: 'reject' }],
+              },
+            ]}
+          >
+            Body
+          </ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    expect(document.querySelector('.reject')).not.toBeNull();
+    expect(document.querySelector('.reject')?.textContent).not.toContain('Reject');
+    mockedPanelWidth = 0;
+  });
 });
 
 describe('a title and its badges', () => {

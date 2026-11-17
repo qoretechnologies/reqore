@@ -2036,13 +2036,19 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         action: IReqorePanelAction,
         index: number,
         includeResponsive: boolean,
-        align: 'flex-start' | 'center' | 'flex-end' = 'flex-end'
+        align: 'flex-start' | 'center' | 'flex-end' = 'flex-end',
+        /* A group's child: the group has been put in its bar already, so the child is drawn
+           whatever its own \`responsive\` says, which then only decides whether its label folds.
+           A child with \`responsive: false\` (a split button's words) was filtered out as though
+           it belonged to the other bar, and only the caret was drawn (qlip-ui). */
+        inGroup = false
       ) => {
         if (
           action.show === false ||
           (showActionsWhenCollapsed === false && _isCollapsed === true) ||
-          (includeResponsive && action.responsive === false) ||
-          (!includeResponsive &&
+          (!inGroup && includeResponsive && action.responsive === false) ||
+          (!inGroup &&
+            !includeResponsive &&
             responsiveActions &&
             (action.responsive === true || !('responsive' in action)))
         ) {
@@ -2080,7 +2086,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               className={className}
               horizontalAlign={align}
             >
-              {group.map((action, index) => renderActions(action, index, true))}
+              {group.map((child, index) => renderActions(child, index, true, undefined, true))}
             </ReqoreControlGroup>
           );
         }

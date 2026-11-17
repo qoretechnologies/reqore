@@ -1016,6 +1016,68 @@ export const TitleBadgesBelowOnAPhone: Story = {
   },
 };
 
+export const SplitButtonKeepsItsWordsOnAPhone: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders a review drawer on a phone (390 px) whose bottom bar holds a split button: "Reject" with its icon (`responsive: false`, so its words stay at any width) and a caret opening "Reject and comment", beside "Approve". Both halves of the split button are drawn, and "Reject" says its word; "Approve", which does not ask to keep its words, folds to its icon on the phone.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreDrawer
+      isOpen
+      responsiveLayout
+      size='600px'
+      position='right'
+      label='Snapshot review'
+      onClose={noop}
+      bottomActions={[
+        {
+          responsive: false,
+          position: 'left',
+          group: [
+            { label: 'Reject', icon: 'CloseLine', responsive: false, className: 'story-reject' },
+            {
+              icon: 'ArrowDownSLine',
+              className: 'story-reject-more',
+              'aria-label': 'More ways to reject',
+              actions: [{ label: 'Reject and comment' }],
+            },
+          ],
+        },
+        { label: 'Approve', icon: 'CheckLine', position: 'right', className: 'story-approve' },
+      ]}
+    >
+      <ReqoreP>Two pixels moved in the header.</ReqoreP>
+    </ReqoreDrawer>
+  ),
+  play: async () => {
+    await withViewport(PHONE_SCREEN.width, PHONE_SCREEN.height, async (narrowed) => {
+      const reject = await waitFor(() => {
+        const element = document.querySelector<HTMLElement>('.story-reject');
+        expect(element).toBeTruthy();
+        return element!;
+      });
+
+      // Both halves of the split button, and the words of the half that asks to keep them.
+      await expect(document.querySelector('.story-reject-more')).toBeTruthy();
+      await expect(reject.textContent).toContain('Reject');
+      if (narrowed) {
+        // A label that does not ask to stay folds to its icon on the phone, as before.
+        await waitFor(() =>
+          expect(document.querySelector('.story-approve')?.textContent ?? '').not.toContain(
+            'Approve'
+          )
+        );
+      }
+    });
+  },
+};
+
 /** A page whose button opens a drawer with no backdrop, as a details panel beside a list. */
 const DetailsBesideThePage = () => {
   const [open, setOpen] = useState(false);
