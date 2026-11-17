@@ -2662,6 +2662,83 @@ export const ATitleSettlesWhenItsBoxFollowsItsText: Story = {
   },
 };
 
+/** The IDE's titles: 16px at weight 600, in the platform's own face (its `TYPE_SCALE`). */
+const IDE_TITLE_THEME = {
+  fontFamily:
+    "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+  typeScale: { heading: { 3: 16 }, headingWeight: 600, lineHeight: 1.45 },
+  uppercaseLabels: false,
+};
+const SECTION_TITLES = ['Address', 'Name', 'Security'];
+const SECTION_WIDTHS = [590, 600];
+
+export const ATitleBesideALongDescriptionSettles: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Six small sections in an IDE drawer\'s width (590px and 600px), titled "Address", "Name" and "Security", each with a sentence beside its title too long for the line, under the IDE\'s 16px titles. Each title settles at its size and each panel draws a handful of times. Its box was as wide as the title, so it read its room a pixel short and shrank; a smaller title shrinks its description with it, which left the header room to grow back into, and the title took turns between the two for ever - "Address" measured 56, 52, 80, 56... and the IDE\'s Add Server story hung (t-96). A room the title has already been given, for the same title, description, actions and width, now ends the turns: it keeps the most room it was given.',
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: IDE_TITLE_THEME,
+  },
+  beforeEach: () => {
+    settlingCommits.clear();
+  },
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {SECTION_WIDTHS.flatMap((width) =>
+        SECTION_TITLES.map((title) => (
+          <div key={`${width}-${title}`} data-settling={`${width}-${title}`} style={{ width }}>
+            <Profiler
+              id={`${width}-${title}`}
+              onRender={() => countSettlingCommits(`${width}-${title}`)}
+            >
+              <ReqorePanel
+                flat
+                minimal
+                raised
+                rounded
+                padded='normal'
+                size='small'
+                stickyHeader
+                label={title}
+                description='The base URL every path in this contract hangs off, and what a generated client uses when nothing overrides it.'
+              >
+                https://api.example.com/v1
+              </ReqorePanel>
+            </Profiler>
+          </div>
+        ))
+      )}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const ids = SECTION_WIDTHS.flatMap((width) => SECTION_TITLES.map((title) => `${width}-${title}`));
+    const drawn = () => ids.map((id) => settlingCommits.get(id) ?? 0);
+
+    await waitFor(() => expect(drawn().every((commits) => commits > 0)).toBe(true));
+    let before: number[] = [];
+    await waitFor(
+      async () => {
+        before = drawn();
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        expect(drawn()).toEqual(before);
+      },
+      { timeout: 5000 }
+    );
+    before.forEach((commits) => expect(commits).toBeLessThan(SETTLING_COMMIT_BOUND));
+
+    for (const id of ids) {
+      await expectTitleWhole(
+        canvasElement.querySelector(`[data-settling="${id}"] .reqore-panel`) as HTMLElement
+      );
+    }
+  },
+};
+
 /* ------------------------------------------------------------------------------------------------
  * media — a cover clipped to the panel's corners
  * ---------------------------------------------------------------------------------------------- */

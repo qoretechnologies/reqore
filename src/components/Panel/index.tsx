@@ -2397,6 +2397,22 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         : {}),
     };
     const [labelAvailable, setLabelAvailable] = useState<number | undefined>(undefined);
+    /**
+     * The rooms the title has been measured to have since the last thing that can change it, and the
+     * one it settled on if they went round in a circle.
+     *
+     * The room is measured off the box the title sits in, and where a host sizes that box by what it
+     * holds the measurement answers the fit it was asked for: a two-line title gets no slack, so a
+     * box rounded to whole px read a pixel short, the title shrank a pixel, the header was left with
+     * room, the title grew back into it, and round again - "Address" in an IDE drawer measured 56, 52,
+     * 80, 56... for ever (t-96). A measurement that comes back to a room it has already given, for a
+     * title, badges, bar and size that have not changed, is going in circles; the title takes the most
+     * room it was given and keeps it until one of those changes.
+     */
+    const labelRoomsSeen = useRef<{ key: string; rooms: number[]; settled?: number }>({
+      key: '',
+      rooms: [],
+    });
     const [labelFitRef, labelFitPx] = useFitTextSize<HTMLDivElement>({
       text: typeof label === 'string' ? label : '',
       available: labelAvailable,
@@ -2542,8 +2558,37 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           parent.clientWidth - padding - siblings - gaps + Math.max(0, headerRoom) + actionsRoom
         )
       );
+      const roomKey = [
+        typeof label === 'string' ? label : '',
+        badgeKey,
+        // what the actions say: an action whose words change takes room and gives it back
+        badgeSignature(actions),
+        width,
+        panelSize,
+        typeof description === 'string' ? description : !!description,
+        clampLines,
+        isNarrow,
+      ].join('\u0000');
 
-      setLabelAvailable((current) => (current === next ? current : next));
+      if (labelRoomsSeen.current.key !== roomKey) {
+        labelRoomsSeen.current = { key: roomKey, rooms: [] };
+      }
+
+      const seen = labelRoomsSeen.current;
+
+      if (seen.settled === undefined) {
+        const last = seen.rooms[seen.rooms.length - 1];
+
+        if (seen.rooms.length && next !== last && seen.rooms.includes(next)) {
+          seen.settled = Math.max(next, ...seen.rooms);
+        } else {
+          seen.rooms = [...seen.rooms.slice(-7), next];
+        }
+      }
+
+      const room = seen.settled ?? next;
+
+      setLabelAvailable((current) => (current === room ? current : room));
     }, [fitLabel, label, width, badgeKey, actions, panelSize, description, clampLines, isNarrow]);
 
     /**
