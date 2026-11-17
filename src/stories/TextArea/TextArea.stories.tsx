@@ -950,3 +950,38 @@ export const ScaledToItsTextWhenItsWidthChanges: Story = {
     await expectFieldsHoldTheirText([{ textarea: shown, what: 'the field shown' }]);
   },
 };
+
+export const ProseInThePageFontCodeInMonospace: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a note in a textarea, in the page\'s font, beside a JSON value in a textarea that asks for monospace (`effect={{ fontFamily: "mono" }}`). A textarea is prose unless it says it holds code or data; it used to take the browser\'s monospace for every field.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical fluid style={{ width: 560 }}>
+      <ReqoreTextarea
+        className='story-prose'
+        value='Resend the label once the carrier confirms the first one was voided.'
+        onChange={() => undefined}
+      />
+      <ReqoreTextarea
+        className='story-code'
+        value={'{\n  "order": 48213,\n  "carrier": "parcel"\n}'}
+        onChange={() => undefined}
+        effect={{ fontFamily: 'mono' }}
+      />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const prose = requiredElement<HTMLTextAreaElement>('textarea.story-prose, .story-prose textarea', 'the note', canvasElement);
+    const code = requiredElement<HTMLTextAreaElement>('textarea.story-code, .story-code textarea', 'the JSON value', canvasElement);
+    const pageFont = getComputedStyle(canvasElement).fontFamily;
+
+    await expect(getComputedStyle(prose).fontFamily).toBe(pageFont);
+    await expect(getComputedStyle(code).fontFamily).not.toBe(pageFont);
+    await expect(getComputedStyle(code).fontFamily.toLowerCase()).toContain('mono');
+  },
+};

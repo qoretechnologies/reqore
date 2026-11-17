@@ -117,6 +117,8 @@ export const ReqoreTreeManagementDialog = ({
                 <ReqoreTextarea
                   value={value ?? ''}
                   scaleWithContent
+                  // A value in the tree is data (JSON), read in monospace.
+                  effect={{ fontFamily: 'mono' }}
                   onChange={(e: any) => setValue(e.target.value)}
                   placeholder={valuePlaceholder}
                   fluid

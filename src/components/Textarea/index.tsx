@@ -179,6 +179,11 @@ export const StyledTextarea = styled(StyledEffect).withConfig({
   width: 100%;
   max-width: 100%;
   max-height: 100%;
+  /* The page's font (or the theme's), not the browser's monospace: a textarea is prose unless it
+     says otherwise. One that holds code or data asks for monospace (\`effect={{ fontFamily:
+     'mono' }}\`), as the export dialog and the tree's value editor do (Filip, 2026-11-17: per use,
+     not monospace everywhere because there may be code). */
+  font-family: inherit;
   font-size: ${({ _size = 'normal', theme }) => getControlTextSize(theme, _size as TSizes)}px;
   margin: 0;
   padding: ${({ _size = 'normal' }) => TEXTAREA_PADDING_FROM_SIZE[_size]}px;
