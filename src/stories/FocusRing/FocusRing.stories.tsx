@@ -68,7 +68,7 @@ export const DrawnForTheKeyboardOnly: Story = {
     docs: {
       description: {
         story:
-          'Renders a button, an interactive tag, a checkbox, a link and a tab bar. Tabbing through them draws one ring on each, in the readable text colour, at least 3:1 against the surface it sits on; a mouse click on the button draws none. Captured with the first button focused from the keyboard.',
+          'Renders a button, an interactive tag, a checkbox, a link and a tab bar. Tabbing through them draws one ring on each, in the readable text colour, at least 3:1 against the surface it sits on, at once rather than eased in; a mouse click on the button draws none. Captured with the first button focused from the keyboard.',
       },
     },
   },
@@ -144,8 +144,13 @@ export const DrawnForTheKeyboardOnly: Story = {
 
     // End on the first control focused while the keyboard is in use, for the capture: the last
     // input was a key, so its focus is drawn as the keyboard's.
+    first.blur();
     first.focus();
     await waitFor(() => expect(ringOf(first).style).toBe('solid'));
+    // Drawn at once, in its settled colour: no fade a capture (or a reader) could catch part way.
+    const atOnce = ringOf(first).color;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(ringOf(first).color).toBe(atOnce);
   },
 };
 

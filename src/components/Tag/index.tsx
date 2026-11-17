@@ -578,6 +578,8 @@ export const StyledTag = styled(StyledEffect).withConfig({
   &:focus-visible {
     outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
     outline-offset: -2px;
+    /* At once, not eased in: see the button's ring. */
+    transition: none;
   }
 `;
 

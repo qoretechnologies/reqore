@@ -136,9 +136,9 @@ Every control draws keyboard focus in one ring (instruction-files decision 030):
   sits flush in a box that clips often (a table cell, a field, a scrolling action group, a segmented control),
   and a ring outside it was cut away there. A link in running text and the small box of a checkbox, radio or
   switch keep theirs 2px outside, where one inside would cover the words or the box.
-- **No flash while it eases in**: a button and a tag set the outline's width and place at rest with no colour,
-  so their 0.2s transition fades only its colour in (it eased from the browser's 3px outline in the text
-  colour). A check that reads the ring right after `focus()` still sees it part way in: read it in `waitFor`.
+- **At once**: a button's and a tag's ring is drawn on the key press, in its settled colour, not eased in over
+  their 0.2s transition (it eased from the browser's 3px outline in the text colour, and a capture taken
+  during the fade caught a different shade each run). It still fades out when focus leaves.
 
 `Utilities/Focus Ring → Drawn For The Keyboard Only`, `→ Kept Inside A Clipping Box`; `__tests__/focusRing.test.ts`.
 

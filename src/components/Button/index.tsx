@@ -632,6 +632,9 @@ export const StyledButton = styled(StyledEffect).withConfig({
   &:focus-visible {
     outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
     outline-offset: -2px;
+    /* At once, not eased in over the button's 0.2s: a reader moving by keyboard sees where they
+       are on the key press, and a capture taken during the fade caught a different shade each run. */
+    transition: none;
   }
 
   .reqore-button-description {
