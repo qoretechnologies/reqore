@@ -34,12 +34,14 @@ export interface IReqoreStatisticGroupProps
   items?: IReqoreStatisticGroupItem[];
   children?: ReactNode;
   /**
-   * A hairline between the figures, and one above and below the group. Off, the figures sit side
-   * by side with the same room between them and nothing drawn.
+   * The hairlines: `true` draws one between the figures and one above and below the group;
+   * `'between'` only those between the figures (and between folded rows), for a strip inside a
+   * card whose own title divider and edge are its top and bottom lines (two lines 6px apart read
+   * double); `false` none, with the same room between the figures.
    *
    * @default true
    */
-  dividers?: boolean;
+  dividers?: boolean | 'between';
   /**
    * How the group sits in a narrow container (at or below `narrowBelow`, measured on the group,
    * not the window):
@@ -65,7 +67,7 @@ export interface IReqoreStatisticGroupProps
 
 export interface IReqoreStatisticGroupStyle {
   theme: IReqoreTheme;
-  $dividers: boolean;
+  $dividers: boolean | 'between';
   $layout: 'row' | 'wrap' | 'scroll';
   $pad: number;
   $minItemWidth: number;
@@ -74,12 +76,16 @@ export interface IReqoreStatisticGroupStyle {
 const hairline = ({ theme, $dividers }: IReqoreStatisticGroupStyle) =>
   $dividers ? getPanelHairlineColor(theme) : 'transparent';
 
+/** The group's own top and bottom lines: only when every hairline is drawn. */
+const outerLine = (style: IReqoreStatisticGroupStyle) =>
+  style.$dividers === true ? hairline(style) : 'transparent';
+
 export const StyledStatisticGroup = styled.div<IReqoreStatisticGroupStyle>`
   width: 100%;
   min-width: 0;
   box-shadow:
-    inset 0 1px 0 ${hairline},
-    inset 0 -1px 0 ${hairline};
+    inset 0 1px 0 ${outerLine},
+    inset 0 -1px 0 ${outerLine};
 
   ${({ $layout, $minItemWidth }) =>
     $layout === 'scroll'

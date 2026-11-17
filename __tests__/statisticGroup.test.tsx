@@ -89,6 +89,15 @@ describe('ReqoreStatisticGroup', () => {
     );
   });
 
+  test("Draws only the lines between its figures with dividers='between'", () => {
+    renderGroup(<ReqoreStatisticGroup items={FIGURES} dividers='between' />);
+
+    expect(getComputedStyle(document.querySelector('.reqore-statistic-group')!).boxShadow).toContain(
+      'transparent'
+    );
+    expect(getComputedStyle(items()[1]).boxShadow).not.toContain('transparent');
+  });
+
   test('Takes statistics as children, drawn as given', () => {
     renderGroup(
       <ReqoreStatisticGroup>

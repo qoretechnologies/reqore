@@ -4,7 +4,7 @@ import {
   IReqoreStatisticGroupItem,
   ReqoreStatisticGroup,
 } from '../../components/StatisticGroup';
-import { ReqoreControlGroup, ReqoreP } from '../../index';
+import { ReqoreControlGroup, ReqoreP, ReqorePanel } from '../../index';
 import { StoryMeta } from '../utils';
 import { SizeArg } from '../utils/args';
 import { PHONE_STORY, PHONE_VIEWPORT } from '../utils/touchScreen';
@@ -323,5 +323,33 @@ export const CustomTheme: Story = {
     const [r, , b] = getComputedStyle(group).boxShadow.match(/\d+/g)!.map(Number);
 
     expect(b).toBeGreaterThan(r);
+  },
+};
+
+export const InACardDividersBetween: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the strip inside a titled card with `dividers="between"`: hairlines between the figures only. The card\'s title divider and its edge are the strip\'s top and bottom lines, so no second line is drawn 6px inside them.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 960 }}>
+      <ReqorePanel label='Deliveries, last 30 days' flat={false} padded>
+        <ReqoreStatisticGroup items={FIGURES.slice(0, 4)} dividers='between' />
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const group = groupIn(canvasElement);
+
+    await waitFor(() => expect(items(group)).toHaveLength(4));
+    // No line of its own above or below; the lines between the figures stay.
+    expect(drawsHairline(group)).toBe(false);
+    items(group)
+      .slice(1)
+      .forEach((item) => expect(drawsHairline(item)).toBe(true));
   },
 };
