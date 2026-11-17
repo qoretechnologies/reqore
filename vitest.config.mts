@@ -87,10 +87,17 @@ const storyBrowser = (kind: 'desktop' | 'phone' | 'scrollbars' | 'posix-locale' 
   // Mac's takes the system's. So the `posix-locale` project does not ask the platform for it: its
   // context is given the language itself (`locale`), which Chromium then reports as it is, Intl's
   // default locale following it, on every platform and build.
+  //
+  // Every story browser rasters whole tiles (`--disable-partial-raster`). Chromium re-rasters only the
+  // part of a tile a change invalidated, so how a rounded corner was anti-aliased depended on the order
+  // the page's DOM changed in before the capture: the same story's capture alternated between two
+  // images one color level apart, build to build (a Dropdown, a Popover, a Modal, a Drawer story).
+  // With whole tiles every run draws them the same (measured over four runs each).
   provider: playwright({
-    ...(kind === 'scrollbars'
-      ? { launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } }
-      : {}),
+    launchOptions: {
+      args: ['--disable-partial-raster'],
+      ...(kind === 'scrollbars' ? { ignoreDefaultArgs: ['--hide-scrollbars'] } : {}),
+    },
     contextOptions:
       kind === 'phone'
         ? { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }
