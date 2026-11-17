@@ -956,7 +956,7 @@ export const ProseInThePageFontCodeInMonospace: Story = {
     docs: {
       description: {
         story:
-          'Renders a note in a textarea, in the page\'s font, beside a JSON value in a textarea that asks for monospace (`effect={{ fontFamily: "mono" }}`). A textarea is prose unless it says it holds code or data; it used to take the browser\'s monospace for every field.',
+          'Renders a note in a textarea, in the page\'s font, above a four-line JSON value in a textarea that asks for monospace (`effect={{ fontFamily: "mono" }}`); both scale to their content, so all of each shows. A textarea is prose unless it says it holds code or data; it used to take the browser\'s monospace for every field.',
       },
     },
   },
@@ -966,12 +966,14 @@ export const ProseInThePageFontCodeInMonospace: Story = {
         className='story-prose'
         value='Resend the label once the carrier confirms the first one was voided.'
         onChange={() => undefined}
+        scaleWithContent
       />
       <ReqoreTextarea
         className='story-code'
         value={'{\n  "order": 48213,\n  "carrier": "parcel"\n}'}
         onChange={() => undefined}
         effect={{ fontFamily: 'mono' }}
+        scaleWithContent
       />
     </ReqoreControlGroup>
   ),
@@ -983,5 +985,10 @@ export const ProseInThePageFontCodeInMonospace: Story = {
     await expect(getComputedStyle(prose).fontFamily).toBe(pageFont);
     await expect(getComputedStyle(code).fontFamily).not.toBe(pageFont);
     await expect(getComputedStyle(code).fontFamily.toLowerCase()).toContain('mono');
+    // Both show all of their text: the JSON's four lines are the point of the story.
+    await waitFor(() => {
+      expect(code.scrollHeight).toBeLessThanOrEqual(code.clientHeight);
+      expect(prose.scrollHeight).toBeLessThanOrEqual(prose.clientHeight);
+    });
   },
 };
