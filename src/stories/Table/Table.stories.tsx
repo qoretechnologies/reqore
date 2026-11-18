@@ -1012,7 +1012,7 @@ export const EmptyData: Story = {
     docs: {
       description: {
         story:
-          'Renders Table with no data so the empty state is visible.',
+          'A table with no rows, nothing searched or filtered: it says "Nothing here yet." and nothing about a search, which nobody made (board 24). Its action is still shown.',
       },
     },
   },
@@ -1027,6 +1027,14 @@ export const EmptyData: Story = {
     fill: true,
     actions: [{ icon: 'AddLine', intent: 'info', label: 'Should be shown!', minimal: true }],
   },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.reqore-table-empty')?.textContent?.trim()).toBe(
+        'Nothing here yet.'
+      )
+    );
+    expect(canvasElement.querySelector('.reqore-table-empty-searched')).toBeNull();
+  },
 };
 
 export const NoDataMessage: Story = {
@@ -1034,13 +1042,21 @@ export const NoDataMessage: Story = {
     docs: {
       description: {
         story:
-          'Renders Table with a custom no-data message.',
+          'A table searched for "asjkghakshgjkashg", which no row holds: a search hid every row, so it says "Nothing to show. Try another search, or fewer filters."',
       },
     },
   },
   args: {
     filterable: true,
     filter: 'asjkghakshgjkashg',
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.reqore-table-empty')?.textContent?.trim()).toBe(
+        'Nothing to show. Try another search, or fewer filters.'
+      )
+    );
+    expect(canvasElement.querySelector('.reqore-table-empty-searched')).toBeTruthy();
   },
 };
 

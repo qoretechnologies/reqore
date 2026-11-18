@@ -1353,3 +1353,91 @@ export const ItsSearchFillsItsLineOnAPhone: Story = {
     await expectSearchFillsTheRoom(canvasElement.querySelector('.search-fills') as HTMLElement);
   },
 };
+
+/* ------------------------------------------------------------------------------------------------
+ * an empty collection says so, and asks for another search only when a search emptied it (board 24)
+ * ---------------------------------------------------------------------------------------------- */
+
+/** What the empty collection in `box` says. */
+const emptyMessageIn = (box: HTMLElement) => {
+  const message = box.querySelector<HTMLElement>('.reqore-collection-empty');
+
+  return message?.textContent?.trim();
+};
+
+export const AnEmptyListSaysSo: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A searchable collection with no items, in a 1440px and a 390px box, nobody having searched it: it says "Nothing here yet." and nothing about a search. Its sentence used to be "Nothing to show. Try another search, or fewer filters." whether or not anyone had searched, so sixteen IDE lists with no message of their own asked the reader to change a search they never typed (a Qog\'s variables, board 24). The third box gives the collection its own `emptyMessage`, which it still says.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      {[1440, 390].map((width) => (
+        <div key={width} className={`empty-${width}`} style={{ width }}>
+          <ReqoreCollection label='Variables' items={[]} filterable sortable />
+        </div>
+      ))}
+      <div className='empty-own' style={{ width: 390 }}>
+        <ReqoreCollection label='Variables' items={[]} filterable emptyMessage='No variables' />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const width of [1440, 390]) {
+      const box = canvasElement.querySelector<HTMLElement>(`.empty-${width}`)!;
+
+      await waitFor(() => expect(emptyMessageIn(box), `${width}px`).toBe('Nothing here yet.'));
+      expect(box.querySelector('.reqore-collection-empty-searched')).toBeNull();
+    }
+    const own = canvasElement.querySelector<HTMLElement>('.empty-own')!;
+
+    await waitFor(() => expect(emptyMessageIn(own)).toBe('No variables'));
+  },
+};
+
+export const ASearchThatHidesEveryItemSaysSo: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A searchable collection of items in a 1440px and a 390px box, searched for "zzz", which none of them holds: it says "Nothing to show. Try another search, or fewer filters.", because a search is what hid them. Cleared, the items are back.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      {[1440, 390].map((width) => (
+        <div key={width} className={`searched-${width}`} style={{ width }}>
+          <ReqoreCollection label='Collection of items' items={items} filterable searchDelay={0} />
+        </div>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const width of [1440, 390]) {
+      const box = canvasElement.querySelector<HTMLElement>(`.searched-${width}`)!;
+      const search = await waitFor(() => {
+        const input = box.querySelector<HTMLInputElement>('input');
+
+        expect(input).toBeTruthy();
+
+        return input!;
+      });
+
+      expect(box.querySelector('.reqore-collection-empty')).toBeNull();
+      await userEvent.type(search, 'zzz');
+      await waitFor(() =>
+        expect(emptyMessageIn(box), `${width}px`).toBe(
+          'Nothing to show. Try another search, or fewer filters.'
+        )
+      );
+      expect(box.querySelector('.reqore-collection-empty-searched')).toBeTruthy();
+      await userEvent.clear(search);
+      await waitFor(() => expect(box.querySelector('.reqore-collection-empty')).toBeNull());
+    }
+  },
+};

@@ -1,6 +1,7 @@
 /* @flow */
 import type { IReqoreEffect, TReqoreHexColor } from '../Effect';
 import { TReqoreFilterRanking } from '../../helpers/search';
+import classNames from 'classnames';
 import { size as count, isArray } from 'lodash';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
@@ -16,6 +17,7 @@ import {
   useReqoreTheme,
 } from '../..';
 import { TReqorePaginationType, getPagingObjectFromType } from '../../constants/paging';
+import { NO_ITEMS_MESSAGE, SEARCH_EMPTY_MESSAGE } from '../../constants/emptyState';
 import { RADIUS_FROM_SIZE, TABLE_SIZE_TO_PX, TOUCH_TARGET_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
@@ -322,10 +324,16 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    */
   pinnedSurface?: TReqoreHexColor;
   /**
-   * What an empty table says. Defaults to
+   * What a table says when its search or a column filter has hidden all its rows. Defaults to
    * `'Nothing to show. Try another search, or fewer filters.'`.
    */
   emptyMessage?: string;
+  /**
+   * What a table with no rows says when nothing is searched or filtered: an empty table must not
+   * ask the reader to change a search they never made. Defaults to the caller's `emptyMessage`
+   * where one is given (it was shown in both cases before), otherwise `'Nothing here yet.'`.
+   */
+  noItemsMessage?: string;
   showHelp?: boolean;
   showColumnsOptions?: boolean;
   /**
@@ -660,7 +668,8 @@ const ReqoreTable = ({
   onFilterChange,
   filterProps,
   filterRanking = 'none',
-  emptyMessage = 'Nothing to show. Try another search, or fewer filters.',
+  emptyMessage: emptyMessageProp,
+  noItemsMessage: noItemsMessageProp,
   headerCellComponent,
   headerEffect,
   headerDividers = true,
@@ -868,6 +877,13 @@ const ReqoreTable = ({
       ]),
     [filters]
   );
+  /* The search sentence only while a search or a column filter is what emptied the table: an empty table
+     told a reader to change a search they never typed (board 24). */
+  const narrowed =
+    normalizedQuery.length > 0 || normalizedFilters.some(([, filterValue]) => filterValue !== '');
+  const emptyText = narrowed
+    ? (emptyMessageProp ?? SEARCH_EMPTY_MESSAGE)
+    : (noItemsMessageProp ?? emptyMessageProp ?? NO_ITEMS_MESSAGE);
 
   const transformedData = useMemo(() => {
     const hasQuery = normalizedQuery.length > 0;
@@ -1781,10 +1797,14 @@ const ReqoreTable = ({
                       <ReqoreMessage
                         flat
                         size={size}
-                        icon='Search2Line'
+                        icon={narrowed ? 'Search2Line' : 'InboxLine'}
                         margin={count(data) ? 'top' : 'none'}
+                        className={classNames(
+                          'reqore-table-empty',
+                          narrowed && 'reqore-table-empty-searched'
+                        )}
                       >
-                        {emptyMessage}
+                        {emptyText}
                       </ReqoreMessage>
                     )
                   : null}

@@ -1,10 +1,12 @@
 import { TReqoreFilterRanking, asSearchText, rankByQuery } from '../../helpers/search';
+import classNames from 'classnames';
 import { map, orderBy, size } from 'lodash';
 import React, { memo, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import { css } from 'styled-components';
 import { ReqoreErrorBoundary, ReqoreP, useReqoreProperty } from '../..';
 import { TReqorePaginationType } from '../../constants/paging';
+import { NO_ITEMS_MESSAGE, SEARCH_EMPTY_MESSAGE } from '../../constants/emptyState';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreTheme } from '../../constants/theme';
@@ -162,10 +164,16 @@ export interface IReqoreCollectionProps
   onQueryChange?: (query: string | number) => void;
 
   /**
-   * What an empty collection says. Defaults to
+   * What a collection says when a search has hidden all its items. Defaults to
    * `'Nothing to show. Try another search, or fewer filters.'`.
    */
   emptyMessage?: string;
+  /**
+   * What a collection with no items says when nobody has searched it: an empty list must not ask
+   * the reader to change a search they never made. Defaults to the caller's `emptyMessage` where
+   * one is given (it was shown in both cases before), otherwise `'Nothing here yet.'`.
+   */
+  noItemsMessage?: string;
   sortButtonTooltip?: (sort?: 'asc' | 'desc') => string;
   displayButtonTooltip?: (display?: 'list' | 'grid') => string;
   inputPlaceholder?: (items?: IReqoreCollectionItemProps[]) => string;
@@ -269,7 +277,8 @@ export const ReqoreCollection = memo(
       </>
     ),
     searchDelay = 300,
-    emptyMessage = 'Nothing to show. Try another search, or fewer filters.',
+    emptyMessage: emptyMessageProp,
+    noItemsMessage: noItemsMessageProp,
     sortButtonTooltip = (sort) => (sort === 'desc' ? 'Sort ascending' : 'Sort descending'),
     displayButtonTooltip = (display) => (display === 'grid' ? 'Show as list' : 'Show as grid'),
     inputPlaceholder = (items) => `Search in ${size(items)} items`,
@@ -309,6 +318,12 @@ export const ReqoreCollection = memo(
       searchDelay,
       onQueryChange
     );
+    /* The search sentence only while a search is what emptied the list: sixteen IDE lists with no message
+       of their own told a reader to change a search they never typed (a Qog's variables, board 24). */
+    const searched = String(query ?? '') !== '';
+    const emptyText = searched
+      ? (emptyMessageProp ?? SEARCH_EMPTY_MESSAGE)
+      : (noItemsMessageProp ?? emptyMessageProp ?? NO_ITEMS_MESSAGE);
 
     useUpdateEffect(() => {
       setShowAs(showAs);
@@ -513,8 +528,15 @@ export const ReqoreCollection = memo(
           {(_items, _children, { applyPaging }) =>
             !size(applyPaging(filteredItems)) ? (
               children || (
-                <ReqoreMessage flat icon='Search2Line'>
-                  {emptyMessage}
+                <ReqoreMessage
+                  flat
+                  icon={searched ? 'Search2Line' : 'InboxLine'}
+                  className={classNames(
+                    'reqore-collection-empty',
+                    searched && 'reqore-collection-empty-searched'
+                  )}
+                >
+                  {emptyText}
                 </ReqoreMessage>
               )
             ) : (
@@ -694,7 +716,8 @@ export const ReqoreCollection = memo(
       filteredItems,
       _showAs,
       columnsGap,
-      emptyMessage,
+      emptyText,
+      searched,
       maxItemHeight,
       rest,
       rounded,
