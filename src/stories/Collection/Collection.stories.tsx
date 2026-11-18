@@ -1444,3 +1444,102 @@ export const ASearchThatHidesEveryItemSaysSo: Story = {
     }
   },
 };
+
+/* ------------------------------------------------------------------------------------------------
+ * a search beside a title keeps the room its placeholder needs (queue item 27)
+ * ---------------------------------------------------------------------------------------------- */
+
+/** Every character of the search's placeholder fits its box, beside its icon and its clear button. */
+const expectPlaceholderWhole = (search: HTMLInputElement) => {
+  const style = getComputedStyle(search);
+  const context = document.createElement('canvas').getContext('2d')!;
+
+  context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+  const text = context.measureText(search.placeholder).width;
+  const room =
+    search.clientWidth - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0);
+
+  expect(text, `"${search.placeholder}" in ${Math.round(room)}px`).toBeLessThanOrEqual(room + 1);
+  expect(search.getBoundingClientRect().width).toBeGreaterThanOrEqual(159);
+};
+
+/** A collection titled `label`, its search and sort beside or under the title. */
+const TitledCollection = ({ id, label, width }: { id: string; label: string; width: number }) => (
+  <div data-titled={id} style={{ width, maxWidth: '100%' }}>
+    <ReqoreCollection label={label} items={items} filterable sortable />
+  </div>
+);
+
+const titledParts = (canvasElement: HTMLElement, id: string) => {
+  const root = canvasElement.querySelector<HTMLElement>(`[data-titled="${id}"]`)!;
+  const { bar, title } = searchHeader(root);
+
+  return { root, bar, title, search: bar.querySelector<HTMLInputElement>('input.reqore-input')! };
+};
+
+export const ASearchBesideATitleKeepsTheRoomItsPlaceholderNeedsOnAPhone: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Two searchable, sortable collections in 390px boxes, a phone\'s width: one titled "Variables", one "Collection of items". Beside "Variables", half the bar left the search about 107px and cut its placeholder to "Sear". A search beside a title now keeps at least the width its placeholder needs (160px at the least): "Variables" leaves it that much, so it stays on the title\'s line with its placeholder whole. "Collection of items" leaves less, so the search goes to the line under the title and fills it (queue item 27).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <TitledCollection id='short' label='Variables' width={390} />
+      <TitledCollection id='long' label='Collection of items' width={390} />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const id of ['short', 'long']) {
+      await waitFor(() => {
+        const { bar, title, search } = titledParts(canvasElement, id);
+        const searchBox = search.getBoundingClientRect();
+        const under = searchBox.top >= title.getBoundingClientRect().bottom - 1;
+
+        expect(search, id).toBeTruthy();
+        // beside the title or under it, never too narrow for its placeholder
+        expectPlaceholderWhole(search);
+        if (under) {
+          // under the title it fills the line beside the other controls
+          expect(searchBox.width, id).toBeGreaterThan(bar.getBoundingClientRect().width * 0.5);
+        }
+        if (id === 'long') {
+          expect(under, 'the long title leaves it too little: it goes under').toBe(true);
+        }
+      });
+    }
+  },
+};
+
+export const ASearchBesideATitleStaysThereOnADesktop: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same two collections in 1440px boxes: the search stays on the title\'s line, at half the bar, its placeholder whole. The width a search keeps beside a title moves nothing where there is room (queue item 27).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <TitledCollection id='short' label='Variables' width={1440} />
+      <TitledCollection id='long' label='Collection of items' width={1440} />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const id of ['short', 'long']) {
+      await waitFor(() => {
+        const { bar, title, search } = titledParts(canvasElement, id);
+        const searchBox = search.getBoundingClientRect();
+
+        expect(search, id).toBeTruthy();
+        expect(searchBox.top, id).toBeLessThan(title.getBoundingClientRect().bottom - 1);
+        expect(searchBox.width, id).toBeGreaterThan(bar.getBoundingClientRect().width * 0.4);
+        expectPlaceholderWhole(search);
+      });
+    }
+  },
+};

@@ -682,15 +682,25 @@ const BESIDE_TITLE_ACTIONS_STYLE: React.CSSProperties = {
   flex: '0 1 auto',
 };
 
+/**
+ * The least a search in the actions' box that fills the bar is drawn at beside a title (`wrapActionsBelowTitle`):
+ * where its placeholder needs more, that. A short title left a phone's search 107px, its placeholder cut to
+ * "Sear" (queue item 27); where the title leaves less, the search goes to the line under it, at its full width.
+ */
+export const SEARCH_BESIDE_TITLE_MIN_PX = 160;
+
 const PanelTitleActions = ({
   wrap,
   fill,
+  fillMinWidth,
   beside,
   children,
 }: {
   wrap: boolean;
   /** The folding group grows (it holds a search): the box takes half the bar, and the group fills it. */
   fill?: boolean;
+  /** The least that box is (its search at the width it needs, and the controls beside it), in px. */
+  fillMinWidth?: number;
   /** Kept beside the title, which takes the rest of the line (the title would gain nothing under them). */
   beside?: boolean;
   children: React.ReactNode;
@@ -700,7 +710,9 @@ const PanelTitleActions = ({
       className={TITLE_ACTIONS_CLASS}
       style={
         fill
-          ? FILLING_TITLE_ACTIONS_STYLE
+          ? fillMinWidth
+            ? { ...FILLING_TITLE_ACTIONS_STYLE, minWidth: fillMinWidth }
+            : FILLING_TITLE_ACTIONS_STYLE
           : beside
             ? BESIDE_TITLE_ACTIONS_STYLE
             : WRAPPED_TITLE_ACTIONS_STYLE
@@ -3102,6 +3114,77 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       setIconBesideTitle((current) => (current === next ? current : next));
     }, [width, label, badgeKey, labelFitPx, icon, iconImage, iconVerticalAlign, description, titleOwnsLine]);
 
+    /**
+     * The least the actions' box that fills the bar is, where it holds a search (`SEARCH_BESIDE_TITLE_MIN_PX`):
+     * the search at the width its placeholder needs, and the controls beside it as they are drawn. As the box's
+     * `min-width` it is what the line breaks on, so where the title leaves less the box takes the line under it.
+     * Read off the box as it is: the controls do not change with where the line breaks, and the search's own width
+     * is taken out of what is measured, so nothing this sets moves it.
+     */
+    const fillsTheBar =
+      wrapActions && !!responsiveActionsWrapperProps?.fluid && hasResponsiveActions(nonFloatingActions);
+    const [fillMinWidth, setFillMinWidth] = useState<number | undefined>(undefined);
+
+    useLayoutEffect(() => {
+      const panel = panelRef.current as HTMLElement | null;
+      const bar = panel?.querySelector?.<HTMLElement>(':scope > .reqore-panel-title');
+      const box = bar?.querySelector<HTMLElement>(`:scope > .${TITLE_ACTIONS_CLASS}`);
+      const input = box?.querySelector<HTMLInputElement>('input');
+      let next: number | undefined;
+
+      if (fillsTheBar && bar && box && input) {
+        const inputStyle = getComputedStyle(input);
+        let needs = SEARCH_BESIDE_TITLE_MIN_PX;
+
+        if (input.placeholder) {
+          titleMeasureCanvas = titleMeasureCanvas || document.createElement('canvas');
+          const context = titleMeasureCanvas.getContext('2d');
+
+          if (context) {
+            context.font = `${inputStyle.fontStyle} ${inputStyle.fontWeight} ${inputStyle.fontSize} ${inputStyle.fontFamily}`;
+            const text = context.measureText(input.placeholder).width;
+            // a measurement that could not be taken (no canvas, as in a test's DOM) leaves the floor
+            // the input's own sides: the room for its icon and its clear button, and its border
+            const sides =
+              (parseFloat(inputStyle.paddingLeft) || 0) +
+              (parseFloat(inputStyle.paddingRight) || 0) +
+              (parseFloat(inputStyle.borderLeftWidth) || 0) +
+              (parseFloat(inputStyle.borderRightWidth) || 0);
+
+            if (Number.isFinite(text)) {
+              needs = Math.max(needs, Math.ceil(text + sides) + 2);
+            }
+          }
+        }
+
+        const boxGap = parseFloat(getComputedStyle(box).columnGap) || 0;
+        const children = (Array.from(box.children) as HTMLElement[]).filter(
+          (child) => child.getBoundingClientRect().width > 0
+        );
+        const drawn =
+          children.reduce((sum, child) => sum + child.getBoundingClientRect().width, 0) +
+          boxGap * Math.max(0, children.length - 1);
+        const barStyle = getComputedStyle(bar);
+        const barInner =
+          bar.clientWidth -
+          (parseFloat(barStyle.paddingLeft) || 0) -
+          (parseFloat(barStyle.paddingRight) || 0);
+
+        const least = Math.min(
+          Math.floor(barInner),
+          Math.ceil(drawn - input.getBoundingClientRect().width + needs)
+        );
+
+        // nothing laid out (a test's DOM) is no least: NaN is never equal to itself, and set again on every
+        // render it never settled
+        next = Number.isFinite(least) && least > 0 ? least : undefined;
+      }
+
+      setFillMinWidth((current) => (current === next ? current : next));
+      // what the actions say, not the list's identity: a host that makes its list in its render would run this on
+      // every render, and in a test's DOM that never settled
+    }, [fillsTheBar, width, badgeSignature(nonFloatingActions)]);
+
     const iconTooltip = useMemo(
       () => ({
         content: label,
@@ -3445,6 +3528,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 wrap={wrapActions}
                 beside={titleBasis === 0}
                 fill={!!responsiveActionsWrapperProps?.fluid && hasResponsiveActions(nonFloatingActions)}
+                fillMinWidth={fillsTheBar ? fillMinWidth : undefined}
               >
                 {hasNonResponsiveActions(leadingTitleActions) ? (
                   <ReqoreControlGroup
