@@ -3664,3 +3664,135 @@ export const AnObviousActionIsItsIcon: Story = {
     expect(button('compare').textContent).toContain('Compare with period before');
   },
 };
+
+/** How many lines `element`'s words are on. */
+const linesOf = (element: HTMLElement) => {
+  const range = document.createRange();
+  range.selectNodeContents(element);
+
+  return new Set(
+    Array.from(range.getClientRects())
+      .filter((rect) => rect.width > 0)
+      .map((rect) => Math.round(rect.top))
+  ).size;
+};
+
+export const ActionsStayBesideATitleThatNeedsTwoLinesAnyway: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'On a phone (390 px), a widget titled "Hero: Qonsole input vs problem wizard" with its help and "more" buttons, and a short one, "Visitors", with the same two. The long title needs two lines even with the whole line to itself, and two beside the buttons, so the buttons going under it would save it nothing and cost the panel a line: they stay beside it, and the title takes its two lines there at its own size. "Visitors" fits beside them on one line. (The admin portal\'s experiment drawer and funnel widget on a phone lost 43px and 37px this way.)',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ padding: '12px 16px', display: 'grid', gap: 16 }}>
+      {/* full-width tiles, as a dashboard lays its widgets out on a phone */}
+      <div data-widget='long'>
+          <ReqorePanel
+            label='Hero: Qonsole input vs problem wizard'
+            labelSize={3}
+            actions={[
+              { icon: 'QuestionLine', tooltip: 'What this shows', size: 'small', flat: true },
+              { icon: 'MoreLine', tooltip: 'More', size: 'small', flat: true },
+            ]}
+            responsiveActions={false}
+            padded
+          >
+            12.4%
+          </ReqorePanel>
+        </div>
+        <div data-widget='short'>
+          <ReqorePanel
+            label='Visitors'
+            labelSize={3}
+            actions={[
+              { icon: 'QuestionLine', tooltip: 'What this shows', size: 'small', flat: true },
+              { icon: 'MoreLine', tooltip: 'More', size: 'small', flat: true },
+            ]}
+            responsiveActions={false}
+            padded
+          >
+            322
+          </ReqorePanel>
+        </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const parts = (id: string) => {
+      const panel = canvasElement.querySelector<HTMLElement>(`[data-widget="${id}"] .reqore-panel`)!;
+      const header = panel.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+      const heading = panel.querySelector<HTMLElement>('.reqore-panel-title .reqore-heading')!;
+      const buttons = Array.from(
+        panel.querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button')
+      );
+
+      return { panel, header, heading, buttons };
+    };
+
+    for (const id of ['long', 'short']) {
+      await waitFor(() => {
+        const { header, buttons } = parts(id);
+        const headerBox = header.getBoundingClientRect();
+
+        expect(buttons.length).toBe(2);
+        // beside the title, on its first line, not on a line of their own under it
+        buttons.forEach((button) =>
+          expect(
+            button.getBoundingClientRect().top,
+            `${id}: header ${Math.round(headerBox.top)}-${Math.round(headerBox.bottom)}`
+          ).toBeLessThan(headerBox.top + 20)
+        );
+      });
+    }
+    await waitFor(() => expect(linesOf(parts('long').heading)).toBe(2));
+    expect(linesOf(parts('short').heading)).toBe(1);
+    await expectTitleWhole(parts('long').panel);
+  },
+};
+
+export const APanelWithNoActionsDrawsNoActionsRow: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'On a phone (390 px), a panel titled "Leaders this month by the revenue their deals closed" and no actions at all. Its bar is its title: no empty actions row under a title of two lines (it made the admin portal\'s leader panel 5px taller).',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ padding: '12px 16px' }} data-widget='bare'>
+      <ReqorePanel label='Leaders this month by the revenue their deals closed' labelSize={3} padded>
+        Dana · 42 deals
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const panel = await waitFor(() => {
+      const element = canvasElement.querySelector<HTMLElement>('[data-widget="bare"] .reqore-panel');
+
+      expect(element).toBeTruthy();
+
+      return element!;
+    });
+
+    expect(panel.querySelector('.reqore-panel-title-actions')).toBeNull();
+    const bar = panel.querySelector<HTMLElement>('.reqore-panel-title')!;
+    const header = panel.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+    const barStyle = getComputedStyle(bar);
+    // the bar is as tall as its title and its own padding, nothing more
+    expect(bar.getBoundingClientRect().height).toBeLessThanOrEqual(
+      header.getBoundingClientRect().height +
+        (parseFloat(barStyle.paddingTop) || 0) +
+        (parseFloat(barStyle.paddingBottom) || 0) +
+        1
+    );
+  },
+};

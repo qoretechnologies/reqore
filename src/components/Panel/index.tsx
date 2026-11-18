@@ -51,7 +51,7 @@ import { getOneHigherSize, isActionShown, resolveAccentSize } from '../../helper
 import { useHoverGate } from '../../helpers/hoveringPointer';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
-import { FIT_TEXT_FLOOR_PX, useFitTextSize } from '../../hooks/useFitTextSize';
+import { FIT_TEXT_FLOOR_PX, useFitTextSize, wordsFitLines } from '../../hooks/useFitTextSize';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   ACTIVE_ICON_SCALE,
@@ -627,20 +627,35 @@ const FILLING_TITLE_ACTIONS_STYLE: React.CSSProperties = {
 };
 
 /** The bar's actions: in a box of their own where they may go under the title, as they are otherwise. */
+/** The actions kept beside a title that would gain nothing under them: their own width, the title the rest. */
+const BESIDE_TITLE_ACTIONS_STYLE: React.CSSProperties = {
+  ...WRAPPED_TITLE_ACTIONS_STYLE,
+  flex: '0 1 auto',
+};
+
 const PanelTitleActions = ({
   wrap,
   fill,
+  beside,
   children,
 }: {
   wrap: boolean;
   /** The folding group grows (it holds a search): the box takes half the bar, and the group fills it. */
   fill?: boolean;
+  /** Kept beside the title, which takes the rest of the line (the title would gain nothing under them). */
+  beside?: boolean;
   children: React.ReactNode;
 }): JSX.Element =>
   wrap ? (
     <div
       className={TITLE_ACTIONS_CLASS}
-      style={fill ? FILLING_TITLE_ACTIONS_STYLE : WRAPPED_TITLE_ACTIONS_STYLE}
+      style={
+        fill
+          ? FILLING_TITLE_ACTIONS_STYLE
+          : beside
+            ? BESIDE_TITLE_ACTIONS_STYLE
+            : WRAPPED_TITLE_ACTIONS_STYLE
+      }
     >
       {children}
     </div>
@@ -2183,10 +2198,16 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
       const shown = nonFloatingActions.filter((action) => action.show !== false);
 
+      /* Nothing to put under the title, nothing to wrap: an empty actions box went to a row of its own under
+         a title of two lines, and the panel grew 5px for it (the admin portal's LeaderGlow on a phone). */
+      if (!shown.length && !onClose && !collapsible) {
+        return false;
+      }
+
       return !(
         shown.length === 1 && (shown[0].destructive === true || shown[0].intent === 'danger')
       );
-    }, [wrapActionsBelowTitle, hasTitleHeader, nonFloatingActions]);
+    }, [wrapActionsBelowTitle, hasTitleHeader, nonFloatingActions, onClose, collapsible]);
 
     // Calculates whether or not the bottom actions should be displayed.
     const hasBottomActions: boolean = useMemo(
@@ -2844,16 +2865,100 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
         if (context && px) {
           context.font = `${style.fontStyle} ${style.fontWeight} ${px}px ${style.fontFamily}`;
-          const name =
-            context.measureText(label).width + (parseFloat(style.letterSpacing) || 0) * label.length;
+          const letterSpacing = parseFloat(style.letterSpacing) || 0;
+          const measure = (text: string) =>
+            context.measureText(text).width + letterSpacing * text.length;
+          const name = measure(label);
           const before = node.getBoundingClientRect().left - header.getBoundingClientRect().left;
 
           next = Math.ceil(before + name) + 1;
+
+          /* The actions go under only where that saves the title something: a line, or a shrink or a cut.
+             A title that needs two lines with the whole line to itself needs two beside the actions too
+             (when they leave it room for that), and under it they only cost the panel a line (the admin
+             portal's experiment drawer and funnel widget on a phone, 43px and 37px). So the lines its
+             words take at their natural size are counted both ways, as the fit packs them, and where
+             beside costs no more the title claims only the room the actions leave, and the bar keeps one
+             line. Read from the actions as they are: actions that fold only ever leave more room, so what
+             this decides keeps (a group the caller makes fluid, a search, keeps its own share). */
+          const bar = header.parentElement;
+          const actionsBox = bar?.querySelector<HTMLElement>(`:scope > .${TITLE_ACTIONS_CLASS}`);
+
+          if (bar && actionsBox && actionsBox.style.flexBasis !== '50%') {
+            const barStyle = getComputedStyle(bar);
+            const barInner =
+              bar.clientWidth -
+              (parseFloat(barStyle.paddingLeft) || 0) -
+              (parseFloat(barStyle.paddingRight) || 0);
+            const barGap = parseFloat(barStyle.columnGap) || 0;
+            const boxGap = parseFloat(getComputedStyle(actionsBox).columnGap) || 0;
+            const boxChildren = (Array.from(actionsBox.children) as HTMLElement[]).filter(
+              (child) => child.getBoundingClientRect().width > 0
+            );
+            /* What each group's controls span, not the group: a group of kept actions stretches across
+               the line it is on under the title, and its own width there is the line's. */
+            const spanOf = (group: HTMLElement) => {
+              const controls = (Array.from(group.children) as HTMLElement[])
+                .map((child) => child.getBoundingClientRect())
+                .filter((box) => box.width > 0);
+
+              return controls.length
+                ? Math.max(...controls.map((box) => box.right)) -
+                    Math.min(...controls.map((box) => box.left))
+                : group.getBoundingClientRect().width;
+            };
+            const actionsWidth =
+              boxChildren.reduce((sum, child) => sum + spanOf(child), 0) +
+              boxGap * Math.max(0, boxChildren.length - 1);
+            const words = label.trim().split(/\s+/).map(measure);
+            const space = measure(' ');
+            const linesIn = (room: number) => {
+              for (let lines = 1; lines <= clampLines; lines += 1) {
+                if (wordsFitLines(words, space, room, lines)) {
+                  return lines;
+                }
+              }
+
+              return clampLines + 1;
+            };
+            const besideRoom = barInner - actionsWidth - barGap;
+            const linesAlone = linesIn(barInner - before);
+            const linesBeside = linesIn(besideRoom - before);
+
+            // a title of one line keeps its claim (its name), which keeps them beside it wherever they fit, and
+            // keeps a panel sized by what it holds as wide as its name and its actions
+            if (
+              actionsWidth > 0 &&
+              linesAlone >= 2 &&
+              linesAlone <= clampLines &&
+              linesBeside <= linesAlone
+            ) {
+              // it claims nothing, and takes what the actions leave (they do not grow: `actionsBeside`)
+              next = 0;
+            }
+          }
         }
       }
 
-      setTitleBasis((current) => (current === next ? current : next));
-    }, [wrapActions, label, labelNaturalPx, labelEffect?.textSize, icon, iconImage, panelSize]);
+      // a measurement that could not be taken (no canvas, as in a test's DOM) is no claim: NaN is never
+      // equal to itself, and set again on every render it never settled
+      const claim = next !== undefined && Number.isFinite(next) ? next : undefined;
+
+      setTitleBasis((current) => (current === claim ? current : claim));
+      // what the actions say, not the list's identity: a host that makes its list in its render would
+      // run this on every render
+    }, [
+      wrapActions,
+      label,
+      labelNaturalPx,
+      labelEffect?.textSize,
+      icon,
+      iconImage,
+      panelSize,
+      width,
+      clampLines,
+      badgeSignature(nonFloatingActions),
+    ]);
 
     /**
      * Where the icon goes once the badges move under the title: beside the title, centred on it.
@@ -3015,6 +3120,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 <StyledPanelTitleHeader
                   className='reqore-panel-title-header'
                   style={titleBasis === undefined ? undefined : { flexBasis: titleBasis }}
+                  data-actions-beside={titleBasis === 0 ? 'true' : undefined}
                 >
                   {breadcrumbs ? (
                     <ReqoreBreadcrumbs
@@ -3235,6 +3341,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               )}
               <PanelTitleActions
                 wrap={wrapActions}
+                beside={titleBasis === 0}
                 fill={!!responsiveActionsWrapperProps?.fluid && hasResponsiveActions(nonFloatingActions)}
               >
                 {hasNonResponsiveActions(leadingTitleActions) ? (
