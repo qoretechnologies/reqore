@@ -22,6 +22,7 @@ import {
   argManager,
 } from '../utils/args';
 import { requiredElement } from '../utils/required';
+import { PHONE_STORY } from '../utils/touchScreen';
 import { findDrawnOverStickyHeader, stickyHeaderOf } from '../utils/stickyStacking';
 import {
   expectBadgesBesideTitle,
@@ -2736,6 +2737,74 @@ export const ATitleBesideALongDescriptionSettles: Story = {
         canvasElement.querySelector(`[data-settling="${id}"] .reqore-panel`) as HTMLElement
       );
     }
+  },
+};
+
+/** A page head's actions on a phone: the two that matter keep their words, the rest may fold. */
+const PAGE_HEAD_ACTIONS: IReqorePanelAction[] = [
+  { label: 'Review next pending', icon: 'EyeLine', size: 'small', responsive: false },
+  { label: 'Save', icon: 'SaveLine', size: 'small', responsive: false },
+  { label: 'Upload', icon: 'UploadLine', size: 'small' },
+  { label: 'Settings', icon: 'Settings3Line', size: 'small' },
+];
+
+export const APageHeadsActionsFitAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "A page's head on a phone (390 px), as Qlip's build page draws it: a large title with a sentence under it and four actions. The two that matter, Review next pending and Save, keep their words (`responsive: false`); Upload and Settings may give theirs up, and go into the \"⋯\" when there is no room for them at all. Every action stays inside the panel, and the panel draws a handful of times and stops. With all four keeping their words nothing could give way, and the fourth ran off the screen (f65, Filip: fold into \"⋯\").",
+      },
+    },
+  },
+  beforeEach: () => {
+    settlingCommits.clear();
+  },
+  render: () => (
+    <div data-settling='page-head' style={{ padding: '12px 16px' }}>
+      <Profiler id='page-head' onRender={() => countSettlingCommits('page-head')}>
+        <ReqorePanel
+          transparent
+          flat
+          rounded={false}
+          label='Build #507 · feature/144'
+          iconWithLabel
+          isCollapsed
+          size='huge'
+          labelSize={2}
+          icon='Image2Line'
+          padded={false}
+          description='Snapshots captured for this build, against the baseline on develop.'
+          actions={PAGE_HEAD_ACTIONS}
+        />
+      </Profiler>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const panel = canvasElement.querySelector('[data-settling="page-head"] .reqore-panel') as HTMLElement;
+
+    await waitFor(() => expect(settlingCommits.get('page-head') ?? 0).toBeGreaterThan(0));
+    let before = 0;
+    await waitFor(
+      async () => {
+        before = settlingCommits.get('page-head') ?? 0;
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        expect(settlingCommits.get('page-head')).toBe(before);
+      },
+      { timeout: 5000 }
+    );
+    expect(before).toBeLessThan(SETTLING_COMMIT_BOUND);
+
+    const edge = panel.getBoundingClientRect().right;
+    const buttons = Array.from(panel.querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button'));
+    buttons.forEach((button) => expect(button.getBoundingClientRect().right).toBeLessThanOrEqual(edge + 1));
+    // the two that matter say what they do
+    const words = buttons.map((button) => button.textContent?.trim());
+    expect(words).toContain('Review next pending');
+    expect(words).toContain('Save');
   },
 };
 
