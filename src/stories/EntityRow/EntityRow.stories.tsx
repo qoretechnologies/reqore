@@ -1355,7 +1355,7 @@ export const ADestructiveActionKeepsItsSizeOnAPhone: Story = {
     docs: {
       description: {
         story:
-          "Renders two chat rows in a 320px card on a phone (390 px): one whose only action is Delete chat (a bin with that tooltip, intent danger), and one whose only action is Open. The Delete stays at the end of its row's label line, its bin alone at a finger's size, named Delete chat - the row is about the conversation. The Open still goes under the label and spans the row, the easiest target for a finger. Spanning, the bin had been written out as a red Delete chat bar under every row, a third of the row a destructive target under a thumb (r-qs-19; BRAND_DESIGN: a destructive button stays as wide as it is).",
+          "Renders three chat rows in a 320px card on a phone (390 px): one whose only action is Delete chat (a bin with that tooltip, intent danger), one whose Delete chat is drawn as a calm theme draws it (a red icon on a quiet button, marked `destructive`, no intent), and one whose only action is Open. Each Delete stays at the end of its row's label line, its bin alone at a finger's size, named Delete chat - the row is about the conversation. The Open still goes under the label and spans the row, the easiest target for a finger. Spanning, the bin had been written out as a red Delete chat bar under every row, a third of the row a destructive target under a thumb (r-qs-19; BRAND_DESIGN: a destructive button stays as wide as it is).",
       },
     },
   },
@@ -1370,6 +1370,25 @@ export const ADestructiveActionKeepsItsSizeOnAPhone: Story = {
           onClick={onEntityRowClick}
           actions={[
             { icon: 'DeleteBinLine', tooltip: 'Delete chat', intent: 'danger', onClick: onDeleteChat },
+          ]}
+        />
+        <ReqoreEntityRow
+          className='chat-row-calm-delete'
+          label='Release timing for the EU payers'
+          description='2 days ago · 7 messages'
+          fluid
+          onClick={onEntityRowClick}
+          actions={[
+            // as a calm theme draws it: a red icon on a quiet button, destructive by its marker, not its intent
+            {
+              icon: 'DeleteBinLine',
+              tooltip: 'Delete chat',
+              flat: true,
+              transparent: true,
+              iconColor: 'danger',
+              destructive: true,
+              onClick: onDeleteChat,
+            },
           ]}
         />
         <ReqoreEntityRow
@@ -1398,6 +1417,14 @@ export const ADestructiveActionKeepsItsSizeOnAPhone: Story = {
       expect(bin.textContent?.trim()).toBe('');
       const rowWidth = deleteRow.getBoundingClientRect().width;
       expect(bin.getBoundingClientRect().width).toBeLessThan(rowWidth / 3);
+
+      // a calm row's delete, a red icon with no danger intent, is destructive by its marker and stays put too
+      const calmRow = canvasElement.querySelector<HTMLElement>('.chat-row-calm-delete')!;
+      expect(calmRow.getAttribute('data-actions')).toBe('end');
+      const calmBin = calmRow.querySelector<HTMLElement>('.reqore-entity-row-actions .reqore-button')!;
+      expect(calmBin.getAttribute('aria-label')).toBe('Delete chat');
+      expect(calmBin.hasAttribute('destructive')).toBe(false);
+      expect(calmBin.getBoundingClientRect().width).toBeLessThan(calmRow.getBoundingClientRect().width / 3);
 
       // the other row's lone action still spans the row
       const openRow = canvasElement.querySelector<HTMLElement>('.chat-row-open')!;

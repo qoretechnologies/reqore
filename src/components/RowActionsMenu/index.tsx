@@ -35,9 +35,24 @@ export const DEFAULT_ACTIONS_MENU_LABEL = 'Actions';
  */
 export type TReqoreNarrowRowActions = 'row' | 'stack' | 'menu';
 
+/** Whether a row's action destroys something, said apart from how it looks. */
+export interface IReqoreRowActionDestructive {
+  /**
+   * The action destroys something (Delete chat, Remove key). It says so apart from its look: a calm
+   * theme draws a destructive row action as a red icon on a quiet button, with no `danger` intent,
+   * because a danger intent there is a red box at the end of every row (Filip, 16 Nov).
+   *
+   * Where a row's actions take the row's width on a phone, a destructive one does not: a lone one
+   * stays at the end of the label's line, its icon alone where it has a tooltip, and one in a stack
+   * keeps its own width. Folded into a row's "⋯", it is drawn in `danger`. Never put on the DOM.
+   */
+  destructive?: boolean;
+}
+
 /** An action a row offers: a button's props, a label, and - for a menu of its own - sub-actions. */
 export interface IReqoreRowMenuAction
-  extends Omit<IReqoreButtonProps, 'children' | 'label' | 'onClick'> {
+  extends Omit<IReqoreButtonProps, 'children' | 'label' | 'onClick'>,
+    IReqoreRowActionDestructive {
   label?: React.ReactNode;
   onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   /** An action that is itself a menu (`ReqoreEntityRow`): its entries are a submenu here. */
@@ -129,7 +144,8 @@ export const getCompactRowAction = (action: {
 };
 
 /**
- * Whether an entity row's action destroys something: its intent is `danger`.
+ * Whether a row's action destroys something: it says so (`destructive`), or - on an entity row - its
+ * intent is `danger`.
  *
  * Where a row's actions take the row's width - on a phone, under the label - a destructive one does
  * not: a full-width Delete is a bigger target than the thing it destroys deserves (BRAND_DESIGN: a
@@ -137,11 +153,14 @@ export const getCompactRowAction = (action: {
  * A lone one stays at the end of the label's line, so a row is about its subject, not a third of it
  * a red bar under a thumb (r-qs-19, Dana on Qonsole's chat list).
  *
- * An entity row's only: on a severity row an action takes the severity's intent as the response to
- * it (Investigate a critical incident), and there `danger` says nothing about destroying.
+ * The intent counts only on an entity row (`byIntent`): on a severity row an action takes the
+ * severity's intent as the response to it (Investigate a critical incident), and there `danger` says
+ * nothing about destroying.
  */
-export const isDestructiveRowAction = (action: { intent?: unknown } | undefined): boolean =>
-  action?.intent === 'danger';
+export const isDestructiveRowAction = (
+  action: { intent?: unknown; destructive?: boolean } | undefined,
+  byIntent = true
+): boolean => action?.destructive === true || (byIntent && action?.intent === 'danger');
 
 /**
  * What an action on a line of its own is drawn with: written out, and the row's width where the
@@ -149,10 +168,11 @@ export const isDestructiveRowAction = (action: { intent?: unknown } | undefined)
  * even in a stack that stretches the others (`isDestructiveRowAction`).
  */
 export const ownLineRowActionProps = (
-  action: { intent?: unknown; style?: React.CSSProperties },
-  actionsSpanRow: boolean
+  action: { intent?: unknown; destructive?: boolean; style?: React.CSSProperties },
+  actionsSpanRow: boolean,
+  byIntent = true
 ): { fluid: boolean; wrap: true; style?: React.CSSProperties } => {
-  const spans = actionsSpanRow && !isDestructiveRowAction(action);
+  const spans = actionsSpanRow && !isDestructiveRowAction(action, byIntent);
 
   return {
     fluid: spans,
@@ -193,7 +213,8 @@ const toMenuItem = (action: IReqoreRowMenuAction, touch: boolean): IReqoreDropdo
     label: getRowActionLabel(action) ?? (custom ? getRowActionLabel(custom) : undefined),
     ...(ownName ? { 'aria-label': ownName } : {}),
     icon: action.icon ?? custom?.icon,
-    intent: action.intent ?? custom?.intent,
+    // a destructive one says so in the menu, where its own look (a red icon on a quiet button) is not drawn
+    intent: action.intent ?? custom?.intent ?? (action.destructive ? 'danger' : undefined),
     // a finger's height, where the pointer is one
     ...(touch ? { size: 'big' as const } : {}),
     disabled: action.disabled ?? custom?.disabled,

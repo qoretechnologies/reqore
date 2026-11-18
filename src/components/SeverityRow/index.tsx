@@ -41,6 +41,9 @@ import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import ReqoreRowActionsMenu, {
   getCompactRowAction,
+  IReqoreRowActionDestructive,
+  isDestructiveRowAction,
+  ownLineRowActionProps,
   getRowActionLabel,
   hasRowActionLabel,
   IReqoreRowActionShortLabel,
@@ -50,7 +53,9 @@ import ReqoreRowActionsMenu, {
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreSeverityRowAction
-  extends Omit<IReqoreButtonProps, 'children'>, IReqoreRowActionShortLabel {
+  extends Omit<IReqoreButtonProps, 'children'>,
+    IReqoreRowActionShortLabel,
+    IReqoreRowActionDestructive {
   /** Visible button label. */
   label?: string;
 }
@@ -460,11 +465,16 @@ const ReqoreSeverityRow = memo(
          kept its one action there already, on any pointer. */
       const coarsePointer =
         typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
+      /* A lone action that says it destroys something (`destructive`) stays at the end of the label's line on
+         a phone too, its icon alone where it has one, rather than a bar across the callout. Only the marker
+         counts here: a severity row's action takes the severity's intent as its response to it. */
+      const loneDestructive = loneAction && isDestructiveRowAction(actions?.[0], false);
       const loneActionAtLineEnd =
         isNarrow &&
-        !isPhoneWidth &&
         loneAction &&
-        (narrowActions === 'menu' || (narrowActions === 'stack' && !coarsePointer));
+        ((!isPhoneWidth &&
+          (narrowActions === 'menu' || (narrowActions === 'stack' && !coarsePointer))) ||
+          (isPhoneWidth && loneDestructive));
       /* Stacked (the default), one to a line, only where the container is a phone's width or narrower. Narrow
          but wider than a phone, they sit side by side under the label at their labels' widths, onto another line
          only where they do not fit, as with `'row'`: actions that answer one callout belong together (Foxhoundn:
@@ -475,7 +485,8 @@ const ReqoreSeverityRow = memo(
          phone's width or narrower - on a phone, or in as narrow a container on any screen - where a full-width
          row is the easiest target there is (Fitts's law). In a container wider than a phone, each is as wide as
          its label (David's width rule, qorus#646). The container is measured, not the screen. */
-      const actionsSpanRow = isNarrow && isPhoneWidth && (actionsStacked || loneAction);
+      const actionsSpanRow =
+        isNarrow && isPhoneWidth && (actionsStacked || loneAction) && !loneActionAtLineEnd;
       // an action on a line of its own: it is written out (an icon-only one says its tooltip), and may span it
       const actionsOnTheirOwnLine = actionsStacked || actionsSpanRow;
 
@@ -599,7 +610,7 @@ const ReqoreSeverityRow = memo(
                 fluid={actionsSpanRow}
                 wrap={isNarrow && !actionsStacked && !loneActionAtLineEnd}
               >
-                {actions.map(({ shortLabel, ...action }, idx) => {
+                {actions.map(({ shortLabel, destructive, ...action }, idx) => {
                   /* At the end of a narrow row's label line, an action says its short label, or is its icon
                      alone where it has a tooltip (`getCompactRowAction`): a long label took the line's room
                      (David, qorus#646). On a line of its own, and wide, it says its label. */
@@ -613,7 +624,9 @@ const ReqoreSeverityRow = memo(
                       size={size}
                       intent={action.intent ?? intent}
                       {...action}
-                      {...(actionsOnTheirOwnLine ? { fluid: actionsSpanRow, wrap: true } : {})}
+                      {...(actionsOnTheirOwnLine
+                        ? ownLineRowActionProps({ ...action, destructive }, actionsSpanRow, false)
+                        : {})}
                       {...compact}
                       // After the spread: `action` carries the consumer's raw
                       // handler and this has to be the one that wins. Applied

@@ -41,6 +41,7 @@ import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import ReqoreRowActionsMenu, {
   getCompactRowAction,
+  IReqoreRowActionDestructive,
   isDestructiveRowAction,
   ownLineRowActionProps,
   getRowActionLabel,
@@ -52,7 +53,9 @@ import ReqoreRowActionsMenu, {
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreEntityRowAction
-  extends Omit<IReqoreButtonProps, 'children'>, IReqoreRowActionShortLabel {
+  extends Omit<IReqoreButtonProps, 'children'>,
+    IReqoreRowActionShortLabel,
+    IReqoreRowActionDestructive {
   /** Visible button label. */
   label?: string;
   /**
@@ -587,7 +590,7 @@ const ReqoreEntityRow = memo(
                 wrap={isNarrow && !actionsStacked && !loneActionAtLineEnd}
               >
                 {actions.map(
-                  ({ actions: subActions, actionsProps, shortLabel, ...action }, idx) => {
+                  ({ actions: subActions, actionsProps, shortLabel, destructive, ...action }, idx) => {
                     /* At the end of a narrow row's label line, an action says its short label, or is its icon
                      alone where it has a tooltip (`getCompactRowAction`): a long label took the line's room
                      (David, qorus#646). On a line of its own, and wide, it says its label. */
@@ -612,8 +615,9 @@ const ReqoreEntityRow = memo(
                          to read. */
                         {...(actionsOnTheirOwnLine
                           ? {
-                              ...ownLineRowActionProps(action, actionsSpanRow),
-                              fixed: !ownLineRowActionProps(action, actionsSpanRow).fluid,
+                              ...ownLineRowActionProps({ ...action, destructive }, actionsSpanRow),
+                              fixed: !ownLineRowActionProps({ ...action, destructive }, actionsSpanRow)
+                                .fluid,
                               label: hasRowActionLabel(action.label)
                                 ? action.label
                                 : getRowActionLabel({ tooltip: action.tooltip }),
@@ -629,7 +633,9 @@ const ReqoreEntityRow = memo(
                         size={size}
                         intent={action.intent ?? intent}
                         {...action}
-                        {...(actionsOnTheirOwnLine ? ownLineRowActionProps(action, actionsSpanRow) : {})}
+                        {...(actionsOnTheirOwnLine
+                          ? ownLineRowActionProps({ ...action, destructive }, actionsSpanRow)
+                          : {})}
                         {...compact}
                         // After the spread, so it wraps the consumer's handler rather
                         // than being replaced by it. Applied even to an action with no

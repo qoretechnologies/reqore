@@ -1307,3 +1307,64 @@ export const ThemedPanelSurface: Story = {
     </ThemedSurfaceComparison>
   ),
 };
+
+const onDismissAlert = fn();
+
+export const ADestructiveActionKeepsItsSizeOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders two critical rows in a card on a phone (390 px): one whose only action deletes the alert (a bin marked `destructive`, its tooltip Delete alert), and one whose only action is Investigate, in the severity's danger intent. The Delete stays at the end of its row's label line, its bin alone - it is not a bar across the callout. Investigate still goes under the text, the row's width: on a severity row a danger intent is the severity's colour, not a sign that the action destroys anything, so only the marker counts (r-qs-19).",
+      },
+    },
+  },
+  render: () => (
+    <div style={{ padding: '0 16px', maxWidth: 390, boxSizing: 'border-box' }}>
+      <ReqoreControlGroup vertical fluid>
+        <div className='delete-alert-row'>
+          <ReqoreSeverityRow
+            label='Payment Processing · stripe-webhook-receiver'
+            description='Avg duration 4.7s exceeded 3.5s threshold · just now'
+            intent='danger'
+            leading={CRITICAL_TAG}
+            fluid
+            actions={[
+              {
+                icon: 'DeleteBinLine',
+                tooltip: 'Delete alert',
+                flat: true,
+                transparent: true,
+                destructive: true,
+                onClick: onDismissAlert,
+              },
+            ]}
+          />
+        </div>
+        <div className='investigate-row'>
+          <LoneActionRow />
+        </div>
+      </ReqoreControlGroup>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    onDismissAlert.mockClear();
+    await withTouchScreen(async (touch) => {
+      const deleteRow = await narrowRow(canvasElement.querySelector('.delete-alert-row')!);
+      await expectLoneActionAtLineEnd(deleteRow);
+      const bin = deleteRow.querySelector<HTMLElement>('.reqore-severity-row-actions .reqore-button')!;
+      expect(bin.getAttribute('aria-label')).toBe('Delete alert');
+      expect(bin.hasAttribute('destructive')).toBe(false);
+
+      const investigate = await narrowRow(canvasElement.querySelector('.investigate-row')!);
+      expect(investigate.getAttribute('data-actions')).toBe('stack');
+      await expectLoneActionSpansTheRow(investigate, 'severity');
+
+      await touch.tap(bin);
+      await waitFor(() => expect(onDismissAlert).toHaveBeenCalledTimes(1));
+    });
+  },
+};
