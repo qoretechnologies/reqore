@@ -257,7 +257,42 @@ const EditorStub = ({ value, onChange: _onChange, ...rest }: any) => (
 // consumers pass it the same way.
 const FILL = { fill: true } as any;
 
+/** A calm destructive action: a red icon on a quiet button that says it destroys (r-qs-19). */
+const DESTRUCTIVE = {
+  icon: 'DeleteBinLine',
+  tooltip: 'Delete',
+  flat: true,
+  transparent: true,
+  iconColor: 'danger',
+  destructive: true,
+} as any;
+
 const CASES: [string, () => ReactElement][] = [
+  [
+    'a destructive action on every surface that draws one',
+    () => (
+      <>
+        <ReqoreMenuItem
+          as={RouterLinkStub}
+          {...ROUTER_LINK_TO}
+          label='Delete every view'
+          destructive
+          rightAction={{ ...DESTRUCTIVE, as: RouterLinkStub, ...ROUTER_LINK_TO }}
+        />
+        <ReqorePanel
+          label='Template'
+          actions={[
+            DESTRUCTIVE,
+            { icon: 'MoreLine', actions: [{ label: 'Delete', destructive: true }] },
+          ]}
+          bottomActions={[{ ...DESTRUCTIVE, label: 'Delete', position: 'right' }]}
+          wrapActionsBelowTitle
+        />
+        <ReqoreCollection items={[{ label: 'Comment', actions: [DESTRUCTIVE] }]} />
+        <ReqoreEntityRow label='Chat' actions={[DESTRUCTIVE]} />
+      </>
+    ),
+  ],
   ['a bare DatePicker', () => <DatePicker value={new Date()} onChange={vi.fn()} />],
   [
     'a minimal pill DatePicker with time',

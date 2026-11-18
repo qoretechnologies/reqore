@@ -23,7 +23,7 @@ import { useDragToScroll } from '../../hooks/useDragToScroll';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
 import { IReqoreTableControls } from './controls';
 import { getTableColumnsPickerItems } from './helpers';
-import { IReqoreIntent, IReqoreTooltip } from '../../types/global';
+import { IReqoreIntent, IReqoreTooltip, IWithReqoreDestructive } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
@@ -172,7 +172,9 @@ export interface IReqoreTableColumn extends IReqoreIntent {
  * action; anything else gives way to its string `tooltip`.
  */
 export type TReqoreTableCellAction = Omit<IReqoreButtonProps, 'children' | 'label' | 'rightIcon'> &
-  IReqoreRowActionShortLabel & {
+  IReqoreRowActionShortLabel &
+  // folded into the column's menu, a destructive action is drawn in danger there
+  IWithReqoreDestructive & {
     label?: React.ReactNode;
   };
 

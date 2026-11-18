@@ -201,6 +201,9 @@ export const StyledReqoreControlGroup = styled(StyledEffect).withConfig({
  * with their own defaults, where an absent key and an undefined one are the
  * same thing.
  */
+/** A group folded to its "⋯" alone keeps that button's width: one object, for the memoised group. */
+const FOLDED_AWAY_STYLE: React.CSSProperties = { minWidth: 'max-content' };
+
 const definedOnly = <T extends Record<string, any>>(props: T): Partial<T> => {
   const rv: Partial<T> = {};
   for (const key of Object.keys(props) as (keyof T)[]) {
@@ -303,7 +306,9 @@ const ReqoreControlGroup = memo(
     const checkIfOverflowing = useCallback(() => {
       return (
         ref.current &&
-        ref.current.clientWidth > 40 &&
+        // At 40px too: a panel floors its folding group there, and a group at its floor that
+        // stopped measuring kept what it had not folded yet, cut off by the group's edge.
+        ref.current.clientWidth >= 40 &&
         !vertical &&
         responsive &&
         ref.current.scrollWidth > ref.current.clientWidth
@@ -674,6 +679,10 @@ const ReqoreControlGroup = memo(
       ]
     );
 
+    // Everything that can fold has: only the "⋯" is left in the row.
+    const foldedAway =
+      !!responsive && !vertical && !!overflowingChildren && overflowingChildren >= foldable.length;
+
     // Get the overflown children
     const overflownChildren = useMemo(
       () => (overflowingChildren ? foldable.slice(0, overflowingChildren) : []),
@@ -740,6 +749,9 @@ const ReqoreControlGroup = memo(
           style={{
             overflowX: responsive ? 'auto' : undefined,
             ...rest.style,
+            // Folded to its "⋯" alone, the group is at least that button's width: there is nothing
+            // left to fold, and a group squeezed narrower cut the button off (a page head on a phone).
+            ...(foldedAway ? FOLDED_AWAY_STYLE : {}),
           }}
           size={size}
           gapSize={gapSize}

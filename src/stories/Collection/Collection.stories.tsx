@@ -15,6 +15,7 @@ import { ReqoreModal } from '../../components/Modal';
 import { expectControlsInside } from '../utils/controlsInside';
 import { StoryRowBox } from '../utils/rowBoxes';
 import { PHONE_STORY } from '../utils/touchScreen';
+import { expectDrawnRed, expectNotDrawnRed, openMenuItems } from '../utils/drawnRed';
 
 import { ThemedSurfaceComparison } from '../utils/themedSurface';
 export interface IColumnsStoryArgs extends IReqoreColumnsProps {
@@ -1114,4 +1115,92 @@ export const ThemedPanelSurface: Story = {
       />
     </ThemedSurfaceComparison>
   ),
+};
+
+/** A template's comments, as the admin portal lists them: each card's Delete is a calm red bin. */
+const COMMENT_CARDS: IReqoreCollectionProps['items'] = [
+  {
+    label: 'Dana Novak',
+    className: 'comment-lone-delete',
+    content: 'Works for our three warehouses after one change to the retry.',
+    wrapActionsBelowTitle: true,
+    actions: [
+      {
+        icon: 'DeleteBinLine',
+        tooltip: 'Delete comment',
+        'aria-label': 'Delete comment',
+        flat: true,
+        transparent: true,
+        iconColor: 'danger',
+        destructive: true,
+        className: 'comment-delete',
+      },
+    ],
+  },
+  {
+    label: 'Ivo Marek',
+    className: 'comment-more-menu',
+    content: 'The 6:00 run overlaps the stock count on Mondays.',
+    wrapActionsBelowTitle: true,
+    actions: [
+      {
+        icon: 'MoreLine',
+        tooltip: 'More',
+        'aria-label': 'More',
+        className: 'comment-more',
+        actions: [
+          { label: 'Pin', icon: 'Pushpin2Line' },
+          { label: 'Delete comment', icon: 'DeleteBinLine', destructive: true },
+        ],
+      },
+    ],
+  },
+];
+
+export const ACardsDestructiveActionOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "A template's comments on a phone (390 px), as the admin portal lists them. The first card's only action deletes the comment: a red bin marked `destructive`. Its cards put their actions under the title where the two do not fit (`wrapActionsBelowTitle`), but a lone destructive one stays at the end of the title's line, its bin alone. The second card's \"⋯\" opens Pin and Delete comment: Delete comment is drawn in danger there, where the red bin is not drawn. The marker never reaches the DOM (r-qs-19).",
+      },
+    },
+  },
+  render: () => (
+    <div style={{ padding: '0 16px' }}>
+      <ReqoreCollection label='Comments' items={COMMENT_CARDS} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const card = await waitFor(() => {
+      const element = canvasElement.querySelector<HTMLElement>('.comment-lone-delete');
+      expect(element).toBeTruthy();
+      return element!;
+    });
+    const header = card.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+    const bin = card.querySelector<HTMLElement>('.reqore-button.comment-delete')!;
+    // on the title's line, at its end, its bin alone
+    expect(card.querySelector('.reqore-panel-title-actions')).toBeNull();
+    expect(bin.getBoundingClientRect().top).toBeLessThan(header.getBoundingClientRect().bottom);
+    expect(bin.getBoundingClientRect().left).toBeGreaterThanOrEqual(
+      header.getBoundingClientRect().right - 1
+    );
+    expect(bin.getBoundingClientRect().width).toBeLessThan(card.getBoundingClientRect().width / 3);
+    expect(bin.getAttribute('aria-label')).toBe('Delete comment');
+    expect(bin.hasAttribute('destructive')).toBe(false);
+
+    await userEvent.click(canvasElement.querySelector<HTMLElement>('.reqore-button.comment-more')!);
+    const [pin, remove] = await waitFor(() => {
+      const items = openMenuItems();
+      expect(items).toHaveLength(2);
+      return items;
+    });
+    expect(remove.textContent?.trim()).toBe('Delete comment');
+    expectDrawnRed(remove);
+    expectNotDrawnRed(pin);
+    expect(remove.hasAttribute('destructive')).toBe(false);
+  },
 };

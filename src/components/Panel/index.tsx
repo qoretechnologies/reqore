@@ -64,6 +64,7 @@ import {
   IReqoreIntent,
   IReqoreTooltip,
   IWithReqoreCustomTheme,
+  IWithReqoreDestructive,
   IWithReqoreFlat,
   IWithReqoreFluid,
   IWithReqoreIconImage,
@@ -101,7 +102,8 @@ const getPaddingSize = (padded: boolean | TSizes, size: TSizes): number =>
 export interface IReqorePanelSubAction extends Omit<IReqoreDropdownItem, 'value'> {
   show?: boolean;
 }
-export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreTooltip, IReqoreIntent {
+export interface IReqorePanelAction
+  extends IReqoreButtonProps, IWithReqoreTooltip, IReqoreIntent, IWithReqoreDestructive {
   label?: string | number;
   onClick?: () => void;
   group?: IReqorePanelAction[];
@@ -213,6 +215,22 @@ export interface IReqorePanelProps
   iconColor?: TReqoreEffectColor;
   responsiveActions?: boolean;
   responsiveTitle?: boolean;
+  /**
+   * Where the title and the actions do not fit on one line, the actions go to the line under the
+   * title, at its end, before any word of the title wraps, shrinks or is cut (board f66; decision
+   * 029's order: the title keeps its words, what is beside it gives way first). Where they fit, the
+   * bar is one line, as without it. The actions move together, in the page's order; the folding
+   * ones fold into "⋯" only where even the whole line under the title is too short for them.
+   *
+   * A lone destructive action (`destructive`, or a `danger` intent) stays on the title's line, at
+   * its end and its own size: a row on a phone keeps a lone Delete there too (r-qs-19).
+   *
+   * The collapse and close controls go with the actions. A page head on a phone is what it is for
+   * (qlip-ui: a pull request's title beside four actions ran to two lines in 130px).
+   *
+   * @default false
+   */
+  wrapActionsBelowTitle?: boolean;
   /**
    * Shrink the title to fit its box before ellipsizing it, down to `labelMinTextSize`.
    * Ignored when `labelEffect.textSize` pins a size.
@@ -395,6 +413,9 @@ export interface IStyledPanel extends Omit<IReqorePanelProps, 'accentSize'> {
   /** True when the description is rendered as its own full-width row under the bar. The bar
    *  must wrap for that row to exist at all. */
   $descriptionBelow?: boolean;
+  /** True when the actions go to the line under the title where the two do not fit
+   *  (`wrapActionsBelowTitle`). The bar wraps, and the title claims its one-line width. */
+  $wrapActions?: boolean;
   /** Resolved line cap for the description, or 0 for "no cap". */
   $descriptionMaxLines?: number;
   /** The height an unclamped description scrolls past, or unset for none. */
@@ -542,6 +563,53 @@ const NARROW_ACTIONS_BESIDE_TITLE: React.CSSProperties = {
 
 /** The class of the bar's group of actions that do not collapse, which the title's fit measures. */
 const NON_RESPONSIVE_ACTIONS_CLASS = 'reqore-panel-non-responsive-actions';
+
+/**
+ * The class of the group of actions that keep their words which the page lists before its first
+ * folding action: drawn before the folding group, so the bar keeps the page's order (board f67).
+ */
+export const LEADING_ACTIONS_CLASS = 'reqore-panel-leading-actions';
+
+/** The class of the box that holds a bar's actions where they may go under its title. */
+export const TITLE_ACTIONS_CLASS = 'reqore-panel-title-actions';
+
+/**
+ * The box a bar's actions are drawn in where they may go to the line under the title
+ * (`wrapActionsBelowTitle`): one flex item, so they move together and in the page's order, as wide
+ * as they are where there is room and as the line where they go under it. It takes the line's room
+ * (it grows), so its folding group measures the line it is on and unfolds when the bar widens.
+ */
+const WRAPPED_TITLE_ACTIONS_STYLE: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  flex: '1 1 auto',
+  minWidth: 0,
+  maxWidth: '100%',
+  gap: GAP_FROM_SIZE.normal,
+};
+
+/** The bottom bar's right-hand folding group, at the bar's trailing edge. */
+const RIGHT_BOTTOM_GROUP_STYLE: React.CSSProperties = { marginLeft: 'auto' };
+
+/** A group of actions that keep their words, at their own width, in that box. */
+const KEPT_ACTIONS_AT_THEIR_WIDTH: React.CSSProperties = { flex: '0 0 auto' };
+
+/** The bar's actions: in a box of their own where they may go under the title, as they are otherwise. */
+const PanelTitleActions = ({
+  wrap,
+  children,
+}: {
+  wrap: boolean;
+  children: React.ReactNode;
+}): JSX.Element =>
+  wrap ? (
+    <div className={TITLE_ACTIONS_CLASS} style={WRAPPED_TITLE_ACTIONS_STYLE}>
+      {children}
+    </div>
+  ) : (
+    <>{children}</>
+  );
 
 /**
  * How much wider `element` is than the least it can be: its width less its min-content width, read
@@ -869,6 +937,7 @@ export const REQORE_PANEL_STYLE_PROPS = listReqoreStyleProps<
   tooltip: true,
   transparent: true,
   unMountContentOnCollapse: true,
+  wrapActionsBelowTitle: true,
   wrapperPadding: true,
 });
 
@@ -1092,7 +1161,8 @@ export const StyledPanelTitle = styled.div.withConfig({
      label and lets the responsive action group collapse instead, which is what the "hidden when
      small" actions are for and what the stack was quietly defeating (a column made the group
      fluid, and a full-width group had room not to collapse). */
-  flex-flow: ${({ $descriptionBelow }) => ($descriptionBelow ? 'row wrap' : 'row')};
+  flex-flow: ${({ $descriptionBelow, $wrapActions }) =>
+    $descriptionBelow || $wrapActions ? 'row wrap' : 'row'};
 
   ${({ $descriptionFontPx }) =>
     !!$descriptionFontPx &&
@@ -1119,6 +1189,32 @@ export const StyledPanelTitle = styled.div.withConfig({
       > .reqore-panel-title-header {
         width: auto;
         flex: 1 1 0%;
+        min-width: 0;
+      }
+    `}
+
+  ${({ $wrapActions }) =>
+    $wrapActions &&
+    css`
+      /* The title claims its one-line width (a content basis) and the actions theirs, so the line
+         breaks between them where the two do not fit, before the title is squeezed: the title then
+         has the line to itself, and only there wraps, shrinks or is cut (\`wrapActionsBelowTitle\`).
+         After the description-below rule, whose 0 basis would never let it break. */
+      > .reqore-panel-title-header {
+        width: auto;
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      /* A description under the title has no width of its own to claim: it takes what the title's
+         line gives it, so a long sentence does not push the actions down where the title fits. The
+         title's column grows to the line, so that is the whole line, not the title's width. */
+      .reqore-panel-title-description {
+        contain: inline-size;
+      }
+
+      > .reqore-panel-title-header > ${StyledPanelTitleHeaderContent} {
+        flex: 1 1 auto;
         min-width: 0;
       }
     `}
@@ -1517,6 +1613,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       fluid,
       responsiveActions = true,
       responsiveTitle = true,
+      wrapActionsBelowTitle = false,
       compactTitle = false,
       fitLabel = true,
       labelMaxLines = 2,
@@ -2001,6 +2098,56 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       [bottomActions]
     );
 
+    /**
+     * The page's order, whichever of its actions may fold (board f67). A bar draws the folding actions
+     * in one group and the ones that keep their words (`responsive: false`) in another, and the kept
+     * group came after the folding one in the title bar, so a kept action the page lists first ("Start
+     * review", then "Show summary") was drawn second. The kept ones the page lists before its first
+     * folding action are a group of their own, drawn before the folding group; the rest are drawn
+     * after it, the title bar's collapse and close controls last. (A kept action between two folding
+     * ones is drawn after them: a bar keeps its one "⋯".) Without `responsiveActions` every action
+     * keeps its words, in one group, in order.
+     */
+    const splitAtFirstFolding = useCallback(
+      <T extends IReqorePanelAction>(list: T[]): [T[], T[]] => {
+        const first = responsiveActions
+          ? list.findIndex((action) => action.show !== false && action.responsive !== false)
+          : -1;
+
+        return first > 0 ? [list.slice(0, first), list.slice(first)] : [[], list];
+      },
+      [responsiveActions]
+    );
+    const [leadingTitleActions, trailingTitleActions] = useMemo(
+      () => splitAtFirstFolding(nonFloatingActions),
+      [splitAtFirstFolding, nonFloatingActions]
+    );
+    const [leadingLeftBottomActions, trailingLeftBottomActions] = useMemo(
+      () => splitAtFirstFolding(leftBottomActions),
+      [splitAtFirstFolding, leftBottomActions]
+    );
+    const [leadingRightBottomActions, trailingRightBottomActions] = useMemo(
+      () => splitAtFirstFolding(rightBottomActions),
+      [splitAtFirstFolding, rightBottomActions]
+    );
+
+    /**
+     * The actions go under the title where the two do not fit (`wrapActionsBelowTitle`), except a lone
+     * destructive one: it stays at the end of the title's line, at its own size, as a row keeps a lone
+     * Delete at the end of its label's line on a phone (r-qs-19).
+     */
+    const wrapActions = useMemo(() => {
+      if (!wrapActionsBelowTitle || !hasTitleHeader) {
+        return false;
+      }
+
+      const shown = nonFloatingActions.filter((action) => action.show !== false);
+
+      return !(
+        shown.length === 1 && (shown[0].destructive === true || shown[0].intent === 'danger')
+      );
+    }, [wrapActionsBelowTitle, hasTitleHeader, nonFloatingActions]);
+
     // Calculates whether or not the bottom actions should be displayed.
     const hasBottomActions: boolean = useMemo(
       () =>
@@ -2094,6 +2241,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           props = {},
           group,
           show,
+          // read where the actions are laid out; never the DOM's
+          destructive: _destructive,
           ...rest
         }: IReqorePanelAction = action;
 
@@ -2295,12 +2444,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       // OTHERWISE, ARE THERE ANY NON RESPONSIVE ACTIONS TO BE SHOWN?
       // This either means actions where user specified responsive: false
       // or user passed responsiveActions: false
-      if (hasNonResponsiveActions(nonFloatingActions)) {
+      if (hasNonResponsiveActions(trailingTitleActions)) {
         show = true;
       }
 
       return show;
-    }, [collapsible, onClose, nonFloatingActions, hasNonResponsiveActions]);
+    }, [collapsible, onClose, trailingTitleActions, hasNonResponsiveActions]);
 
     /**
      * The title's natural size in px, from the heading level it renders at — the same
@@ -2724,6 +2873,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               noHorizontalPadding={noHorizontalPadding}
               responsive={responsiveTitle}
               $descriptionBelow={descriptionBelow}
+              $wrapActions={wrapActions}
               $descriptionMaxLines={descriptionIsClamped ? descriptionClamp : 0}
               $descriptionMaxHeight={descriptionIsClamped ? undefined : descriptionMaxHeight}
               $descriptionFontPx={descriptionFontPx}
@@ -2965,91 +3115,128 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   />
                 </StyledPanelTitleHeader>
               )}
-              {hasResponsiveActions(nonFloatingActions) && (
-                <ReqoreControlGroup
-                  responsive={responsiveActions}
-                  // Not fluid by default. `fluid` emits `width: 100%`, so the group's flex basis
-                  // becomes the whole bar and the title — the only shrinkable thing on the other
-                  // side — collapses to nothing: measured at 0px of title on a 400px panel, and
-                  // 142px of a 518px bar where the buttons needed 90.
-                  //
-                  // A caller whose actions include something with no useful width of its own —
-                  // Collection puts a search input in here — opts back in through
-                  // `responsiveActionsWrapperProps`, because `fluid` is also what ControlGroup
-                  // propagates to its children, and that input has nothing to fill without it.
-                  fluid={false}
-                  horizontalAlign='flex-end'
-                  customTheme={theme}
+              <PanelTitleActions wrap={wrapActions}>
+                {hasNonResponsiveActions(leadingTitleActions) ? (
+                  <ReqoreControlGroup
+                    className={LEADING_ACTIONS_CLASS}
+                    fixed
+                    horizontalAlign='flex-end'
+                    verticalAlign='center'
+                    customTheme={theme}
+                    size={panelSize}
+                    // At the bar's trailing edge, as the folding group after it was; sized as the kept
+                    // group after it is (see there).
+                    style={
+                      wrapActions
+                        ? KEPT_ACTIONS_AT_THEIR_WIDTH
+                        : hasTitleHeader && isNarrow
+                          ? { ...NARROW_ACTIONS_BESIDE_TITLE, marginLeft: 'auto' }
+                          : { flex: '0 0 auto', marginLeft: 'auto' }
+                    }
+                  >
+                    {leadingTitleActions.map(renderNonResponsiveActions())}
+                  </ReqoreControlGroup>
+                ) : null}
+                {hasResponsiveActions(nonFloatingActions) && (
+                  <ReqoreControlGroup
+                    responsive={responsiveActions}
+                    // Not fluid by default. `fluid` emits `width: 100%`, so the group's flex basis
+                    // becomes the whole bar and the title — the only shrinkable thing on the other
+                    // side — collapses to nothing: measured at 0px of title on a 400px panel, and
+                    // 142px of a 518px bar where the buttons needed 90.
+                    //
+                    // A caller whose actions include something with no useful width of its own —
+                    // Collection puts a search input in here — opts back in through
+                    // `responsiveActionsWrapperProps`, because `fluid` is also what ControlGroup
+                    // propagates to its children, and that input has nothing to fill without it.
+                    fluid={false}
+                    horizontalAlign='flex-end'
+                    customTheme={theme}
+                    size={panelSize}
+                    {...responsiveActionsWrapperProps}
+                    // The cap is the whole fix. Half the bar guarantees the title the other half,
+                    // and the moment the buttons need more than their share the group overflows —
+                    // which is what `responsive` collapse watches (`scrollWidth > clientWidth`), so
+                    // the fold into the `…` menu still fires. Floored at 40px because shrinking to
+                    // nothing clips the buttons rather than folding them, and ControlGroup ignores
+                    // its own overflow below that width, which would strand them clipped.
+                    style={{
+                      // Pushed to the trailing edge. A `fluid` group used to span the bar and its
+                      // own `horizontalAlign` put the buttons on the right; a content-sized one is
+                      // only as wide as its buttons, so with no title header beside it — Tree has
+                      // no label — it would sit at the LEFT of an otherwise empty bar. `auto`
+                      // margin restores the edge without giving the group any width back. The kept
+                      // actions before it take the edge where there are some, and the actions' own
+                      // box where they may go under the title.
+                      marginLeft:
+                        wrapActions || hasNonResponsiveActions(leadingTitleActions)
+                          ? undefined
+                          : 'auto',
+                      // Content basis that may still shrink. `fluid={false}` alone compiles to
+                      // `flex: 0 0 auto`, which pins the group at its content width so it can never
+                      // overflow — and `responsive` collapse watches `scrollWidth > clientWidth`,
+                      // so the fold into the `…` menu would simply stop happening.
+                      flex: '0 1 auto',
+                      // Floored, because shrinking to nothing clips the buttons instead of folding
+                      // them, and ControlGroup ignores its own overflow below 40px. At the floor
+                      // it folds on, and folded to its "⋯" alone it is that button's width.
+                      minWidth: 40,
+                      // Capped, so a group that IS opted back into growing cannot take the row —
+                      // but only while there is a title header to take it FROM. With no label,
+                      // badge, icon or breadcrumbs the bar is the group's alone, and holding a
+                      // Collection's search input to half of an empty bar guards nothing. Nor where
+                      // the actions go under the title rather than squeeze it: there the line breaks
+                      // on the group's whole width, and under the title the line is theirs.
+                      maxWidth: hasTitleHeader && !wrapActions ? '50%' : undefined,
+                      ...responsiveActionsWrapperProps?.style,
+                    }}
+                  >
+                    {nonFloatingActions.map(renderResponsiveActions())}
+                  </ReqoreControlGroup>
+                )}
+                <ReqorePanelNonResponsiveActions
+                  show={showNonResponsiveGroup()}
+                  isSmall={false}
+                  showControlButtons
                   size={panelSize}
-                  {...responsiveActionsWrapperProps}
-                  // The cap is the whole fix. Half the bar guarantees the title the other half,
-                  // and the moment the buttons need more than their share the group overflows —
-                  // which is what `responsive` collapse watches (`scrollWidth > clientWidth`), so
-                  // the fold into the `…` menu still fires. Floored at 40px because shrinking to
-                  // nothing clips the buttons rather than folding them, and ControlGroup ignores
-                  // its own overflow below that width, which would strand them clipped.
-                  style={{
-                    // Pushed to the trailing edge. A `fluid` group used to span the bar and its
-                    // own `horizontalAlign` put the buttons on the right; a content-sized one is
-                    // only as wide as its buttons, so with no title header beside it — Tree has
-                    // no label — it would sit at the LEFT of an otherwise empty bar. `auto`
-                    // margin restores the edge without giving the group any width back.
-                    marginLeft: 'auto',
-                    // Content basis that may still shrink. `fluid={false}` alone compiles to
-                    // `flex: 0 0 auto`, which pins the group at its content width so it can never
-                    // overflow — and `responsive` collapse watches `scrollWidth > clientWidth`,
-                    // so the fold into the `…` menu would simply stop happening.
-                    flex: '0 1 auto',
-                    // Floored, because shrinking to nothing clips the buttons instead of folding
-                    // them, and ControlGroup ignores its own overflow below 40px.
-                    minWidth: 40,
-                    // Capped, so a group that IS opted back into growing cannot take the row —
-                    // but only while there is a title header to take it FROM. With no label,
-                    // badge, icon or breadcrumbs the bar is the group's alone, and holding a
-                    // Collection's search input to half of an empty bar guards nothing.
-                    maxWidth: hasTitleHeader ? '50%' : undefined,
-                    ...responsiveActionsWrapperProps?.style,
-                  }}
+                  hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
+                  customTheme={theme}
+                  isCollapsed={_isCollapsed}
+                  onCollapseClick={collapsible ? handleCollapseClick : undefined}
+                  onCloseClick={onClose}
+                  closeButtonProps={closeButtonProps}
+                  collapseButtonProps={collapseButtonProps}
+                  collapseTooltip={collapseTooltip}
+                  expandTooltip={expandTooltip}
+                  closeTooltip={closeTooltip}
+                  fluid={!hasTitleHeader}
+                  className={NON_RESPONSIVE_ACTIONS_CLASS}
+                  // Beside a title in a NARROW bar the title comes first (qorus#646). The group is
+                  // `0 0 auto`, so a narrow bar - a table in a card on a phone - squeezed the title
+                  // to nothing and still pushed its last button past the panel's edge. Narrow, the
+                  // title takes its whole width first and the group what is left, at least what its
+                  // controls cannot do without (a search field narrows, a button never does) and at
+                  // most its own width. A basis of 0 is what gives the title the first claim: the
+                  // group is sized from the leftover, so the title shrinks only once the controls
+                  // are at their smallest - and its words break only when one is wider than the
+                  // space left beside them. Shrinking the two against each other instead, by any
+                  // factor, took a fraction of a pixel off the title, and that broke "Services" into
+                  // "Servic / es". Room the title does not need goes to the group first (a grow no
+                  // title's comes near), so a search field widens before the title's box does. A
+                  // wide bar keeps the group at its own width: there the title's claim was its
+                  // one-line width, a description beside it included, and a long description
+                  // squeezed a table's search to its least instead of wrapping.
+                  style={
+                    wrapActions
+                      ? KEPT_ACTIONS_AT_THEIR_WIDTH
+                      : hasTitleHeader && isNarrow
+                        ? NARROW_ACTIONS_BESIDE_TITLE
+                        : undefined
+                  }
                 >
-                  {nonFloatingActions.map(renderResponsiveActions())}
-                </ReqoreControlGroup>
-              )}
-              <ReqorePanelNonResponsiveActions
-                show={showNonResponsiveGroup()}
-                isSmall={false}
-                showControlButtons
-                size={panelSize}
-                hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
-                customTheme={theme}
-                isCollapsed={_isCollapsed}
-                onCollapseClick={collapsible ? handleCollapseClick : undefined}
-                onCloseClick={onClose}
-                closeButtonProps={closeButtonProps}
-                collapseButtonProps={collapseButtonProps}
-                collapseTooltip={collapseTooltip}
-                expandTooltip={expandTooltip}
-                closeTooltip={closeTooltip}
-                fluid={!hasTitleHeader}
-                className={NON_RESPONSIVE_ACTIONS_CLASS}
-                // Beside a title in a NARROW bar the title comes first (qorus#646). The group is
-                // `0 0 auto`, so a narrow bar - a table in a card on a phone - squeezed the title
-                // to nothing and still pushed its last button past the panel's edge. Narrow, the
-                // title takes its whole width first and the group what is left, at least what its
-                // controls cannot do without (a search field narrows, a button never does) and at
-                // most its own width. A basis of 0 is what gives the title the first claim: the
-                // group is sized from the leftover, so the title shrinks only once the controls
-                // are at their smallest - and its words break only when one is wider than the
-                // space left beside them. Shrinking the two against each other instead, by any
-                // factor, took a fraction of a pixel off the title, and that broke "Services" into
-                // "Servic / es". Room the title does not need goes to the group first (a grow no
-                // title's comes near), so a search field widens before the title's box does. A
-                // wide bar keeps the group at its own width: there the title's claim was its
-                // one-line width, a description beside it included, and a long description
-                // squeezed a table's search to its least instead of wrapping.
-                style={hasTitleHeader && isNarrow ? NARROW_ACTIONS_BESIDE_TITLE : undefined}
-              >
-                {nonFloatingActions.map(renderNonResponsiveActions())}
-              </ReqorePanelNonResponsiveActions>
+                  {trailingTitleActions.map(renderNonResponsiveActions())}
+                </ReqorePanelNonResponsiveActions>
+              </PanelTitleActions>
               {descriptionBelow ? (
                 // `flex-basis: 100%` is what puts it on its own line — the bar is a wrapping
                 // flex row, so a full-width item cannot share one with anything before it.
@@ -3095,9 +3282,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               noHorizontalPadding={noHorizontalPadding}
               $cornerInset={cornerInset}
             >
-              {hasNonResponsiveActions(leftBottomActions) ? (
+              {/* In the page's order, whichever may fold (`splitAtFirstFolding`, board f67). */}
+              {hasNonResponsiveActions(leadingLeftBottomActions) ? (
                 <ReqoreControlGroup size={panelSize} style={{ marginRight: 'auto' }}>
-                  {leftBottomActions.map(renderNonResponsiveActions('flex-start'))}
+                  {leadingLeftBottomActions.map(renderNonResponsiveActions('flex-start'))}
                 </ReqoreControlGroup>
               ) : null}
               {hasResponsiveActions(leftBottomActions) && (
@@ -3111,25 +3299,43 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   {leftBottomActions.map(renderResponsiveActions('flex-start'))}
                 </ReqoreControlGroup>
               )}
+              {hasNonResponsiveActions(trailingLeftBottomActions) ? (
+                <ReqoreControlGroup size={panelSize} style={{ marginRight: 'auto' }}>
+                  {trailingLeftBottomActions.map(renderNonResponsiveActions('flex-start'))}
+                </ReqoreControlGroup>
+              ) : null}
+              {hasNonResponsiveActions(leadingRightBottomActions) ? (
+                <ReqoreControlGroup
+                  horizontalAlign='flex-end'
+                  size={panelSize}
+                  style={{ marginLeft: 'auto' }}
+                >
+                  {leadingRightBottomActions.map(renderNonResponsiveActions())}
+                </ReqoreControlGroup>
+              ) : null}
               {hasResponsiveActions(rightBottomActions) && (
                 <ReqoreControlGroup
                   fluid={responsiveActions}
                   horizontalAlign='flex-end'
                   responsive={responsiveActions}
                   customTheme={theme}
-                  style={{ marginLeft: 'auto' }}
+                  style={
+                    hasNonResponsiveActions(leadingRightBottomActions)
+                      ? undefined
+                      : RIGHT_BOTTOM_GROUP_STYLE
+                  }
                   size={panelSize}
                 >
                   {rightBottomActions.map(renderResponsiveActions())}
                 </ReqoreControlGroup>
               )}
-              {hasNonResponsiveActions(rightBottomActions) ? (
+              {hasNonResponsiveActions(trailingRightBottomActions) ? (
                 <ReqoreControlGroup
                   horizontalAlign='flex-end'
                   size={panelSize}
                   style={{ marginLeft: 'auto' }}
                 >
-                  {rightBottomActions.map(renderNonResponsiveActions())}
+                  {trailingRightBottomActions.map(renderNonResponsiveActions())}
                 </ReqoreControlGroup>
               ) : null}
             </StyledPanelBottomActions>

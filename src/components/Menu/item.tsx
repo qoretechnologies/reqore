@@ -3,7 +3,7 @@ import { ReqoreButton, ReqoreControlGroup, ReqoreDropdown } from '../..';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
-import { IReqoreComponent } from '../../types/global';
+import { IReqoreComponent, IWithReqoreDestructive } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
 // Type-only imports — erased at build time, so the Menu ↔ Dropdown reference
 // (Dropdown already imports Menu types) stays a type-level cycle, never a
@@ -28,7 +28,10 @@ export type TReqoreMenuItemActionEventHandler<
 ) => void;
 
 export type TReqoreMenuItemAction<Metadata extends Record<string, any> = Record<string, any>> =
-  Omit<IReqoreButtonProps, 'onClick'> & {
+  Omit<IReqoreButtonProps, 'onClick'> &
+  /* A destructive one (a saved view's Delete) keeps its own look rather than taking the item's
+     intent, and its entries, where it opens a menu, say for themselves. */
+  IWithReqoreDestructive & {
     onClick?: TReqoreMenuItemActionEventHandler<Metadata>;
     /**
      * Turns the action into a dropdown: clicking it opens a popover menu of
@@ -45,7 +48,7 @@ export type TReqoreMenuItemAction<Metadata extends Record<string, any> = Record<
   };
 
 export interface IReqoreMenuItemProps<Metadata extends Record<string, any> = Record<string, any>>
-  extends IReqoreComponent, IReqoreButtonProps {
+  extends IReqoreComponent, IReqoreButtonProps, IWithReqoreDestructive {
   label?: string | number;
   selected?: boolean;
   itemId?: string;
@@ -104,7 +107,8 @@ const ReqoreMenuItem = memo(
         disabled,
         itemId,
         tooltip,
-        intent,
+        intent: ownIntent,
+        destructive,
         flat = true,
         stackWithActions = true,
         scrollIntoView,
@@ -114,6 +118,10 @@ const ReqoreMenuItem = memo(
       ref
     ) => {
       const { setRef } = useCombinedRefs<HTMLButtonElement>(ref);
+      /* An entry that destroys something is drawn in danger where it gives no intent of its own: in a
+         menu its words are its look, so the marker is what says it (a panel action's own menu, a row's
+         "⋯"). */
+      const intent: TReqoreIntent | undefined = ownIntent ?? (destructive ? 'danger' : undefined);
       const [itemRef, setItemRef] = useState<HTMLButtonElement | null>(null);
       // one callback for the item's life: a new one each render detached and attached the element each time
       const handleItemRef = useCallback(
@@ -202,8 +210,16 @@ const ReqoreMenuItem = memo(
       ) => {
         if (!action) return null;
 
-        const { actions, actionsProps, onClick: _onClick, ...buttonProps } = action;
+        const {
+          actions,
+          actionsProps,
+          onClick: _onClick,
+          destructive: actionDestructive,
+          ...buttonProps
+        } = action;
         const transparent = rest.transparent === false ? false : !rest.effect;
+        // a destructive action keeps its own look (a red icon on a quiet button), not the item's tint
+        const actionIntent = actionDestructive ? undefined : intent;
 
         if (actions?.length) {
           return (
@@ -217,7 +233,7 @@ const ReqoreMenuItem = memo(
               minimal={rest.minimal}
               customTheme={rest.customTheme}
               className={className}
-              intent={intent}
+              intent={actionIntent}
               active={selected}
               // A menu row's action opens beside the row, not over the list
               // below it; consumers can override via `actionsProps`. No caret so
@@ -241,7 +257,7 @@ const ReqoreMenuItem = memo(
             minimal={rest.minimal}
             customTheme={rest.customTheme}
             className={className}
-            intent={intent}
+            intent={actionIntent}
             active={selected}
             {...buttonProps}
             onClick={handleActionClick}

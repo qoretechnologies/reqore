@@ -21,6 +21,7 @@ import {
   SizeArg,
   argManager,
 } from '../utils/args';
+import { expectDrawnRed, expectNotDrawnRed, openMenuItems } from '../utils/drawnRed';
 import { requiredElement } from '../utils/required';
 import { PHONE_STORY } from '../utils/touchScreen';
 import { findDrawnOverStickyHeader, stickyHeaderOf } from '../utils/stickyStacking';
@@ -2756,7 +2757,7 @@ export const APageHeadsActionsFitAPhone: Story = {
     docs: {
       description: {
         story:
-          "A page's head on a phone (390 px), as Qlip's build page draws it: a large title with a sentence under it and four actions. The two that matter, Review next pending and Save, keep their words (`responsive: false`); Upload and Settings may give theirs up, and go into the \"⋯\" when there is no room for them at all. Every action stays inside the panel, and the panel draws a handful of times and stops. With all four keeping their words nothing could give way, and the fourth ran off the screen (f65, Filip: fold into \"⋯\").",
+          "A page's head on a phone (390 px), as Qlip's build page draws it: a large title with a sentence under it and four actions. The two that matter, Review next pending and Save, keep their words (`responsive: false`); Upload and Settings may give theirs up, and go into the \"⋯\" when there is no room for them at all; the \"⋯\" is their size, as Qlip draws it. Every action, the \"⋯\" whole, stays inside the panel, and the panel draws a handful of times and stops. With all four keeping their words nothing could give way, and the fourth ran off the screen (f65, Filip: fold into \"⋯\").",
       },
     },
   },
@@ -2779,6 +2780,8 @@ export const APageHeadsActionsFitAPhone: Story = {
           padded={false}
           description='Snapshots captured for this build, against the baseline on develop.'
           actions={PAGE_HEAD_ACTIONS}
+          // the "⋯" is a head action like the others, at their size (as qlip-ui draws it)
+          responsiveActionsWrapperProps={{ size: 'small' }}
         />
       </Profiler>
     </div>
@@ -2995,4 +2998,423 @@ export const ThemedPanelSurface: Story = {
       </ReqorePanel>
     </ThemedSurfaceComparison>
   ),
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * the page's order, whichever actions may fold (board f67)
+ * ---------------------------------------------------------------------------------------------- */
+
+/** A build page's head actions, as qlip-ui lists them: its primary first, keeping its words. */
+const ORDERED_ACTIONS: IReqorePanelAction[] = [
+  {
+    label: 'Start review',
+    icon: 'PlayLine',
+    className: 'order-start-review',
+    responsive: false,
+  },
+  { label: 'Show summary', icon: 'FileList3Line', className: 'order-show-summary' },
+  { label: 'Settings', icon: 'Settings3Line', className: 'order-settings' },
+];
+
+/** Its bottom bar, each side with one that keeps its words and one that may fold, in two orders. */
+const ORDERED_BOTTOM_ACTIONS: IReqorePanelProps['bottomActions'] = [
+  { label: 'Help', icon: 'QuestionLine', className: 'order-help', position: 'left' },
+  {
+    label: 'Keep',
+    icon: 'CheckLine',
+    className: 'order-keep',
+    position: 'left',
+    responsive: false,
+  },
+  {
+    label: 'Discard',
+    icon: 'DeleteBinLine',
+    className: 'order-discard',
+    position: 'right',
+    responsive: false,
+  },
+  { label: 'Preview', icon: 'EyeLine', className: 'order-preview', position: 'right' },
+];
+
+const OrderedActionsPanel = () => (
+  <ReqorePanel
+    label='Build #507'
+    icon='Image2Line'
+    actions={ORDERED_ACTIONS}
+    bottomActions={ORDERED_BOTTOM_ACTIONS}
+  >
+    Snapshots captured for this build, against the baseline on develop.
+  </ReqorePanel>
+);
+
+/** The left edges of the buttons with these classes that are drawn in `root`, in that order. */
+const leftsOf = (root: HTMLElement, classes: string[]) =>
+  classes.map((name) => {
+    const button = root.querySelector<HTMLElement>(`.reqore-button.${name}`);
+
+    expect(button, `${name} is drawn`).toBeTruthy();
+
+    return button!.getBoundingClientRect().left;
+  });
+
+/** Each is to the right of the one before it. */
+const expectLeftToRight = (lefts: number[]) =>
+  lefts.slice(1).forEach((left, index) => expect(left).toBeGreaterThan(lefts[index]));
+
+export const ActionsKeepThePagesOrder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A panel whose title bar lists Start review (it keeps its words, `responsive: false`), then Show summary and Settings (they may fold), and whose bottom bar lists Help then Keep on the left and Discard then Preview on the right. Each bar draws them in that order. The title bar drew the folding ones first, so Show summary came before Start review although the page lists them the other way round (board f67, qlip-ui\'s build page); the bottom bar\'s right side did the same with Discard.',
+      },
+    },
+  },
+  render: OrderedActionsPanel,
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      const title = canvasElement.querySelector<HTMLElement>('.reqore-panel-title')!;
+      expectLeftToRight(
+        leftsOf(title, ['order-start-review', 'order-show-summary', 'order-settings'])
+      );
+      const bottom = canvasElement.querySelector<HTMLElement>('.reqore-panel-bottom-actions')!;
+      expectLeftToRight(leftsOf(bottom, ['order-help', 'order-keep']));
+      expectLeftToRight(leftsOf(bottom, ['order-discard', 'order-preview']));
+    });
+    // every one says its words where there is room
+    const words = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button')
+    ).map((button) => button.textContent?.trim());
+    expect(words).toEqual(['Start review', 'Show summary', 'Settings']);
+  },
+};
+
+export const ActionsKeepThePagesOrderOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'The same panel on a phone (390 px). Start review keeps its words and stays first; Show summary and Settings give theirs up for their icons, or go into the "⋯" where there is no room, after it. Nothing runs off the panel (board f67).',
+      },
+    },
+  },
+  render: OrderedActionsPanel,
+  play: async ({ canvasElement }) => {
+    const panel = canvasElement.querySelector<HTMLElement>('.reqore-panel')!;
+    const title = panel.querySelector<HTMLElement>('.reqore-panel-title')!;
+
+    await waitFor(() => {
+      const start = title.querySelector<HTMLElement>('.reqore-button.order-start-review')!;
+      expect(start.textContent?.trim()).toBe('Start review');
+      // every other button in the bar - an action's icon, the "⋯" - is after it
+      const others = Array.from(title.querySelectorAll<HTMLElement>('.reqore-button')).filter(
+        (button) => button !== start
+      );
+      expect(others.length).toBeGreaterThan(0);
+      others.forEach((button) =>
+        expect(button.getBoundingClientRect().left).toBeGreaterThan(
+          start.getBoundingClientRect().left
+        )
+      );
+      // the folding ones that are drawn keep their order among themselves
+      const drawn = ['order-show-summary', 'order-settings'].filter((name) =>
+        title.querySelector(`.reqore-button.${name}`)
+      );
+      expectLeftToRight(leftsOf(title, drawn));
+    });
+
+    const edge = panel.getBoundingClientRect().right;
+    panel
+      .querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button')
+      .forEach((button) => expect(button.getBoundingClientRect().right).toBeLessThanOrEqual(edge + 1));
+    const bottom = panel.querySelector<HTMLElement>('.reqore-panel-bottom-actions')!;
+    expectLeftToRight(leftsOf(bottom, ['order-discard', 'order-preview']));
+  },
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * the actions go under a title they do not fit beside (board f66)
+ * ---------------------------------------------------------------------------------------------- */
+
+/** A pull request's page head on Qlip: its primary and its way back keep their words. */
+const PULL_REQUEST_ACTIONS: IReqorePanelAction[] = [
+  { label: 'Start review', icon: 'PlayLine', size: 'small', responsive: false },
+  { label: 'Pull request', icon: 'GitPullRequestLine', size: 'small', responsive: false },
+  { label: 'Upload', icon: 'UploadLine', size: 'small' },
+  { label: 'Settings', icon: 'Settings3Line', size: 'small' },
+];
+
+/** A page head as qlip-ui draws it, its actions going under the title where both do not fit. */
+const WrappingPageHead = ({
+  id,
+  label,
+  actions,
+  description,
+}: {
+  id: string;
+  label: string;
+  actions: IReqorePanelAction[];
+  description?: string;
+}) => (
+  <div data-head={id}>
+    <Profiler id={id} onRender={() => countSettlingCommits(id)}>
+      <ReqorePanel
+        transparent
+        flat
+        rounded={false}
+        label={label}
+        iconWithLabel
+        isCollapsed
+        size='huge'
+        labelSize={2}
+        icon='GitBranchLine'
+        padded={false}
+        description={description}
+        actions={actions}
+        wrapActionsBelowTitle
+      />
+    </Profiler>
+  </div>
+);
+
+/** The panel of a page head, its title header and the box its actions are in. */
+const pageHead = (root: HTMLElement, id: string) => {
+  const panel = root.querySelector<HTMLElement>(`[data-head="${id}"] .reqore-panel`)!;
+  const header = panel.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+  const actions = panel.querySelector<HTMLElement>('.reqore-panel-title-actions');
+
+  return { panel, header, actions };
+};
+
+/** Every draw of these heads has stopped, and a handful did it. */
+const expectHeadsSettled = async (ids: string[]) => {
+  await waitFor(() => ids.forEach((id) => expect(settlingCommits.get(id) ?? 0).toBeGreaterThan(0)));
+  await waitFor(
+    async () => {
+      const before = ids.map((id) => settlingCommits.get(id) ?? 0);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(ids.map((id) => settlingCommits.get(id) ?? 0)).toEqual(before);
+    },
+    { timeout: 5000 }
+  );
+  ids.forEach((id) => expect(settlingCommits.get(id)).toBeLessThan(SETTLING_COMMIT_BOUND));
+};
+
+/** The head's actions are on the line under its title, at the line's end. */
+const expectActionsUnderTitle = (root: HTMLElement, id: string) => {
+  const { panel, header, actions } = pageHead(root, id);
+
+  expect(actions, `${id}: its actions are in a box of their own`).toBeTruthy();
+  expect(actions!.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+    header.getBoundingClientRect().bottom - 1
+  );
+  const bar = panel.querySelector<HTMLElement>('.reqore-panel-title')!;
+  const buttons = Array.from(actions!.querySelectorAll<HTMLElement>('.reqore-button'));
+  const right = Math.max(...buttons.map((button) => button.getBoundingClientRect().right));
+  expect(right).toBeGreaterThan(bar.getBoundingClientRect().right - 2);
+  buttons.forEach((button) =>
+    expect(button.getBoundingClientRect().right).toBeLessThanOrEqual(
+      panel.getBoundingClientRect().right + 1
+    )
+  );
+};
+
+/** The head's actions share its title's line, after it. */
+const expectActionsBesideTitle = (root: HTMLElement, id: string) => {
+  const { panel, header } = pageHead(root, id);
+  const headerBox = header.getBoundingClientRect();
+  const buttons = Array.from(
+    panel.querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button')
+  ).filter((button) => !header.contains(button));
+
+  expect(buttons.length).toBeGreaterThan(0);
+  buttons.forEach((button) => {
+    const box = button.getBoundingClientRect();
+    expect(box.top).toBeLessThan(headerBox.bottom);
+    expect(box.left).toBeGreaterThanOrEqual(headerBox.right - 1);
+  });
+};
+
+export const ActionsGoUnderATitleTheyDoNotFitBeside: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Three page heads with `wrapActionsBelowTitle`, as Qlip draws a pull request\'s: at 900px the title and its four actions share a line. In a 360px column the four do not fit beside "feature/mvp #42", so they go to the line under it, at its end, together and in order, and the title keeps its words at its own size. "Logs" and one action fit on one line, and stay there (board f66; decision 029: the title keeps its words, what is beside it gives way first).',
+      },
+    },
+  },
+  beforeEach: () => {
+    settlingCommits.clear();
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <div style={{ width: 900 }}>
+        <WrappingPageHead
+          id='wide'
+          label='feature/mvp #42'
+          description='12 snapshots changed · main ← feature/mvp'
+          actions={PULL_REQUEST_ACTIONS}
+        />
+      </div>
+      <div style={{ width: 360 }}>
+        <WrappingPageHead
+          id='narrow'
+          label='feature/mvp #42'
+          description='12 snapshots changed · main ← feature/mvp'
+          actions={PULL_REQUEST_ACTIONS}
+        />
+      </div>
+      <div style={{ width: 360 }}>
+        <WrappingPageHead
+          id='short'
+          label='Logs'
+          actions={[{ icon: 'DownloadLine', tooltip: 'Download', size: 'small' }]}
+        />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectHeadsSettled(['wide', 'narrow', 'short']);
+    await waitFor(() => {
+      expectActionsBesideTitle(canvasElement, 'wide');
+      expectActionsUnderTitle(canvasElement, 'narrow');
+      expectActionsBesideTitle(canvasElement, 'short');
+    });
+    await expectTitleWhole(pageHead(canvasElement, 'narrow').panel);
+    // under the title, the actions keep the page's order and their words where they have room
+    const narrowWords = Array.from(
+      pageHead(canvasElement, 'narrow').actions!.querySelectorAll<HTMLElement>('.reqore-button')
+    )
+      .map((button) => button.textContent?.trim())
+      .filter(Boolean);
+    expect(narrowWords.slice(0, 2)).toEqual(['Start review', 'Pull request']);
+  },
+};
+
+export const ActionsGoUnderATitleOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Qlip\'s pull request page head on a phone (390 px), with `wrapActionsBelowTitle`. "feature/mvp #42" has its line to itself at its own size, whole; Start review and Pull request keep their words on the line under it, at its end, and Upload and Settings give theirs up or go into the "⋯". Without the option the title was squeezed beside the actions and ran to two lines in 130px (board f66). A second head whose only action is a destructive Delete keeps it at the end of the title\'s line, its bin alone, as a row keeps a lone Delete on a phone (r-qs-19).',
+      },
+    },
+  },
+  beforeEach: () => {
+    settlingCommits.clear();
+  },
+  render: () => (
+    <div style={{ padding: '12px 16px' }}>
+      <WrappingPageHead
+        id='phone'
+        label='feature/mvp #42'
+        description='12 snapshots changed · main ← feature/mvp'
+        actions={PULL_REQUEST_ACTIONS}
+      />
+      <ReqoreVerticalSpacer height={24} />
+      <WrappingPageHead
+        id='lone-delete'
+        label='Order sync template'
+        actions={[
+          {
+            icon: 'DeleteBinLine',
+            tooltip: 'Delete template',
+            'aria-label': 'Delete template',
+            flat: true,
+            transparent: true,
+            iconColor: 'danger',
+            destructive: true,
+            size: 'small',
+            className: 'lone-delete',
+          },
+        ]}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectHeadsSettled(['phone', 'lone-delete']);
+    await waitFor(() => expectActionsUnderTitle(canvasElement, 'phone'));
+    const { panel } = pageHead(canvasElement, 'phone');
+    await expectTitleWhole(panel);
+    // the title is on one line: it did not wrap beside the actions
+    const title = panel.querySelector<HTMLElement>('.reqore-panel-title-label-and-badges')!;
+    const range = document.createRange();
+    range.selectNodeContents(title.firstElementChild!);
+    const lineTops = new Set(
+      Array.from(range.getClientRects())
+        .filter((rect) => rect.width > 0)
+        .map((rect) => Math.round(rect.top))
+    );
+    expect(lineTops.size).toBe(1);
+    const words = Array.from(panel.querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button'))
+      .map((button) => button.textContent?.trim())
+      .filter(Boolean);
+    expect(words).toContain('Start review');
+    expect(words).toContain('Pull request');
+
+    // the lone destructive action stays on its title's line, at its end, its bin alone
+    const lone = pageHead(canvasElement, 'lone-delete');
+    const bin = lone.panel.querySelector<HTMLElement>('.reqore-button.lone-delete')!;
+    expect(lone.actions).toBeNull();
+    expect(bin.getBoundingClientRect().top).toBeLessThan(lone.header.getBoundingClientRect().bottom);
+    expect(bin.getBoundingClientRect().width).toBeLessThan(56);
+    expect(bin.getAttribute('aria-label')).toBe('Delete template');
+    expect(bin.hasAttribute('destructive')).toBe(false);
+  },
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * a destructive action says so in a panel action's own menu (r-qs-19)
+ * ---------------------------------------------------------------------------------------------- */
+
+export const ADestructiveEntryInAPanelActionsMenu: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A template panel whose "⋯" action opens a menu of Rename and Delete template. Delete template is marked `destructive` and gives no intent: in the menu, where a calm red icon is not drawn, it is drawn in danger. Rename is not. The marker never reaches the DOM (r-qs-19: it means the same wherever an action is drawn).',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ maxWidth: 480 }}>
+      <ReqorePanel
+        label='Order sync template'
+        icon='FileList3Line'
+        actions={[
+          {
+            icon: 'MoreLine',
+            className: 'template-menu',
+            tooltip: 'More',
+            actions: [
+              { label: 'Rename', icon: 'EditLine' },
+              { label: 'Delete template', icon: 'DeleteBinLine', destructive: true },
+            ],
+          },
+        ]}
+      >
+        Copies the day's orders to the warehouse at 6:00.
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(canvasElement.querySelector<HTMLElement>('.template-menu')!);
+    const items = await waitFor(() => {
+      const found = openMenuItems();
+      expect(found).toHaveLength(2);
+      return found;
+    });
+    const [rename, remove] = items;
+    expect(remove.textContent?.trim()).toBe('Delete template');
+    expectDrawnRed(remove);
+    expectNotDrawnRed(rename);
+    expect(remove.hasAttribute('destructive')).toBe(false);
+  },
 };

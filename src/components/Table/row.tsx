@@ -382,7 +382,8 @@ const ReqoreTableRow = memo(
               rounded={false}
               className='reqore-table-cell-actions'
             >
-              {(actions ?? cell.actions(data)).map(({ label, shortLabel, ...action }, index) => {
+              {(actions ?? cell.actions(data)).map(
+                ({ label, shortLabel, destructive: _destructive, ...action }, index) => {
                 /* An action's label is drawn in its button, as a button's is. Only where the
                    column is folded (a narrow table, a row with one action) does an action with an
                    icon show the icon alone, in the menu button's square: its label is then its

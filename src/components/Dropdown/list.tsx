@@ -756,7 +756,8 @@ const ReqoreDropdownList = memo(
                           'items' in item && size(item.items) ? 'ArrowRightSLine' : item.rightIcon
                         }
                         customTheme={theme}
-                        intent={intent}
+                        // an entry that destroys something is drawn in danger, not in the list's tint
+                        intent={item.destructive ? undefined : intent}
                         {...item}
                         rightAction={getAction(item, 'right')}
                         leftAction={getAction(item, 'left')}

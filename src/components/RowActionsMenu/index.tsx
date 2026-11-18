@@ -3,7 +3,7 @@ import React, { memo, useCallback, useEffect, useId, useMemo, useRef, useState }
 import { TOUCH_TARGET_PX, TSizes } from '../../constants/sizes';
 import styled from '../../helpers/styled';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
-import { TReqoreTooltipProp } from '../../types/global';
+import { IWithReqoreDestructive, TReqoreTooltipProp } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
@@ -35,19 +35,14 @@ export const DEFAULT_ACTIONS_MENU_LABEL = 'Actions';
  */
 export type TReqoreNarrowRowActions = 'row' | 'stack' | 'menu';
 
-/** Whether a row's action destroys something, said apart from how it looks. */
-export interface IReqoreRowActionDestructive {
-  /**
-   * The action destroys something (Delete chat, Remove key). It says so apart from its look: a calm
-   * theme draws a destructive row action as a red icon on a quiet button, with no `danger` intent,
-   * because a danger intent there is a red box at the end of every row (Filip, 16 Nov).
-   *
-   * Where a row's actions take the row's width on a phone, a destructive one does not: a lone one
-   * stays at the end of the label's line, its icon alone where it has a tooltip, and one in a stack
-   * keeps its own width. Folded into a row's "⋯", it is drawn in `danger`. Never put on the DOM.
-   */
-  destructive?: boolean;
-}
+/**
+ * Whether a row's action destroys something, said apart from its look: `IWithReqoreDestructive`, the
+ * marker every action surface reads. Where a row's actions take the row's width on a phone, a
+ * destructive one does not: a lone one stays at the end of the label's line, its icon alone where it
+ * has a tooltip, and one in a stack keeps its own width. Folded into a row's "⋯", it is drawn in
+ * `danger`.
+ */
+export type IReqoreRowActionDestructive = IWithReqoreDestructive;
 
 /** An action a row offers: a button's props, a label, and - for a menu of its own - sub-actions. */
 export interface IReqoreRowMenuAction
