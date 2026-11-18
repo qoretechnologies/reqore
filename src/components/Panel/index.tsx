@@ -544,6 +544,12 @@ const StyledPanelTitleLabelBox = styled.div<{ $clampLines: number; $ownLine?: bo
 `;
 
 /**
+ * How much more than the actions' box a title takes of the room its line leaves (`wrapActionsBelowTitle`): all
+ * but a sliver, so a description beside the actions is not wrapped into half the line.
+ */
+const TITLE_TAKES_THE_ROOM = 1000;
+
+/**
  * How much more than the title a group of actions that do not collapse takes of the room left over: so much
  * that the title's box widens only once the group is at its own width (a flex item takes its grow factor's
  * share of the free space, and the title's is 1).
@@ -1202,7 +1208,10 @@ export const StyledPanelTitle = styled.div.withConfig({
          After the description-below rule, whose 0 basis would never let it break. */
       > .reqore-panel-title-header {
         width: auto;
-        flex: 1 1 auto;
+        /* The room the two leave on their line is the title's: a description beside the actions is a
+           sentence, not a column. The actions' box, which also grows, takes the whole line only where it
+           is alone under the title, so its folding group still measures that line. */
+        flex: ${TITLE_TAKES_THE_ROOM} 1 auto;
         min-width: 0;
       }
 

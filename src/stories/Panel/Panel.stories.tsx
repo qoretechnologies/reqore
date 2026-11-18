@@ -3174,6 +3174,8 @@ const WrappingPageHead = ({
         padded={false}
         description={description}
         actions={actions}
+        // the "⋯" is a head action like the others, at their size (as qlip-ui draws it)
+        responsiveActionsWrapperProps={{ size: 'small' }}
         wrapActionsBelowTitle
       />
     </Profiler>
@@ -3243,7 +3245,7 @@ export const ActionsGoUnderATitleTheyDoNotFitBeside: Story = {
     docs: {
       description: {
         story:
-          'Three page heads with `wrapActionsBelowTitle`, as Qlip draws a pull request\'s: at 900px the title and its four actions share a line. In a 360px column the four do not fit beside "feature/mvp #42", so they go to the line under it, at its end, together and in order, and the title keeps its words at its own size. "Logs" and one action fit on one line, and stay there (board f66; decision 029: the title keeps its words, what is beside it gives way first).',
+          'Three page heads with `wrapActionsBelowTitle`, as Qlip draws a pull request\'s: at 900px the title and its four actions share a line, and the description under the title has the room the actions leave, on one line. In a 360px column the four do not fit beside "feature/mvp #42", so they go to the line under it, at its end, together and in order, and the title keeps its words at its own size. "Logs" and one action fit on one line, and stay there (board f66; decision 029: the title keeps its words, what is beside it gives way first).',
       },
     },
   },
@@ -3285,6 +3287,19 @@ export const ActionsGoUnderATitleTheyDoNotFitBeside: Story = {
       expectActionsBesideTitle(canvasElement, 'short');
     });
     await expectTitleWhole(pageHead(canvasElement, 'narrow').panel);
+    // beside the actions, the description has the title's line, not half of it: one line at 900px
+    const wideDescription = pageHead(canvasElement, 'wide').panel.querySelector<HTMLElement>(
+      '.reqore-panel-title-description'
+    )!;
+    const descriptionLines = document.createRange();
+    descriptionLines.selectNodeContents(wideDescription);
+    expect(
+      new Set(
+        Array.from(descriptionLines.getClientRects())
+          .filter((rect) => rect.width > 0)
+          .map((rect) => Math.round(rect.top))
+      ).size
+    ).toBe(1);
     // under the title, the actions keep the page's order and their words where they have room
     const narrowWords = Array.from(
       pageHead(canvasElement, 'narrow').actions!.querySelectorAll<HTMLElement>('.reqore-button')
