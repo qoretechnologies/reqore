@@ -193,6 +193,13 @@ workflow can be run by hand.
 - **Location:** `src/stories/` (e.g. `Collection.stories.tsx`).
 - **Pattern:** ArgTypes for props, canvas controls, visual testing via Chromatic.
 - **Command:** `yarn build-storybook` builds the static site.
+- **Parse a story file right after editing it:** `yarn stories:parse <files>` (no files: every story
+  file changed against HEAD) runs Storybook's own indexer (`scripts/parse-stories.mjs`) in about a
+  second and names the line it cannot read. Run it before anything else: a story run, a capture, a
+  commit. A story file Storybook cannot index fails the whole index of a running Storybook the moment
+  it is saved, and every story run fails before its first story (qorus-ide, 18 Nov: unescaped quotes
+  in a description). Gate: `__tests__/storyFilesAreIndexable.test.ts`. Mind the quotes in a story's
+  description, and give a subagent that edits story files the same instruction.
 - **Touch stories:** a story whose play calls `withTouchScreen` (`src/stories/utils/touchScreen.ts`)
   carries `tags: ['touch']`. `yarn test:stories` runs those stories in their own Vitest project
   (`storybook-touch`), whose browser context is a phone from the start (Playwright's `isMobile` and

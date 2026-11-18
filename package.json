@@ -28,7 +28,8 @@
     "docs:dev": "docusaurus start",
     "docs:build": "docusaurus build",
     "docs:api": "typedoc --options typedoc.json",
-    "update-qlip": "yarn add @qoretechnologies/qlip@beta --dev"
+    "update-qlip": "yarn add @qoretechnologies/qlip@beta --dev",
+    "stories:parse": "node scripts/parse-stories.mjs"
   },
   "repository": {
     "type": "git",
