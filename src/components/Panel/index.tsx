@@ -51,7 +51,12 @@ import { getOneHigherSize, isActionShown, resolveAccentSize } from '../../helper
 import { useHoverGate } from '../../helpers/hoveringPointer';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
-import { FIT_TEXT_FLOOR_PX, useFitTextSize, wordsFitLines } from '../../hooks/useFitTextSize';
+import {
+  FIT_TEXT_FLOOR_PX,
+  textPaintingElement,
+  useFitTextSize,
+  wordsFitLines,
+} from '../../hooks/useFitTextSize';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   ACTIVE_ICON_SCALE,
@@ -2858,7 +2863,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       let next: number | undefined;
 
       if (wrapActions && node && header && typeof label === 'string' && label.trim()) {
-        const style = getComputedStyle((node.firstElementChild as HTMLElement) || node);
+        // the font the name is drawn in: a `labelEffect` family or spacing is the span's, not the heading's
+        const style = getComputedStyle(textPaintingElement(node));
         const px = labelEffect?.textSize ? parseFloat(style.fontSize) : labelNaturalPx;
         titleMeasureCanvas = titleMeasureCanvas || document.createElement('canvas');
         const context = titleMeasureCanvas.getContext('2d');

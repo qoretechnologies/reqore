@@ -1277,3 +1277,119 @@ export const TheSameTitleAtTheSameSizeBesideALongWord: Story = {
   render: () => <ExperimentSheet status='Running · phase 2' />,
   play: expectSheetTitleAtItsSize,
 };
+
+/** A smaller phone than the touch stories' (390 px): what Qlip captures its phone stories at. */
+const SMALL_PHONE = { width: 375, height: 812 };
+
+const SMALL_PHONE_STORY = {
+  parameters: {
+    viewport: {
+      options: {
+        smallPhone: {
+          name: `Small phone (${SMALL_PHONE.width} × ${SMALL_PHONE.height})`,
+          styles: { width: `${SMALL_PHONE.width}px`, height: `${SMALL_PHONE.height}px` },
+          type: 'mobile' as const,
+        },
+      },
+    },
+    qlip: { viewport: SMALL_PHONE },
+  },
+  globals: { viewport: { value: 'smallPhone', isRotated: false } },
+};
+
+/** The code font Qlip draws a story's path in. */
+const CODE_FONT =
+  "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace";
+
+export const AMonospaceTitleKeepsItsActionsBesideIt: Story = {
+  globals: SMALL_PHONE_STORY.globals,
+  parameters: {
+    ...SMALL_PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders a snapshot review sheet on a small phone (375 px), as Qlip draws it: the story\'s path "Example/ProfileBadge · Unmasked" in a monospace font, its status word "To review" and two lines of figures under it, a "more" button and a close button. The path takes two lines with the whole line to itself, and two beside the buttons, so the buttons stay beside it rather than taking a line of their own under it.',
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: { typeScale: { heading: { 3: 16 }, headingWeight: 600, dialogHeading: 20 } },
+  },
+  render: () => (
+    <ReqoreDrawer
+      isOpen
+      position='right'
+      size='100vw'
+      hasBackdrop={false}
+      responsiveLayout
+      label='Example/ProfileBadge · Unmasked'
+      labelEffect={{ fontFamily: CODE_FONT }}
+      description='Build #128 · 3 of 12 · 375×812 · 2.41% changed · 1,234 px'
+      descriptionEffect={{ fontFamily: CODE_FONT }}
+      icon='FocusLine'
+      badge={{ label: 'To review', appearance: 'text', icon: 'CheckboxBlankCircleFill' }}
+      responsiveActions={false}
+      actions={[
+        {
+          icon: 'MoreLine',
+          flat: true,
+          raised: true,
+          responsive: false,
+          tooltip: 'More snapshot actions',
+          actions: [{ label: 'Add a comment', icon: 'MapPinLine' }],
+        },
+      ]}
+      onClose={noop}
+    >
+      <ReqoreP>The baseline and the new image, side by side.</ReqoreP>
+    </ReqoreDrawer>
+  ),
+  play: async () => {
+    await withViewport(SMALL_PHONE.width, SMALL_PHONE.height, async () => {
+      const drawer = await waitFor(() => {
+        const element = document.querySelector<HTMLElement>('.reqore-drawer');
+
+        expect(element).toBeTruthy();
+
+        return element!;
+      });
+      const header = drawer.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+      const heading = drawer.querySelector<HTMLElement>('.reqore-panel-title .reqore-heading')!;
+
+      await waitFor(() => {
+        const buttons = Array.from(
+          drawer.querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button')
+        );
+        const headerBox = header.getBoundingClientRect();
+
+        // the "more" button and the close button
+        expect(buttons.length).toBe(2);
+        // beside the title, not on a line of their own under it
+        buttons.forEach((button) =>
+          expect(
+            button.getBoundingClientRect().top,
+            `title ${Math.round(headerBox.top)}-${Math.round(headerBox.bottom)}`
+          ).toBeLessThan(headerBox.bottom)
+        );
+      });
+      // drawn in its own font, at the sheet's title size, on two lines
+      expect(getComputedStyle(heading.querySelector('.reqore-span')!).fontFamily).toContain(
+        'monospace'
+      );
+      await waitFor(() => expect(getComputedStyle(heading).fontSize).toBe('20px'));
+      await waitFor(() => {
+        const range = document.createRange();
+
+        range.selectNodeContents(heading);
+        expect(
+          new Set(
+            Array.from(range.getClientRects())
+              .filter((rect) => rect.width > 0)
+              .map((rect) => Math.round(rect.top))
+          ).size
+        ).toBe(2);
+      });
+      await expectTitleWhole(drawer);
+    });
+  },
+};

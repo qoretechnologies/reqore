@@ -13,6 +13,7 @@ import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   largestFittingTextSize,
+  textPaintingElement,
   useFitTextSize,
   wordsFitLines,
 } from '../src/hooks/useFitTextSize';
@@ -121,5 +122,26 @@ describe('largestFittingTextSize', () => {
 
   it('keeps the slack on one line, so a label that fits to the pixel is not shrunk', () => {
     expect(wordsFitLines([100], 0, 98, 1)).toBe(true);
+  });
+});
+
+describe('the font a title is measured in', () => {
+  // A panel's title: the measured box, the heading in it, and the span that paints the words with the
+  // panel's `labelEffect` (a monospace family). Measured with the heading's font, a monospace title
+  // counted its lines wrong beside its actions (qlip-ui's review drawer at 375px, board f66).
+  it("is the span's that paints the words, not the heading's", () => {
+    const box = document.createElement('div');
+    box.innerHTML =
+      '<h3 style="font-family: sans-serif"><span style="font-family: monospace">Example/ProfileBadge</span></h3>';
+
+    expect(textPaintingElement(box)).toBe(box.querySelector('span'));
+    expect(getComputedStyle(textPaintingElement(box)).fontFamily).toBe('monospace');
+  });
+
+  it('is the box itself when it holds the words directly', () => {
+    const box = document.createElement('div');
+    box.textContent = 'Visitors';
+
+    expect(textPaintingElement(box)).toBe(box);
   });
 });

@@ -94,6 +94,24 @@ export const wordsFitLines = (
 };
 
 /**
+ * The element that paints a text: the innermost first child under the measured box. A wrapper
+ * inherits a normal weight while the heading inside it is bold, and the heading's own font is not
+ * the text's either: a panel's `labelEffect` (a monospace family, a letter spacing) is drawn by the
+ * span inside the heading. Measured with the heading's font, a monospace title was narrower on
+ * paper than on screen, so the bar counted three lines for it beside its actions where it took two,
+ * and put its actions under it (qlip-ui's review drawer on a phone, board f66).
+ */
+export const textPaintingElement = (node: HTMLElement): HTMLElement => {
+  let element = node;
+
+  while (element.firstElementChild instanceof HTMLElement) {
+    element = element.firstElementChild;
+  }
+
+  return element;
+};
+
+/**
  * The size to draw a text at: `max` when its words fit `lines` lines of `available` there, else
  * the largest whole px down to `floor` at which they do, else `floor` (the clamp cuts what a
  * floored size still cannot hold). `words` and `space` are widths at `max`.
@@ -187,10 +205,9 @@ export const useFitTextSize = <T extends HTMLElement = HTMLDivElement>({
       return;
     }
 
-    // The font comes from the element that PAINTS the text: a wrapper inherits a normal
-    // weight while the heading inside it is bold, and measuring the wrong weight picks a size
-    // that still clips.
-    const style = getComputedStyle((node.firstElementChild as HTMLElement) || node);
+    // The font comes from the element that PAINTS the text (`textPaintingElement`): measuring
+    // the wrong weight or family picks a size that still clips.
+    const style = getComputedStyle(textPaintingElement(node));
     // Letter-spacing is not part of the canvas font shorthand, so it is added back per
     // character. A spaced heading measured without it fits on paper and clips in the DOM.
 
