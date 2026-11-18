@@ -598,7 +598,7 @@ export const FoldToFitBesideATitle: Story = {
     docs: {
       description: {
         story:
-          'Renders a folding filter as the action of a 330px panel titled "Methods", the width of a section heading on a phone. The title keeps its whole word and the filter folds into the room left beside it. Asserts the title is not squeezed and the filter folded: a fold slot used to report the full row of segments as the least it could do with, which left the title 0px wide.',
+          'Renders a folding filter as the action of a 330px panel titled "Methods", the width of a section heading on a phone. The title keeps its whole word and the filter folds into the room left beside it, the bar kept on one line (`wrapActionsBelowTitle={false}`). Asserts the title is not squeezed and the filter folded: a fold slot used to report the full row of segments as the least it could do with, which left the title 0px wide.',
       },
     },
   },
@@ -615,6 +615,8 @@ export const FoldToFitBesideATitle: Story = {
           padded={false}
           collapsible
           responsiveActions={false}
+          // the filter folds into the room beside the title, the bar kept on one line
+          wrapActionsBelowTitle={false}
           actions={[
             {
               as: ReqoreSegmentedControl,

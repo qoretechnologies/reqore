@@ -124,9 +124,21 @@ describe('wrapActionsBelowTitle', () => {
     expect(container.querySelector('.reqore-panel-title-actions')).toBeNull();
   });
 
-  test('changes nothing where it is not asked for', () => {
+  test('is on by default (Filip, 18 Nov)', () => {
     const { container } = renderInProvider(
       <ReqorePanel label='Build' actions={[action('Upload'), action('Save', true)]} />
+    );
+
+    expect(container.querySelector('.reqore-panel-title-actions')).not.toBeNull();
+  });
+
+  test('changes nothing where it is turned off', () => {
+    const { container } = renderInProvider(
+      <ReqorePanel
+        label='Build'
+        actions={[action('Upload'), action('Save', true)]}
+        wrapActionsBelowTitle={false}
+      />
     );
 
     expect(container.querySelector('.reqore-panel-title-actions')).toBeNull();

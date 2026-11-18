@@ -1740,6 +1740,11 @@ const ReqoreTable = ({
         padded={false}
         contentStyle={{ display: 'flex', flexFlow: 'column', overflow: 'hidden' }}
         responsiveActions={false}
+        /* A table keeps its title whole on one line its own way: a narrow toolbar folds its search into a
+           button, and the open search takes the toolbar's line. Moved under the title, the toolbar would
+           hold an open search field wider than its line, which pushed "50 rows" past the card's edge. So
+           its bar stays one line unless the page asks (`wrapActionsBelowTitle`, the panels' default). */
+        wrapActionsBelowTitle={false}
         {...rest}
         // the open search takes the toolbar's line; the title is back when it closes
         {...(searchOpenFolded ? { label: undefined, icon: undefined } : {})}

@@ -117,6 +117,14 @@ export interface IReqorePanelAction
   show?: boolean | 'hover';
   // Hide the action if the group is too small
   responsive?: boolean;
+  /**
+   * The icon says what the action does (refresh, close, download, copy, settings…), so it is drawn as its icon
+   * alone at every width; its `label` becomes its tooltip (unless it has one) and its accessible name. Leave it off
+   * where the icon cannot carry the meaning on its own (a choice between two things, a mode, a named destination,
+   * a primary call to action): those keep their words (`responsive: false` keeps them on a narrow panel too).
+   * FRONTEND "Obvious actions are icons only" (board f65).
+   */
+  iconOnly?: boolean;
 }
 
 export interface IReqorePanelBottomAction extends IReqorePanelAction {
@@ -228,7 +236,10 @@ export interface IReqorePanelProps
    * The collapse and close controls go with the actions. A page head on a phone is what it is for
    * (qlip-ui: a pull request's title beside four actions ran to two lines in 130px).
    *
-   * @default false
+   * On by default for every panel, drawer and dialog (Filip, 18 Nov); `false` keeps a bar of one line
+   * whatever it costs the title.
+   *
+   * @default true
    */
   wrapActionsBelowTitle?: boolean;
   /**
@@ -1625,7 +1636,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       fluid,
       responsiveActions = true,
       responsiveTitle = true,
-      wrapActionsBelowTitle = false,
+      wrapActionsBelowTitle = true,
       compactTitle = false,
       fitLabel = true,
       labelMaxLines = 2,
@@ -2255,8 +2266,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           show,
           // read where the actions are laid out; never the DOM's
           destructive: _destructive,
+          iconOnly,
           ...rest
         }: IReqorePanelAction = action;
+        const actionLabelText = typeof label === 'number' ? String(label) : label;
+        // the icon says it: drawn alone, its label its tooltip and its accessible name (f65)
+        const iconSaysIt = !!iconOnly && !!rest.icon && !!label;
 
         let { className }: IReqorePanelAction = action;
 
@@ -2286,8 +2301,14 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             <ReqoreDropdown
               fixed
               {...rest}
+              {...(iconSaysIt ?
+                {
+                  tooltip: rest.tooltip || actionLabelText,
+                  'aria-label': rest['aria-label'] || actionLabelText,
+                }
+              : {})}
               key={index}
-              label={label}
+              label={iconSaysIt ? undefined : label}
               intent={intent}
               className={className}
               customTheme={rest.customTheme || theme}
@@ -2333,8 +2354,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         // comment promises did not exist. It is what the confirmation dialog stands on —
         // two unlabelled squares, a tick and a cross, name neither the action nor the
         // one that throws the work away.
-        const actionLabelTooltip = typeof label === 'number' ? String(label) : label;
-        const dropActionLabel = isNarrow && action.responsive !== false && !!rest.icon && !!label;
+        //
+        // An action whose icon is enough (`iconOnly`) is drawn as its icon at every width. Either way a
+        // dropped label is still the button's accessible name, not only its tooltip.
+        const actionLabelTooltip = actionLabelText;
+        const dropActionLabel =
+          iconSaysIt || (isNarrow && action.responsive !== false && !!rest.icon && !!label);
 
         return (
           <ReqoreButton
@@ -2345,6 +2370,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             className={className}
             customTheme={rest.customTheme || theme}
             intent={intent}
+            aria-label={
+              dropActionLabel ? rest['aria-label'] || actionLabelTooltip : rest['aria-label']
+            }
             tooltip={dropActionLabel ? rest.tooltip || actionLabelTooltip : rest.tooltip}
             onClick={
               rest.onClick

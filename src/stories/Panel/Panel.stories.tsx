@@ -2490,7 +2490,7 @@ export const BadgesGiveWayToTheTitle: Story = {
     docs: {
       description: {
         story:
-          'Renders a dashboard tile at 200px three ways — a plain title, a title the caller draws itself (a `ReactElement`), and a title with an icon — each with a quiet "Last 30 days" badge, a help button and a "more" menu, then the same tile at 480px. At 200px the title and the badge do not fit on one line, so the badge moves to a line under the title, its words on the title\'s left edge (past the icon, which stays centred on the title), and the title is whole at its natural size. At 480px the badge sits beside the title.',
+          'Renders a dashboard tile at 200px three ways — a plain title, a title the caller draws itself (a `ReactElement`), and a title with an icon — each with a quiet "Last 30 days" badge, a help button and a "more" menu, then the same tile at 480px, each keeping its bar on one line (`wrapActionsBelowTitle={false}`; by default the actions would go under the title). At 200px the title and the badge do not fit on one line, so the badge moves to a line under the title, its words on the title\'s left edge (past the icon, which stays centred on the title), and the title is whole at its natural size. At 480px the badge sits beside the title.',
       },
     },
   },
@@ -2505,6 +2505,8 @@ export const BadgesGiveWayToTheTitle: Story = {
             badge={TILE_BADGE}
             actions={TILE_ACTIONS}
             responsiveActions={false}
+            // the bar that keeps one line: what gives way beside the actions
+            wrapActionsBelowTitle={false}
             padded
           >
             {width}px
@@ -2543,7 +2545,7 @@ export const ATitleShrinksBeforeItsWordsAreCut: Story = {
     docs: {
       description: {
         story:
-          'A 190px tile under the calm heading sizes (`typeScale.heading[3]: 16`), titled "Design changes built" with a "Last 30 days" badge, a help button and a "more" menu, as the admin portal draws it. The badge moves under the title, and the title has two lines of 98px. Its length (about 160px) fits those two lines, but its words do not: at 16px they break "Design / changes / built", and the clamp at two lines cut "built" from a title kept at full size. The fit now packs the words as the browser breaks them, so the title shrinks until they fit two lines, and reads whole (decision 029: wrap, then shrink, then cut).',
+          'A 190px tile under the calm heading sizes (`typeScale.heading[3]: 16`), titled "Design changes built" with a "Last 30 days" badge, a help button and a "more" menu, as the admin portal draws it, its bar kept on one line (`wrapActionsBelowTitle={false}`). The badge moves under the title, and the title has two lines of 98px. Its length (about 160px) fits those two lines, but its words do not: at 16px they break "Design / changes / built", and the clamp at two lines cut "built" from a title kept at full size. The fit now packs the words as the browser breaks them, so the title shrinks until they fit two lines, and reads whole (decision 029: wrap, then shrink, then cut).',
       },
     },
   },
@@ -2559,6 +2561,8 @@ export const ATitleShrinksBeforeItsWordsAreCut: Story = {
         badge={TILE_BADGE}
         actions={TILE_ACTIONS}
         responsiveActions={false}
+        // the bar that keeps one line: the title's own wrap, shrink and cut beside the actions
+        wrapActionsBelowTitle={false}
         padded
       >
         12 designs
@@ -3147,17 +3151,22 @@ const PULL_REQUEST_ACTIONS: IReqorePanelAction[] = [
   { label: 'Settings', icon: 'Settings3Line', size: 'small' },
 ];
 
-/** A page head as qlip-ui draws it, its actions going under the title where both do not fit. */
+/**
+ * A page head as qlip-ui draws it, its actions going under the title where both do not fit: the default
+ * since 18 Nov; `wrap={false}` is a page that opts out.
+ */
 const WrappingPageHead = ({
   id,
   label,
   actions,
   description,
+  wrap,
 }: {
   id: string;
   label: string;
   actions: IReqorePanelAction[];
   description?: string;
+  wrap?: boolean;
 }) => (
   <div data-head={id}>
     <Profiler id={id} onRender={() => countSettlingCommits(id)}>
@@ -3176,7 +3185,7 @@ const WrappingPageHead = ({
         actions={actions}
         // the "⋯" is a head action like the others, at their size (as qlip-ui draws it)
         responsiveActionsWrapperProps={{ size: 'small' }}
-        wrapActionsBelowTitle
+        {...(wrap === undefined ? {} : { wrapActionsBelowTitle: wrap })}
       />
     </Profiler>
   </div>
@@ -3568,5 +3577,90 @@ export const BadgesGiveWayBeforeTheActionsOnAPhone: Story = {
         expect(box.right).toBeLessThanOrEqual(panel.getBoundingClientRect().right + 1);
       });
     });
+  },
+};
+
+export const ActionsGoUnderATitleByDefault: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Two page heads in a 360px column, neither naming `wrapActionsBelowTitle`. The first takes the default: its four actions do not fit beside "feature/mvp #42", so they go to the line under it and the title keeps its line and its size. The second opts out (`wrapActionsBelowTitle={false}`) and keeps one line, the title squeezed beside the actions, as every bar did before the default (Filip, 18 Nov).',
+      },
+    },
+  },
+  beforeEach: () => {
+    settlingCommits.clear();
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <div style={{ width: 360 }}>
+        <WrappingPageHead id='by-default' label='feature/mvp #42' actions={PULL_REQUEST_ACTIONS} />
+      </div>
+      <div style={{ width: 360 }}>
+        <WrappingPageHead
+          id='opted-out'
+          label='feature/mvp #42'
+          actions={PULL_REQUEST_ACTIONS}
+          wrap={false}
+        />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectHeadsSettled(['by-default', 'opted-out']);
+    await waitFor(() => {
+      expectActionsUnderTitle(canvasElement, 'by-default');
+      expectActionsBesideTitle(canvasElement, 'opted-out');
+    });
+    await expectTitleWhole(pageHead(canvasElement, 'by-default').panel);
+  },
+};
+
+export const AnObviousActionIsItsIcon: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A page head whose Refresh and Settings say what they do with their icon (`iconOnly`): each is drawn as its icon at every width, its words its tooltip and its accessible name. "Compare with period before" is a mode the icon cannot carry, so it keeps its words (FRONTEND "Obvious actions are icons only", board f65).',
+      },
+    },
+  },
+  beforeEach: () => {
+    settlingCommits.clear();
+  },
+  render: () => (
+    <div style={{ width: 900 }}>
+      <WrappingPageHead
+        id='obvious'
+        label='Orders this week'
+        actions={[
+          { label: 'Refresh', icon: 'RefreshLine', size: 'small', iconOnly: true, className: 'story-refresh' },
+          {
+            label: 'Compare with period before',
+            icon: 'ArrowLeftRightLine',
+            size: 'small',
+            responsive: false,
+            className: 'story-compare',
+          },
+          { label: 'Settings', icon: 'Settings3Line', size: 'small', iconOnly: true, className: 'story-settings' },
+        ]}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectHeadsSettled(['obvious']);
+    const button = (name: string) =>
+      canvasElement.querySelector<HTMLElement>(`.story-${name}`) as HTMLElement;
+
+    await waitFor(() => expect(button('refresh')).toBeTruthy());
+    for (const [name, words] of [
+      ['refresh', 'Refresh'],
+      ['settings', 'Settings'],
+    ]) {
+      expect(button(name).textContent?.trim()).toBe('');
+      expect(button(name).getAttribute('aria-label')).toBe(words);
+    }
+    expect(button('compare').textContent).toContain('Compare with period before');
   },
 };
