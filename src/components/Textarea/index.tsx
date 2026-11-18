@@ -537,7 +537,9 @@ function Textarea<T>(
           onFocusCapture={handleFocusCapture}
           className={`${className || ''} reqore-control reqore-textarea`}
           _size={size}
-          ref={(ref) => setInputRef(ref)}
+          // The setter itself, which keeps its identity: an arrow made here was a new ref on every render, so React
+          // called it with null and then the element each time, two updates for nothing (board f70).
+          ref={setInputRef}
           theme={theme}
           rounded={rounded}
           rows={rows}

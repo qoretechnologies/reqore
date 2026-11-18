@@ -409,10 +409,27 @@ const ReqoreSegmentedControl = memo(
       const wrapperRefs = useRef<Record<string, HTMLDivElement | null>>({});
       const containerRef = useRef<HTMLDivElement>(null);
       const [measureRef, { width: measuredWidth }] = useMeasure();
+      /* One ref for as long as the caller's ref is the same: an arrow made in the render was a new ref every time, so
+         React called it with null and then the node on every render, and the measure set its state twice for
+         nothing (board f70). */
+      const setContainerRef = useCallback(
+        (node: HTMLDivElement | null) => {
+          (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+          measureRef(node as Element);
+          if (typeof ref === 'function') {
+            ref(node);
+          } else if (ref) {
+            (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+          }
+        },
+        [measureRef, ref]
+      );
       const [indicatorStyle, setIndicatorStyle] = useState<{
         left: number;
         width: number;
       }>({ left: 0, width: 0 });
+      // The indicator as last set, to set it only when it moves.
+      const indicatorDrawn = useRef(indicatorStyle);
 
       // foldToFit: the room the slot is given, and each segment's width as drawn.
       const [slotRef, { width: slotWidth }] = useMeasure<HTMLDivElement>();
@@ -510,7 +527,7 @@ const ReqoreSegmentedControl = memo(
             layoutWidth && containerRect.width && Math.abs(containerRect.width - layoutWidth) >= 1
               ? containerRect.width / layoutWidth
               : 1;
-          setIndicatorStyle({
+          const next = {
             // From the container's PADDING edge, which is where an absolutely positioned
             // child's `left: 0` sits: the border-box rect plus the border (`clientLeft`,
             // 0 when `flat`). Measured from the border edge and corrected by the padding
@@ -518,7 +535,17 @@ const ReqoreSegmentedControl = memo(
             // with a border, 3px without — on every control since the component shipped.
             left: (itemRect.left - containerRect.left) / scale - container.clientLeft,
             width: itemRect.width / scale,
-          });
+          };
+          // Only when it moved: a page hands its items as a new list each render, and a new
+          // object every time was an update for nothing (board f70). Compared before asking:
+          // an update that hands back the same state is still an update React has to schedule.
+          if (
+            indicatorDrawn.current.left !== next.left ||
+            indicatorDrawn.current.width !== next.width
+          ) {
+            indicatorDrawn.current = next;
+            setIndicatorStyle(next);
+          }
         }
       }, [_value, items, isSelectedHidden, visibleItems, measuredWidth, moreLabel]);
 
@@ -615,17 +642,7 @@ const ReqoreSegmentedControl = memo(
       const control = (
         <StyledSegmentedControl
           {...rest}
-          ref={(node) => {
-            (containerRef as React.MutableRefObject<HTMLDivElement | null>).current =
-              node;
-            measureRef(node as Element);
-            if (typeof ref === 'function') {
-              ref(node);
-            } else if (ref) {
-              (ref as React.MutableRefObject<HTMLDivElement | null>).current =
-                node;
-            }
-          }}
+          ref={setContainerRef}
           theme={theme}
           size={size}
           flat={flat}

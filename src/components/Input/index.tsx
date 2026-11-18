@@ -418,7 +418,9 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
             ...rest?.effect,
           }}
           onChange={!readOnly && !rest?.disabled ? rest?.onChange : undefined}
-          ref={(ref) => setInputRef(ref)}
+          // The setter itself, which keeps its identity: an arrow made here was a new ref on every render, so React
+          // called it with null and then the element each time, two updates for nothing (board f70).
+          ref={setInputRef}
           theme={theme}
           _size={size}
           minimal={minimal}
