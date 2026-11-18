@@ -319,7 +319,7 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
           icon='ShareForward2Fill'
           rightIcon={args.rightIcon}
           leftIconColor='#00fafd'
-          rightIconColor='#eb0e8c'
+          rightIconColor='#ff7ac0'
           wrap
           onRemoveClick={null}
           actions={[

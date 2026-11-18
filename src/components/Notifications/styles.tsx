@@ -3,13 +3,21 @@ import { css, keyframes } from 'styled-components';
 import { PADDING_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { fadeIn } from '../../helpers/animations';
-import { changeDarkness, changeLightness, getNotificationIntent, getReadableColor } from '../../helpers/colors';
+import {
+  changeDarkness,
+  changeLightness,
+  getDrawnColor,
+  getNotificationIntent,
+  getReadableColor,
+  getThemeSurface,
+  TReqoreSurface,
+} from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { resolvePadding, TReqorePadded } from '../../helpers/utils';
 import { RaisedElement } from '../../styles';
 import { IWithReqoreOpaque } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { StyledEffect } from '../Effect';
+import { StyledEffect, TReqoreHexColor } from '../Effect';
 
 /**
  * The classic notification surface, shared with `ReqoreMessage`. Kept in its
@@ -38,7 +46,63 @@ export interface IReqoreNotificationStyle extends IWithReqoreOpaque {
   raised?: boolean;
   $padded?: TReqorePadded;
   $paddingSize?: TSizes;
+  /** What the notification is drawn on (`useReqoreSurface`): the theme's surface when not known. */
+  $surface?: TReqoreSurface;
+  /**
+   * The color its own `customTheme` names (`main`), resolved; not an intent's. A minimal one on no surface it
+   * knows of is read against it: whoever named it painted what is under the notification.
+   */
+  $main?: TReqoreHexColor;
 }
+
+/** A notification's (or a message's) fill when not minimal: what its styled rule paints and what it is read on. */
+const getNotificationFill = ({
+  theme,
+  intent,
+  type,
+  opaque = true,
+}: Pick<IReqoreNotificationStyle, 'theme' | 'intent' | 'type' | 'opaque'>): string =>
+  opaque
+    ? changeLightness(theme.main, 0.1)
+    : rgba(getNotificationIntent(theme, intent || type), 0.3);
+
+/**
+ * What a notification (or a message) is drawn in, as drawn over what is under it, and the text that reads there:
+ * the theme's main a step lighter when opaque - translucent when the intent is (muted) - a 30% wash of the intent
+ * when not, nothing when minimal. A minimal one is drawn on the surface it is on, or on the color its own
+ * `customTheme` names when it is on none it knows of (`$main`); on neither, its text is the color around it
+ * (`inherit`) - its intent's color is not what is under it.
+ */
+export const getNotificationColors = ({
+  theme,
+  intent,
+  type,
+  minimal,
+  opaque = true,
+  $surface,
+  $main,
+}: Pick<
+  IReqoreNotificationStyle,
+  'theme' | 'intent' | 'type' | 'minimal' | 'opaque' | '$surface' | '$main'
+>): { background: TReqoreHexColor; text: TReqoreHexColor | 'inherit' } => {
+  const under = getThemeSurface(theme, $surface);
+
+  if (minimal) {
+    const painted = !$surface && $main ? getDrawnColor($main, under) : undefined;
+
+    return {
+      background: painted ?? under,
+      text:
+        $surface || painted
+          ? getReadableColor(theme, null, null, true, painted ?? under)
+          : 'inherit',
+    };
+  }
+
+  const background = getDrawnColor(getNotificationFill({ theme, intent, type, opaque }), under);
+
+  return { background, text: getReadableColor(theme, null, null, true, background) };
+};
 
 const timeoutAnimation = keyframes`
   0% {
@@ -104,8 +168,13 @@ export const StyledReqoreNotification = styled(StyledEffect).withConfig({
     if (asMessage) {
       return undefined;
     }
+    // not where motion is unwelcome: there it is on screen at once
     return css`
       animation: 0.2s ${fadeIn} ease-in;
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+      }
     `;
   }}
 
@@ -126,12 +195,12 @@ export const StyledReqoreNotification = styled(StyledEffect).withConfig({
     opaque = true,
     backgroundBlur,
     raised,
+    $surface,
+    $main,
   }: IReqoreNotificationStyle) => css`
     background-color: ${minimal
       ? 'transparent'
-      : opaque
-      ? changeLightness(theme.main, 0.1)
-      : rgba(getNotificationIntent(theme, intent || type), 0.3)};
+      : getNotificationFill({ theme, intent, type, opaque })};
     border: ${flat ? 0 : '1px solid'};
     border-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.2)};
 
@@ -161,9 +230,11 @@ export const StyledReqoreNotification = styled(StyledEffect).withConfig({
       }
     `}
 
-    color: ${minimal || !opaque
-      ? 'inherit'
-      : getReadableColor(theme, null, null, true, minimal ? theme.originalMain : undefined)};
+    /* Read against what it is drawn on: a translucent background (the muted intent, an
+       intent's wash) over what is under the notification, not the colour it is made of. A
+       minimal one on nothing it knows of is written in the colour around it. */
+    color: ${getNotificationColors({ theme, intent, type, minimal, opaque, $surface, $main })
+      .text};
 
     ${clickable &&
     css`

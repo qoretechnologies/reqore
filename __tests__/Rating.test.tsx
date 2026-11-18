@@ -6,6 +6,8 @@ import {
   ReqoreRating,
   ReqoreUIProvider,
 } from '../src';
+import { ReqoreSurfaceProvider } from '../src/context/SurfaceContext';
+import { getContrastRatio, getDrawnColor } from '../src/helpers/colors';
 
 test('Renders <Rating /> with 5 stars by default', () => {
   render(
@@ -270,4 +272,35 @@ test('A mouse resting on a star previews it', () => {
   fireEvent.mouseMove(second);
 
   expect(screen.getByText('2 / 5')).toBeTruthy();
+});
+
+/*
+ * A star in a theme's color (`filledColor='warning'`) is drawn in the shade of it that stands out by 3:1 from what
+ * the rating is drawn on, as an icon given that color is; a hex is drawn as given.
+ */
+describe('a star in a color the caller gives', () => {
+  const starColorOn = (surface: string, filledColor: string) => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreSurfaceProvider color={surface as `#${string}`}>
+              <ReqoreRating value={3} max={5} filledColor={filledColor as never} />
+            </ReqoreSurfaceProvider>
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+    const star = document.querySelector('.reqore-rating-item svg') as SVGElement;
+    return getDrawnColor(getComputedStyle(star).color);
+  };
+
+  test("a theme's color stands out by 3:1 on a surface close to it", () => {
+    // a brown close to the theme's warning: the warning as it is barely shows on it
+    expect(getContrastRatio(starColorOn('#8a5020', 'warning'), '#8a5020')).toBeGreaterThanOrEqual(3);
+  });
+
+  test('a hex is drawn as given', () => {
+    expect(starColorOn('#ffffff', '#ffee00')).toBe('#ffee00');
+  });
 });

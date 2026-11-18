@@ -5,6 +5,8 @@ import {
   ReqoreLayoutContent,
   ReqoreUIProvider,
 } from '../src';
+import { getContrastRatio, getDrawnColor } from '../src/helpers/colors';
+import { SurfaceProbe } from './shared/surfaces';
 
 const basicItems = [
   { label: 'Item 1', content: 'Content 1' },
@@ -437,4 +439,44 @@ test('Minimal accordion with item intent renders a tinted header background', ()
   // The intent minimal header gets a non-transparent tinted background.
   expect(dangerBg).not.toBe(plainBg);
   expect(dangerBg).not.toMatch(/transparent|rgba\(0, 0, 0, 0\)/);
+});
+
+/*
+ * An accordion is read on what it paints: a minimal header (no fill of its own) on the accordion's light gradient
+ * is drawn in a text that reads on the gradient, not on the dark page around it; and what the header holds is told
+ * it is drawn on the header.
+ */
+describe('an accordion with a light gradient on a dark page', () => {
+  const LIGHT = { colors: { 0: '#ffffff', 100: '#f2f2f2' } } as const;
+
+  test("a minimal header's text reads on the gradient", () => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreAccordion
+          minimal
+          effect={{ gradient: LIGHT }}
+          items={[{ label: 'One', content: 'Body' }]}
+        />
+      </ReqoreUIProvider>
+    );
+
+    const header = document.querySelector('.reqore-accordion-header') as HTMLElement;
+    expect(
+      getContrastRatio(getDrawnColor(getComputedStyle(header).color), '#ffffff')
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
+  test('what its header holds is drawn on the header', () => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreAccordion
+          minimal
+          effect={{ gradient: LIGHT }}
+          items={[{ label: (<SurfaceProbe />) as never, content: 'Body' }]}
+        />
+      </ReqoreUIProvider>
+    );
+
+    expect(document.querySelector('[data-testid="surfaces"]')!.textContent).toContain('#ffffff');
+  });
 });

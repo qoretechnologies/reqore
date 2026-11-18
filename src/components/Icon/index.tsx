@@ -1,4 +1,3 @@
-import { rgba } from 'polished';
 import React, { forwardRef, memo, useMemo } from 'react';
 import { IconContext } from 'react-icons';
 import { IconBaseProps, IconType } from 'react-icons/lib';
@@ -6,7 +5,15 @@ import * as RemixIcons from 'react-icons/ri';
 import { css, keyframes } from 'styled-components';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { ICON_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
-import { getColorFromMaybeString, getReadableColor } from '../../helpers/colors';
+import {
+  getColorAtAlpha,
+  getColorFromMaybeString,
+  getReadableColor,
+  getReadableIntentColor,
+  getReadableThemeColor,
+  READABLE_ICON_CONTRAST,
+} from '../../helpers/colors';
+import { useReqoreSurface } from '../../context/SurfaceContext';
 import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -172,11 +179,20 @@ const ReqoreIcon = memo(
       ref
     ) => {
       const theme = useReqoreTheme();
+      const surface = useReqoreSurface();
       const glowingIconsDefault = useReqoreProperty('glowingIcons');
       const Icon: IconType = RemixIcons[`Ri${icon}`];
+      /* An intent, or a theme's color named by name ('info', 'success:lighten:2'), draws the icon in a
+         shade of it that stands out by 3:1 from what the icon is drawn on (WCAG 1.4.11): the danger red
+         as it is is 2.4:1 on the dark theme. Any other color given is the caller's. */
       const finalColor: string | undefined = useMemo(
-        () => (intent ? theme.intents[intent] : getColorFromMaybeString(theme, color)),
-        [intent, theme, color]
+        () =>
+          intent
+            ? getReadableIntentColor(theme, intent, READABLE_ICON_CONTRAST, surface)
+            : color
+              ? getReadableThemeColor(theme, color, READABLE_ICON_CONTRAST, surface)
+              : undefined,
+        [intent, theme, color, surface]
       );
       const finalSize: string = isStringSize(size) ? ICON_FROM_SIZE[size] : size;
       const finalWrapperSize: string = wrapperSize
@@ -217,7 +233,7 @@ const ReqoreIcon = memo(
         const opacity = config.opacity ?? 0.8;
         // Own colour → a plain, well-supported rgba glow.
         if (ownColor) {
-          return `drop-shadow(0 0 ${blur}px ${rgba(ownColor, opacity)})`;
+          return `drop-shadow(0 0 ${blur}px ${getColorAtAlpha(ownColor, opacity)})`;
         }
         // No colour of its own (the app-wide default on an inheritance-coloured
         // icon, e.g. a button glyph): glow the *painted* `currentColor` in pure CSS

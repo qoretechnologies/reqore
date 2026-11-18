@@ -1,7 +1,9 @@
 import { noop } from 'lodash';
 import { CSSProperties, ReactNode } from 'react';
 import { IReqoreNotificationProps } from '../../components/Notifications/notification';
-import { ReqoreP } from '../../index';
+import { TReqoreHexColor } from '../../components/Effect';
+import { getDrawnColor } from '../../helpers/colors';
+import { ReqoreP, ReqoreSurfaceProvider } from '../../index';
 
 /** Realistic notifications, one per intent, with a one-line form for `compact`. */
 export type TSample = Partial<IReqoreNotificationProps> & { key: string; short?: string };
@@ -79,7 +81,8 @@ export const STATIC: Partial<IReqoreNotificationProps> = { onClose: noop, onFini
 
 export const Row = ({ label, children }: { label: string; children: ReactNode }) => (
   <div style={{ display: 'flex', flexFlow: 'column', gap: 8, minWidth: 0 }}>
-    <ReqoreP size='tiny' effect={{ opacity: 0.6, uppercase: true, spaced: 1 }}>
+    {/* in the text color, not faded: on the busy backdrop a faded label did not read everywhere it is drawn */}
+    <ReqoreP size='tiny' effect={{ uppercase: true, spaced: 1 }}>
       {label}
     </ReqoreP>
     {children}
@@ -111,6 +114,19 @@ export const Grid = ({
   </div>
 );
 
+/** The backdrop's gradient: its colors, painted and read alike. */
+const BACKDROP_COLORS: TReqoreHexColor[] = ['#1d3557', '#7b2d7a', '#0f6b4f'];
+
+/** Its stripes: a white wash over the gradient, painted and read alike. */
+const BACKDROP_STRIPE = 'rgba(255,255,255,0.08)';
+
+/* Every color the backdrop shows: its gradient's, and each under a stripe. The notifications on it are told
+   (`ReqoreSurfaceProvider`), so their text and icons read on all of it, as an app does for a background of its own. */
+const BACKDROP_SURFACES: TReqoreHexColor[] = [
+  ...BACKDROP_COLORS,
+  ...BACKDROP_COLORS.map((color) => getDrawnColor(BACKDROP_STRIPE, color)),
+];
+
 /**
  * Something busy behind the glass, so the frost and the translucency can be
  * judged — a plain canvas hides both.
@@ -120,12 +136,12 @@ export const Backdrop = ({ children }: { children: ReactNode }) => (
     style={{
       padding: 24,
       borderRadius: 12,
+      // the stripes over the gradient, drawn as the surfaces above read them: a plain wash, no blend mode
       background:
-        'linear-gradient(135deg, #1d3557 0%, #7b2d7a 45%, #0f6b4f 100%), ' +
-        'repeating-linear-gradient(45deg, transparent 0 18px, rgba(255,255,255,0.08) 18px 22px)',
-      backgroundBlendMode: 'overlay',
+        `repeating-linear-gradient(45deg, transparent 0 18px, ${BACKDROP_STRIPE} 18px 22px), ` +
+        `linear-gradient(135deg, ${BACKDROP_COLORS[0]} 0%, ${BACKDROP_COLORS[1]} 45%, ${BACKDROP_COLORS[2]} 100%)`,
     }}
   >
-    {children}
+    <ReqoreSurfaceProvider color={BACKDROP_SURFACES}>{children}</ReqoreSurfaceProvider>
   </div>
 );

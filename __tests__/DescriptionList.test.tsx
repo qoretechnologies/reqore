@@ -5,6 +5,9 @@ import {
   ReqoreLayoutContent,
   ReqoreUIProvider,
 } from '../src';
+import { getContrastRatio } from '../src/helpers/colors';
+import { drawnOpacity, fromHex, hex, over } from './shared/colorMath';
+import { SurfaceProbe } from './shared/surfaces';
 
 const baseItems = [
   { key: 'created', label: 'Created', content: '5/16/2026, 11:00 PM' },
@@ -210,4 +213,53 @@ test('per-row uppercaseLabel overrides the component default', () => {
   expect(
     document.querySelectorAll('.reqore-description-list-label').length
   ).toBe(2);
+});
+
+test("a label is faded as far as it reads in the list's own text color, not the provider's", () => {
+  const labelOpacity = () =>
+    Number(
+      getComputedStyle(
+        document.querySelector('.reqore-description-list-label .reqore-paragraph') as HTMLElement
+      ).opacity
+    );
+
+  const { unmount } = renderList();
+  const inTheProviders = labelOpacity();
+
+  unmount();
+  // a grey that reads on the dark theme only drawn in full
+  renderList({ customTheme: { text: { color: '#808080' } } });
+
+  expect(inTheProviders).toBeLessThan(1);
+  expect(labelOpacity()).toBeGreaterThan(inTheProviders);
+});
+
+test("an uppercase label in an intent is faded as far as that intent's shade reads, not the text color", () => {
+  // danger's shade on the dark theme stands out less than its white text: faded as far as the white
+  // can be, it no longer reads
+  renderList({
+    uppercaseLabels: true,
+    items: [{ key: 'a', label: 'Failed', labelIntent: 'danger', content: <SurfaceProbe /> }],
+  });
+
+  const label = document.querySelector(
+    '.reqore-description-list-label .reqore-paragraph'
+  ) as HTMLElement;
+  // what the list hands its rows is what the label is drawn on
+  const surface = fromHex(
+    document.querySelector('[data-testid="surfaces"]')!.textContent!.split(',')[0]
+  );
+  const drawn = over(getComputedStyle(label).color, surface, drawnOpacity(label));
+
+  expect(getContrastRatio(hex(drawn), hex(surface))).toBeGreaterThanOrEqual(4.5);
+});
+
+test("a label in the content's case is drawn at full strength", () => {
+  renderList({ uppercaseLabels: false });
+
+  expect(
+    drawnOpacity(
+      document.querySelector('.reqore-description-list-label .reqore-paragraph') as HTMLElement
+    )
+  ).toBe(1);
 });

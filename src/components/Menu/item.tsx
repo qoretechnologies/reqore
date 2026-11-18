@@ -1,7 +1,8 @@
-import React, { forwardRef, memo, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { forwardRef, memo, useCallback, useEffect, useState } from 'react';
 import { ReqoreButton, ReqoreControlGroup, ReqoreDropdown } from '../..';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { IReqoreComponent } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
@@ -127,13 +128,8 @@ const ReqoreMenuItem = memo(
       // Respect the global animations toggle from `ReqoreUIProvider` (popovers — menus are
       // rendered inside them) and the OS reduced-motion preference.
       const animations = useReqoreProperty('animations');
-      const prefersReducedMotion = useMemo(
-        () =>
-          typeof window !== 'undefined' &&
-          typeof window.matchMedia === 'function' &&
-          window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-        []
-      );
+      // followed live: a user switching "Reduce motion" on with the menu open
+      const prefersReducedMotion = usePrefersReducedMotion();
       const scrollBehavior: ScrollBehavior =
         animations?.popovers === false || prefersReducedMotion ? 'auto' : 'smooth';
 

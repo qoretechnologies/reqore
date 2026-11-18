@@ -17,6 +17,8 @@ import { SPRING_CONFIG } from '../../constants/animations';
 import { IReqoreTheme } from '../../constants/theme';
 import type { IReqoreConfirmationModal } from '../../containers/ReqoreProvider';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { ReqoreSurfaceProvider } from '../../context/SurfaceContext';
+import { getThemeSurface } from '../../helpers/colors';
 import { getSwipeStep } from '../../helpers/gestures';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import {
@@ -569,8 +571,8 @@ const DRAWER_SLIDE_PX = 80;
  * entered as a floating side panel and became a phone sheet kept `right: 10px`, a sheet 10px
  * short of the screen's edge.
  */
-const getSpringConfig = (isModal?: boolean) =>
-  isModal
+const getSpringConfig = (isModal?: boolean, still?: boolean) => {
+  const config = isModal
     ? {
         from: { opacity: 0, transform: 'scale(0.5)' },
         enter: { opacity: 1, transform: 'scale(1)' },
@@ -581,6 +583,12 @@ const getSpringConfig = (isModal?: boolean) =>
         enter: { opacity: 1, slide: 0 },
         leave: { opacity: 0, slide: DRAWER_SLIDE_PX },
       };
+
+  /* Without motion (`still`: reduced motion, or dialog animations off) it enters where it rests.
+     An `immediate` spring is set at react-spring's next frame, so its first frame was its `from`:
+     see-through, and beyond its edge. */
+  return still ? { ...config, from: config.enter } : config;
+};
 
 /**
  * The translate a drawer `slide` px beyond `position`'s edge is drawn with. Nothing once it is
@@ -646,6 +654,13 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     const customPortalId = useReqoreProperty('customPortalId');
     const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
     const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+    /* What the drawer is drawn on: the layout's surface, not that of what opened it. It is in the
+       portal, over the page, but in the React tree of its opener, and so inherited its surface (a
+       drawer opened from a danger message picked its content's shades against the message's red).
+       Its panel draws the drawer's fill on this and hands that fill to the content; the hide
+       control, shown outside the panel, is drawn on this. */
+    const layoutTheme = useReqoreTheme();
+    const layoutSurface = useMemo(() => getThemeSurface(layoutTheme), [layoutTheme]);
     const isMobile = useReqoreProperty('isMobile');
     const isMobileOrTablet = useReqoreProperty('isMobileOrTablet');
     // One query, always subscribed (a hook cannot come and go with the prop):
@@ -709,13 +724,21 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
       });
     }, [position, size, width, height]);
 
+    const reducedMotion = usePrefersReducedMotion();
+    // Motion that is not the finger's own — the drawer coming in and going, a sheet let go early
+    // springing back — is instant when the user asked for less of it, or when dialog animations
+    // are off.
+    const immediateMotion = animations.dialogs === false || reducedMotion;
+
     const transitions = useTransition(isOpen, {
-      ...getSpringConfig(_isModal),
+      ...getSpringConfig(_isModal, immediateMotion),
       config: SPRING_CONFIG,
       // A zero-tension spring never advances from its `from` state. When
       // dialog animations are disabled, apply the entered / left styles
       // immediately so drawers and modals remain visible and interactive.
-      immediate: animations.dialogs === false,
+      // Under reduced motion it is in place at once too, and so is its
+      // backdrop, whose opacity is this spring's.
+      immediate: immediateMotion,
     });
 
     const zIndex = useMemo(
@@ -778,10 +801,6 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
       : undefined;
 
     const isHoverCapable = useReqoreProperty('isHoverCapable');
-    const reducedMotion = usePrefersReducedMotion();
-    // Motion that is not the finger's own — a sheet let go early springing back — is instant
-    // when the user asked for less of it, or when dialog animations are off.
-    const immediateMotion = animations.dialogs === false || reducedMotion;
     // A sheet with nothing to close into cannot be swiped. A modal is dragged only where the
     // pointer can hover: the `move` cursor on its title bar is the affordance, and on a touch
     // screen a press on a header belongs to the page.
@@ -1061,107 +1080,109 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
       transitions((styles: any, item) =>
         item ? (
           <ReqoreThemeProvider theme={theme} customTheme={customTheme}>
-            {hasBackdrop && !hidden ? (
-              <ReqoreBackdrop
-                onClose={handleClose}
-                zIndex={zIndex}
-                blur={blur}
-                opacity={styles.opacity}
-              />
-            ) : null}
-            <StyledWrapper
-              ref={drawerRef}
-              zIndex={wrapperZIndex}
-              className='reqore-drawer-wrapper'
-              role={_isModal || hasBackdrop ? 'dialog' : undefined}
-              aria-modal={_isModal || hasBackdrop ? 'true' : undefined}
-            >
-              <Resizable
-                className={`${className || ''} reqore-drawer-resizable${
-                  sheet.active ? ' reqore-drawer-sheet' : ''
-                }${swipeable ? ' reqore-drawer-swipeable' : ''}${
-                  draggable ? ' reqore-drawer-draggable' : ''
-                }${dragging ? ' reqore-drawer-dragging' : ''}`}
-                maxHeight={
-                  layout === 'horizontal' || layout === 'center' ? maxSize || '90vh' : undefined
-                }
-                minHeight={
-                  layout === 'center'
-                    ? minHeight || minSize || MODAL_MIN_HEIGHT
-                    : layout === 'horizontal'
-                    ? hidden
-                      ? 0
-                      : minSize || DRAWER_MIN_SIZE
-                    : undefined
-                }
-                maxWidth={
-                  layout === 'vertical' || layout === 'center' ? maxSize || '90vw' : undefined
-                }
-                minWidth={
-                  layout === 'center'
-                    ? minWidth || minSize || MODAL_MIN_WIDTH
-                    : layout === 'vertical'
-                    ? hidden
-                      ? 0
-                      : minSize || DRAWER_MIN_SIZE
-                    : undefined
-                }
-                as={StyledDrawerResizable}
-                {...({
-                  $edgelessPosition: !floating && !_isModal ? position : undefined,
-                  $handle: draggable ? 'drag' : swipeable ? 'swipe' : undefined,
-                  $dragging: dragging,
-                } as any)}
-                {...dragHandlers}
-                style={{
-                  ...resizeableStyle,
-                  opacity: styles.opacity,
-                  transform: dragTransform(
-                    _isModal ? styles.transform : getSlideTransform(styles.slide, position)
-                  ),
-                }}
-                handleWrapperStyle={handleWrapperStyle}
-                size={sizeObject}
-                onResize={handleResize}
-                enable={enable}
+            <ReqoreSurfaceProvider color={layoutSurface}>
+              {hasBackdrop && !hidden ? (
+                <ReqoreBackdrop
+                  onClose={handleClose}
+                  zIndex={zIndex}
+                  blur={blur}
+                  opacity={styles.opacity}
+                />
+              ) : null}
+              <StyledWrapper
+                ref={drawerRef}
+                zIndex={wrapperZIndex}
+                className='reqore-drawer-wrapper'
+                role={_isModal || hasBackdrop ? 'dialog' : undefined}
+                aria-modal={_isModal || hasBackdrop ? 'true' : undefined}
               >
-                {hidden && hidable ? (
-                  <StyledCloseWrapper
-                    className='reqore-drawer-controls'
-                    position={position}
-                    w={layout === 'vertical' ? 0 : _size.width}
-                    h={layout === 'horizontal' ? 0 : _size.height}
-                  >
-                    <ReqoreButton
-                      flat
-                      customTheme={theme}
-                      className='reqore-drawer-control reqore-drawer-hide-button'
-                      icon={getHideShowIcon(position, _isHidden)}
-                      onClick={onHideToggleClick}
-                    />
-                  </StyledCloseWrapper>
-                ) : null}
-                {!hidden && (
-                  <ReqorePanel
-                    {...rest}
-                    size={panelSize}
-                    opacity={opacity}
-                    blur={hasBackdrop ? 0 : blur}
-                    actions={_actions}
-                    customTheme={customTheme}
-                    intent={intent}
-                    rounded={floating || _isModal ? true : false}
-                    flat={flat}
-                    onClose={handleClose}
-                    closeButtonProps={closeButtonProps}
-                    className={`reqore-drawer`}
-                    style={panelStyle}
-                  >
-                    {children}
-                  </ReqorePanel>
-                )}
-              </Resizable>
-            </StyledWrapper>
+                <Resizable
+                  className={`${className || ''} reqore-drawer-resizable${
+                    sheet.active ? ' reqore-drawer-sheet' : ''
+                  }${swipeable ? ' reqore-drawer-swipeable' : ''}${
+                    draggable ? ' reqore-drawer-draggable' : ''
+                  }${dragging ? ' reqore-drawer-dragging' : ''}`}
+                  maxHeight={
+                    layout === 'horizontal' || layout === 'center' ? maxSize || '90vh' : undefined
+                  }
+                  minHeight={
+                    layout === 'center'
+                      ? minHeight || minSize || MODAL_MIN_HEIGHT
+                      : layout === 'horizontal'
+                      ? hidden
+                        ? 0
+                        : minSize || DRAWER_MIN_SIZE
+                      : undefined
+                  }
+                  maxWidth={
+                    layout === 'vertical' || layout === 'center' ? maxSize || '90vw' : undefined
+                  }
+                  minWidth={
+                    layout === 'center'
+                      ? minWidth || minSize || MODAL_MIN_WIDTH
+                      : layout === 'vertical'
+                      ? hidden
+                        ? 0
+                        : minSize || DRAWER_MIN_SIZE
+                      : undefined
+                  }
+                  as={StyledDrawerResizable}
+                  {...({
+                    $edgelessPosition: !floating && !_isModal ? position : undefined,
+                    $handle: draggable ? 'drag' : swipeable ? 'swipe' : undefined,
+                    $dragging: dragging,
+                  } as any)}
+                  {...dragHandlers}
+                  style={{
+                    ...resizeableStyle,
+                    opacity: styles.opacity,
+                    transform: dragTransform(
+                      _isModal ? styles.transform : getSlideTransform(styles.slide, position)
+                    ),
+                  }}
+                  handleWrapperStyle={handleWrapperStyle}
+                  size={sizeObject}
+                  onResize={handleResize}
+                  enable={enable}
+                >
+                  {hidden && hidable ? (
+                    <StyledCloseWrapper
+                      className='reqore-drawer-controls'
+                      position={position}
+                      w={layout === 'vertical' ? 0 : _size.width}
+                      h={layout === 'horizontal' ? 0 : _size.height}
+                    >
+                      <ReqoreButton
+                        flat
+                        customTheme={theme}
+                        className='reqore-drawer-control reqore-drawer-hide-button'
+                        icon={getHideShowIcon(position, _isHidden)}
+                        onClick={onHideToggleClick}
+                      />
+                    </StyledCloseWrapper>
+                  ) : null}
+                  {!hidden && (
+                    <ReqorePanel
+                      {...rest}
+                      size={panelSize}
+                      opacity={opacity}
+                      blur={hasBackdrop ? 0 : blur}
+                      actions={_actions}
+                      customTheme={customTheme}
+                      intent={intent}
+                      rounded={floating || _isModal ? true : false}
+                      flat={flat}
+                      onClose={handleClose}
+                      closeButtonProps={closeButtonProps}
+                      className={`reqore-drawer`}
+                      style={panelStyle}
+                    >
+                      {children}
+                    </ReqorePanel>
+                  )}
+                </Resizable>
+              </StyledWrapper>
+            </ReqoreSurfaceProvider>
           </ReqoreThemeProvider>
         ) : null
       ),

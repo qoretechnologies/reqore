@@ -1,4 +1,3 @@
-import { rgba } from 'polished';
 import { HTMLAttributes } from 'react';
 import { css, keyframes } from 'styled-components';
 import { Colors } from '../../constants/colors';
@@ -6,11 +5,27 @@ import { getFontFamily, TReqoreFontFamilyShorthand } from '../../constants/fonts
 import { TEXT_FROM_SIZE, TSizes, WEIGHT_TO_NUMBER } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
+  buildGradientColorsFromString,
+  cacheKey,
   changeLightness,
+  createColorCache,
   createEffectGradient,
+  getColorAtAlpha,
   getColorFromMaybeString,
-  getGradientMix,
+  getDrawnColor,
+  getGradientColorList,
+  getReadableAccentColorOn,
   getReadableColorFrom,
+  getReadableColorOn,
+  getReadableFadedColor,
+  getReadableThemeColor,
+  getReadableAlpha,
+  getThemeSurface,
+  getThemeColorKey,
+  getThemeSurfaces,
+  READABLE_TEXT_CONTRAST,
+  TReqoreReadableBackground,
+  TReqoreSurface,
 } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { isStringSize } from '../../helpers/utils';
@@ -244,7 +259,185 @@ export interface IReqoreTextEffectProps
   active?: boolean;
   isText?: boolean;
   transparent?: boolean;
+  /** What the text is drawn on (`useReqoreSurface`), when the component knows: the theme's surface when not. */
+  $surface?: TReqoreSurface;
+  /** Every color the text is drawn on, when the component knows them better (a tag's fill, each color of its gradient). */
+  $backgrounds?: TReqoreHexColor[];
 }
+
+/**
+ * The colors a (non-text) gradient effect paints, each as the browser draws it: the fill (a step lighter and at a
+ * quarter when minimal) over the lighter ring the effect draws under it (border-box, a quarter too when minimal),
+ * over the element's own `base` color, over what is under the element. With an opaque fill the ring is hidden;
+ * with a translucent one it shows through, and text drawn there is drawn on all of it.
+ */
+export const getEffectGradientBackgrounds = (
+  theme: IReqoreTheme,
+  colors: TReqoreEffectGradientColors,
+  minimal: boolean | undefined,
+  base: string,
+  under: TReqoreHexColor
+): TReqoreHexColor[] => {
+  const behind = base === 'transparent' ? under : getDrawnColor(base, under);
+  // the ring as the effect paints it (`getEffectRingStops`): one per stop, in the same order
+  const rings = getEffectRingStops(theme, colors, 0.15, minimal);
+
+  return getGradientColorList(theme, colors).map((stop, index) => {
+    const fill = minimal ? getColorAtAlpha(changeLightness(stop, 0.05), 0.25) : stop;
+
+    return getDrawnColor(fill, getDrawnColor(rings[index], behind));
+  });
+};
+
+/**
+ * What a component with this effect is drawn in: each color of its gradient (its `surface` fill, when the gradient
+ * is only its ring), each over what is under the component; `flat` when it has no gradient. What it holds is read
+ * against all of them.
+ */
+export const getEffectBackgrounds = (
+  theme: IReqoreTheme,
+  effect: IReqoreEffect | undefined,
+  flat: TReqoreHexColor,
+  under: TReqoreHexColor
+): TReqoreHexColor[] => {
+  const gradient = getPrimaryGradient(effect?.gradient);
+
+  if (!gradient) {
+    return [flat];
+  }
+
+  if (gradient.surface && !gradient.borderColor) {
+    return [getDrawnColor(getColorFromMaybeString(theme, gradient.surface) || under, under)];
+  }
+
+  // a list of gradients is drawn as layers: each over the ones after it, and the ring under them all
+  const stops = drawEffectLayers(
+    theme,
+    normalizeGradients(effect?.gradient).map((each) => getGradientColorList(theme, each.colors)),
+    gradient.borderColor ? undefined : gradient.colors,
+    under
+  );
+
+  return stops.length ? stops : [flat];
+};
+
+/**
+ * The lighter ring an effect draws under its gradient (border-box): each color of the gradient, `lighten` lighter
+ * (a quarter of it when minimal), as `createEffectGradient` paints it.
+ */
+const getEffectRingStops = (
+  theme: IReqoreTheme,
+  colors: TReqoreEffectGradientColors,
+  lighten: number = 0.15,
+  minimal?: boolean
+): TReqoreHexColor[] =>
+  getGradientColorList(theme, colors).map(
+    (stop) =>
+      (minimal
+        ? getColorAtAlpha(changeLightness(stop, lighten), 0.25)
+        : changeLightness(stop, lighten)) as TReqoreHexColor
+  );
+
+/**
+ * The colors an effect's fill layers (`layers`, the first on top) are drawn in over the ring of its primary gradient
+ * (`ringColors`; none when the gradient has a border color of its own or only rings a solid fill) over `under`. Where
+ * a fill is translucent the ring shows through it (qorus#646: a translucent blue glow was read without its lighter
+ * ring, and a label faded for it read 3.6:1). One fill layer and its ring share the gradient's geometry, so each stop
+ * is drawn over the ring's same stop; more layers are drawn over every color of the ones under them.
+ */
+const drawEffectLayers = (
+  theme: IReqoreTheme,
+  layers: TReqoreHexColor[][],
+  ringColors: TReqoreEffectGradientColors | undefined,
+  under: TReqoreHexColor,
+  lighten: number = 0,
+  minimal?: boolean
+): TReqoreHexColor[] => {
+  if (!ringColors) {
+    return drawGradientLayers(layers, under, lighten);
+  }
+
+  // the ring is drawn lighter when the effect is, by twice the fill's step (0.15 at rest, 0.25 pressed)
+  const ring = getEffectRingStops(theme, ringColors, 0.15 + lighten * 2, minimal);
+  const fills = layers.map((layer) =>
+    layer.map((stop) => (lighten ? changeLightness(stop, lighten) : stop))
+  );
+
+  if (fills.length === 1 && fills[0].length === ring.length) {
+    return Array.from(
+      new Set(fills[0].map((stop, index) => getDrawnColor(stop, getDrawnColor(ring[index], under))))
+    );
+  }
+
+  return drawGradientLayers([...fills, ring], under);
+};
+
+/**
+ * The colors gradient layers are drawn in: each layer (the first on top) as each of its colors, over each color of
+ * the layers under it, over `under` - every color the stack can show somewhere. A step lighter with `lighten`, as
+ * an effect draws them hovered or pressed.
+ */
+const drawGradientLayers = (
+  layers: TReqoreHexColor[][],
+  under: TReqoreHexColor,
+  lighten: number = 0
+): TReqoreHexColor[] =>
+  layers.reduceRight<TReqoreHexColor[]>(
+    (below, layer) =>
+      Array.from(
+        new Set(
+          below.flatMap((beneath) =>
+            layer.map((stop) =>
+              getDrawnColor(lighten ? changeLightness(stop, lighten) : stop, beneath)
+            )
+          )
+        )
+      ),
+    [under]
+  );
+
+/**
+ * The color an effect writes its text in. A theme's color - an intent, the theme's main, a shade of one ('info',
+ * 'success:lighten:5') - in the shade of it that reads on what the text is drawn on, as an intent's text does: the
+ * theme picks the hue, not how faint it is. Any other color as it is given.
+ */
+export const getEffectTextColor = (
+  theme: IReqoreTheme,
+  color: TReqoreEffectColor,
+  surface?: TReqoreSurface,
+  backgrounds?: TReqoreHexColor[]
+): TReqoreHexColor =>
+  getReadableThemeColor(theme, color, READABLE_TEXT_CONTRAST, surface, backgrounds);
+
+/**
+ * The colors of a gradient the text is drawn in (`background-clip: text`), each in the shade of it that reads on
+ * what the text is drawn on: the letters are drawn in every one of them.
+ */
+export const getReadableTextGradient = (
+  theme: IReqoreTheme,
+  gradient: IReqoreEffectGradient,
+  surface?: TReqoreSurface,
+  backgrounds?: TReqoreHexColor[]
+): IReqoreEffectGradient => {
+  const colors =
+    typeof gradient.colors === 'string'
+      ? buildGradientColorsFromString(theme, gradient.colors)
+      : gradient.colors;
+  const under = backgrounds?.length ? backgrounds : [getThemeSurface(theme, surface)];
+
+  return {
+    ...gradient,
+    colors: Object.fromEntries(
+      Object.entries(colors || {}).map(([at, color]) => [
+        at,
+        getReadableAccentColorOn(
+          getDrawnColor(getColorFromMaybeString(theme, color) || under[0], under[0]),
+          under
+        ),
+      ])
+    ),
+  };
+};
 
 // Animate the gradient
 const StyledGradientKeyframes = keyframes`
@@ -320,7 +513,8 @@ export const getGlowBoxShadow = (
   normalizeGlows(glow)
     .map((g) => {
       const color = getColorFromMaybeString(theme, g.color);
-      const painted = g.opacity !== undefined && g.opacity < 1 ? rgba(color, g.opacity) : color;
+      const painted =
+        g.opacity !== undefined && g.opacity < 1 ? getColorAtAlpha(color, g.opacity) : color;
 
       // `size` 0 still means the default 2px spread, as it always has.
       // An offset is written only when set, so a centred glow is the same CSS as ever.
@@ -402,150 +596,211 @@ export const withGlow = (theme: IReqoreTheme, effect: IReqoreEffect | undefined,
  */
 const REQORE_EFFECT_STYLE_PROPS = ['color', 'effect', 'intent', 'isText', 'theme'];
 
+const rememberGradientStyles = createColorCache<ReturnType<typeof css> | undefined>();
+
+/**
+ * The styles an effect's gradient paints (its fill, its ring, the text that reads on it, its animation), for the
+ * props the pass reads. A page draws the same few gradients over and over, each a pass of color maths, so it is
+ * worked out once per gradient, theme and state.
+ */
+const getGradientStyles = (props: IReqoreTextEffectProps) => {
+  const { effect, theme, minimal, active, transparent, isText, $surface, $backgrounds } = props;
+
+  if (!effect?.gradient) {
+    return undefined;
+  }
+
+  return rememberGradientStyles(
+    cacheKey(
+      getThemeColorKey(theme),
+      JSON.stringify(effect.gradient),
+      !!effect.color,
+      !!effect.interactive,
+      !!minimal,
+      !!active,
+      !!transparent,
+      !!isText,
+      Array.isArray($surface) ? $surface.join(',') : $surface,
+      // only text is drawn in colors made to read on what it is drawn on
+      isText ? $backgrounds?.join(',') : undefined
+    ),
+    () => paintGradient(props)
+  );
+};
+
+const paintGradient = ({
+  effect,
+  theme,
+  minimal,
+  active,
+  transparent,
+  isText,
+  $surface,
+  $backgrounds,
+}: IReqoreTextEffectProps) => {
+  // text drawn in a gradient is drawn in colors that read
+  const gradients = normalizeGradients(effect?.gradient).map((gradient) =>
+    isText ? getReadableTextGradient(theme, gradient, $surface, $backgrounds) : gradient
+  );
+  if (!effect || gradients.length === 0) {
+    return undefined;
+  }
+
+  // Build padding-box layers (the actual fill) for every gradient in the list.
+  const paddingLayers: string[] = [];
+  const paddingLayersActive: string[] = [];
+  // `surface` on the first gradient: the ring is the gradient, the fill is a colour.
+  const surfaceColor =
+    !isText && gradients[0].surface && !gradients[0].borderColor
+      ? getColorFromMaybeString(theme, gradients[0].surface)
+      : undefined;
+
+  gradients.forEach((g, index) => {
+    if (index === 0 && surfaceColor) {
+      const fill = `linear-gradient(${surfaceColor}, ${surfaceColor}) padding-box`;
+      paddingLayers.push(fill);
+      paddingLayersActive.push(fill);
+      return;
+    }
+
+    const colors = createEffectGradient(
+      theme,
+      g.colors,
+      // text is drawn in the colors made to read (`getReadableTextGradient`), not a minimal fill's step off them
+      minimal && !isText ? 0.05 : 0,
+      !isText && minimal && !active,
+      false,
+      transparent
+    );
+    const colorsActive = isText
+      ? colors
+      : createEffectGradient(theme, g.colors, 0.05, minimal, true, transparent);
+    paddingLayers.push(buildGradientLayer(g, colors, 'padding-box'));
+    paddingLayersActive.push(buildGradientLayer(g, colorsActive, 'padding-box'));
+  });
+
+  // The first gradient drives readable-text, animation, and border behaviour
+  // (multi-gradient borders would visually fight each other; one is enough).
+  const primary = gradients[0];
+
+  // The text stands out from every color the primary gradient is drawn in (a translucent one over the theme),
+  // hovered too when the effect answers the pointer - not from a mix of them, which none of it is drawn in.
+  let readableColor: TReqoreHexColor | undefined;
+  let readableHoverColor: TReqoreHexColor | undefined;
+  let readableBackgrounds: TReqoreHexColor[] = [];
+  if (!effect.color) {
+    const under = getThemeSurface(theme, $surface);
+    // every layer (the first is on top) drawn over the ones under it, each as each of its colors
+    const layers = surfaceColor
+      ? [[getColorFromMaybeString(theme, primary.surface!) as TReqoreHexColor]]
+      : gradients.map((gradient) => getGradientColorList(theme, gradient.colors));
+    // the lighter ring is drawn under the fill when the gradient is the fill, and has no border color of its own
+    const ringColors = surfaceColor || primary.borderColor || isText ? undefined : primary.colors;
+    const restStops = drawEffectLayers(theme, layers, ringColors, under, 0, minimal);
+    const activeStops = drawEffectLayers(theme, layers, ringColors, under, 0.05, minimal);
+
+    // as it is drawn now: at rest, or lighter when active; hovered it is lighter, and gets its own
+    readableBackgrounds = active ? activeStops : restStops;
+    readableColor = readableBackgrounds.length
+      ? getReadableColorOn(readableBackgrounds)
+      : undefined;
+    readableHoverColor =
+      effect.interactive && activeStops.length ? getReadableColorOn(activeStops) : undefined;
+  }
+
+  let borderColor: string;
+  let borderHoverColor: string;
+
+  if (primary.borderColor) {
+    borderColor = `${getColorFromMaybeString(theme, primary.borderColor)}`;
+    borderHoverColor = `${changeLightness(
+      getColorFromMaybeString(theme, primary.borderColor),
+      0.15
+    )}`;
+  } else if (!isText) {
+    borderColor = 'transparent';
+    borderHoverColor = 'transparent';
+
+    // A `surface` ring shows the gradient's own colours; the default ring is a
+    // lighter echo of the fill it borders.
+    const borderGradientColors: string = createEffectGradient(
+      theme,
+      primary.colors,
+      surfaceColor ? 0 : 0.15,
+      minimal
+    );
+    const borderGradientColorsActive: string = createEffectGradient(
+      theme,
+      primary.colors,
+      surfaceColor ? 0.1 : 0.25,
+      minimal
+    );
+
+    paddingLayers.push(buildGradientLayer(primary, borderGradientColors, 'border-box'));
+    paddingLayersActive.push(
+      buildGradientLayer(primary, borderGradientColorsActive, 'border-box')
+    );
+  }
+
+  const gradient = paddingLayers.join(', ');
+  const gradientActive = paddingLayersActive.join(', ');
+
+  return css`
+    background: ${active ? gradientActive : gradient};
+    border-color: ${borderColor} !important;
+
+    ${readableColor && !minimal && !transparent
+      ? css`
+          color: ${readableColor} !important;
+          &::placeholder {
+            color: ${getReadableFadedColor(readableColor, readableBackgrounds, 0.7)} !important;
+          }
+        `
+      : undefined}
+
+    ${primary.animate === 'always' || (primary.animate === 'active' && active)
+      ? css`
+          background-size: 200% 200%;
+          animation: ${StyledGradientKeyframes} ${primary.animationSpeed || 2}s linear infinite;
+        `
+      : undefined}
+
+    ${effect.interactive &&
+    css`
+      cursor: pointer;
+
+      &:hover,
+      &:focus,
+      &:active {
+        background: ${gradientActive};
+        border-color: ${borderHoverColor} !important;
+        ${readableHoverColor && !minimal && !transparent
+          ? css`
+              color: ${readableHoverColor} !important;
+            `
+          : undefined}
+
+        ${primary.animate === 'hover' ||
+        (primary.animate === 'active' && active) ||
+        primary.animate === 'always'
+          ? css`
+              background-size: 200% 200%;
+              animation: ${StyledGradientKeyframes} ${primary.animationSpeed || 2}s linear
+                infinite;
+            `
+          : undefined}
+      }
+    `}
+  `;
+};
+
 export const StyledEffect = styled.span.withConfig({
   shouldForwardProp: omitStyleProps(...REQORE_EFFECT_STYLE_PROPS),
 })`
   // If gradient was supplied
-  ${({ effect, theme, minimal, active, transparent, isText }: IReqoreTextEffectProps) => {
-    const gradients = normalizeGradients(effect?.gradient);
-    if (!effect || gradients.length === 0) {
-      return undefined;
-    }
+  ${(props: IReqoreTextEffectProps) => getGradientStyles(props)}
 
-    // Build padding-box layers (the actual fill) for every gradient in the list.
-    const paddingLayers: string[] = [];
-    const paddingLayersActive: string[] = [];
-    // `surface` on the first gradient: the ring is the gradient, the fill is a colour.
-    const surfaceColor =
-      !isText && gradients[0].surface && !gradients[0].borderColor
-        ? getColorFromMaybeString(theme, gradients[0].surface)
-        : undefined;
-
-    gradients.forEach((g, index) => {
-      if (index === 0 && surfaceColor) {
-        const fill = `linear-gradient(${surfaceColor}, ${surfaceColor}) padding-box`;
-        paddingLayers.push(fill);
-        paddingLayersActive.push(fill);
-        return;
-      }
-
-      const colors = createEffectGradient(
-        theme,
-        g.colors,
-        minimal ? 0.05 : 0,
-        !isText && minimal && !active,
-        false,
-        transparent
-      );
-      const colorsActive = createEffectGradient(
-        theme,
-        g.colors,
-        0.05,
-        minimal,
-        true,
-        transparent
-      );
-      paddingLayers.push(buildGradientLayer(g, colors, 'padding-box'));
-      paddingLayersActive.push(buildGradientLayer(g, colorsActive, 'padding-box'));
-    });
-
-    // The first gradient drives readable-text, animation, and border behaviour
-    // (multi-gradient borders would visually fight each other; one is enough).
-    const primary = gradients[0];
-
-    // Determine the text color based on the primary gradient
-    let color: TReqoreHexColor | undefined;
-    if (!effect.color) {
-      color = surfaceColor
-        ? (getColorFromMaybeString(theme, primary.surface!) as TReqoreHexColor)
-        : getGradientMix(theme, primary.colors);
-    }
-
-    let borderColor: string;
-    let borderHoverColor: string;
-
-    if (primary.borderColor) {
-      borderColor = `${getColorFromMaybeString(theme, primary.borderColor)}`;
-      borderHoverColor = `${changeLightness(
-        getColorFromMaybeString(theme, primary.borderColor),
-        0.15
-      )}`;
-    } else if (!isText) {
-      borderColor = 'transparent';
-      borderHoverColor = 'transparent';
-
-      // A `surface` ring shows the gradient's own colours; the default ring is a
-      // lighter echo of the fill it borders.
-      const borderGradientColors: string = createEffectGradient(
-        theme,
-        primary.colors,
-        surfaceColor ? 0 : 0.15,
-        minimal
-      );
-      const borderGradientColorsActive: string = createEffectGradient(
-        theme,
-        primary.colors,
-        surfaceColor ? 0.1 : 0.25,
-        minimal
-      );
-
-      paddingLayers.push(buildGradientLayer(primary, borderGradientColors, 'border-box'));
-      paddingLayersActive.push(
-        buildGradientLayer(primary, borderGradientColorsActive, 'border-box')
-      );
-    }
-
-    const gradient = paddingLayers.join(', ');
-    const gradientActive = paddingLayersActive.join(', ');
-
-    return css`
-      background: ${active ? gradientActive : gradient};
-      border-color: ${borderColor} !important;
-
-      ${color && !minimal && !transparent
-        ? css`
-            color: ${getReadableColorFrom(getColorFromMaybeString(theme, color), false)} !important;
-            &::placeholder {
-              color: ${rgba(
-                getReadableColorFrom(getColorFromMaybeString(theme, color), false),
-                0.7
-              )} !important;
-            }
-          `
-        : undefined}
-
-      ${primary.animate === 'always' || (primary.animate === 'active' && active)
-        ? css`
-            background-size: 200% 200%;
-            animation: ${StyledGradientKeyframes} ${primary.animationSpeed || 2}s linear infinite;
-          `
-        : undefined}
-
-      ${effect.interactive &&
-      css`
-        cursor: pointer;
-
-        &:hover,
-        &:focus,
-        &:active {
-          background: ${gradientActive};
-          border-color: ${borderHoverColor} !important;
-
-          ${primary.animate === 'hover' ||
-          (primary.animate === 'active' && active) ||
-          primary.animate === 'always'
-            ? css`
-                background-size: 200% 200%;
-                animation: ${StyledGradientKeyframes} ${primary.animationSpeed || 2}s linear
-                  infinite;
-              `
-            : undefined}
-        }
-      `}
-    `;
-  }}
-
-  ${({ effect, theme, isText }: IReqoreTextEffectProps) => {
+  ${({ effect, theme, isText, $surface }: IReqoreTextEffectProps) => {
     const primaryGlow = getPrimaryGlow(effect?.glow);
 
     if (!effect || !effect.glow || !primaryGlow) {
@@ -565,14 +820,15 @@ export const StyledEffect = styled.span.withConfig({
       );
       const blur = primaryGlow.blur || 0;
       const opacity = primaryGlow.opacity || 1;
+      const halo = getColorAtAlpha(color, opacity);
 
+      /* The letters sit in their glow, a halo of its color right around them, and are drawn in the color that
+         reads on it - a light glow's letters dark. A halo in the letters' own color around them hid them (white
+         letters in a white halo inside a red glow: 3.85:1). */
       glow = css`
-        color: ${Colors.LIGHT};
-        text-shadow: 0 0 ${blur}px ${rgba(color, opacity)},
-          0 0 ${blur + 5}px ${rgba(color, opacity)}, 0 0 ${blur + 10}px ${rgba(color, opacity)},
-          0 0 1px ${rgba(getReadableColorFrom(color), opacity)},
-          0 0 2px ${rgba(getReadableColorFrom(color), opacity)},
-          0 0 3px ${rgba(getReadableColorFrom(color), opacity)};
+        color: ${getReadableColorFrom(halo, false, undefined, undefined, getThemeSurface(theme, $surface))};
+        text-shadow: 0 0 ${blur}px ${halo}, 0 0 ${blur + 5}px ${halo}, 0 0 ${blur + 10}px ${halo},
+          0 0 1px ${halo}, 0 0 2px ${halo}, 0 0 3px ${halo};
       `;
     }
 
@@ -664,10 +920,10 @@ ${({ effect }: IReqoreTextEffectProps) =>
         `
       : undefined}
 
-  ${({ effect, theme }: IReqoreTextEffectProps) =>
+  ${({ effect, theme, $surface, $backgrounds }: IReqoreTextEffectProps) =>
     effect && effect.color
       ? css`
-          color: ${getColorFromMaybeString(theme, effect.color)} !important;
+          color: ${getEffectTextColor(theme, effect.color, $surface, $backgrounds)} !important;
         `
       : undefined}
 
@@ -779,14 +1035,22 @@ export const StyledTextEffect = styled(StyledEffect)
         `
       : undefined}
 
-  ${({ effect, theme }: IReqoreTextEffectProps) => {
+  ${({ effect, theme, $surface, $backgrounds }: IReqoreTextEffectProps) => {
     if (!effect?.frost) {
       return undefined;
     }
 
     const frost = typeof effect.frost === 'boolean' ? {} : effect.frost;
-    const color = getColorFromMaybeString(theme, frost.color || 'main:lighten:8');
-    const opacity = frost.opacity ?? 0.72;
+    // a theme's color in a shade that reads where the text is drawn (any other color as given)
+    const color = getReadableThemeColor(
+      theme,
+      frost.color || 'main:lighten:8',
+      READABLE_TEXT_CONTRAST,
+      $surface,
+      $backgrounds
+    );
+    const under = $backgrounds?.length ? $backgrounds : getThemeSurfaces(theme, $surface);
+    const opacity = getFrostOpacity(color, under, frost.opacity);
     const shadowOpacity = frost.shadowOpacity ?? 0.28;
     const blur = frost.blur ?? 0.4;
 
@@ -794,19 +1058,34 @@ export const StyledTextEffect = styled(StyledEffect)
       color: transparent !important;
       background: linear-gradient(
         180deg,
-        ${rgba(color, Math.min(opacity + 0.18, 1))},
-        ${rgba(color, opacity * 0.52)}
+        ${getColorAtAlpha(color, Math.min(opacity + 0.18, 1))},
+        ${getColorAtAlpha(color, opacity * FROST_FOOT)}
       );
       -webkit-background-clip: text !important;
       background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
       text-shadow:
-        0 1px 0 ${rgba(Colors.LIGHT, shadowOpacity)},
-        0 -1px 0 ${rgba(Colors.DARK, shadowOpacity * 0.7)},
-        0 0 ${blur}px ${rgba(color, shadowOpacity)};
+        0 1px 0 ${getColorAtAlpha(Colors.LIGHT, shadowOpacity)},
+        0 -1px 0 ${getColorAtAlpha(Colors.DARK, shadowOpacity * 0.7)},
+        0 0 ${blur}px ${getColorAtAlpha(color, shadowOpacity)};
     `;
   }}
 `;
+
+/** How far down its letters frosted text fades: its foot is drawn at this part of its opacity. */
+export const FROST_FOOT = 0.52;
+
+/**
+ * The opacity frosted text is drawn at (its top; its foot is `FROST_FOOT` of it): the caller's `opacity` as given,
+ * or by default 0.72, raised as far as the foot needs to stand out from what it is drawn on. Only the default is
+ * floored: what a caller sets is the caller's (see COMPONENTS.md).
+ */
+export const getFrostOpacity = (
+  color: TReqoreHexColor | string,
+  under: TReqoreReadableBackground,
+  opacity?: number
+): number =>
+  opacity !== undefined ? opacity : getReadableAlpha(color, under, 0.72 * FROST_FOOT) / FROST_FOOT;
 
 export const ReqoreEffect = ({ children, ...rest }: IReqoreTextEffectProps) => {
   return (

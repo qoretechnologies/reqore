@@ -30,6 +30,7 @@ import {
 } from '../../index';
 import tableData from '../../mock/tableData';
 import { StoryMeta } from '../utils';
+import { expectedWarning } from '../utils/expectedConsole';
 import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 import { expectTableContentWithinItsRows } from '../utils/tableGeometry';
 import {
@@ -2152,6 +2153,9 @@ const WRAPPING_ROWS = slice(tableData.data as IReqoreTableRowData[], 0, 4).map((
     : row
 );
 
+/** The table's warning that a `rowHeight` does nothing on a table that renders every row. */
+const ROW_HEIGHT_HAS_NO_EFFECT = expectedWarning(/^\[ReqoreTable\] `rowHeight` has no effect/);
+
 /**
  * A wrapping table given more height than its rows need.
  *
@@ -2170,7 +2174,8 @@ export const WrappedRowsFitTheirBody: Story = {
           'need; the second row has a long address that wraps onto several lines. The body ' +
           'is exactly as tall as its rows — no blank band under the last one and nothing to ' +
           'scroll — whatever `rowHeight` the table was also given, since wrapped rows take ' +
-          'their height from their content. The `height` is the most the body may take.',
+          'their height from their content, and the table warns that the `rowHeight` does ' +
+          'nothing. The `height` is the most the body may take.',
       },
     },
   },
@@ -2181,7 +2186,9 @@ export const WrappedRowsFitTheirBody: Story = {
     label: 'Wrapped rows fit their body',
     data: WRAPPING_ROWS,
   },
+  beforeEach: ROW_HEIGHT_HAS_NO_EFFECT.beforeEach,
   play: async ({ canvasElement }) => {
+    await ROW_HEIGHT_HAS_NO_EFFECT.expectWarned();
     const body = await waitFor(() => {
       const el = canvasElement.querySelector<HTMLElement>('.reqore-table-body');
       if (!el?.querySelectorAll('.reqore-table-row').length) throw new Error('rows not rendered');
@@ -2524,6 +2531,11 @@ export const LongContentAtScale: Story = {
   },
 };
 
+/** The table's warning that wrapping does nothing in a body it virtualizes. */
+const WRAP_HAS_NO_EFFECT = expectedWarning(
+  /^\[ReqoreTable\] `wrap` \/ `cell\.wrap` has no visual effect/
+);
+
 /**
  * `wrap` together with an explicit `virtualized`, which the table warns about:
  * a virtualised list positions each row absolutely and has to know its height
@@ -2538,9 +2550,9 @@ export const LongContentWrappedAndVirtualized: Story = {
     docs: {
       description: {
         story:
-          'The contradiction the table warns about — `wrap` with `virtualized` explicitly on. ' +
-          'The rows stay one height, so the wrapping buys nothing, and what does not fit is ' +
-          'held inside the row rather than drawn over the rows below it.',
+          'The contradiction the table warns about — `wrap` with `virtualized` explicitly on — ' +
+          'and the warning it gives. The rows stay one height, so the wrapping buys nothing, ' +
+          'and what does not fit is held inside the row rather than drawn over the rows below it.',
       },
     },
   },
@@ -2553,7 +2565,11 @@ export const LongContentWrappedAndVirtualized: Story = {
     height: 400,
     label: 'Wrapped rows in a virtualized body',
   },
-  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
+  beforeEach: WRAP_HAS_NO_EFFECT.beforeEach,
+  play: async ({ canvasElement }) => {
+    await WRAP_HAS_NO_EFFECT.expectWarned();
+    await expectTableContentWithinItsRows(canvasElement);
+  },
 };
 
 /* A table's toolbar in a narrow box (qorus#646): on a phone, a table in a card is narrower than the screen,

@@ -203,7 +203,7 @@ export const WithEffect: Story = {
     docs: {
       description: {
         story:
-          'Renders Slider with a visual effect applied.',
+          'Renders Slider with a visual effect applied: its track, thumbs and current-value tags drawn in gradients. The tags\' gradients are dark at both ends or light at both ends, so their numbers read on all of them.',
       },
     },
   },
@@ -212,7 +212,8 @@ export const WithEffect: Story = {
     effect: {
       gradient: {
         direction: 'to right bottom',
-        colors: { 0: '#ca74da', 100: '#521b6e' },
+        // dark at both ends: the current value's tag is drawn in it, and its number reads on all of it
+        colors: { 0: '#9b3fb0', 100: '#521b6e' },
         animate: 'active',
       },
       spaced: 2,
