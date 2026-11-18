@@ -167,6 +167,28 @@ test('The folded columns are named once, grouped columns included', () => {
   expect(getActionsMenuColumnIds(columns, 900)).toEqual([]);
 });
 
+test('A hidden or disabled column folds nothing, and its actions are never asked for', () => {
+  const asked = vi.fn(() => {
+    throw new TypeError('the column was asked for its actions');
+  });
+  const disabled = actionsColumn({
+    dataId: 'disabled',
+    enabled: false,
+    cell: { ...actionsColumn().cell, actions: asked },
+  });
+  const hidden = actionsColumn({
+    dataId: 'hidden',
+    show: false,
+    cell: { ...actionsColumn().cell, actions: asked },
+  });
+  const columns: IReqoreTableColumn[] = [{ dataId: 'name' }, disabled, hidden, actionsColumn()];
+
+  const ids = getActionsMenuColumnIds(columns, 300);
+  expect(ids).toEqual(['actions']);
+  expect(() => getFoldedActionTexts(columns, ids, [{ name: 'a' }, { name: 'b' }])).not.toThrow();
+  expect(asked).not.toHaveBeenCalled();
+});
+
 test('A column whose id holds a space folds by its whole id, and no other with it', () => {
   // `row actions` folds; `row` and `actions` are columns of their own and have no actions to fold.
   const columns: IReqoreTableColumn[] = [
