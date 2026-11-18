@@ -1404,7 +1404,7 @@ export const ASearchThatHidesEveryItemSaysSo: Story = {
     docs: {
       description: {
         story:
-          'A searchable collection of items in a 1440px and a 390px box, searched for "zzz", which none of them holds: it says "Nothing to show. Try another search, or fewer filters.", because a search is what hid them. Cleared, the items are back.',
+          'A searchable collection of items in a 1440px and a 390px box, searched for "zzz", which none of them holds: it says "Nothing to show. Try another search, or fewer filters.", because a search is what hid them. Cleared, the items are back; the picture is taken searched.',
       },
     },
   },
@@ -1436,8 +1436,11 @@ export const ASearchThatHidesEveryItemSaysSo: Story = {
         )
       );
       expect(box.querySelector('.reqore-collection-empty-searched')).toBeTruthy();
+      // cleared, the items are back; searched again, so the picture is what the story is about
       await userEvent.clear(search);
       await waitFor(() => expect(box.querySelector('.reqore-collection-empty')).toBeNull());
+      await userEvent.type(search, 'zzz');
+      await waitFor(() => expect(box.querySelector('.reqore-collection-empty-searched')).toBeTruthy());
     }
   },
 };
