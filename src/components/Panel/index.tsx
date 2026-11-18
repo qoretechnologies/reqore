@@ -601,6 +601,9 @@ const RIGHT_BOTTOM_GROUP_STYLE: React.CSSProperties = { marginLeft: 'auto' };
 /** A group of actions that keep their words, at their own width, in that box. */
 const KEPT_ACTIONS_AT_THEIR_WIDTH: React.CSSProperties = { flex: '0 0 auto' };
 
+/** One canvas for every panel that measures its title's name (`wrapActionsBelowTitle`). */
+let titleMeasureCanvas: HTMLCanvasElement | undefined;
+
 /** The bar's actions: in a box of their own where they may go under the title, as they are otherwise. */
 const PanelTitleActions = ({
   wrap,
@@ -2697,13 +2700,21 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
          title, down to what its controls cannot do without). Neither moves when the title's font
          does: the sum is the title's whole claim on the bar. */
       const header = node.closest<HTMLElement>('.reqore-panel-title-header');
-      const headerRoom = header
-        ? header.clientWidth -
-          Array.from(header.children).reduce(
-            (total, child) => total + child.getBoundingClientRect().width,
-            0
-          )
-        : 0;
+      /* Where the actions may go under the title (`wrapActionsBelowTitle`), the title's text column
+         fills the header, so the room the header has is in that column, past the title's line: up to
+         the header's own edge. Read as the header's children's slack, the title's room was its own
+         width rounded down, and a short title that fitted ("slack", 50.4px in 50) shrank a step. */
+      const headerRoom = !header
+        ? 0
+        : wrapActions
+          ? header.getBoundingClientRect().right -
+            (parseFloat(getComputedStyle(header).paddingRight) || 0) -
+            parent.getBoundingClientRect().right
+          : header.clientWidth -
+            Array.from(header.children).reduce(
+              (total, child) => total + child.getBoundingClientRect().width,
+              0
+            );
       const narrowActions = isNarrow
         ? node
             .closest('.reqore-panel-title')
@@ -2726,6 +2737,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         typeof description === 'string' ? description : !!description,
         clampLines,
         isNarrow,
+        wrapActions,
       ].join('\u0000');
 
       if (labelRoomsSeen.current.key !== roomKey) {
@@ -2747,7 +2759,56 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       const room = seen.settled ?? next;
 
       setLabelAvailable((current) => (current === room ? current : room));
-    }, [fitLabel, label, width, badgeKey, actions, panelSize, description, clampLines, isNarrow]);
+    }, [
+      fitLabel,
+      label,
+      width,
+      badgeKey,
+      actions,
+      panelSize,
+      description,
+      clampLines,
+      isNarrow,
+      wrapActions,
+    ]);
+
+    /**
+     * Where the actions may go under the title (`wrapActionsBelowTitle`), what the title claims on its
+     * line: its name alone, one line at its natural size, with the icon before it. Its badges are not
+     * part of the claim: where the name and the actions fit on a line and the badges do not, the badges
+     * go under the name (decision 029) and the actions stay beside it; the actions go under only where
+     * the name itself and they do not fit. A title's content basis held its badges beside it, so the
+     * actions went under first, a line taller for nothing (the portal's template drawer on a phone).
+     *
+     * Measured at the natural size, by canvas as the fit measures: never from where the actions are,
+     * so nothing it decides can change it. A title drawn by the caller (an element) has no text to
+     * measure, and keeps its content basis.
+     */
+    const [titleBasis, setTitleBasis] = useState<number | undefined>(undefined);
+
+    useLayoutEffect(() => {
+      const node = labelFitRef.current;
+      const header = node?.closest<HTMLElement>('.reqore-panel-title-header');
+      let next: number | undefined;
+
+      if (wrapActions && node && header && typeof label === 'string' && label.trim()) {
+        const style = getComputedStyle((node.firstElementChild as HTMLElement) || node);
+        const px = labelEffect?.textSize ? parseFloat(style.fontSize) : labelNaturalPx;
+        titleMeasureCanvas = titleMeasureCanvas || document.createElement('canvas');
+        const context = titleMeasureCanvas.getContext('2d');
+
+        if (context && px) {
+          context.font = `${style.fontStyle} ${style.fontWeight} ${px}px ${style.fontFamily}`;
+          const name =
+            context.measureText(label).width + (parseFloat(style.letterSpacing) || 0) * label.length;
+          const before = node.getBoundingClientRect().left - header.getBoundingClientRect().left;
+
+          next = Math.ceil(before + name) + 1;
+        }
+      }
+
+      setTitleBasis((current) => (current === next ? current : next));
+    }, [wrapActions, label, labelNaturalPx, labelEffect?.textSize, icon, iconImage, panelSize]);
 
     /**
      * Where the icon goes once the badges move under the title: beside the title, centred on it.
@@ -2906,7 +2967,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               $cornerInset={cornerInset}
             >
               {hasTitleHeader && (
-                <StyledPanelTitleHeader className='reqore-panel-title-header'>
+                <StyledPanelTitleHeader
+                  className='reqore-panel-title-header'
+                  style={titleBasis === undefined ? undefined : { flexBasis: titleBasis }}
+                >
                   {breadcrumbs ? (
                     <ReqoreBreadcrumbs
                       {...breadcrumbs}

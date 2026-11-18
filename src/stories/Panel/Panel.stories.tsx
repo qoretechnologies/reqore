@@ -3433,3 +3433,140 @@ export const ADestructiveEntryInAPanelActionsMenu: Story = {
     expect(remove.hasAttribute('destructive')).toBe(false);
   },
 };
+
+/* ------------------------------------------------------------------------------------------------
+ * under `wrapActionsBelowTitle`, a title that fits keeps its size, and its badges give way first
+ * ---------------------------------------------------------------------------------------------- */
+
+/** Short names an app drawer is titled with: "slack" was 50.4px wide and shrank a step in 50. */
+const SHORT_NAMES = ['slack', 'Slack', 'Telegram', 'NewApp', 'Order sync'];
+
+/** An app drawer's head, as the admin portal draws it: a status, a copy button and a close. */
+const AppHead = ({ name, wrap }: { name: string; wrap: boolean }) => (
+  <ReqorePanel
+    className={`app-head${wrap ? ' app-head-wrap' : ''}`}
+    data-name={name}
+    label={name}
+    icon='KeyLine'
+    isCollapsed
+    onClose={noop}
+    wrapActionsBelowTitle={wrap}
+    actions={[
+      {
+        label: 'Published',
+        icon: 'CheckLine',
+        actions: [{ label: 'Unpublish', icon: 'CloseLine' }],
+      },
+      { icon: 'FileCopyLine', tooltip: 'Copy the client ID' },
+    ]}
+  />
+);
+
+/** The px a panel's title is drawn at. */
+const titlePx = (panel: HTMLElement) =>
+  parseFloat(
+    getComputedStyle(
+      panel.querySelector<HTMLElement>('.reqore-panel-title-label-box')!.firstElementChild as HTMLElement
+    ).fontSize
+  );
+
+export const AShortTitleKeepsItsSizeWhereActionsMayGoUnder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'App drawer heads (a key icon, a status, a copy button and a close) titled slack, Slack, Telegram, NewApp and Order sync, in a 390px and a 1440px box, each drawn with `wrapActionsBelowTitle` and without. Every title fits, and each is drawn at the same size both ways. With the option, "slack" (50.4px wide) was drawn a step smaller, 19px for 20: the room its fit measured was its own width rounded down (the admin portal, f66).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big' fluid>
+      {[390, 1440].map((width) => (
+        <div key={width} className={`heads-${width}`} style={{ width, maxWidth: '100%' }}>
+          <ReqoreControlGroup vertical fluid>
+            {SHORT_NAMES.map((name) => (
+              <ReqoreControlGroup key={name} vertical fluid>
+                <AppHead name={name} wrap={false} />
+                <AppHead name={name} wrap />
+              </ReqoreControlGroup>
+            ))}
+          </ReqoreControlGroup>
+        </div>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelectorAll('.app-head .reqore-panel-title-label-box')).toHaveLength(
+        SHORT_NAMES.length * 4
+      )
+    );
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    for (const width of [390, 1440]) {
+      const box = canvasElement.querySelector<HTMLElement>(`.heads-${width}`)!;
+      for (const name of SHORT_NAMES) {
+        const [plain, wrapping] = Array.from(
+          box.querySelectorAll<HTMLElement>(`.app-head[data-name="${name}"]`)
+        );
+        await waitFor(() =>
+          expect(titlePx(wrapping), `${name} at ${width}px`).toBe(titlePx(plain))
+        );
+      }
+    }
+  },
+};
+
+export const BadgesGiveWayBeforeTheActionsOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          'A template drawer\'s head on a phone (390 px, the screen\'s width), with `wrapActionsBelowTitle`: "Order Sync Template", its badges Submitted, v3 and flow, a sentence under it, a copy button and a close. The name and the actions fit on one line and the badges do not, so the badges go under the name (decision 029) and the actions stay beside it. The actions went under too, below the description, a line taller for nothing: the title claimed the width of its name and its badges (the admin portal, f66).',
+      },
+    },
+  },
+  render: () => (
+    // a drawer on a phone: the screen's whole width
+    <div style={{ width: '100%' }}>
+      <ReqorePanel
+        className='template-head'
+        label='Order Sync Template'
+        icon='FileList3Line'
+        isCollapsed
+        onClose={noop}
+        wrapActionsBelowTitle
+        description='Copies the day’s orders to the warehouse at 6:00.'
+        badge={[
+          { label: 'Submitted', intent: 'warning' },
+          { label: 'v3' },
+          { label: 'flow' },
+        ]}
+        actions={[{ icon: 'FileCopyLine', tooltip: 'Copy the template ID' }]}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const panel = canvasElement.querySelector<HTMLElement>('.template-head')!;
+    await expectBadgesUnderTitle(panel);
+    await expectTitleWhole(panel);
+    await waitFor(() => {
+      const header = panel.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+      const headerBox = header.getBoundingClientRect();
+      // the copy button and the close are beside the name and its badges, at the line's end: not under them
+      const buttons = Array.from(
+        panel.querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button')
+      ).filter((button) => !header.contains(button));
+      expect(buttons.length).toBeGreaterThanOrEqual(2);
+      buttons.forEach((button) => {
+        const box = button.getBoundingClientRect();
+        expect(box.top).toBeLessThan(headerBox.bottom);
+        expect(box.left).toBeGreaterThanOrEqual(headerBox.right - 1);
+        expect(box.right).toBeLessThanOrEqual(panel.getBoundingClientRect().right + 1);
+      });
+    });
+  },
+};
