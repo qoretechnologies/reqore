@@ -6,6 +6,7 @@ import ReqoreButton, { TReqoreBadge } from '../../components/Button';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import { ReqoreH4 } from '../../components/Header';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
+import ReqoreSegmentedControl from '../../components/SegmentedControl';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
 import { ReqoreP } from '../../components/Paragraph';
 import { ReqoreHorizontalSpacer, ReqoreVerticalSpacer } from '../../components/Spacer';
@@ -3794,5 +3795,302 @@ export const APanelWithNoActionsDrawsNoActionsRow: Story = {
         (parseFloat(barStyle.paddingBottom) || 0) +
         1
     );
+  },
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * under the actions' default: a description below, a caption, a filter, and icons beside a title (f66)
+ * ---------------------------------------------------------------------------------------------- */
+
+/** A section heading as the IDE's dashboard draws it: a name, its count, a filter, a sentence under it. */
+const SectionHeading = ({ wrap, width }: { wrap?: boolean; width: number }) => (
+  <div
+    data-heading={`${width}-${wrap === false ? 'off' : 'default'}`}
+    style={{ width, maxWidth: '100%' }}
+  >
+    <ReqorePanel
+      label='Needs you'
+      badge={{ label: '25', appearance: 'text' } as TReqoreBadge}
+      description='What needs a person now: failures with a prepared fix, held orders and open questions.'
+      descriptionPosition='below'
+      descriptionMaxLines={0}
+      actions={[{ icon: 'FilterLine', label: 'All areas', flat: true, responsive: false }]}
+      responsiveActions={false}
+      responsiveTitle={false}
+      {...(wrap === false ? { wrapActionsBelowTitle: false } : {})}
+      transparent
+      flat
+      minimal
+      padded={false}
+      fluid
+    />
+  </div>
+);
+
+export const ADescriptionBelowTakesTheWholeWidth: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A dashboard section heading ("Needs you", its count 25 and an "All areas" filter) with a sentence under it (`descriptionPosition=\'below\'`), at 1440px and 390px, drawn with the actions\' default and with `wrapActionsBelowTitle={false}`. The sentence takes the full width under the name and the filter both ways, and reads on the same lines. Under the default it was laid out 0px wide, a word to a line ("What / needs / a / person…", the IDE\'s operator dashboard, f66).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big' fluid>
+      {[1440, 390].map((width) => (
+        <ReqoreControlGroup key={width} vertical fluid>
+          <SectionHeading width={width} />
+          <SectionHeading width={width} wrap={false} />
+        </ReqoreControlGroup>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const sentence = (id: string) =>
+      canvasElement.querySelector<HTMLElement>(
+        `[data-heading="${id}"] .reqore-panel-title-description`
+      )!;
+
+    for (const width of [1440, 390]) {
+      await waitFor(() => {
+        const [byDefault, off] = [sentence(`${width}-default`), sentence(`${width}-off`)];
+        const bar = byDefault.closest<HTMLElement>('.reqore-panel-title')!;
+
+        expect(byDefault, `${width}px`).toBeTruthy();
+        // as wide as with the default off, on as many lines: one at 1440px, the bar's width on a phone
+        expect(Math.round(byDefault.getBoundingClientRect().width)).toBe(
+          Math.round(off.getBoundingClientRect().width)
+        );
+        expect(linesOf(byDefault), `${width}px`).toBe(linesOf(off));
+        expect(linesOf(byDefault), `${width}px`).toBeLessThanOrEqual(width < 600 ? 3 : 1);
+        if (width < 600) {
+          expect(byDefault.getBoundingClientRect().width).toBeGreaterThan(bar.clientWidth * 0.8);
+        }
+      });
+    }
+  },
+};
+
+/** Every word of `element` on one line: its text's boxes all start within a few px of the same top. */
+const onOneLine = (element: HTMLElement) => {
+  const range = document.createRange();
+
+  range.selectNodeContents(element);
+  const tops = Array.from(range.getClientRects())
+    .filter((rect) => rect.width > 0)
+    .map((rect) => rect.top);
+
+  return tops.length > 0 && Math.max(...tops) - Math.min(...tops) < 4;
+};
+
+/** The IDE's recent orders section: a name, its count, which orders it holds, a folding filter, a link. */
+const OrdersSection = ({ width }: { width: number }) => {
+  const [filter, setFilter] = useState<string | undefined>('all');
+
+  return (
+    <div data-orders={width} style={{ width, maxWidth: '100%' }}>
+      <ReqorePanel
+        label='Recent orders'
+        badge={{ label: '4 failing', appearance: 'text' } as TReqoreBadge}
+        description='Newest 4 of 120'
+        descriptionPosition='below'
+        descriptionMaxLines={0}
+        collapsible
+        actions={[
+          {
+            as: ReqoreSegmentedControl,
+            props: {
+              foldToFit: true,
+              size: 'small',
+              value: filter,
+              onChange: setFilter,
+              items: [
+                { value: 'all', label: 'All 120' },
+                { value: 'failed', label: 'Failed 4' },
+                { value: 'active', label: 'In progress 12' },
+                { value: 'complete', label: 'Complete 101' },
+                { value: 'canceled', label: 'Canceled 3' },
+              ],
+            },
+            responsive: false,
+          },
+          { icon: 'TableLine', label: 'Browse orders', minimal: true, flat: true, responsive: false },
+        ]}
+        responsiveActions={false}
+        responsiveTitle={false}
+        transparent
+        flat
+        minimal
+        padded={false}
+        fluid
+      />
+    </div>
+  );
+};
+
+export const ACaptionAndAFilterKeepTheirRoomWhenTheActionsGoUnder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A detail page\'s "Recent orders" section at 1440px and 390px: its count ("4 failing") beside the name, which orders it holds ("Newest 4 of 120") under it, a filter that folds to its room and "Browse orders". At 1440px the actions sit beside the name; at 390px they go under it, and the filter folds into that line. The count and the caption keep their width and their one line both ways, and the filter stays inside the panel. Under the default the caption was drawn a letter to a line ("N e w e s t 4"), and on a phone the filter kept its whole width under the name and ran off the panel\'s left edge (the IDE\'s detail pages, f66).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big' fluid>
+      {[1440, 390].map((width) => (
+        <OrdersSection key={width} width={width} />
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const width of [1440, 390]) {
+      const box = canvasElement.querySelector<HTMLElement>(`[data-orders="${width}"]`)!;
+
+      await waitFor(() => {
+        const bar = box.querySelector<HTMLElement>('.reqore-panel-title')!;
+        const barBox = bar.getBoundingClientRect();
+        const caption = bar.querySelector<HTMLElement>('.reqore-panel-title-description')!;
+        const count = Array.from(
+          bar.querySelectorAll<HTMLElement>('.reqore-panel-title-header .reqore-tag')
+        ).find((tag) => tag.textContent?.includes('4 failing'))!;
+        const filter = bar.querySelector<HTMLElement>('.reqore-segmented-control-slot')!;
+        const heading = bar.querySelector<HTMLElement>('.reqore-heading')!;
+
+        expect(caption && count && filter && heading, `${width}px`).toBeTruthy();
+        // the caption and the count on one line each, at their own width
+        expect(onOneLine(caption), `${width}px caption`).toBe(true);
+        expect(onOneLine(count), `${width}px count`).toBe(true);
+        expect(count.scrollWidth, `${width}px count`).toBeLessThanOrEqual(count.clientWidth + 1);
+        // the filter inside the panel, on the name's line at 1440px and under it at 390px
+        const filterBox = filter.getBoundingClientRect();
+
+        expect(filterBox.left, `${width}px filter`).toBeGreaterThanOrEqual(barBox.left - 1);
+        expect(filterBox.right, `${width}px filter`).toBeLessThanOrEqual(barBox.right + 1);
+        if (width === 1440) {
+          expect(filterBox.top).toBeLessThan(heading.getBoundingClientRect().bottom);
+        } else {
+          expect(filterBox.top).toBeGreaterThanOrEqual(heading.getBoundingClientRect().bottom - 1);
+        }
+      });
+    }
+    await expectTitleWhole(
+      canvasElement.querySelector<HTMLElement>('[data-orders="390"] .reqore-panel')!
+    );
+  },
+};
+
+/** An issue drawer's head, as the IDE draws it: an icon, a name, its state, a help button and a close. */
+const IssueHead = ({ id, width, words }: { id: string; width: number; words?: boolean }) => (
+  <div data-issue={id} style={{ width, maxWidth: '100%' }}>
+    <ReqorePanel
+      label='#24011 in Order-to-Cash → payment-author'
+      icon='AlertLine'
+      badge={{ label: 'Open', appearance: 'text' } as TReqoreBadge}
+      isCollapsed
+      onClose={noop}
+      closeButtonProps={{ flat: true, transparent: true }}
+      actions={[
+        words
+          ? { icon: 'QuestionLine', label: 'Help', flat: true, size: 'small', responsive: false }
+          : { icon: 'QuestionLine', tooltip: 'What this shows', flat: true, size: 'small' },
+      ]}
+    />
+  </div>
+);
+
+/** The px the issue head `id`'s title is drawn at. */
+const issueTitlePx = (canvasElement: HTMLElement, id: string) =>
+  parseFloat(
+    getComputedStyle(
+      canvasElement.querySelector<HTMLElement>(`[data-issue="${id}"] .reqore-heading`)!
+    ).fontSize
+  );
+
+export const IconActionsStayBesideATitleThatFitsALittleSmaller: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'An issue drawer\'s head (an alert icon, "#24011 in Order-to-Cash → payment-author", its state "Open", a help button drawn as its icon and a close), each in a box sized from the wide one\'s own parts. At 1440px everything fits on one line. In a box 4px too narrow for the name beside the two icons at its own size (the IDE\'s issue drawer at 599px), the icons stay beside it and the name is drawn a step smaller, on one line and whole, its state under it. They went to a row of their own, a row lost for 4px (f66). A name may be drawn up to a tenth smaller for icons (Filip, 18 Nov). In a box where it would have to be drawn smaller than that, the icons go under it; and a help button that keeps its word ("Help") goes under in the 4px-short box, as actions with words always have.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big' fluid>
+      <IssueHead id='wide' width={1440} />
+      <IssueHead id='wide-words' width={1440} words />
+      <IssueHead id='icons' width={599} />
+      <IssueHead id='narrow' width={460} />
+      <IssueHead id='words' width={599} words />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const parts = (id: string) => {
+      const panel = canvasElement.querySelector<HTMLElement>(`[data-issue="${id}"] .reqore-panel`)!;
+      const header = panel.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+      const heading = panel.querySelector<HTMLElement>('.reqore-heading')!;
+      const buttons = Array.from(
+        panel.querySelectorAll<HTMLElement>('.reqore-panel-title-actions .reqore-button')
+      );
+
+      return { panel, header, heading, buttons };
+    };
+    const beside = (id: string) => {
+      const { heading, buttons } = parts(id);
+
+      return buttons.every(
+        (button) => button.getBoundingClientRect().top < heading.getBoundingClientRect().bottom
+      );
+    };
+
+    await waitFor(() => expect(parts('wide').buttons).toHaveLength(2));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const naturalPx = issueTitlePx(canvasElement, 'wide');
+    /* The widths are the heads' own, read off the wide ones, so the name misses its line by the same few px
+       whatever font draws it: the bar's padding, the icon, the name, the gap and the actions. */
+    const widthFor = (wideId: string, nameShare: number, short: number) => {
+      const { panel, header, heading } = parts(wideId);
+      const bar = panel.querySelector<HTMLElement>('.reqore-panel-title')!;
+      const barStyle = getComputedStyle(bar);
+      const actions = panel.querySelector<HTMLElement>('.reqore-panel-title-actions')!;
+      const before = heading.getBoundingClientRect().left - header.getBoundingClientRect().left;
+
+      return (
+        (parseFloat(barStyle.paddingLeft) || 0) +
+        (parseFloat(barStyle.paddingRight) || 0) +
+        before +
+        heading.getBoundingClientRect().width * nameShare +
+        (parseFloat(barStyle.columnGap) || 0) +
+        actions.getBoundingClientRect().width -
+        short
+      );
+    };
+    const resize = (id: string, width: number) => {
+      canvasElement.querySelector<HTMLElement>(`[data-issue="${id}"]`)!.style.width = `${width}px`;
+    };
+
+    // 4px short at the name's own size; and short even at four fifths of it
+    resize('icons', widthFor('wide', 1, 4));
+    resize('words', widthFor('wide-words', 1, 4));
+    resize('narrow', widthFor('wide', 0.8, 0));
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    await waitFor(() => {
+      expect(beside('wide'), 'wide').toBe(true);
+      expect(beside('icons'), 'icons').toBe(true);
+      expect(linesOf(parts('icons').heading)).toBe(1);
+      expect(issueTitlePx(canvasElement, 'icons')).toBeLessThan(naturalPx);
+      expect(issueTitlePx(canvasElement, 'icons')).toBeGreaterThanOrEqual(
+        Math.floor(naturalPx * 0.9)
+      );
+      expect(beside('narrow'), 'narrow').toBe(false);
+      expect(beside('words'), 'words').toBe(false);
+      expect(issueTitlePx(canvasElement, 'words')).toBe(naturalPx);
+    });
+    await expectTitleWhole(parts('icons').panel);
+    await expectBadgesUnderTitle(parts('icons').panel);
   },
 };

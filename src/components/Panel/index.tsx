@@ -566,6 +566,41 @@ const StyledPanelTitleLabelBox = styled.div<{ $clampLines: number; $ownLine?: bo
 const TITLE_TAKES_THE_ROOM = 1000;
 
 /**
+ * How small a title may be drawn to keep actions that draw no words beside it, as a share of its own size
+ * (`wrapActionsBelowTitle`): a row of icons under a title they missed by a few px cost a whole row (the IDE's
+ * issue drawer at 599px, 4px short for its ? and x). A title that would have to go smaller than this lets them
+ * go under it (Filip, 18 Nov: "the title shrinks a bit").
+ */
+export const ICON_ACTIONS_TITLE_SHRINK = 0.9;
+
+/**
+ * Whether a bar action is drawn as its icon alone, with no words: `iconOnly`, an icon with no label, or a
+ * label a narrow bar drops (as `renderActions` does). A control the caller draws (`as`) or a menu that keeps
+ * its label has words; a group, only if one of its own has.
+ */
+export const actionDrawsNoWords = (action: IReqorePanelAction, narrow: boolean): boolean => {
+  if (action.show === false) {
+    return true;
+  }
+
+  if (action.as) {
+    return false;
+  }
+
+  if (size(action.group)) {
+    return action.group!.every((child) => actionDrawsNoWords(child, narrow));
+  }
+
+  const hasLabel = action.label !== undefined && action.label !== null && action.label !== '';
+
+  if (!hasLabel || action.iconOnly) {
+    return !!action.icon;
+  }
+
+  return !!action.icon && !size(action.actions) && narrow && action.responsive !== false;
+};
+
+/**
  * How much more than the title a group of actions that do not collapse takes of the room left over: so much
  * that the title's box widens only once the group is at its own width (a flex item takes its grow factor's
  * share of the free space, and the title's is 1).
@@ -604,7 +639,10 @@ export const TITLE_ACTIONS_CLASS = 'reqore-panel-title-actions';
 const WRAPPED_TITLE_ACTIONS_STYLE: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'flex-end',
+  /* At the line's end, but never past its start: actions wider than their line under the title ran off
+     its left edge, the first choice of a filter out of sight (the IDE's recent orders, f66). Where they
+     cannot fit they start at the line's start, in reading order. */
+  justifyContent: 'safe flex-end',
   flex: '1 1 auto',
   minWidth: 0,
   maxWidth: '100%',
@@ -614,8 +652,14 @@ const WRAPPED_TITLE_ACTIONS_STYLE: React.CSSProperties = {
 /** The bottom bar's right-hand folding group, at the bar's trailing edge. */
 const RIGHT_BOTTOM_GROUP_STYLE: React.CSSProperties = { marginLeft: 'auto' };
 
-/** A group of actions that keep their words, at their own width, in that box. */
-const KEPT_ACTIONS_AT_THEIR_WIDTH: React.CSSProperties = { flex: '0 0 auto' };
+/**
+ * A group of actions that keep their words, in that box: at its own width where the line has room, and down
+ * to what its controls cannot do without where it does not, so a control that folds to its room (a
+ * `foldToFit` segmented control) folds into the line under the title. At its own width always, the group
+ * overflowed a phone's line with the whole filter, its first choices past the panel's edge (the IDE's
+ * recent orders, f66). A button does not shrink (it is `fixed`): the group's least is its buttons.
+ */
+const KEPT_ACTIONS_AT_THEIR_WIDTH: React.CSSProperties = { flex: '0 1 auto' };
 
 /** One canvas for every panel that measures its title's name (`wrapActionsBelowTitle`). */
 let titleMeasureCanvas: HTMLCanvasElement | undefined;
@@ -1268,8 +1312,11 @@ export const StyledPanelTitle = styled.div.withConfig({
 
       /* A description under the title has no width of its own to claim: it takes what the title's
          line gives it, so a long sentence does not push the actions down where the title fits. The
-         title's column grows to the line, so that is the whole line, not the title's width. */
-      .reqore-panel-title-description {
+         title's column grows to the line, so that is the whole line, not the title's width.
+         Only in the title's column, which stretches it: a description on its own row under the bar
+         (\`descriptionPosition='below'\`) is an inline-block sized by its words, and with no width of
+         its own it was 0px wide, a word or a letter to a line (the IDE's dashboard headings, f66). */
+      > .reqore-panel-title-header .reqore-panel-title-description {
         contain: inline-size;
       }
 
@@ -2214,6 +2261,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       );
     }, [wrapActionsBelowTitle, hasTitleHeader, nonFloatingActions, onClose, collapsible]);
 
+    /** Every action on the title's line is drawn as its icon (the close and collapse controls are). */
+    const titleActionsDrawNoWords = useMemo(
+      () => nonFloatingActions.every((action) => actionDrawsNoWords(action, isNarrow)),
+      [nonFloatingActions, isNarrow]
+    );
+
     // Calculates whether or not the bottom actions should be displayed.
     const hasBottomActions: boolean = useMemo(
       () =>
@@ -2401,8 +2454,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         // An action whose icon is enough (`iconOnly`) is drawn as its icon at every width. Either way a
         // dropped label is still the button's accessible name, not only its tooltip.
         const actionLabelTooltip = actionLabelText;
-        const dropActionLabel =
-          iconSaysIt || (isNarrow && action.responsive !== false && !!rest.icon && !!label);
+        // the rule a title reads to keep icons beside it (`actionDrawsNoWords`), so the two cannot drift
+        const dropActionLabel = !!label && actionDrawsNoWords(action, isNarrow);
 
         return (
           <ReqoreButton
@@ -2645,12 +2698,21 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       key: '',
       rooms: [],
     });
+    /**
+     * The title keeps one line, drawn a little smaller, so that actions drawn as icons stay beside it
+     * (`ICON_ACTIONS_TITLE_SHRINK`): where it may take two lines it would otherwise wrap beside them, and a
+     * second line of title costs the panel what a row of icons under it does. Set where the title claims its
+     * line (the effect that measures its name).
+     */
+    const [titleShrinksForIcons, setTitleShrinksForIcons] = useState(false);
+    /** What the title claims on its line where the actions may go under it (see the effect that sets it). */
+    const [titleBasis, setTitleBasis] = useState<number | undefined>(undefined);
     const [labelFitRef, labelFitPx] = useFitTextSize<HTMLDivElement>({
       text: typeof label === 'string' ? label : '',
       available: labelAvailable,
       max: labelNaturalPx,
       min: labelMinTextSize,
-      lines: clampLines,
+      lines: titleShrinksForIcons ? 1 : clampLines,
       enabled: fitLabel !== false && typeof label === 'string' && !labelEffect?.textSize,
     });
     const badgeKey = badgeSignature(badge);
@@ -2809,6 +2871,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         clampLines,
         isNarrow,
         wrapActions,
+        // the title's claim: a claim made smaller for icons beside it narrows the title's line
+        titleBasis,
       ].join('\u0000');
 
       if (labelRoomsSeen.current.key !== roomKey) {
@@ -2841,6 +2905,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       clampLines,
       isNarrow,
       wrapActions,
+      titleBasis,
     ]);
 
     /**
@@ -2855,12 +2920,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
      * so nothing it decides can change it. A title drawn by the caller (an element) has no text to
      * measure, and keeps its content basis.
      */
-    const [titleBasis, setTitleBasis] = useState<number | undefined>(undefined);
 
     useLayoutEffect(() => {
       const node = labelFitRef.current;
       const header = node?.closest<HTMLElement>('.reqore-panel-title-header');
       let next: number | undefined;
+      let shrinksForIcons = false;
 
       if (wrapActions && node && header && typeof label === 'string' && label.trim()) {
         // the font the name is drawn in: a `labelEffect` family or spacing is the span's, not the heading's
@@ -2942,6 +3007,33 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               // it claims nothing, and takes what the actions leave (they do not grow: `actionsBeside`)
               next = 0;
             }
+
+            /* Actions drawn as icons alone stay beside a title that takes one line on its own and fits beside
+               them on one line a little smaller (`ICON_ACTIONS_TITLE_SHRINK`): the title claims its name at that
+               size, and its fit draws it on one line at the largest size the line leaves. Missed by a few px,
+               they took a row of their own (the IDE's issue drawer at 599px). Actions with words go under first,
+               and a title that cannot shrink (one the caller sizes, breadcrumbs) lets them. */
+            const shrunkPx = Math.floor(px * ICON_ACTIONS_TITLE_SHRINK);
+            const shrunkClaim = Math.ceil(before + name * (shrunkPx / px)) + 1;
+            /* What the line breaks on: the groups as they are drawn, not their controls' span (a folding group
+               of one icon is 40px, its button 32). Icons are as wide under the title as beside it. */
+            const actionsBoxWidth =
+              boxChildren.reduce((sum, child) => sum + child.getBoundingClientRect().width, 0) +
+              boxGap * Math.max(0, boxChildren.length - 1);
+
+            if (
+              next > 0 &&
+              actionsBoxWidth > 0 &&
+              titleActionsDrawNoWords &&
+              fitsLabel &&
+              linesAlone === 1 &&
+              shrunkPx >= (labelMinTextSize ?? 0) &&
+              next + barGap + actionsBoxWidth > barInner &&
+              shrunkClaim + barGap + actionsBoxWidth <= barInner
+            ) {
+              next = shrunkClaim;
+              shrinksForIcons = true;
+            }
           }
         }
       }
@@ -2951,6 +3043,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       const claim = next !== undefined && Number.isFinite(next) ? next : undefined;
 
       setTitleBasis((current) => (current === claim ? current : claim));
+      setTitleShrinksForIcons((current) => (current === shrinksForIcons ? current : shrinksForIcons));
       // what the actions say, not the list's identity: a host that makes its list in its render would
       // run this on every render
     }, [
@@ -2964,6 +3057,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       width,
       clampLines,
       badgeSignature(nonFloatingActions),
+      titleActionsDrawNoWords,
+      fitsLabel,
+      labelMinTextSize,
     ]);
 
     /**
