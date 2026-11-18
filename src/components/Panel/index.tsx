@@ -615,16 +615,33 @@ const KEPT_ACTIONS_AT_THEIR_WIDTH: React.CSSProperties = { flex: '0 0 auto' };
 /** One canvas for every panel that measures its title's name (`wrapActionsBelowTitle`). */
 let titleMeasureCanvas: HTMLCanvasElement | undefined;
 
+/**
+ * The box of actions that hold something with no width of its own (a Collection's search input, a group the
+ * caller made `fluid`): it claims half the bar, as the growing group did beside the title before the actions
+ * could go under it, so the search fills the room the title leaves; where half the bar does not fit beside the
+ * title the line breaks, and under the title the search fills the line (Filip, 18 Nov).
+ */
+const FILLING_TITLE_ACTIONS_STYLE: React.CSSProperties = {
+  ...WRAPPED_TITLE_ACTIONS_STYLE,
+  flex: '1 1 50%',
+};
+
 /** The bar's actions: in a box of their own where they may go under the title, as they are otherwise. */
 const PanelTitleActions = ({
   wrap,
+  fill,
   children,
 }: {
   wrap: boolean;
+  /** The folding group grows (it holds a search): the box takes half the bar, and the group fills it. */
+  fill?: boolean;
   children: React.ReactNode;
 }): JSX.Element =>
   wrap ? (
-    <div className={TITLE_ACTIONS_CLASS} style={WRAPPED_TITLE_ACTIONS_STYLE}>
+    <div
+      className={TITLE_ACTIONS_CLASS}
+      style={fill ? FILLING_TITLE_ACTIONS_STYLE : WRAPPED_TITLE_ACTIONS_STYLE}
+    >
       {children}
     </div>
   ) : (
@@ -3216,7 +3233,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   />
                 </StyledPanelTitleHeader>
               )}
-              <PanelTitleActions wrap={wrapActions}>
+              <PanelTitleActions
+                wrap={wrapActions}
+                fill={!!responsiveActionsWrapperProps?.fluid && hasResponsiveActions(nonFloatingActions)}
+              >
                 {hasNonResponsiveActions(leadingTitleActions) ? (
                   <ReqoreControlGroup
                     className={LEADING_ACTIONS_CLASS}
@@ -3276,8 +3296,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                       // Content basis that may still shrink. `fluid={false}` alone compiles to
                       // `flex: 0 0 auto`, which pins the group at its content width so it can never
                       // overflow — and `responsive` collapse watches `scrollWidth > clientWidth`,
-                      // so the fold into the `…` menu would simply stop happening.
-                      flex: '0 1 auto',
+                      // so the fold into the `…` menu would simply stop happening. A group the
+                      // caller made fluid grows in the actions' own box, which then claims its share
+                      // of the bar (`FILLING_TITLE_ACTIONS_STYLE`).
+                      flex: wrapActions && responsiveActionsWrapperProps?.fluid ? '1 1 auto' : '0 1 auto',
                       // Floored, because shrinking to nothing clips the buttons instead of folding
                       // them, and ControlGroup ignores its own overflow below 40px. At the floor
                       // it folds on, and folded to its "⋯" alone it is that button's width.

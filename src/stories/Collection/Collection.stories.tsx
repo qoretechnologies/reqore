@@ -1274,3 +1274,82 @@ export const AGroupPlacedLastStaysLast: Story = {
     }
   },
 };
+
+/** The collection's header: its bar, its title and its search box. */
+const searchHeader = (root: HTMLElement) => {
+  const bar = root.querySelector<HTMLElement>('.reqore-collection > .reqore-panel-title')!;
+  const search = bar.querySelector<HTMLElement>('.reqore-input')!;
+  const title = bar.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+
+  return { bar, search, title };
+};
+
+/**
+ * The search takes the room the title leaves it: an input is worth exactly as much as it is given, so under the
+ * actions' default (they go under a title they do not fit beside, f66) it still fills the bar where there is room,
+ * and the line under the title where they go there (Filip, 18 Nov).
+ */
+const expectSearchFillsTheRoom = async (root: HTMLElement) => {
+  await waitFor(() => expect(searchHeader(root).search).toBeTruthy());
+  await waitFor(() => {
+    const { bar, search, title } = searchHeader(root);
+    const barBox = bar.getBoundingClientRect();
+    const searchBox = search.getBoundingClientRect();
+    const titleBox = title.getBoundingClientRect();
+    const besideTitle = searchBox.top < titleBox.bottom - 1;
+    // what is left of the search's line once the title (if beside it) and the other controls have theirs
+    const others = Array.from(
+      bar.querySelectorAll<HTMLElement>('.reqore-panel-title-actions .reqore-button')
+    ).reduce((sum, button) => sum + button.getBoundingClientRect().width, 0);
+    const room = barBox.width - (besideTitle ? titleBox.width : 0) - others;
+
+    // it fills its room, less the gaps between it and the other controls
+    expect(searchBox.width).toBeGreaterThan(room - 24);
+    // beside the title, its share of the bar, as before the default: not its placeholder's width
+    if (besideTitle) {
+      expect(searchBox.width).toBeGreaterThan(barBox.width * 0.4);
+    }
+  });
+};
+
+export const ItsSearchFillsTheBar: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A sortable, searchable collection in a 1440px page. The search box takes the room the title "Collection of items" and the sort control leave it, as it did before the actions went under a title they do not fit beside by default (Filip, 18 Nov).',
+      },
+    },
+  },
+  args: { label: 'Collection of items', items, filterable: true, sortable: true },
+  render: (args) => (
+    <div style={{ width: 1440 }} className='search-fills'>
+      <ReqoreCollection {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectSearchFillsTheRoom(canvasElement.querySelector('.search-fills') as HTMLElement);
+  },
+};
+
+export const ItsSearchFillsItsLineOnAPhone: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'The same collection on a phone (390 px): the title has its line, and the search box fills the line under it beside the sort control.',
+      },
+    },
+  },
+  args: { label: 'Collection of items', items, filterable: true, sortable: true },
+  render: (args) => (
+    <div className='search-fills'>
+      <ReqoreCollection {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectSearchFillsTheRoom(canvasElement.querySelector('.search-fills') as HTMLElement);
+  },
+};
