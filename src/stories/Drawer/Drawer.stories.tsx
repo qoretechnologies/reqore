@@ -1169,3 +1169,111 @@ export const KeyboardOpensAndClosesADrawer: Story = {
     await waitFor(() => expect(document.activeElement).toBe(opener));
   },
 };
+
+/**
+ * The admin portal's A/B test sheet on a phone: its icon, its long name and its status word with a dot, on the calm
+ * heading sizes. Only the status word differs between the two stories below.
+ */
+const ExperimentSheet = ({ status }: { status: string }) => {
+  const [loaded, setLoaded] = useState(false);
+
+  useLayoutEffect(() => {
+    const timer = setTimeout(() => setLoaded(true), 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <ReqoreDrawer
+      isOpen
+      position='bottom'
+      size='88vh'
+      flat
+      label={loaded ? 'Hero: Qonsole input vs problem wizard' : 'A/B test'}
+      icon='FlaskLine'
+      badge={loaded ? { label: status, icon: 'CheckboxBlankCircleFill', appearance: 'text' } : undefined}
+      onClose={noop}
+    >
+      <ReqoreP>Visitors and conversion per version.</ReqoreP>
+    </ReqoreDrawer>
+  );
+};
+
+/** The sheet's title: its size, and how many lines it takes. */
+const sheetTitle = () =>
+  waitFor(() => {
+    const heading = document.querySelector<HTMLElement>('.reqore-drawer .reqore-heading');
+
+    expect(heading?.textContent).toContain('Hero: Qonsole input');
+
+    // the lines its words are on: the tops of its text's boxes
+    const range = document.createRange();
+
+    range.selectNodeContents(heading!);
+
+    const tops = new Set(
+      Array.from(range.getClientRects())
+        .filter((rect) => rect.width > 0)
+        .map((rect) => Math.round(rect.top))
+    );
+
+    return { size: getComputedStyle(heading!).fontSize, lines: tops.size };
+  });
+
+/**
+ * The title at its natural size, wrapped to two lines, its status word under it. A word as long as "Running · phase
+ * 2" beside the title took the room the title was measured for: the title shrank to 16px to fit beside it, and then
+ * took its line whole with the word under it after all, one line at 16px where every other test showed two at 20
+ * (the admin portal's ExperimentDrawer › Removed Version at 390).
+ */
+const expectSheetTitleAtItsSize = async () => {
+  await withViewport(PHONE_SCREEN.width, PHONE_SCREEN.height, async () => {
+    const drawer = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>('.reqore-drawer');
+
+      expect(element).toBeTruthy();
+
+      return element!;
+    });
+
+    await expectBadgesUnderTitle(drawer);
+    await expectTitleWhole(drawer);
+    await waitFor(async () => expect(await sheetTitle()).toEqual({ size: '20px', lines: 2 }));
+  });
+};
+
+export const TheSameTitleAtTheSameSizeBesideAShortWord: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders an A/B test sheet on a phone (390 px) under the calm heading sizes: the title "Hero: Qonsole input vs problem wizard" with its status word "Ended" under it. The title keeps its 20px and wraps to two lines.',
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: { typeScale: { heading: { 3: 16 }, headingWeight: 600, dialogHeading: 20 } },
+  },
+  render: () => <ExperimentSheet status='Ended' />,
+  play: expectSheetTitleAtItsSize,
+};
+
+export const TheSameTitleAtTheSameSizeBesideALongWord: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders the same A/B test sheet with a longer status word, "Running · phase 2". The word goes under the title before the title gives anything, so the title is drawn as beside "Ended": 20px, two lines.',
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: { typeScale: { heading: { 3: 16 }, headingWeight: 600, dialogHeading: 20 } },
+  },
+  render: () => <ExperimentSheet status='Running · phase 2' />,
+  play: expectSheetTitleAtItsSize,
+};
