@@ -63,9 +63,41 @@ const CollectionGroupHeader = memo(
 
 export type TReqoreCollectionActions = (IReqorePanelAction & { position?: 'left' | 'right' })[];
 
-export interface IReqoreCollectionGroup extends IReqorePanelProps {}
+export interface IReqoreCollectionGroup extends IReqorePanelProps {
+  /**
+   * The group's place among the groups: they are drawn by it, lowest first, and those at one place by
+   * name, in the collection's sort. A group with none is at 0, so a negative place puts a group before
+   * them and a positive one after them, in either sort ("Other applications" last, under the business
+   * categories: r-qs-47). The items in no group ('Ungrouped') lead unless they are given a place.
+   */
+  order?: number;
+}
 
 export type TReqoreCollectionGroups = Record<string, IReqoreCollectionGroup>;
+
+/** The name the items in no group are gathered under. */
+const UNGROUPED = 'Ungrouped';
+
+/**
+ * How two groups are ordered: by their place (`order`; 0 where none is given, the items in no group
+ * first), then by name in the sort's direction. The direction turns the names only, never the places.
+ */
+export const compareCollectionGroups = (
+  a: string,
+  b: string,
+  groups: TReqoreCollectionGroups | undefined,
+  sort: 'asc' | 'desc' | undefined
+): number => {
+  const place = (name: string) =>
+    groups?.[name]?.order ?? (name === UNGROUPED ? -Infinity : 0);
+  const [placeA, placeB] = [place(a), place(b)];
+
+  if (placeA !== placeB) {
+    return placeA < placeB ? -1 : 1;
+  }
+
+  return sort === 'asc' ? a.localeCompare(b) : b.localeCompare(a);
+};
 
 export interface IReqoreCollectionProps
   extends IReqoreComponent,
@@ -512,7 +544,7 @@ export const ReqoreCollection = memo(
 
                     return pagedItems.map((item, index) => {
                       const group = item.groups && !paging ? item.groups[0] : undefined;
-                      const showHeader = group && group !== 'Ungrouped' && group !== lastGroup;
+                      const showHeader = group && group !== UNGROUPED && group !== lastGroup;
 
                       if (group) {
                         lastGroup = group;
@@ -543,7 +575,7 @@ export const ReqoreCollection = memo(
                   // Groups is a list of strings, so an item can be in multiple groups
                   // Sort the groups based on defaultSort
                   const grouped = pagedItems.reduce((acc, item) => {
-                    const groups = item.groups && !paging ? item.groups : ['Ungrouped'];
+                    const groups = item.groups && !paging ? item.groups : [UNGROUPED];
 
                     groups.forEach((group) => {
                       if (!acc[group]) {
@@ -563,17 +595,9 @@ export const ReqoreCollection = memo(
                     });
                   }
 
-                  // Also sort the group names, but keep 'Ungrouped' at the start, always
+                  // The groups by their place, then by name; 'Ungrouped' first unless it is given one
                   const orderedGrouped = Object.keys(grouped)
-                    .sort((a, b) => {
-                      if (a === 'Ungrouped') return -1;
-                      if (b === 'Ungrouped') return 1;
-                      if (defaultSort === 'asc') {
-                        return a.localeCompare(b);
-                      } else {
-                        return b.localeCompare(a);
-                      }
-                    })
+                    .sort((a, b) => compareCollectionGroups(a, b, groupsConfig, defaultSort))
                     .reduce((acc, group) => {
                       acc[group] = grouped[group];
                       return acc;
@@ -581,7 +605,8 @@ export const ReqoreCollection = memo(
 
                   // Render groups
                   return Object.entries(orderedGrouped).map(([groupName, groupItems]) => {
-                    const groupConfig = groupsConfig?.[groupName];
+                    // its place is the collection's to read, never its panel's
+                    const { order: _order, ...groupConfig } = groupsConfig?.[groupName] ?? {};
                     const itemsNodes = groupItems.map((item, index) => (
                       <ReqoreErrorBoundary {...errorBoundaryOptions} key={index}>
                         <ReqoreCollectionItem
@@ -596,7 +621,7 @@ export const ReqoreCollection = memo(
                       </ReqoreErrorBoundary>
                     ));
 
-                    if (groupName === 'Ungrouped') {
+                    if (groupName === UNGROUPED) {
                       return <React.Fragment key={groupName}>{itemsNodes}</React.Fragment>;
                     }
 

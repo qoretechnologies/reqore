@@ -1204,3 +1204,73 @@ export const ACardsDestructiveActionOnAPhone: Story = {
     expect(remove.hasAttribute('destructive')).toBe(false);
   },
 };
+
+/** An app catalogue's apps by business category, and the ones in none under "Other applications". */
+const CATALOGUE_APPS: IReqoreCollectionProps['items'] = [
+  { label: 'Saved: Payroll export', content: 'Your saved favorite' },
+  { label: 'Payroll', content: 'Pays the monthly salaries', groups: ['Finance'] },
+  { label: 'Invoices', content: 'Sends and tracks invoices', groups: ['Finance'] },
+  { label: 'Label printer', content: 'Prints labels from a file', groups: ['Other applications'] },
+  { label: 'Shipments', content: 'Books carriers for orders', groups: ['Logistics'] },
+  { label: 'Stock levels', content: 'Counts what is in each warehouse', groups: ['Warehouse'] },
+];
+
+const CATALOGUE_GROUPS: IReqoreCollectionProps['groups'] = {
+  // after every business category, in either sort (r-qs-47)
+  'Other applications': { order: 1 },
+};
+
+/** The group headings drawn in `root`, in order. */
+const groupHeadings = (root: HTMLElement) =>
+  Array.from(root.querySelectorAll<HTMLElement>('.reqore-collection-group')).map(
+    (group) => group.querySelector('.reqore-panel-title-label-row')?.textContent?.trim()
+  );
+
+export const AGroupPlacedLastStaysLast: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'An app catalogue in two sorts, A to Z and Z to A. Its apps are grouped by business category, and those in none are under "Other applications", placed after them (`groups[\'Other applications\'].order: 1`). In both sorts the categories turn and "Other applications" stays last; the saved favorite, in no group, stays first. Sorted by name, "Other applications" landed between Logistics and Warehouse (r-qs-47).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big' fluid>
+      <div className='catalogue-asc' style={{ width: 640 }}>
+        <ReqoreCollection
+          label='A to Z'
+          items={CATALOGUE_APPS}
+          groups={CATALOGUE_GROUPS}
+          defaultSort='asc'
+          columns={2}
+        />
+      </div>
+      <div className='catalogue-desc' style={{ width: 640 }}>
+        <ReqoreCollection
+          label='Z to A'
+          items={CATALOGUE_APPS}
+          groups={CATALOGUE_GROUPS}
+          defaultSort='desc'
+          columns={2}
+        />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const asc = canvasElement.querySelector<HTMLElement>('.catalogue-asc')!;
+    const desc = canvasElement.querySelector<HTMLElement>('.catalogue-desc')!;
+    await waitFor(() =>
+      expect(groupHeadings(asc)).toEqual(['Finance', 'Logistics', 'Warehouse', 'Other applications'])
+    );
+    expect(groupHeadings(desc)).toEqual(['Warehouse', 'Logistics', 'Finance', 'Other applications']);
+    // the favorite in no group leads, before the first heading
+    for (const root of [asc, desc]) {
+      const favorite = Array.from(root.querySelectorAll<HTMLElement>('.reqore-collection-item')).find(
+        (item) => item.textContent?.includes('Saved: Payroll export')
+      )!;
+      const firstGroup = root.querySelector<HTMLElement>('.reqore-collection-group')!;
+      expect(favorite.getBoundingClientRect().top).toBeLessThan(firstGroup.getBoundingClientRect().top);
+    }
+  },
+};
