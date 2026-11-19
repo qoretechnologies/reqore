@@ -3,7 +3,7 @@
  * `options.confirmations`: what an app decides once for every confirmation, under each call's
  * own data — its words (so they can be translated), its primary, and its look.
  *
- * Reported from the Qorus IDE: every confirmation drew a 0.9 backdrop with a blur, washed the
+ * Reported from an app: every confirmation drew a 0.9 backdrop with a blur, washed the
  * dialog in its intent, added "Are you sure you want to proceed?" under a title that already
  * asked, and spoke English whatever the app's language — with no way to change any of it but at
  * each of the call sites.

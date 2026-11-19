@@ -179,7 +179,7 @@ const ReqoreMenuItem = memo(
           /* Inside a menu, the item is scrolled to inside that menu and nothing else moves. Its own
              `scrollIntoView` scrolled every scrollable ancestor to centre it in the viewport - the page's
              scroll container and the document too - so arrow keys in an editor's completion list moved
-             the page and, in a short view, left it blank (qorus#646). */
+             the page and, in a short view, left it blank. */
           const menu = itemRef.closest('.reqore-menu');
           if (menu) {
             scrollWithinMenu(itemRef, menu, scrollBehavior);

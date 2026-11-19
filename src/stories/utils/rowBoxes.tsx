@@ -19,7 +19,7 @@ export interface IStoryRowBoxProps {
  *
  * A row takes the width of the box it is put in, and a story that shows a row wide and narrow puts it in two
  * boxes of different widths. Undrawn, those boxes left two rows of different widths one above the other, which
- * read as a row sizing itself wrongly (David's review of the narrow-row stories, qorus#646). Drawn and named,
+ * read as a row sizing itself wrongly. Drawn and named,
  * the difference reads as what the story is about.
  */
 /** The caption's effect: one object for every render, so the memoised paragraph is not drawn again for it. */
@@ -77,7 +77,7 @@ export const expectEqualBoxesEqualRows = (root: ParentNode, rowSelector: string)
  * Whether a row's container is a phone's width or narrower, measured as the row measures it: the content box of
  * the container it is drawn in (`.reqore-entity-row-container`, `.reqore-severity-row-container`), against Reqore's
  * phone width. Where it is - on a phone, or in as narrow a container on any screen - a lone or stacked action under
- * the label is the row's width (Fitts's law); where it is wider, each is as wide as its label (qorus#646).
+ * the label is the row's width (Fitts's law); where it is wider, each is as wide as its label.
  */
 export const rowContainerIsPhoneWidth = (row: HTMLElement) => {
   const container = (row.closest('.reqore-entity-row-container, .reqore-severity-row-container') ??

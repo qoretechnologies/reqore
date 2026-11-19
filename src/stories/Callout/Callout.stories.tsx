@@ -242,7 +242,7 @@ export const WithLabel: Story = {
   args: {
     label: 'Configuration required',
     description:
-      'Set up your AI provider before publishing this Qog. The build will succeed but runs will fail at execution time.',
+      'Set up your AI provider before publishing this flow. The build will succeed but runs will fail at execution time.',
     intent: 'warning',
   },
 };
@@ -261,16 +261,16 @@ export const WithLabelAndRichBody: Story = {
   },
   render: Template,
   args: {
-    label: 'Build with Qonsole',
+    label: 'Build with the assistant',
     icon: 'Robot2Line',
     intent: 'info',
     children: (
       <>
-        Prefer natural language? Open Qonsole and describe what you need — it can build and
+        Prefer natural language? Open the assistant and describe what you need — it can build and
         edit this service for you, step by step.
         <ReqoreControlGroup style={{ marginTop: '10px' }}>
           <ReqoreButton icon='Robot2Line' intent='info' fixed>
-            Create with Qonsole
+            Create with the assistant
           </ReqoreButton>
           <ReqoreButton icon='BookOpenLine' fixed>
             Read the guide

@@ -1469,7 +1469,7 @@ export const OnlyTheOpenLevelHearsTheKeys: Story = {
     docs: {
       description: {
         story:
-          'Renders a list opened from a text field, which keeps the focus while the list is used. "Group" is opened with a click, then ↓ and Enter pick its first row: only that row is picked. Before, the level above heard the keys too, and Enter also picked the row it had highlighted ("Inner 1 | Plain") (qorus#646).',
+          'Renders a list opened from a text field, which keeps the focus while the list is used. "Group" is opened with a click, then ↓ and Enter pick its first row: only that row is picked. Before, the level above heard the keys too, and Enter also picked the row it had highlighted ("Inner 1 | Plain").',
       },
     },
   },
@@ -1535,7 +1535,7 @@ export const AnOpenedLevelSaysAndRanksAsTheListDoes: Story = {
     docs: {
       description: {
         story:
-          'Renders a list in German that ranks its matches by relevance and names its rows for a screen reader (`listId`), with a group of connections. Opened, the group is the same list: its search says "2 Einträge durchsuchen", "telegram" puts Telegram first, the highlighted row has its id, and a search that finds nothing says "Nichts gefunden". Before, an opened level dropped the five options it was not handed, and said "Search 2 items..." and "No items found" (qorus#646).',
+          'Renders a list in German that ranks its matches by relevance and names its rows for a screen reader (`listId`), with a group of connections. Opened, the group is the same list: its search says "2 Einträge durchsuchen", "telegram" puts Telegram first, the highlighted row has its id, and a search that finds nothing says "Nichts gefunden". Before, an opened level dropped the five options it was not handed, and said "Search 2 items..." and "No items found".',
       },
     },
   },
@@ -1589,7 +1589,7 @@ export const ADestructiveEntryAndActionSaySo: Story = {
     docs: {
       description: {
         story:
-          'Saved views, as the admin portal\'s analytics bar offers them. Each view\'s Delete is its row\'s own action, a red bin marked `destructive` (`rightAction`); Delete every view is an entry marked `destructive` with no intent of its own, and is drawn in danger: in a menu its words are its look. A bin deletes its view without opening it, and the marker never reaches the DOM (r-qs-19: it means the same wherever an action is drawn).',
+          'Saved views, as an analytics bar offers them. Each view\'s Delete is its row\'s own action, a red bin marked `destructive` (`rightAction`); Delete every view is an entry marked `destructive` with no intent of its own, and is drawn in danger: in a menu its words are its look. A bin deletes its view without opening it, and the marker never reaches the DOM (it means the same wherever an action is drawn).',
       },
     },
   },

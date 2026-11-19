@@ -23,7 +23,7 @@ import { PHONE_STORY } from '../utils/touchScreen';
 
 /**
  * An input in a group that can be typed into, as a page's would be: it holds its own text. Given a `value` and no
- * `onChange`, an input is read-only and React warns of it (qorus#646: the story run's warning gate).
+ * `onChange`, an input is read-only and React warns of it (the story run's warning gate fails on that).
  */
 const StoryInput = ({ value: initial, ...rest }: IReqoreInputProps) => {
   const [value, setValue] = useState(initial);
@@ -840,7 +840,7 @@ const PATH_STEPS = [
 ];
 
 /**
- * A path picked a step at a time, as a data provider picker draws it (the Qorus IDE's, qorus#646): what it picks
+ * A path picked a step at a time, as a data provider picker draws it: what it picks
  * from, then each step in a group of its own (`fluid={false}`) saying the step and what it is, then a button that
  * applies the path.
  */

@@ -71,7 +71,7 @@ const WindowSizeClassCard = () => {
           />
         </ReqoreControlGroup>
         <ReqoreP>
-          Material 3's window size classes (decision 031): a phone below 600px, a tablet to 1199px,
+          Material 3's window size classes: a phone below 600px, a tablet to 1199px,
           a desktop from 1200px, wide from 1600px. Each width is in exactly one class.
         </ReqoreP>
       </ReqoreControlGroup>
@@ -79,7 +79,7 @@ const WindowSizeClassCard = () => {
   );
 };
 
-/** A story drawn in a window `width` px wide, in Storybook and in its Qlip capture. */
+/** A story drawn in a window `width` px wide, in Storybook and in its visual capture. */
 const atWidth = (width: number, sizeClass: TReqoreWindowSizeClass, isMobile: boolean, isTablet: boolean): Story => ({
   parameters: {
     viewport: {
@@ -94,7 +94,7 @@ const atWidth = (width: number, sizeClass: TReqoreWindowSizeClass, isMobile: boo
     qlip: { viewport: { width, height: 700 } },
     docs: {
       description: {
-        story: `A window ${width}px wide is \`${sizeClass}\`: \`isMobile\` is ${isMobile}, \`isTablet\` is ${isTablet}, \`isMobileOrTablet\` is ${isMobile || isTablet}. The card names its width, highlights its class on Reqore's window size classes (Material 3's, decision 031) and shows the provider's three flags.`,
+        story: `A window ${width}px wide is \`${sizeClass}\`: \`isMobile\` is ${isMobile}, \`isTablet\` is ${isTablet}, \`isMobileOrTablet\` is ${isMobile || isTablet}. The card names its width, highlights its class on Reqore's window size classes (Material 3's) and shows the provider's three flags.`,
       },
     },
   },

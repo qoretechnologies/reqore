@@ -1,10 +1,10 @@
 /**
- * Reqore's window size classes: Material 3's (decision 031). A phone below 600px, a tablet to
+ * Reqore's window size classes: Material 3's. A phone below 600px, a tablet to
  * 1199, a desktop from 1200, wide from 1600; each width in exactly one class.
  *
  * Before: the provider asked `(max-width: 480px)` and `(min-width: 480px) and (max-width:
  * 1200px)`, so at exactly 480px a window was a phone AND a tablet, a 599px window was a tablet,
- * and the numbers were not exported, so every app copied them (the IDE wrote its own 768).
+ * and the numbers were not exported, so every app copied them (one wrote its own 768).
  *
  * `useReqoreMedia` decides once per module load whether it can query, so `matchMedia` is in
  * place before the provider is imported.

@@ -411,7 +411,7 @@ const ReqoreSegmentedControl = memo(
       const [measureRef, { width: measuredWidth }] = useMeasure();
       /* One ref for as long as the caller's ref is the same: an arrow made in the render was a new ref every time, so
          React called it with null and then the node on every render, and the measure set its state twice for
-         nothing (board f70). */
+         nothing. */
       const setContainerRef = useCallback(
         (node: HTMLDivElement | null) => {
           (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
@@ -537,7 +537,7 @@ const ReqoreSegmentedControl = memo(
             width: itemRect.width / scale,
           };
           // Only when it moved: a page hands its items as a new list each render, and a new
-          // object every time was an update for nothing (board f70). Compared before asking:
+          // object every time was an update for nothing. Compared before asking:
           // an update that hands back the same state is still an update React has to schedule.
           if (
             indicatorDrawn.current.left !== next.left ||

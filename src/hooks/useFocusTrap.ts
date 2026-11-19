@@ -183,8 +183,8 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
             // ...until its content brings one, which then takes focus, as it would have had it been there when
             // the trap opened. Unless the user has moved focus by then: focus that has left the container is
             // left where it is. Which of the two a drawer ended with depended on whether its content had rendered
-            // by the first frame (qorus#646, a drawer captured with its first tab focused on one run and with the
-            // drawer focused on the next).
+            // by the first frame (a drawer captured with its first tab focused on one run and with the drawer
+            // focused on the next).
             if (typeof MutationObserver !== 'undefined') {
               awaitContent = new MutationObserver(() => {
                 if (document.activeElement !== waiting) {
@@ -233,7 +233,7 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
       awaitContent = undefined;
 
       // Give focus back to what had it before the trap opened. Read here, not in the frame: the ref is cleared
-      // now, so a frame that read it found nothing and focus was never given back (qorus#646).
+      // now, so a frame that read it found nothing and focus was never given back.
       const previouslyFocused = previouslyFocusedRef.current;
       previouslyFocusedRef.current = null;
       if (restoreFocus && previouslyFocused) {

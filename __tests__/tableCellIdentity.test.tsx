@@ -13,7 +13,7 @@ import { IReqoreTableColumn } from '../src/components/Table';
  * answers a new type by unmounting the old tree and mounting a fresh one.
  * Nothing looked wrong: the cell was re-created with the same content. But the
  * node a pointer (or a test) had just found was detached a moment later, so
- * the click landed on nothing — which cost the Qorus IDE a real bug, found
+ * the click landed on nothing — which cost a host app a real bug, found
  * only by checking `isConnected` on the node that had been clicked.
  */
 

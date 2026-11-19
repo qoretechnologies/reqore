@@ -337,7 +337,7 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   /**
    * A filter the page draws itself (its own toolbar, not this table's search or column filters) is narrowing
    * `data`: an empty table then says `emptyMessage`, with the search icon, as it does when its own search emptied
-   * it, and not that there is nothing yet (queue item 29: the admin portal's support queue filtered to empty).
+   * it, and not that there is nothing yet (a support queue filtered to empty, say).
    */
   filtered?: boolean;
   showHelp?: boolean;
@@ -885,7 +885,7 @@ const ReqoreTable = ({
     [filters]
   );
   /* The search sentence only while a search or a column filter is what emptied the table: an empty table
-     told a reader to change a search they never typed (board 24). */
+     told a reader to change a search they never typed. */
   const narrowed =
     !!filteredByPage ||
     normalizedQuery.length > 0 ||
@@ -1106,8 +1106,8 @@ const ReqoreTable = ({
   // A finger needs a bigger button than a mouse: the column, and the rows, make room for one.
   const touch = useReqoreProperty('isHoverCapable') === false;
   /* A folded column is as wide as what its cells draw: the square for a menu or an icon, and a row's
-     one action with no icon its words - its short label, or its label - whole in their button
-     (qorus#646). Measured over the table's rows, not the ones on screen, so the width holds as they
+     one action with no icon its words - its short label, or its label - whole in their button.
+     Measured over the table's rows, not the ones on screen, so the width holds as they
      scroll and page. */
   const { widths: foldedTextWidths, probe: foldedActionsProbe } = useFoldedActionWidths(
     _internalColumns,

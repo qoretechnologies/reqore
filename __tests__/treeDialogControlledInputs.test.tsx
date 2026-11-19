@@ -4,7 +4,7 @@ import { ReqoreUIProvider } from '../src';
 import { ReqoreTreeManagementDialog } from '../src/components/Tree/modal';
 
 /**
- * qorus#646 (React's warning, found by the story run's warning gate): the tree's dialog for a new item drew its
+ * Found by the story run's warning gate (React's warning): the tree's dialog for a new item drew its
  * key and value fields with no value, and the first key typed gave them one - React warned "A component is
  * changing an uncontrolled input to be controlled" (Tree › New Object Item Can Be Added). They hold text from the
  * start, empty for a new item; a host's own key or value renderer is still given what the item holds.

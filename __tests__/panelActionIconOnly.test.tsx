@@ -1,7 +1,7 @@
 /**
  * A panel action whose icon says what it does (`iconOnly`) is drawn as its icon at every width, its label its
- * tooltip and its accessible name; an action without it keeps its words (board f65, FRONTEND "Obvious actions are
- * icons only"). The story is `Layout/Panel › An Obvious Action Is Its Icon`.
+ * tooltip and its accessible name; an action without it keeps its words (only an obvious
+ * action is its icon alone). The story is `Layout/Panel › An Obvious Action Is Its Icon`.
  */
 import { render } from '@testing-library/react';
 import { ReqoreContent, ReqoreLayoutContent, ReqorePanel, ReqoreUIProvider } from '../src';

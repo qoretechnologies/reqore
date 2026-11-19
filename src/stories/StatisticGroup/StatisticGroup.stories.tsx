@@ -93,7 +93,7 @@ export const NarrowFoldsToTwoPerRow: Story = {
     docs: {
       description: {
         story:
-          'Renders the same five figures in a 360px box with `narrowLayout="wrap"`: narrower than 480px, the strip folds to two figures a row (three rows), a hairline between the two of a row and above every row after the first. An opt-in kept for a host that asks for it; the default stays one row and scrolls (decision 010).',
+          'Renders the same five figures in a 360px box with `narrowLayout="wrap"`: narrower than 480px, the strip folds to two figures a row (three rows), a hairline between the two of a row and above every row after the first. An opt-in kept for a host that asks for it; the default stays one row and scrolls.',
       },
     },
   },
@@ -125,7 +125,7 @@ export const NarrowScrollsSideways: Story = {
     docs: {
       description: {
         story:
-          'Renders the five figures in a 360px box: one row that scrolls sideways, each figure at least 96px wide, the scrollbar hidden. The default: a strip never breaks into two rows (decision 010, BRAND_DESIGN §5).',
+          'Renders the five figures in a 360px box: one row that scrolls sideways, each figure at least 96px wide, the scrollbar hidden. The default: a strip never breaks into two rows.',
       },
     },
   },
@@ -250,7 +250,7 @@ export const AtMostFiveFigures: Story = {
     docs: {
       description: {
         story:
-          'Renders a strip given seven figures: it draws the first five (decision 010: a strip shows at most five headline figures; the rest belong in the detail) and says so in the console.',
+          'Renders a strip given seven figures: it draws the first five (a strip shows at most five headline figures; the rest belong in the detail) and says so in the console.',
       },
     },
   },

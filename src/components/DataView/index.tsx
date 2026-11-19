@@ -492,7 +492,7 @@ const TableShell = styled.div<
   overflow: hidden;
   /* Nested containers get a *darker* tint — visual depth comes from
      the surface itself stepping down a notch for every level of
-     nesting, the same pattern the IDE uses. The container's right /
+     nesting. The container's right /
      top / bottom borders are a near-invisible neutral; the LEFT edge
      carries a 2px theme-tinted accent so every group (root *and*
      nested) reads as an indented chunk with a clear left rail. */
@@ -743,8 +743,8 @@ const ArrayItem = styled.div<IStyledThemeProps>`
   align-items: start;
   gap: 8px;
   /* More left padding than the other three sides so the item index
-     and contents read as visually inset under the parent — mirrors
-     the IDE pattern of "nested = inset". */
+     and contents read as visually inset under the parent — the
+     pattern of "nested = inset". */
   padding: ${({ $size }) => PADDING_FROM_SIZE[$size]}px
     ${({ $size }) => PADDING_FROM_SIZE[$size]}px
     ${({ $size }) => PADDING_FROM_SIZE[$size]}px
@@ -889,7 +889,7 @@ const PreservedDetails = memo(
       scrollTargetRef.current = findScrollTarget(summary);
     }, []);
 
-    // the host is told once, from the click: an updater is React's to run, twice in StrictMode (qorus#646)
+    // the host is told once, from the click: an updater is React's to run, twice in StrictMode
     const toggle = useCallback(() => {
       preserveScroll();
       const next = !open;

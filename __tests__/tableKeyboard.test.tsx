@@ -5,7 +5,7 @@ import { IReqoreTableColumn } from '../src/components/Table';
 
 /**
  * A list row that opens on a click opens from the keyboard too, and the table's toolbar buttons say
- * what they are (the admin portal's keyboard pass).
+ * what they are (found in an app's keyboard pass).
  */
 
 const columns: IReqoreTableColumn[] = [

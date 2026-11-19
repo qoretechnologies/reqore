@@ -257,7 +257,7 @@ const EditorStub = ({ value, onChange: _onChange, ...rest }: any) => (
 // consumers pass it the same way.
 const FILL = { fill: true } as any;
 
-/** A calm destructive action: a red icon on a quiet button that says it destroys (r-qs-19). */
+/** A calm destructive action: a red icon on a quiet button that says it destroys. */
 const DESTRUCTIVE = {
   icon: 'DeleteBinLine',
   tooltip: 'Delete',

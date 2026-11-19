@@ -8,7 +8,7 @@
  * hovered (`keepOpenOnHover`) opened on nothing else, so on a phone the hidden tabs, segments and
  * crumbs could not be reached. They open on the tap's click now, and close as a click popover's do.
  * `keepOpenOnHover` with `handler: 'click'` (or `'focus'`) listens to its own event as well as to
- * the hover: before, it heard only the hover, and a tap opened nothing (qorus-ide: `handler =
+ * the hover: before, it heard only the hover, and a tap opened nothing (an app passed `handler =
  * isHoverCapable ? 'hover' : 'click'` with `keepOpenOnHover`).
  */
 import { act, fireEvent, render, screen } from '@testing-library/react';

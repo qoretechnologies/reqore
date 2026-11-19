@@ -37,7 +37,7 @@ export type TPosition = 'top' | 'bottom' | 'left' | 'right';
 /**
  * The viewport width (px, inclusive) at or below which a `responsiveLayout`
  * drawer becomes a sheet when the caller names no breakpoint. 900 is the
- * number qorus-ide converged on for every one of its drawers: a 620–720px
+ * number an app built on reqore converged on for every one of its drawers: a 620–720px
  * side panel in a 900px window leaves a sliver of page that is not usable
  * anyway, so the sheet is the honest layout there. The provider's own
  * `isMobile` (< 600px) is too narrow for drawers that wide — at 700px such a
@@ -285,7 +285,7 @@ export const DRAWER_MIN_SIZE = '150px';
  * top and the rest empty.
  *
  * Width is inert in practice — the default is `80vw` and the narrowest modal in
- * reqore, reqraft and qorus-ide is 480px — so what this actually changes is the
+ * reqore, reqraft and the apps built on them is 480px — so what this actually changes is the
  * height of a modal with less than 80px of content, which in practice means one
  * with no header. Such a modal reserves room for chrome it does not have. That
  * is accepted rather than worked around: 80px is a reasonable smallest dialog,
@@ -394,7 +394,7 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
    * wide screen is shown again rather than left hidden with no control to
    * bring it back. Above the breakpoint nothing changes.
    *
-   * These defaults are qorus-ide's `useResponsiveDrawerProps` behaviour moved
+   * These defaults are a host app's `useResponsiveDrawerProps` behaviour moved
    * into the library: bottom, full width, 90% of the height, at 900px. Pass
    * `true` for them, or `{ below, position, size, maxSize }` to tune them.
    * The root carries `.reqore-drawer-sheet` while the layout is active, so a
@@ -1020,7 +1020,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
            * wrapper to `overflow: visible` so the header can escape, and
            * `overflow: hidden` on an ancestor makes that ancestor a sticky
            * containing block, so this box was in that chain. No drawer or
-           * modal story passes `stickyHeader`, while qorus-ide ships it as a
+           * modal story passes `stickyHeader`, while a host app ships it as a
            * default in panels that render inside drawers — so the geometry
            * sweep says nothing about the case that matters most.
            *

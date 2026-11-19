@@ -486,7 +486,7 @@ export const FocusedThenTappedOnAPhoneKeepsItsChoices: Story = {
     docs: {
       description: {
         story:
-          "Renders an empty Select on a phone (390 px) whose box has the focus, as a form that focuses its first field leaves it, so its list of choices is already open. A finger taps the box, then taps it again: the list stays open both times, and a choice can still be seen and picked. A tap on a box that already has the focus sends only the click, and the list's click toggled it shut, so the choices a focus had shown went away at the first tap and never came back (board f63).",
+          "Renders an empty Select on a phone (390 px) whose box has the focus, as a form that focuses its first field leaves it, so its list of choices is already open. A finger taps the box, then taps it again: the list stays open both times, and a choice can still be seen and picked. A tap on a box that already has the focus sends only the click, and the list's click toggled it shut, so the choices a focus had shown went away at the first tap and never came back.",
       },
     },
   },
@@ -518,7 +518,7 @@ export const FocusedThenClickedKeepsItsChoices: Story = {
     docs: {
       description: {
         story:
-          'Renders an empty Select whose box has the focus, so its list of choices is open, and clicks the box twice with the mouse: the list stays open. Only a click outside, Escape or a pick closes it - a click on the box it was opened from never does (board f63).',
+          'Renders an empty Select whose box has the focus, so its list of choices is open, and clicks the box twice with the mouse: the list stays open. Only a click outside, Escape or a pick closes it - a click on the box it was opened from never does.',
       },
     },
     // Interaction-only: the open list is pictured by `FocusedThenTappedOnAPhoneKeepsItsChoices`.

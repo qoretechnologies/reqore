@@ -13,11 +13,11 @@ import {
 } from '../src';
 
 /**
- * A popover takes a click that lands as soon as its trigger is drawn (qorus#646).
+ * A popover takes a click that lands as soon as its trigger is drawn.
  *
  * A Reqore component handed the popover its element in an effect, after the browser had painted it, and the
  * popover armed its click listener in the render after that: a button on screen that opened nothing when
- * clicked straight away, with nothing on the page saying when it would. The Qorus IDE's story harness kept
+ * clicked straight away, with nothing on the page saying when it would. A host app's story harness kept
  * sleeps for it (a template selector, among others). The element is now handed on in the commit that draws
  * it, and the listener is there before the paint.
  *

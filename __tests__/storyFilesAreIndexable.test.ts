@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest';
 // preview reloads on each retry, and every `yarn test:stories` run fails before its first story,
 // whichever files it was given. This names the file in the unit suite. `yarn stories:parse
 // [files…]` (`scripts/parse-stories.mjs`) runs the same parser on just those files in about a
-// second: run it right after every story-file edit (qorus-ide 080573019, ported 18 Nov).
+// second: run it right after every story-file edit.
 
 const SRC = join(process.cwd(), 'src');
 /** `.storybook/main.ts`: `stories: ['../src/**\/*.stories.@(js|jsx|ts|tsx)']` */

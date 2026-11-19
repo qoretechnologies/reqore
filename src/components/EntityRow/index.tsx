@@ -94,7 +94,7 @@ export interface IReqoreEntityRowProps
     IWithReqoreFluid,
     IWithReqoreSize,
     IWithReqoreTooltip {
-  /** Primary text — e.g. the Qog name. */
+  /** Primary text — e.g. the entity's name. */
   label: React.ReactNode;
   /**
    * Secondary text — typically a one-line description.
@@ -281,7 +281,7 @@ const StyledRow = styled(StyledEffect).withConfig({
 
   /* Narrow, the actions are under the label: a row of buttons that goes onto another line where it does not
      fit, or with narrowActions='stack' one to a line (each the row's width in a phone-width container), as
-     ReqoreSeverityRow's (qorus#646): on one line that does not wrap, labelled actions reached past the row on
+     ReqoreSeverityRow's: on one line that does not wrap, labelled actions reached past the row on
      a phone. A finger gets a target it can hit. */
   @media (pointer: coarse) {
     &[data-narrow='true'] > .reqore-entity-row-actions > .reqore-button {
@@ -289,10 +289,10 @@ const StyledRow = styled(StyledEffect).withConfig({
     }
   }
 
-  /* Narrow, two or more actions are one menu button at the end of the label's line (qorus#646), not
+  /* Narrow, two or more actions are one menu button at the end of the label's line, not
      a line each under it: the label keeps its width, and a list of rows does not grow by a line per
      action. A row of that mode with one action keeps it there too, as a button of its own ('end'): under the
-     label it was a line of its own for one button, where a row with more had none (David, qorus#646). The
+     label it was a line of its own for one button, where a row with more had none. The
      columns are the wide row's. */
   &[data-narrow='true'][data-actions='menu'],
   &[data-narrow='true'][data-actions='end'] {
@@ -449,10 +449,10 @@ const ReqoreEntityRow = memo(
       const actionsAsMenu = isNarrow && narrowActions === 'menu' && (actions?.length ?? 0) > 1;
       /* Narrow, a row that folds two or more into a menu keeps its one action where the menu would be - only
          while its container is wider than a phone. As narrow as a phone, the action goes under the label and
-         spans the row like any lone action there (David and Foxhoundn, qorus#646). */
+         spans the row like any lone action there. */
       /* A lone destructive action stays at the end of the label's line on a phone too, its icon alone where
-         it has one: spanning the row it was a red bar a third of the row's height, under every row (r-qs-19,
-         `isDestructiveRowAction`). */
+         it has one: spanning the row it was a red bar a third of the row's height, under every row
+         (`isDestructiveRowAction`). */
       const loneDestructive = loneAction && isDestructiveRowAction(actions?.[0]);
       const loneActionAtLineEnd =
         isNarrow &&
@@ -463,7 +463,7 @@ const ReqoreEntityRow = memo(
       /* Under the label, stacked actions and a lone action are the row's width where the row's container is a
          phone's width or narrower - on a phone, or in as narrow a container on any screen - where a full-width
          row is the easiest target there is (Fitts's law). In a container wider than a phone, each is as wide as
-         its label (David's width rule, qorus#646). The container is measured, not the screen. */
+         its label. The container is measured, not the screen. */
       const actionsSpanRow =
         isNarrow && isPhoneWidth && (actionsStacked || loneAction) && !loneActionAtLineEnd;
       // an action on a line of its own: it is written out (an icon-only one says its tooltip), and may span it
@@ -592,8 +592,8 @@ const ReqoreEntityRow = memo(
                 {actions.map(
                   ({ actions: subActions, actionsProps, shortLabel, destructive, ...action }, idx) => {
                     /* At the end of a narrow row's label line, an action says its short label, or is its icon
-                     alone where it has a tooltip (`getCompactRowAction`): a long label took the line's room
-                     (David, qorus#646). On a line of its own, and wide, it says its label. */
+                     alone where it has a tooltip (`getCompactRowAction`): a long label took the line's room.
+                     On a line of its own, and wide, it says its label. */
                     const compact = loneActionAtLineEnd
                       ? getCompactRowAction({ ...action, shortLabel })
                       : undefined;

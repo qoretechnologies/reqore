@@ -704,7 +704,7 @@ export const SwipeInProgress: Story = {
     docs: {
       description: {
         story:
-          'A toast on a phone caught mid-swipe: dragged 35% of its width to the right and still held, so it sits that far from where it started, carries `.reqore-notification-dragging`, and its fifteen-second timer line is paused. Asserted in the play; like the other swipe stories, not captured by Qlip.',
+          'A toast on a phone caught mid-swipe: dragged 35% of its width to the right and still held, so it sits that far from where it started, carries `.reqore-notification-dragging`, and its fifteen-second timer line is paused. Asserted in the play; like the other swipe stories, not captured as a snapshot.',
       },
     },
   },

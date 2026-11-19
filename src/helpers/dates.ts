@@ -30,8 +30,8 @@ export const getPreviousYears = (min: number, max = new Date().getFullYear()) =>
 
 /**
  * A date the way the date picker reads one, as a ZonedDateTime (the date picker cannot use a Date), or `undefined`
- * for one it cannot read. It never throws: a value read in a render that threw took the page with it (qorus#646:
- * the Qorus IDE's Workflow Orders page went to its router's error page for "2026-06-02T08:00:00").
+ * for one it cannot read. It never throws: a value read in a render that threw took the page with it (an app's
+ * orders page went to its router's error page for "2026-06-02T08:00:00").
  *
  * - A date-time with a zone or an offset (`2026-06-02T08:00:00Z`, `…+02:00`) is that instant, in the user's zone.
  * - A date-time without one (`2026-06-02T08:00:00`) is that wall-clock time in the user's zone: ISO 8601 reads a

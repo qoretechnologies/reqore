@@ -1,7 +1,7 @@
 /**
  * What an empty list says (a `ReqoreCollection`, a `ReqoreTable`). The search sentence is for a list a
  * search or a filter emptied; a list with nothing in it says so, and never asks the reader to change a
- * search they never made (board 24: a Qog's variables, the app catalogue, sixteen IDE lists in all).
+ * search they never made (a list of variables, an app catalogue, many lists in an app).
  */
 
 /** What a list says when a search or a filter hid all its items. */

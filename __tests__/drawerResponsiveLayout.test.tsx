@@ -39,7 +39,7 @@ describe('resolveDrawerResponsiveLayout', () => {
     expect(resolveDrawerResponsiveLayout(true, wide)).toEqual({ active: false });
   });
 
-  it('`true` is the IDE behaviour: a bottom sheet, full width, 90% high, at 900px', () => {
+  it('`true` is a bottom sheet: full width, 90% high, at 900px', () => {
     expect(DRAWER_SHEET_BREAKPOINT).toBe(900);
     expect(DRAWER_RESPONSIVE_LAYOUT_DEFAULTS).toEqual({
       below: 900,

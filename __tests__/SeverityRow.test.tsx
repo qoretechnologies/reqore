@@ -496,7 +496,7 @@ test('Renders <SeverityRow /> with custom paddingSize', () => {
 });
 
 /*
- * Narrow (below 640px of its own container), two or more actions are one menu button (qorus#646).
+ * Narrow (below 640px of its own container), two or more actions are one menu button.
  */
 
 class RowResizeObserver {
@@ -546,8 +546,8 @@ test('Folds two or more actions into one menu button below 640px of its containe
 
 test('Keeps a callout\'s actions in sight by default and with narrowActions="stack": side by side above a phone\'s width, stacked at it', () => {
   for (const props of [{}, { narrowActions: 'stack' as const }]) {
-    // narrow but wider than a phone: side by side under the label, wrapping where they do not fit (Foxhoundn:
-    // law of proximity; David, qorus#646)
+    // narrow but wider than a phone: side by side under the label, wrapping where they do not fit (the
+    // law of proximity)
     renderMeasured(600, { actions: TWO_ACTIONS, ...props });
 
     const row = document.querySelector('.reqore-severity-row')!;

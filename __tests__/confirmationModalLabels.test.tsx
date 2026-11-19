@@ -9,7 +9,7 @@
  * throws the work away, and at 375px it offered two unlabelled squares — a
  * tick and a cross, side by side, with the destructive one named nowhere.
  *
- * Reported from the Qorus IDE: removing a row from a case on a narrow surface
+ * Reported from an app: removing a row from a case on a narrow surface
  * "did nothing" — the dialog opened, and the button that would have confirmed
  * it could not be told from the one that would not.
  */

@@ -376,7 +376,7 @@ const HUGE_MESSAGE = Array.from(
   (_, line) => `Line ${line + 1} of a message that is genuinely huge.`
 ).join(' ');
 
-/** The app defaults the IDE and the admin portal open every confirmation with. */
+/** The app defaults the calm apps open every confirmation with. */
 const CALM_CONFIRMATIONS = {
   content: null,
   backdropBlur: 0,

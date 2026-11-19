@@ -330,6 +330,17 @@ const StyledButton = styled.button<IReqoreButtonStyle>`
   `…Label`, `…Message`, `…Tooltip`, `…Text`, `…Title` or `…Placeholder` in `src/` (stories and
   mock data left out) and fails on those words.
 
+### Public text
+- Reqore is public and open source: its sources, stories, tests, docs, `COMPONENTS.md`, PR descriptions and commit
+  messages name nothing of the private world it is built in. No app or screen of ours (the admin portal, the IDE,
+  Qonsole, qlip-ui, Qlip), no private issue or PR (`qorus#…`, `qoretechnologies/qorus`), no person or persona, no
+  review, board, queue or decision id, no internal document (instruction-files, BRAND_DESIGN), chat or host. Say what
+  a component does and why, in words anyone can read ("a 218px dashboard tile", "a host app that fails its stories
+  on a React warning"); a public `reqore#…` issue may be named.
+- `__tests__/publicText.test.ts` fails on a denylist of those names (`scripts/publicTextGate.mjs`; run
+  `node scripts/publicTextGate.mjs <files>` to see what a file still names). Lowercase config keys such as
+  `parameters.qlip` are code and stay allowed; made-up people in `src/mock/` are not checked.
+
 ### Color Helpers (`src/helpers/colors.ts`)
 - **Text contrast:** `getReadableColor(theme)` returns light or dark based on `theme.main`.
 - **Gradients:** `getGradientMix()` blends multiple colors for effect gradients.

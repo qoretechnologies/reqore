@@ -2,8 +2,7 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
-// Convention gate: a default label says what the reader wants, never what the code does
-// (Filip, 17 Nov 2026).
+// Convention gate: a default label says what the reader wants, never what the code does.
 //
 // The words an app shows unless it passes its own (a button's label, a tooltip, an empty
 // state, an error) name what the reader gets: "Hide", "Show all", "Try again", "Nothing to

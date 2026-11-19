@@ -4,12 +4,12 @@ import { ReqoreContent, ReqoreLayoutContent, ReqorePanel, ReqoreUIProvider } fro
 import { PANEL_ACTIONS_ATTRIBUTE } from '../src/components/Panel';
 
 /**
- * A title bar folds a collapsible panel only on a click on the bar itself, never on one of its actions (queue item
- * 34). An action used to keep its click from the bar only when it had an `onClick` of its own, so a custom (`as`)
+ * A title bar folds a collapsible panel only on a click on the bar itself, never on one of its actions.
+ * An action used to keep its click from the bar only when it had an `onClick` of its own, so a custom (`as`)
  * action without one, or one that did not hand an `onClick` on to its DOM, folded the panel when it was used.
  */
 
-/** A segmented choice that takes no `onClick`, as the IDE's heading choices: its buttons have their own. */
+/** A segmented choice that takes no `onClick`, as an app's heading choices: its buttons have their own. */
 const Choices = ({ onPick }: { onPick: (value: string) => void }) => (
   <div className='choices'>
     <button type='button' onClick={() => onPick('day')}>

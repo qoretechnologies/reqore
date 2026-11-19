@@ -4,7 +4,7 @@ import { describe, expect, test } from 'vitest';
 import '../src';
 import { isDestructiveRowAction, ownLineRowActionProps } from '../src/components/RowActionsMenu';
 
-// A row's action says it destroys something apart from its look (r-qs-19): a calm theme draws a delete
+// A row's action says it destroys something apart from its look: a calm theme draws a delete
 // as a red icon on a quiet button, with no danger intent, and must still be able to say so.
 describe('a destructive row action', () => {
   test('is one marked destructive, whatever its intent', () => {

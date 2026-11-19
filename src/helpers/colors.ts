@@ -454,7 +454,7 @@ export const getGradientMix = (
  * surface the text is drawn on (`theme.main`, the component's own); else `undefined`, and the
  * component keeps its own derivation. A calm palette names its secondary grey once (#a6a6af), and
  * Markdown prose, descriptions and statistic labels match it instead of each being the readable
- * color at an opacity of its own (admin portal: a template's description read brighter than the
+ * color at an opacity of its own (a template's description in a drawer read brighter than the
  * drawer's other secondary text).
  */
 export const getSecondaryTextColor = (

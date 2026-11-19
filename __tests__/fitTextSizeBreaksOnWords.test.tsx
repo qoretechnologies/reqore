@@ -4,7 +4,7 @@
  * `useFitTextSize` poured the text into `available * lines` as one run: "Design changes built" is
  * 160px at 16px, under two 98px lines' 196px, so it kept 16px. But a line breaks on a word, and
  * the words break "Design / changes / built" - three lines, and the clamp at two cut "built" from
- * a title at full size (the admin portal's 200px tile, 17 Nov). Decision 029: a title wraps, then
+ * a title at full size (a 200px dashboard tile). The order is: a title wraps, then
  * shrinks, then is cut. It now packs the words the way the browser does, and shrinks before the
  * clamp has to cut.
  */
@@ -128,7 +128,7 @@ describe('largestFittingTextSize', () => {
 describe('the font a title is measured in', () => {
   // A panel's title: the measured box, the heading in it, and the span that paints the words with the
   // panel's `labelEffect` (a monospace family). Measured with the heading's font, a monospace title
-  // counted its lines wrong beside its actions (qlip-ui's review drawer at 375px, board f66).
+  // counted its lines wrong beside its actions (a review drawer at 375px).
   it("is the span's that paints the words, not the heading's", () => {
     const box = document.createElement('div');
     box.innerHTML =
@@ -146,7 +146,7 @@ describe('the font a title is measured in', () => {
   });
 });
 
-// A title kept to one line for icons, which may otherwise wrap, keeps a pixel spare (queue item 28).
+// A title kept to one line for icons, which may otherwise wrap, keeps a pixel spare.
 describe('the slack of a one-line fit', () => {
   test('lets a line run 2px past its room by default', () => {
     expect(wordsFitLines([100], 4, 99, 1)).toBe(true);

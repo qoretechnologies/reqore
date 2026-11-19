@@ -23,7 +23,7 @@ interface IVitestMouse {
  *
  * The mouse stays where a story rests it, over the stories that come after it in the same browser, and
  * whatever they draw there is hovered: a story whose play rested the mouse on a card left the next stories'
- * titles opening their hovers, which said each title a second time (reqraft, qorus#646). Off the page -
+ * titles opening their hovers, which said each title a second time (in reqraft). Off the page -
  * where it is before anything moves it - nothing is under it.
  *
  * `vitest/browser` is imported when called, never statically: it throws outside the test runner (see

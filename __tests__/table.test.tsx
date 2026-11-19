@@ -409,6 +409,10 @@ test('Rows on <Table /> cannot be selected if _selectId is missing', () => {
   expect(fn).toHaveBeenCalledTimes(1);
 });
 
+/* Both draw every row of a table with no virtualisation, which takes jsdom about 10-30s, and more on a loaded
+   machine: the suite's 30s cut them off there. Their own limit, not a skip. */
+const SLOW_TABLE_TIMEOUT = 120_000;
+
 test('Non-virtualized <Table /> renders every row in the DOM', () => {
   const data: IReqoreTableProps = {
     ...tableData,
@@ -425,7 +429,7 @@ test('Non-virtualized <Table /> renders every row in the DOM', () => {
   );
 
   expect(document.querySelectorAll('.reqore-table-row').length).toBe(tableData.data.length);
-});
+}, SLOW_TABLE_TIMEOUT);
 
 test('Wrapped <Table /> renders rows with min-height instead of fixed height', () => {
   const longText =
@@ -489,7 +493,7 @@ test('A wrapped <Table /> says so when it is also given a rowHeight it cannot us
   } finally {
     warn.mockRestore();
   }
-});
+}, SLOW_TABLE_TIMEOUT);
 
 test('A virtualized <Table /> takes its rowHeight without a warning', () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);

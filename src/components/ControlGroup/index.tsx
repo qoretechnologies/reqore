@@ -416,7 +416,7 @@ const ReqoreControlGroup = memo(
       // the row to fold: every child is in the menu. A group that still does not fit then - the overflow
       // button alone is wider than the room it has (a labelled or large button, a narrow container) - has
       // nothing more a fold could take, and counting on rendered the same row again and measured it again,
-      // forever: a render loop that froze a page under `act` (qorus#646).
+      // forever: a render loop that froze a page under `act`.
       if (
         (overflowingChildren || overflowingChildren === 0) &&
         overflowingChildren < foldable.length &&

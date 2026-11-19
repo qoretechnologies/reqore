@@ -1,11 +1,11 @@
 /**
  * Reqore's window size classes: where a phone ends, a tablet starts and a desktop starts.
  *
- * They are Material 3's (decision 031, Filip, 17 Nov 2026): compact below 600px, medium
+ * They are Material 3's: compact below 600px, medium
  * 600-839, expanded 840-1199, large 1200-1599 and extra-large from 1600. Every phone held
  * upright is 360-440px wide, so the phone line at 600 moves no phone; what it decides is a
  * narrow or split window (481-599px, a phone layout) and an iPad mini held upright or a phone
- * on its side (600px and up, a tablet layout). It was 480, and the IDE's own 768.
+ * on its side (600px and up, a tablet layout). It was 480, and one app's own 768.
  *
  * These are WINDOW classes. A component that lays itself out by its own box keeps its own
  * container rule (`NARROW_CONTAINER_BREAKPOINT_PX`, `SEVERITY_ROW_NARROW_BREAKPOINT_PX`,

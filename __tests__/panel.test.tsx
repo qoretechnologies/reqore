@@ -851,7 +851,7 @@ describe('narrow action labels', () => {
   });
 
   test("Keeps a split button's words in a narrow bottom bar when they ask to", () => {
-    // A split button: its words (`responsive: false`) and a caret with a menu (qlip-ui's
+    // A split button: its words (`responsive: false`) and a caret with a menu (a
     // review drawer on a phone). The words were not drawn at all, at any width.
     mockedPanelWidth = 360;
     render(

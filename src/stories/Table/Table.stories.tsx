@@ -1012,7 +1012,7 @@ export const EmptyData: Story = {
     docs: {
       description: {
         story:
-          'A table with no rows, nothing searched or filtered: it says "Nothing here yet." and nothing about a search, which nobody made (board 24). Its action is still shown.',
+          'A table with no rows, nothing searched or filtered: it says "Nothing here yet." and nothing about a search, which nobody made. Its action is still shown.',
       },
     },
   },
@@ -2573,14 +2573,14 @@ export const LongContentWrappedAndVirtualized: Story = {
   play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };
 
-/* A table's toolbar in a narrow box (qorus#646): on a phone, a table in a card is narrower than the screen,
+/* A table's toolbar in a narrow box: on a phone, a table in a card is narrower than the screen,
    and its search field and actions reached past the card - the search field kept its width and the
    toolbar did not wrap. */
 
-/** The width of a card on a 390px phone screen, inside its page's gutters: what the IDE's tables sit in. */
+/** The width of a card on a 390px phone screen, inside its page's gutters: what an app's tables sit in. */
 const NARROW_TABLE_WIDTH = 265;
 
-/* A narrow table's row actions (qorus#646): three icon buttons took a third of a phone's table from the
+/* A narrow table's row actions: three icon buttons took a third of a phone's table from the
    columns that say which row is which. Narrow, they are one menu button per row that names them. */
 
 /** The actions cells of the rows on screen. */
@@ -2653,12 +2653,12 @@ export const FilterableInANarrowBox: Story = {
   },
 };
 
-/* A narrow table's search (qorus#646): a button with its icon until it is used, so the title keeps the
+/* A narrow table's search: a button with its icon until it is used, so the title keeps the
    toolbar. Opened, the field takes the toolbar's line; empty, Escape or leaving it closes it again. */
 
 const onFiftyRows = fn();
 
-/** The IDE's list card: a title with its count, a page-size control, the search and the more button. */
+/** An app's list card: a title with its count, a page-size control, the search and the more button. */
 const WorkflowsCard = () => (
   <div className='workflows-card' style={{ width: 320, maxWidth: '100%' }}>
     <ReqoreTable
@@ -2834,7 +2834,7 @@ export const TitleWordWiderThanItsSpace: Story = {
     docs: {
       description: {
         story:
-          "Renders a searchable table in a 320px box and in a 220px box, titled with one word wider than the space left beside its search button and more button. At 320px the word shrinks until it fits whole (a title keeps its words: it wraps, then shrinks, then is cut - decision 029). At 220px it is too wide even at the smallest size a title takes, so only then is it broken, and it stays inside the title's box, as the controls stay inside the panel.",
+          "Renders a searchable table in a 320px box and in a 220px box, titled with one word wider than the space left beside its search button and more button. At 320px the word shrinks until it fits whole (a title keeps its words: it wraps, then shrinks, then is cut). At 220px it is too wide even at the smallest size a title takes, so only then is it broken, and it stays inside the title's box, as the controls stay inside the panel.",
       },
     },
   },
@@ -2945,7 +2945,7 @@ export const RowActionsMenuOpen: Story = {
 };
 
 /* A wide table draws a cell action's label in its button, as it did before the narrow menu existed
-   (qorus#646 had it as the button's tooltip only, at any width: a labelled action was a blank
+   (a first cut had it as the button's tooltip only, at any width: a labelled action was a blank
    button). */
 
 const LABELLED_ACTIONS_COLUMNS: IReqoreTableColumn[] = [
@@ -3013,7 +3013,7 @@ export const RowActionLabelsWhenWide: Story = {
   },
 };
 
-/* A narrow table's one-action column (qorus#646): where a table is a phone's width or narrower, its actions
+/* A narrow table's one-action column: where a table is a phone's width or narrower, its actions
    column folds. A row with one action keeps it as a button there; one with no icon says its `shortLabel`,
    or its label where it has none, and the column is as wide as those words take in their button - folded
    to the menu button's square, "Test" was cut to "T…". */
@@ -3169,7 +3169,7 @@ export const FoldedColumnSaysTheFullLabelWithoutAShortLabel: Story = {
     expectFoldedActionsSay(canvasElement, 'Test the connection', 'Test the connection'),
 };
 
-/* A wide toolbar beside a long one-line description (qorus#646): the narrow bar's rule - the title
+/* A wide toolbar beside a long one-line description: the narrow bar's rule - the title
    first, the actions from what it leaves - applied at every width took the description's one-line
    width as the title's claim, and squeezed the search to its least instead of wrapping the
    description. */

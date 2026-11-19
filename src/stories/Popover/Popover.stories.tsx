@@ -1817,7 +1817,7 @@ export const AVetoedTooltipKeepsItsPixelsButNotItsPointer: Story = {
  *
  * Reqore's own `Clamped To Viewport` and `Progress → With Tooltip` both lost
  * their auto-opened popovers to that, and two live surfaces do the same thing:
- * the Qorus IDE's FSM error tooltip, and reqraft's LSP hover documentation,
+ * an app's state-machine error tooltip, and reqraft's LSP hover documentation,
  * whose anchor is a 1x1 `pointer-events: none` span — a trigger the pointer can
  * never be on, so it could never be closed by the pointer leaving it either.
  *

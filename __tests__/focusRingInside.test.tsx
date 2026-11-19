@@ -11,7 +11,7 @@ import {
 /**
  * The keyboard's ring is drawn inside a button's and a tag's edge: a control sits flush
  * in a box that clips often (a table cell, a field, a scrolling action group), and a ring drawn 2px
- * outside was cut away there (Qlip build 20261117-015530).
+ * outside was cut away there (seen in a visual review).
  */
 
 /** The `:focus-visible` rules the page's style sheets hold for an element's classes. */

@@ -69,7 +69,7 @@ document.head.appendChild(style);
 
 /* A story fails when a ResizeObserver callback changes the layout it observes in the same frame: the
    browser leaves the change unreported until the next one and says so with an error event whose message
-   is "ResizeObserver loop completed with undelivered notifications" (qorus#646). Vitest only logs that
+   is "ResizeObserver loop completed with undelivered notifications". Vitest only logs that
    event (it carries no error object), so it is caught here. The listener goes on through EventTarget, not
    `window.addEventListener`: Vitest counts the error listeners a page adds that way and stops reporting
    any unhandled error once there is one. */
@@ -100,7 +100,7 @@ afterEach(async () => {
 
 /* Each story's browser is the one its project promises (vitest.config.mts): a desktop with a mouse, or, for
    the stories tagged `touch`, a phone. The phone's stories run first, so every desktop story checks, after
-   them, that it still has its mouse: a touch screen that left a desktop page without one (qorus#646) fails
+   them, that it still has its mouse: a touch screen that left a desktop page without one fails
    the next story here.
 
    And its scrollbars: hidden, taking no room, but in the project of the stories tagged `scrollbars`, whose

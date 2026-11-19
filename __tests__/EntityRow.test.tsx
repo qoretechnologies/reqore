@@ -113,7 +113,7 @@ test('Renders <EntityRow /> with actions', () => {
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreEntityRow label='Qog' actions={[{ label: 'Run' }]} />
+          <ReqoreEntityRow label='Job' actions={[{ label: 'Run' }]} />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
@@ -130,7 +130,7 @@ test('Calls onClick when row is clicked', () => {
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreEntityRow label='Qog' onClick={handleClick} />
+          <ReqoreEntityRow label='Job' onClick={handleClick} />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
@@ -611,7 +611,7 @@ test('Renders without a ResizeObserver implementation', () => {
 });
 
 /*
- * Narrow, the actions are buttons under the label by default (qorus#646, Foxhoundn: a fold into a menu is
+ * Narrow, the actions are buttons under the label by default (a fold into a menu is
  * opted into, never a row's default); with `narrowActions='menu'` two or more are one menu button.
  */
 

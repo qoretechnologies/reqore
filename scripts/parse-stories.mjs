@@ -8,7 +8,7 @@
 // `index.json` with 500, every open preview reloads on each retry, and every story run fails
 // before its first story. The unit gate (`__tests__/storyFilesAreIndexable.test.ts`) catches it,
 // but only when the unit suite runs; a running Storybook reads the file the moment it is saved
-// (18 Nov, qorus-ide: a description with unescaped quotes broke a Storybook's index for minutes).
+// (a description with unescaped quotes once broke a host app's Storybook index for minutes).
 // So run this right after every story-file edit, before anything else.
 //
 // With no files it checks the story files changed against HEAD (staged, unstaged and untracked).

@@ -5,12 +5,12 @@ import { ReqoreControlGroup, ReqoreUIProvider } from '../src';
 import { modelGroupLayout } from './shared/controlGroupLayout';
 
 /**
- * A responsive control group folds only what it has, and folds each child once (qorus#646).
+ * A responsive control group folds only what it has, and folds each child once.
  *
  * The group folds its children into a `…` menu one at a time for as long as its row overflows. Nothing
  * stopped the count when every child was already in the menu: a group whose overflow button alone is wider
  * than its room - a labelled or large button, a narrow container - kept counting, re-rendering the same row
- * and measuring it again, forever. Under `act` that froze the page (the Qorus IDE's story run).
+ * and measuring it again, forever. Under `act` that froze the page (a host app's story run).
  *
  * The row and the menu also took from two different lists: the row sliced the raw `children` array, the
  * menu took from `React.Children.toArray(children)`, which leaves out the holes a caller leaves (`null`,

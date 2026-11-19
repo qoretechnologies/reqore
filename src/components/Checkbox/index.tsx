@@ -277,7 +277,7 @@ const StyledCheckbox = styled.div.withConfig({
   padding: 0px;
   transition: all 0.2s ease-out;
 
-  /* A label that wraps (qorus#646) makes the checkbox as high as the lines it takes, at least one; and the
+  /* A label that wraps makes the checkbox as high as the lines it takes, at least one; and the
      checkbox gives way to the room it is in rather than keep its label on one line, so it is never wider than
      its container, and shrinks in a row. */
   ${({ size, $wrapLabel }) =>
@@ -544,7 +544,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
     };
 
     /* The groups the label is in keep the width of its one line unless told to give way: a group that is not
-       fluid does not shrink. A label that wraps is let wrap in the room the checkbox has (qorus#646), and so is a
+       fluid does not shrink. A label that wraps is let wrap in the room the checkbox has, and so is a
        label with a description, which is prose: kept to one line, it pushed the checkbox past its container's edge
        (reqore#662: a radio group's descriptions cut at a 490px panel's edge). */
     const wraps = !!wrapLabel || !!description;

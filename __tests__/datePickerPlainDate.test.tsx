@@ -5,7 +5,7 @@ import { DatePicker } from '../src/components/DatePicker';
 import { readDate, toPlainDate } from '../src/helpers/dates';
 
 /**
- * A plain date (queue item 33, the IDE's test rows): a day with no time and no zone, read and written as
+ * A plain date (a test editor's rows): a day with no time and no zone, read and written as
  * `YYYY-MM-DD`, the same day whatever zone the browser is in. An instant written as ISO in UTC came back as the day
  * before east of UTC.
  */

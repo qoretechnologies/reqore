@@ -91,7 +91,7 @@ const GlobalStyle = createGlobalStyle`
   /* A wrapped control group's child is never wider than the group (WRAPPED_CONTROL_GROUP_CHILD_SELECTOR). A child
      as wide as content that does not wrap - a button saying a value and its description, or a group holding one -
      stayed that wide, past the group and the card it was in: a data provider's path ran 487-712px wide in a 346px
-     card on a phone (qorus#646). */
+     card on a phone. */
   ${WRAPPED_CONTROL_GROUP_CHILD_SELECTOR} {
     max-width: ${CONTROL_GROUP_CHILD_MAX_WIDTH};
     min-width: 0;

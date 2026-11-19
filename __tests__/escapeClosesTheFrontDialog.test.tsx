@@ -5,7 +5,7 @@ import { ReqoreDrawer, ReqoreModal, ReqoreUIProvider } from '../src';
 import { useReqoreProperty } from '../src/hooks/useReqoreContext';
 
 /**
- * Escape closes the dialog in front, and only it (the admin portal's keyboard pass): a drawer declared
+ * Escape closes the dialog in front, and only it (found in an app's keyboard pass): a drawer declared
  * `closeOnEscPress` and never read it, and the confirmation from `confirmAction` could not be cancelled
  * with Escape.
  */

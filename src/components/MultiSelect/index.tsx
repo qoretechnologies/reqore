@@ -8,7 +8,7 @@
  * This module stays so that nothing consuming the old name breaks: both
  * `import { ReqoreMultiSelect } from '@qoretechnologies/reqore'` and the deep
  * `'@qoretechnologies/reqore/dist/components/MultiSelect'` import that reqraft
- * and qorus-ide use for `TReqoreMultiSelectItem` keep resolving, with the same
+ * and the apps built on it use for `TReqoreMultiSelectItem` keep resolving, with the same
  * types they always had.
  */
 import { IReqoreSelectMultiProps, ReqoreSelect, TReqoreSelectValue } from '../Select';

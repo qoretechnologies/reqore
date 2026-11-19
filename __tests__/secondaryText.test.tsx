@@ -14,7 +14,7 @@ import { getSecondaryTextColor, getSecondaryTextEffect } from '../src/helpers/co
 /**
  * A theme names its secondary text color once (`text.secondary`), and descriptions, statistic
  * labels and Markdown prose draw in it, where each was the readable color at an opacity of its own
- * (admin portal: a template's description read brighter than the drawer's other secondary text).
+ * (in an app, a template's description read brighter than the drawer's other secondary text).
  * Unset, everything is as before.
  */
 const CALM: Partial<IReqoreTheme> = { main: '#141418', text: { secondary: '#a6a6af' } };

@@ -4,9 +4,9 @@
  * What a rounded container draws at its top-left corner starts clear of the corner: at least the
  * corner's radius in from the container's outer edge.
  *
- * Seen in the admin portal (Filip, Qlip build #44: "I feel like the panel label is too close to the
- * border radius?"): a 14px `theme.panel.radius` on a `small` panel put its title 7px in, under the
- * curve, because a title bar was padded by its size's step and never by the corner.
+ * Seen in a dashboard, where a panel's label sat too close to its rounded corner: a 14px
+ * `theme.panel.radius` on a `small` panel put its title 7px in, under the curve, because a title
+ * bar was padded by its size's step and never by the corner.
  */
 
 import { expect } from 'storybook/test';

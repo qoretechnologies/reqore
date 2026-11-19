@@ -427,7 +427,7 @@ export const CustomTheme: Story = {
 /** Every component takes a tooltip. */
 export const Tooltip: Story = {
   parameters: {
-    // Tooltip only becomes visible on hover — the static Qlip capture would
+    // Tooltip only becomes visible on hover — the static snapshot would
     // just re-photograph the Default story's overflowing row, so opt this
     // story out of visual regression.
     qlip: { skip: true },

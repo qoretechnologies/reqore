@@ -70,7 +70,7 @@ export interface IReqoreCollectionGroup extends IReqorePanelProps {
    * The group's place among the groups: they are drawn by it, lowest first, and those at one place by
    * name, in the collection's sort. A group with none is at 0, so a negative place puts a group before
    * them and a positive one after them, in either sort ("Other applications" last, under the business
-   * categories: r-qs-47). The items in no group ('Ungrouped') lead unless they are given a place.
+   * categories). The items in no group ('Ungrouped') lead unless they are given a place.
    */
   order?: number;
 }
@@ -177,7 +177,7 @@ export interface IReqoreCollectionProps
   /**
    * A filter the page draws itself (its own toolbar, not this collection's search) is narrowing `items`: an empty
    * collection then says `emptyMessage`, with the search icon, as it does when its own search emptied it, and
-   * not that there is nothing yet (queue item 29: the admin portal's support queue filtered to empty).
+   * not that there is nothing yet (a support queue filtered to empty, say).
    */
   filtered?: boolean;
   sortButtonTooltip?: (sort?: 'asc' | 'desc') => string;
@@ -325,8 +325,8 @@ export const ReqoreCollection = memo(
       searchDelay,
       onQueryChange
     );
-    /* The search sentence only while a search is what emptied the list: sixteen IDE lists with no message
-       of their own told a reader to change a search they never typed (a Qog's variables, board 24). */
+    /* The search sentence only while a search is what emptied the list: many lists in an app with no message
+       of their own told a reader to change a search they never typed (a list of variables, say). */
     const searched = String(query ?? '') !== '' || !!filtered;
     const emptyText = searched
       ? (emptyMessageProp ?? SEARCH_EMPTY_MESSAGE)

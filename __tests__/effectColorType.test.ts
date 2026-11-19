@@ -13,7 +13,7 @@ import {
  * expression whose type is that wide (`TS2590: Expression produces a union
  * type that is too complex to represent`), and it does so at the CONSUMER:
  * merely putting a typed value of it in a conditional, or spreading it into an
- * effect object, was enough. The Qorus IDE carried `as any` casts for exactly
+ * effect object, was enough. A consuming app carried `as any` casts for exactly
  * that, in code that had the right type already.
  *
  * The modifier segments are `${number}` now: the same spellings are accepted,

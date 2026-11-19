@@ -58,7 +58,7 @@ export interface IDropdownKeyboardControls {
 }
 
 /**
- * The list's own style: it may shrink in its panel's column (qorus#646). One object for every render, as the control
+ * The list's own style: it may shrink in its panel's column. One object for every render, as the control
  * group it is handed to is memoised (a new object each render would draw it again for nothing).
  */
 const SHRINKABLE_LIST_STYLE: React.CSSProperties = { minHeight: 0 };
@@ -469,7 +469,7 @@ const ReqoreDropdownList = memo(
     /* Back at this level from the level it showed by the keys (the left arrow), the row that level came
        from is highlighted, as the keys left it: the right arrow opens it again and Enter acts on it.
        Opening it cleared the highlight, and it showed again on the way back only while this level also
-       heard the keys pressed in the level it showed (qorus#646, Foxhoundn). The same holds for a lone row
+       heard the keys pressed in the level it showed. The same holds for a lone row
        the list opened by itself. Back by a click (the back button, a crumb) says nothing of the keys:
        nothing is highlighted, as before - a highlighted row looks picked to a pointer. */
     const levelItShowed = useRef<IReqoreDropdownItem | undefined>(undefined);
@@ -622,7 +622,7 @@ const ReqoreDropdownList = memo(
 
     return (
       // In a popover held to the room below its field, the list shrinks to it (min-height 0 in the panel's
-      // column) and its rows, the menu, take what its search and tags leave: one place scrolls (qorus#646).
+      // column) and its rows, the menu, take what its search and tags leave: one place scrolls.
       <ReqoreControlGroup vertical fluid style={SHRINKABLE_LIST_STYLE}>
         {/* An array prop: keyed here, so a caller passing elements without keys draws no warning.
             `toArray` keeps the keys a caller gave rather than putting keys by position over them,

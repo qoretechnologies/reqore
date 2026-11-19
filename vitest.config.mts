@@ -75,17 +75,17 @@ const storyBrowser = (
   // off. Turning Chromium's touch emulation off over the DevTools protocol (how a touch story used to
   // borrow a desktop page) leaves the page with the hover and pointer the machine reports, not the mouse
   // Playwright launched it with (`--blink-settings=primaryHoverType=2,…`), and a Linux CI runner reports
-  // none: every later story in the page found `(hover: none)` (qorus#646).
+  // none: every later story in the page found `(hover: none)`.
   //
   // Playwright launches Chromium with `--hide-scrollbars`, so a scrollbar takes no room in the other
   // projects, wherever the browser runs. Without it, Chromium on Linux (the CI runner) draws classic
   // 15px scrollbars, as Linux, Windows and a Mac set to always show them do: a layout that has to
-  // leave room for one (a field measured while it draws one, qorus#646) is only seen there. A Mac
+  // leave room for one (a field measured while it draws one) is only seen there. A Mac
   // that shows its scrollbars as it scrolls draws them over the content, so there they take no room.
   //
   // A Chromium that takes its language from the POSIX locale (LC_ALL, then LANG: C, C.UTF-8, POSIX
   // or none, as in most Linux containers) reports `navigator.language` as `en-US@posix`, which is
-  // no BCP 47 tag: `Intl` throws on it (qorus#646). Not every build does: the arm64 Linux one does,
+  // no BCP 47 tag: `Intl` throws on it. Not every build does: the arm64 Linux one does,
   // and the amd64 Linux one the CI runs reports `en-US` whatever the locale or `--lang` says, as a
   // Mac's takes the system's. So the `posix-locale` project does not ask the platform for it: its
   // context is given the language itself (`locale`), which Chromium then reports as it is, Intl's

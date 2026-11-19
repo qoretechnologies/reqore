@@ -257,7 +257,7 @@ const StyledRow = styled(StyledEffect).withConfig({
   }
 
   /* Narrow, the actions stack under the label, one to a line (each the row's width in a phone-width container), with its label
-     whole (qorus#646): kept on one line that does not wrap, two labelled actions reached past the row on
+     whole: kept on one line that does not wrap, two labelled actions reached past the row on
      a phone. An icon's tooltip is its label there, and a finger gets a target it can hit. */
   @media (pointer: coarse) {
     &[data-narrow='true'] > .reqore-severity-row-actions > .reqore-button {
@@ -265,10 +265,10 @@ const StyledRow = styled(StyledEffect).withConfig({
     }
   }
 
-  /* Narrow, two or more actions are one menu button at the end of the label's line (qorus#646), not
+  /* Narrow, two or more actions are one menu button at the end of the label's line, not
      a line each under it: the label keeps its width, and a list of rows does not grow by a line per
      action. A row of that mode with one action keeps it there too, as a button of its own ('end'): under the
-     label it was a line of its own for one button, where a row with more had none (David, qorus#646). */
+     label it was a line of its own for one button, where a row with more had none. */
   &[data-narrow='true'][data-actions='menu'],
   &[data-narrow='true'][data-actions='end'] {
     grid-template-columns: ${STRIP_WIDTH_PX}px 1fr auto;
@@ -459,9 +459,9 @@ const ReqoreSeverityRow = memo(
       const noGutter = !showStrip && !hasLeading && !stripGutter;
       /* Narrow, a lone action stays at the end of the label's line while the container is wider than a
          phone. Under the label, a drawer's one "Open" became a bordered bar the drawer's width on a desktop,
-         because every drawer is narrower than 640px (Filip, 2026-10-28). It goes under the label, spanning the
-         row, only where a full-width target is what helps: a phone-width container (David and Foxhoundn,
-         qorus#646), or - in the default 'stack' mode - a touch screen. A row that folds two or more into a menu
+         because every drawer is narrower than 640px. It goes under the label, spanning the
+         row, only where a full-width target is what helps: a phone-width container, or - in the default
+         'stack' mode - a touch screen. A row that folds two or more into a menu
          kept its one action there already, on any pointer. */
       const coarsePointer =
         typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
@@ -477,14 +477,14 @@ const ReqoreSeverityRow = memo(
           (isPhoneWidth && loneDestructive));
       /* Stacked (the default), one to a line, only where the container is a phone's width or narrower. Narrow
          but wider than a phone, they sit side by side under the label at their labels' widths, onto another line
-         only where they do not fit, as with `'row'`: actions that answer one callout belong together (Foxhoundn:
-         the law of proximity; David, qorus#646). A lone action at the end of the label's line is never stacked:
+         only where they do not fit, as with `'row'`: actions that answer one callout belong together (the law
+         of proximity). A lone action at the end of the label's line is never stacked:
          it is there only while the container is wider than a phone. */
       const actionsStacked = isNarrow && isPhoneWidth && narrowActions !== 'row';
       /* Under the label, stacked actions and a lone action are the row's width where the row's container is a
          phone's width or narrower - on a phone, or in as narrow a container on any screen - where a full-width
          row is the easiest target there is (Fitts's law). In a container wider than a phone, each is as wide as
-         its label (David's width rule, qorus#646). The container is measured, not the screen. */
+         its label. The container is measured, not the screen. */
       const actionsSpanRow =
         isNarrow && isPhoneWidth && (actionsStacked || loneAction) && !loneActionAtLineEnd;
       // an action on a line of its own: it is written out (an icon-only one says its tooltip), and may span it
@@ -612,8 +612,8 @@ const ReqoreSeverityRow = memo(
               >
                 {actions.map(({ shortLabel, destructive, ...action }, idx) => {
                   /* At the end of a narrow row's label line, an action says its short label, or is its icon
-                     alone where it has a tooltip (`getCompactRowAction`): a long label took the line's room
-                     (David, qorus#646). On a line of its own, and wide, it says its label. */
+                     alone where it has a tooltip (`getCompactRowAction`): a long label took the line's room.
+                     On a line of its own, and wide, it says its label. */
                   const compact = loneActionAtLineEnd
                     ? getCompactRowAction({ ...action, shortLabel })
                     : undefined;

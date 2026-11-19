@@ -1,7 +1,7 @@
 // The header cell above a pinned column paints the SAME fill as the pinned body cells under it: the
 // surface the table sits on. It painted `theme.main` instead, a step darker than the panel, so the
 // header over a pinned actions column read as a black box beside the rest of the header (reported on
-// the IDE's Connections list, 2026-11-06). Opaque either way, so the header cells that scroll under
+// an app's connections list). Opaque either way, so the header cells that scroll under
 // it still do not show through.
 import { render } from '@testing-library/react';
 import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';

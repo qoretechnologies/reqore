@@ -29,7 +29,7 @@ const action = (label: string, keeps = false): IReqorePanelAction => ({
   ...(keeps ? { responsive: false } : {}),
 } as IReqorePanelAction);
 
-// A bar draws its actions in the page's order, whichever of them may fold (board f67).
+// A bar draws its actions in the page's order, whichever of them may fold.
 describe("a panel's actions", () => {
   test('are drawn in the order the page gives them, a kept one first included', () => {
     const { container } = renderInProvider(
@@ -96,7 +96,7 @@ describe("a panel's actions", () => {
   });
 });
 
-// Where the title and the actions do not fit on one line, the actions go under it (board f66).
+// Where the title and the actions do not fit on one line, the actions go under it.
 describe('wrapActionsBelowTitle', () => {
   test('puts the actions in one box, in order, that the bar can move under the title', () => {
     const { container } = renderInProvider(
@@ -124,7 +124,7 @@ describe('wrapActionsBelowTitle', () => {
     expect(container.querySelector('.reqore-panel-title-actions')).toBeNull();
   });
 
-  test('is on by default (Filip, 18 Nov)', () => {
+  test('is on by default', () => {
     const { container } = renderInProvider(
       <ReqorePanel label='Build' actions={[action('Upload'), action('Save', true)]} />
     );

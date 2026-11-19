@@ -3,7 +3,7 @@ import { fireEvent, render } from '@testing-library/react';
 import { ReqoreMenu, ReqoreMenuItem, ReqoreMenuSection, ReqoreUIProvider } from '../src/index';
 
 /**
- * qorus#646 (found by the IDE agent): a menu cloned its own props - customTheme, wrap, flat, minimal, size and
+ * A menu cloned its own props - customTheme, wrap, flat, minimal, size and
  * closePopover - onto every child, plain DOM elements included, so React warned about unknown props on a
  * div, and the props reached the DOM. A host element takes none of them: the menu and its sections now
  * pass them only to components.

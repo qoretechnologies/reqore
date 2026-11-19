@@ -7,7 +7,7 @@ const textRgb = (element: HTMLElement): number[] =>
 
 /**
  * `element`'s text is drawn in a red: its red channel leads the other two. How a destructive action
- * says so in a menu, where its own look (a red icon on a quiet button) is not drawn (r-qs-19).
+ * says so in a menu, where its own look (a red icon on a quiet button) is not drawn.
  */
 export const expectDrawnRed = (element: HTMLElement) => {
   const [r, g, b] = textRgb(element);

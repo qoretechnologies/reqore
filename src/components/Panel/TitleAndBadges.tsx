@@ -37,7 +37,7 @@ export const getTextBadgeLead = (
  * left, then cut the title: a 218px tile left its title 31px beside "Last 30 days" and two
  * buttons, so it read "De…". The title is what names the thing and a badge says something about
  * it, so the badges move before the title wraps, and the title then wraps before it shrinks and
- * shrinks before it is cut (Filip, 2026-11-16; instruction-files decision 029).
+ * shrinks before it is cut.
  *
  * A wrapping flex line does exactly that: a line takes its items at their full width, so the
  * badges stay beside the title only while the title's whole one-line width and theirs fit, and
@@ -49,7 +49,7 @@ export const getTextBadgeLead = (
  * A text badge ("Last 30 days") draws no box, so its edge is its words, which sit the tag's
  * padding inside it: the badges are pulled back by that much (`$textLead`) and the gap widened by
  * as much, so beside the title the room is what it always was and under it the words start where
- * the title's do (Filip, 2026-11-17).
+ * the title's do.
  */
 const StyledTitleAndBadges = styled.div<{ $gap: number; $textLead: number }>`
   display: flex;

@@ -43,7 +43,7 @@ const INHERITING = ['.reqore-button', '.reqore-input', '.reqore-textarea'];
 /**
  * The ones that keep a face of their own whatever the page or the theme is set in: a tag and a
  * shortcut key name the platform UI font. A textarea is prose, in the page's font, unless it asks
- * for monospace (Filip, 2026-11-17: per use).
+ * for monospace (a choice made per use).
  */
 const OWN_FONTS: [string, string][] = [
   ['.reqore-tag', 'system-ui'],

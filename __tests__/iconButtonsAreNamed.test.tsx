@@ -14,7 +14,7 @@ import ReqoreDropdownList from '../src/components/Dropdown/list';
 /**
  * A button that is an icon alone says what it does, as a tooltip and to a screen reader: the tree's
  * edit / delete / add / copy, a tab's close, a date picker's clear, a nested list's back and a
- * drawer's hide were read as "button" (the IDE's list editor; the table toolbar's were f56). Each
+ * drawer's hide were read as "button" (in an app's list editor, and the table toolbar's too). Each
  * render also checks that no button on the page is left without a name.
  */
 const mount = (ui: React.ReactNode) =>

@@ -299,7 +299,7 @@ export const CalmScale: Story = {
   },
 };
 
-/** The calm apps' card-title size and weight (board q54); a dialog's title, 20px, is shown in Dialogs/Drawer · Calm Title Sizes. */
+/** The calm apps' card-title size and weight; a dialog's title, 20px, is shown in Dialogs/Drawer · Calm Title Sizes. */
 const EXAMPLE_HEADINGS: Partial<IReqoreTheme> = {
   ...CALM_THEME,
   typeScale: { ...CALM_TYPE_SCALE, heading: { 3: 16 }, headingWeight: 600 },
@@ -319,7 +319,7 @@ export const HeadingsOnTheScale: Story = {
     docs: {
       description: {
         story:
-          "Renders a level 3 heading and a normal panel's title twice: on the left at Reqore's own heading sizes (19px, the browser's bold), on the right under the calm apps' `theme.typeScale.heading` (`{ 3: 16 }`) with `headingWeight: 600`. Both take the theme's px and weight; a theme that names no heading sizes renders as before. These are the calm apps' card-title size and weight (board q54); a drawer's or modal's own title takes `dialogHeading`.",
+          "Renders a level 3 heading and a normal panel's title twice: on the left at Reqore's own heading sizes (19px, the browser's bold), on the right under the calm apps' `theme.typeScale.heading` (`{ 3: 16 }`) with `headingWeight: 600`. Both take the theme's px and weight; a theme that names no heading sizes renders as before. These are the calm apps' card-title size and weight; a drawer's or modal's own title takes `dialogHeading`.",
       },
     },
   },

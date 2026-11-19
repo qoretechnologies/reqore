@@ -424,10 +424,10 @@ export const WithBackgroundBlur: Story = {
   },
 };
 
-/* `responsiveLayout` is qorus-ide's bottom-sheet behaviour moved into the
-   library, so the stories pin down what the IDE gets back: WHERE it switches
+/* `responsiveLayout` is a host app's bottom-sheet behaviour moved into the
+   library, so the stories pin down what that app gets back: WHERE it switches
    (900px, not the provider's 480px), HOW TALL the sheet is (90vh, like every
-   IDE drawer today) and what each knob changes. Every story shares one set of
+   drawer it had) and what each knob changes. Every story shares one set of
    drawer args; only the viewport and the `responsiveLayout` config differ. */
 const SHEET_ARGS = {
   responsiveLayout: true,
@@ -447,7 +447,7 @@ const PHONE_VIEWPORT = {
  * `PHONE_VIEWPORT` for a story whose frame after the play shows nothing of the feature — the
  * page with the sheet gone, or a sheet at rest that `ResponsiveSheetMobile` already captures.
  * The play still runs at phone width (the Storybook `viewport` parameter sizes the page before
- * it); only the Qlip capture is skipped, so no empty or duplicate snapshot is produced.
+ * it); only the visual capture is skipped, so no empty or duplicate snapshot is produced.
  */
 const PHONE_VIEWPORT_UNCAPTURED = {
   ...PHONE_VIEWPORT,
@@ -527,7 +527,7 @@ export const ResponsiveSheetBelowBreakpoint: Story = {
     docs: {
       description: {
         story:
-          'The same drawer in an 800px window: wider than the provider’s 600px phone breakpoint, narrower than the 900px sheet breakpoint (`DRAWER_SHEET_BREAKPOINT`, the number qorus-ide uses for all of its drawers). It is still a sheet — a 720px panel would leave 80px of page here, which is no page at all.',
+          'The same drawer in an 800px window: wider than the provider’s 600px phone breakpoint, narrower than the 900px sheet breakpoint (`DRAWER_SHEET_BREAKPOINT`, the number a host app used for all of its drawers). It is still a sheet — a 720px panel would leave 80px of page here, which is no page at all.',
       },
     },
   },
@@ -852,7 +852,7 @@ export const SheetSwipeInProgress: Story = {
     docs: {
       description: {
         story:
-          'A phone-width sheet caught mid-swipe: its title bar has been dragged down by 30% of its height and is still held, so the sheet sits that far below its edge with the page showing above it, the root carries `.reqore-drawer-dragging`, and nothing is animating. The one swipe story Qlip captures — the others end on a closed sheet or a sheet at rest.',
+          'A phone-width sheet caught mid-swipe: its title bar has been dragged down by 30% of its height and is still held, so the sheet sits that far below its edge with the page showing above it, the root carries `.reqore-drawer-dragging`, and nothing is animating. The one swipe story the visual tests capture — the others end on a closed sheet or a sheet at rest.',
       },
     },
   },
@@ -1083,7 +1083,7 @@ export const CalmTitleSizes: Story = {
     docs: {
       description: {
         story:
-          "Renders a drawer under the calm apps' heading sizes (`typeScale: { heading: { 3: 16 }, headingWeight: 600, dialogHeading: 20 }`): the drawer's own title at 20px, a card inside it at 16px, both at weight 600. A dialog's title is a step above a card's (board q54).",
+          "Renders a drawer under the calm apps' heading sizes (`typeScale: { heading: { 3: 16 }, headingWeight: 600, dialogHeading: 20 }`): the drawer's own title at 20px, a card inside it at 16px, both at weight 600. A dialog's title is a step above a card's.",
       },
     },
   },
@@ -1171,7 +1171,7 @@ export const KeyboardOpensAndClosesADrawer: Story = {
 };
 
 /**
- * The admin portal's A/B test sheet on a phone: its icon, its long name and its status word with a dot, on the calm
+ * An A/B test's sheet on a phone: its icon, its long name and its status word with a dot, on the calm
  * heading sizes. Only the status word differs between the two stories below.
  */
 const ExperimentSheet = ({ status }: { status: string }) => {
@@ -1189,7 +1189,7 @@ const ExperimentSheet = ({ status }: { status: string }) => {
       position='bottom'
       size='88vh'
       flat
-      label={loaded ? 'Hero: Qonsole input vs problem wizard' : 'A/B test'}
+      label={loaded ? 'Hero: Console input vs problem wizard' : 'A/B test'}
       icon='FlaskLine'
       badge={loaded ? { label: status, icon: 'CheckboxBlankCircleFill', appearance: 'text' } : undefined}
       onClose={noop}
@@ -1204,7 +1204,7 @@ const sheetTitle = () =>
   waitFor(() => {
     const heading = document.querySelector<HTMLElement>('.reqore-drawer .reqore-heading');
 
-    expect(heading?.textContent).toContain('Hero: Qonsole input');
+    expect(heading?.textContent).toContain('Hero: Console input');
 
     // the lines its words are on: the tops of its text's boxes
     const range = document.createRange();
@@ -1224,7 +1224,7 @@ const sheetTitle = () =>
  * The title at its natural size, wrapped to two lines, its status word under it. A word as long as "Running · phase
  * 2" beside the title took the room the title was measured for: the title shrank to 16px to fit beside it, and then
  * took its line whole with the word under it after all, one line at 16px where every other test showed two at 20
- * (the admin portal's ExperimentDrawer › Removed Version at 390).
+ * (seen in an app's experiment drawer, its Removed Version at 390).
  */
 const expectSheetTitleAtItsSize = async () => {
   await withViewport(PHONE_SCREEN.width, PHONE_SCREEN.height, async () => {
@@ -1249,7 +1249,7 @@ export const TheSameTitleAtTheSameSizeBesideAShortWord: Story = {
     docs: {
       description: {
         story:
-          'Renders an A/B test sheet on a phone (390 px) under the calm heading sizes: the title "Hero: Qonsole input vs problem wizard" with its status word "Ended" under it. The title keeps its 20px and wraps to two lines.',
+          'Renders an A/B test sheet on a phone (390 px) under the calm heading sizes: the title, a long test name, with its status word "Ended" under it. The title keeps its 20px and wraps to two lines.',
       },
     },
   },
@@ -1278,7 +1278,7 @@ export const TheSameTitleAtTheSameSizeBesideALongWord: Story = {
   play: expectSheetTitleAtItsSize,
 };
 
-/** A smaller phone than the touch stories' (390 px): what Qlip captures its phone stories at. */
+/** A smaller phone than the touch stories' (390 px): the one a snapshot review app captures its phone stories at. */
 const SMALL_PHONE = { width: 375, height: 812 };
 
 const SMALL_PHONE_STORY = {
@@ -1297,7 +1297,7 @@ const SMALL_PHONE_STORY = {
   globals: { viewport: { value: 'smallPhone', isRotated: false } },
 };
 
-/** The code font Qlip draws a story's path in. */
+/** The code font a snapshot review app draws a story's path in. */
 const CODE_FONT =
   "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace";
 
@@ -1308,7 +1308,7 @@ export const AMonospaceTitleKeepsItsActionsBesideIt: Story = {
     docs: {
       description: {
         story:
-          'Renders a snapshot review sheet on a small phone (375 px), as Qlip draws it: the story\'s path "Example/ProfileBadge · Unmasked" in a monospace font, its status word "To review" and two lines of figures under it, a "more" button and a close button. The path takes two lines with the whole line to itself, and two beside the buttons, so the buttons stay beside it rather than taking a line of their own under it.',
+          'Renders a snapshot review sheet on a small phone (375 px), as a snapshot review app draws it: the story\'s path "Example/ProfileBadge · Unmasked" in a monospace font, its status word "To review" and two lines of figures under it, a "more" button and a close button. The path takes two lines with the whole line to itself, and two beside the buttons, so the buttons stay beside it rather than taking a line of their own under it.',
       },
     },
   },

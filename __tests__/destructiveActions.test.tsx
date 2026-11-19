@@ -11,7 +11,7 @@ import {
 } from '../src';
 
 /**
- * `destructive` means the same wherever an action is drawn (r-qs-19): a menu entry that says it
+ * `destructive` means the same wherever an action is drawn: a menu entry that says it
  * destroys is drawn in danger where it gives no intent, a destructive action beside an entry keeps
  * its own look rather than the entry's tint, and a panel action keeps the marker off its button.
  */

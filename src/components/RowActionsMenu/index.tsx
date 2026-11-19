@@ -22,16 +22,16 @@ export const DEFAULT_ACTIONS_MENU_LABEL = 'Actions';
  *   is a phone's width or narrower (on a phone, or as narrow a container on any screen). In a wider container
  *   (a narrow `ReqoreSeverityRow`, between 480 and 640px) side by side, each as wide as its label, onto another
  *   line only where they do not fit, as with `'row'`: actions that answer one callout stay together (the law
- *   of proximity; Foxhoundn and David, qorus#646). For a callout whose actions are what it is there for
+ *   of proximity). For a callout whose actions are what it is there for
  *   ("Try again"), which a menu would hide.
  * - `'menu'`: one menu button, at the end of the label's line, opening a menu that names each action.
  *   The content keeps its width, and a list of rows does not grow by a line per action. Opted into, never a
- *   row's default: it hides what a row offers behind a button (qorus#646, Foxhoundn). A row of this mode
+ *   row's default: it hides what a row offers behind a button. A row of this mode
  *   with one action keeps it as a button there, at the end of the label's line, while its container is
  *   wider than a phone.
  *
  * In every mode, a lone action under the label is the row's width where the container is a phone's width or
- * narrower: the easiest target there is (Fitts's law; David and Foxhoundn, qorus#646).
+ * narrower: the easiest target there is (Fitts's law).
  */
 export type TReqoreNarrowRowActions = 'row' | 'stack' | 'menu';
 
@@ -106,7 +106,7 @@ export interface IReqoreRowActionShortLabel {
 }
 
 /**
- * An action as reqore draws it compactly (a row-end action on a narrow screen, qorus#646):
+ * An action as reqore draws it compactly (a row-end action on a narrow screen):
  * - its `shortLabel`, its label its tooltip and its accessible name;
  * - with none, an action with an icon and a tooltip is its icon alone, named by its label: one its author gave a
  *   tooltip reads without its words;
@@ -143,10 +143,10 @@ export const getCompactRowAction = (action: {
  * intent is `danger`.
  *
  * Where a row's actions take the row's width - on a phone, under the label - a destructive one does
- * not: a full-width Delete is a bigger target than the thing it destroys deserves (BRAND_DESIGN: a
- * primary action that wraps takes the line, a secondary or destructive one stays as wide as it is).
+ * not: a full-width Delete is a bigger target than the thing it destroys deserves (a primary
+ * action that wraps takes the line, a secondary or destructive one stays as wide as it is).
  * A lone one stays at the end of the label's line, so a row is about its subject, not a third of it
- * a red bar under a thumb (r-qs-19, Dana on Qonsole's chat list).
+ * a red bar under a thumb (in a chat list, say).
  *
  * The intent counts only on an entity row (`byIntent`): on a severity row an action takes the
  * severity's intent as the response to it (Investigate a critical incident), and there `danger` says

@@ -59,7 +59,7 @@ const meta = {
     fill: false,
     label: 'Table',
     data: {
-      firstName: 'Filip',
+      firstName: 'Jan',
       lastName: 'Machinia',
       age: 25,
       married: false,

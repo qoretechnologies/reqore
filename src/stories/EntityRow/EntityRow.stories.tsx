@@ -521,7 +521,7 @@ export const WithOverflowMenu: Story = {
   },
 };
 
-/* A narrow row's actions (qorus#646), as ReqoreSeverityRow's and a narrow table's. The row measures its
+/* A narrow row's actions, as ReqoreSeverityRow's and a narrow table's. The row measures its
    OWN container - not the viewport, because the case this exists for is a narrow drawer / sidebar / split
    panel on a wide screen - and below 480px of it its actions move under the label, as a row of buttons.
    A row can opt into `narrowActions='menu'` instead: two or more actions are then one menu button at the
@@ -664,7 +664,7 @@ export const ActionDoesNotFireTheRow: Story = {
     docs: {
       description: {
         story:
-          'The row and its actions are both clickable, and a click on an action must not read as a click on the row. Both counters below are wired: pressing **Run** increments only the action, pressing the row itself increments only the row. Without the guard both fire, and an action that toggles what the row toggles cancels itself out — which is what made a disclosure caret look dead in the Qorus IDE. Applied even to an action with no handler of its own.',
+          'The row and its actions are both clickable, and a click on an action must not read as a click on the row. Both counters below are wired: pressing **Run** increments only the action, pressing the row itself increments only the row. Without the guard both fire, and an action that toggles what the row toggles cancels itself out — which is what made a disclosure caret look dead in an app. Applied even to an action with no handler of its own.',
       },
     },
   },
@@ -995,7 +995,7 @@ export const LoneActionSpansTheRowOnAPhone: Story = {
 
 /* Rows of one action each: with a short label, with an icon and a tooltip but no short label, and with neither.
    An entity row is narrow only where its container is a phone's width or narrower, where its one action is a line
-   of its own under the label, the row's width, saying its full label: it draws a short label nowhere (qorus#646). */
+   of its own under the label, the row's width, saying its full label: it draws a short label nowhere. */
 const ONE_ACTION_ROWS: Array<Pick<IReqoreEntityRowProps, 'label' | 'actions'>> = [
   {
     label: 'orders-db · PostgreSQL',
@@ -1165,7 +1165,7 @@ const expectEntityActionsStacked = async (canvasElement: HTMLElement) => {
       expect(box.top).toBeGreaterThanOrEqual(boxes[index].bottom - 0.5);
     });
     /* each the row's width at a phone's width, a finger's target; as wide as its label in a wider container. The
-       last, Remove, is destructive: it is as wide as its label even at a phone's width (r-qs-19). */
+       last, Remove, is destructive: it is as wide as its label even at a phone's width. */
     boxes.forEach((box, index) => {
       const destructive = index === boxes.length - 1;
       if (atPhoneWidth && !destructive) {
@@ -1355,7 +1355,7 @@ export const ADestructiveActionKeepsItsSizeOnAPhone: Story = {
     docs: {
       description: {
         story:
-          "Renders three chat rows in a 320px card on a phone (390 px): one whose only action is Delete chat (a bin with that tooltip, intent danger), one whose Delete chat is drawn as a calm theme draws it (a red icon on a quiet button, marked `destructive`, no intent), and one whose only action is Open. Each Delete stays at the end of its row's label line, its bin alone at a finger's size, named Delete chat - the row is about the conversation. The Open still goes under the label and spans the row, the easiest target for a finger. Spanning, the bin had been written out as a red Delete chat bar under every row, a third of the row a destructive target under a thumb (r-qs-19; BRAND_DESIGN: a destructive button stays as wide as it is).",
+          "Renders three chat rows in a 320px card on a phone (390 px): one whose only action is Delete chat (a bin with that tooltip, intent danger), one whose Delete chat is drawn as a calm theme draws it (a red icon on a quiet button, marked `destructive`, no intent), and one whose only action is Open. Each Delete stays at the end of its row's label line, its bin alone at a finger's size, named Delete chat - the row is about the conversation. The Open still goes under the label and spans the row, the easiest target for a finger. Spanning, the bin had been written out as a red Delete chat bar under every row, a third of the row a destructive target under a thumb (a destructive button stays as wide as it is).",
       },
     },
   },

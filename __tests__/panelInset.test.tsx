@@ -6,7 +6,7 @@ import { IReqoreTheme } from '../src/constants/theme';
 /**
  * A panel says the inset it pads its content's sides by (`--reqore-panel-inset-x`), so a child that
  * bleeds to its edges takes back exactly that: a fixed 16px ran a list 3px past both sides of a
- * small panel padded 13px to clear a 14px corner (admin portal, Reqraft's OAuth2 client form).
+ * small panel padded 13px to clear a 14px corner (Reqraft's OAuth2 client form).
  */
 const insetOf = (theme: Partial<IReqoreTheme> | undefined, props: Record<string, unknown>) => {
   render(

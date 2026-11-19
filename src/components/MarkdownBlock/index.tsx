@@ -52,11 +52,11 @@ const text = (step: 'up' | 'same' | 'down') => ({ theme, $size }: IReqoreMarkdow
 const hairline = ({ theme }: IReqoreMarkdownBlockStyle) => getPanelHairlineColor(theme);
 
 /**
- * Text a person wrote, drawn in the theme's type scale (decision 017). A "# Order Sync" at the top
+ * Text a person wrote, drawn in the theme's type scale. A "# Order Sync" at the top
  * of a template's description rendered as the browser's 28px heading, as loud as the page's own
  * title, inside a drawer section. Here a heading is at most one step above the body: h1-h3 a step
  * up and bold, h4-h6 the body's size and bold, both in the primary colour; prose is the body's size
- * in the secondary grey, about 72 characters a line (decision 025).
+ * in the secondary grey, about 72 characters a line.
  */
 export const StyledMarkdownBlock = styled.div<IReqoreMarkdownBlockStyle>`
   color: ${secondary};

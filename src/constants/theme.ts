@@ -113,7 +113,7 @@ export interface IReqoreTypeScale {
   /**
    * px of a drawer's or a modal's own title, which is a heading at its panel's level like a card's
    * title (level 3 for a normal one): a calm theme draws a dialog's title a step above a card's
-   * (20 against 16, Filip 2026-11-17). Unset, a dialog's title is its level's px, as a card's is.
+   * (20 against 16). Unset, a dialog's title is its level's px, as a card's is.
    */
   dialogHeading?: number;
   /**

@@ -460,7 +460,7 @@ export const StyledButton = styled(StyledEffect).withConfig({
       : null}
   /* A button is never wider than its container, unless it sets its own maxWidth: fixed means it does not
      stretch, not that it may run past what holds it. A fixed button saying a value and its description stayed as
-     wide as both on one line, 487-712px in a 346px card on a phone (qorus#646); capped, its label is clipped as any
+     wide as both on one line, 487-712px in a 346px card on a phone; capped, its label is clipped as any
      button's is, and its description takes as many lines as it needs. Its container's width is what percentages
      are measured against, so a wrapped stack that pulls the button over its padding adds that back: see
      CONTROL_GROUP_CHILD_MAX_WIDTH. */
@@ -965,7 +965,7 @@ const ReqoreButton = memo(
       const _flat = minimal ? flat : flat === true;
       const _children = useMemo(() => label || children, [label, children]);
       /* An icon alone names nothing: a button with no label of its own and no `aria-label` was read as
-         "button", and a test that finds buttons by name found nothing to test (qorus#646). Its tooltip, when
+         "button", and a test that finds buttons by name found nothing to test. Its tooltip, when
          that is a string, is the words it would say, so it names it. A tooltip that is a node or an object is
          left to the caller, and a button that has a label, or is named already, is not named twice. */
       const tooltipName =

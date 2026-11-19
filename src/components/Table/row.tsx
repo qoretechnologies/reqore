@@ -390,7 +390,7 @@ const ReqoreTableRow = memo(
                    tooltip, unless it has one. A button that draws no label is named by its label
                    or tooltip text, which a screen reader would not read from the icon. Folded, an
                    action with no icon says its short label where it has one, its label then its
-                   tooltip and its name (`getCompactRowAction`, qorus#646), and the column is as
+                   tooltip and its name (`getCompactRowAction`), and the column is as
                    wide as those words (`getFoldedActionText`, `useFoldedActionWidths`). */
                 const drawLabel = hasRowActionLabel(label) && !(folded && action.icon);
                 const compact =

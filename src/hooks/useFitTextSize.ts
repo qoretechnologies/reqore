@@ -42,7 +42,7 @@ export interface IUseFitTextSizeOptions {
    * The words are packed into lines the way the browser breaks them (greedily, at spaces), not
    * poured in as one run: "Design changes built" in a 98px box is 156px, under two lines' 196px,
    * but breaks "Design / changes / built" at 16px, so a clamp at two lines cut "built" from a
-   * title kept at full size (the admin portal's 200px tile). Shrinking comes before cutting.
+   * title kept at full size (a 200px dashboard tile). Shrinking comes before cutting.
    *
    * @default 1
    */
@@ -53,7 +53,7 @@ export interface IUseFitTextSizeOptions {
    * The px a one-line fit may run past `available` (`FIT_TOLERANCE_PX` by default), or must keep spare when
    * negative. A box whose text may still wrap (a title clamped to two lines, kept to one so that icons stay beside
    * it) takes none and a pixel spare: a size judged to fit by the slack was drawn on two lines, its last word wrapped
-   * ("Problem / wizard", the admin portal's tile on a phone).
+   * ("Problem / wizard", a dashboard tile on a phone).
    */
   slack?: number;
 }
@@ -107,7 +107,7 @@ export const wordsFitLines = (
  * the text's either: a panel's `labelEffect` (a monospace family, a letter spacing) is drawn by the
  * span inside the heading. Measured with the heading's font, a monospace title was narrower on
  * paper than on screen, so the bar counted three lines for it beside its actions where it took two,
- * and put its actions under it (qlip-ui's review drawer on a phone, board f66).
+ * and put its actions under it (a review drawer on a phone).
  */
 export const textPaintingElement = (node: HTMLElement): HTMLElement => {
   let element = node;

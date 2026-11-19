@@ -896,7 +896,7 @@ export const CountUpWhenInView: Story = {
   },
 };
 
-/* A label's words stay whole (qorus#646): "DEPENDENCIES" on a 120px KPI tile broke mid-word
+/* A label's words stay whole: "DEPENDENCIES" on a 120px KPI tile broke mid-word
    ("DEPEND / ENCI / ES"). A label wraps between its words, and a word breaks only when it alone is
    wider than its tile. A tile narrows to the share its row gives it (min-width 0), so a row that
    sizes its tiles by their content keeps every word whole where it has the room. */
@@ -980,7 +980,7 @@ export const LabelWordWiderThanItsTile: Story = {
   },
 };
 
-/* Four tiles in a 320px grid of four equal columns (qorus#646): a tile is as narrow as its column,
+/* Four tiles in a 320px grid of four equal columns: a tile is as narrow as its column,
    not as wide as the longest word of its label. Kept at that word's width, "Dependencies" and
    "Connections" pushed the row past its box and the tiles over each other; a word now breaks only
    when it cannot fit its tile, which here is every long one. */
@@ -1035,7 +1035,7 @@ export const NarrowGridTilesStayInTheirCells: Story = {
       // and its label inside it
       const label = tile.querySelector('.reqore-statistic-label') as HTMLElement;
       expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
-      // centred line by line, a broken label as a whole one is (Foxhoundn's review of #708)
+      // centred line by line, a broken label as a whole one is (from the review of reqore#708)
       expect(getComputedStyle(label).textAlign).toBe('center');
       const text = document.createRange();
       text.selectNodeContents(label);

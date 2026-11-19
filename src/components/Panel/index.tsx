@@ -127,7 +127,6 @@ export interface IReqorePanelAction
    * alone at every width; its `label` becomes its tooltip (unless it has one) and its accessible name. Leave it off
    * where the icon cannot carry the meaning on its own (a choice between two things, a mode, a named destination,
    * a primary call to action): those keep their words (`responsive: false` keeps them on a narrow panel too).
-   * FRONTEND "Obvious actions are icons only" (board f65).
    */
   iconOnly?: boolean;
 }
@@ -230,18 +229,18 @@ export interface IReqorePanelProps
   responsiveTitle?: boolean;
   /**
    * Where the title and the actions do not fit on one line, the actions go to the line under the
-   * title, at its end, before any word of the title wraps, shrinks or is cut (board f66; decision
-   * 029's order: the title keeps its words, what is beside it gives way first). Where they fit, the
+   * title, at its end, before any word of the title wraps, shrinks or is cut (the title keeps its
+   * words, what is beside it gives way first). Where they fit, the
    * bar is one line, as without it. The actions move together, in the page's order; the folding
    * ones fold into "⋯" only where even the whole line under the title is too short for them.
    *
    * A lone destructive action (`destructive`, or a `danger` intent) stays on the title's line, at
-   * its end and its own size: a row on a phone keeps a lone Delete there too (r-qs-19).
+   * its end and its own size: a row on a phone keeps a lone Delete there too.
    *
    * The collapse and close controls go with the actions. A page head on a phone is what it is for
-   * (qlip-ui: a pull request's title beside four actions ran to two lines in 130px).
+   * (a pull request's title beside four actions ran to two lines in 130px).
    *
-   * On by default for every panel, drawer and dialog (Filip, 18 Nov); `false` keeps a bar of one line
+   * On by default for every panel, drawer and dialog; `false` keeps a bar of one line
    * whatever it costs the title.
    *
    * @default true
@@ -483,10 +482,9 @@ const getScrollableAncestor = (node: HTMLElement | null): HTMLElement | null => 
  *
  * A pinned header is for finding your place in a long panel whose header has scrolled away. A
  * panel that fits on the screen, or nearly does, never puts you there: its header pinned for
- * the few pixels it overhung and drew a band with nothing under it to label (Filip,
- * 2026-11-16: "it looks really dumb"). Just over one screen is not enough - a 311px card in a
- * 264px area pinned for its 47px of overhang - so the line is one and a half. The rule is
- * shared by every Qore app (instruction-files decision 028).
+ * the few pixels it overhung and drew a band with nothing under it to label. Just over one
+ * screen is not enough - a 311px card in a 264px area pinned for its 47px of overhang - so the
+ * line is one and a half.
  */
 export const STICKY_HEADER_TALL_SCREENS = 1.5;
 
@@ -567,9 +565,9 @@ const TITLE_TAKES_THE_ROOM = 1000;
 
 /**
  * How small a title may be drawn to keep actions that draw no words beside it, as a share of its own size
- * (`wrapActionsBelowTitle`): a row of icons under a title they missed by a few px cost a whole row (the IDE's
- * issue drawer at 599px, 4px short for its ? and x). A title that would have to go smaller than this lets them
- * go under it (Filip, 18 Nov: "the title shrinks a bit").
+ * (`wrapActionsBelowTitle`): a row of icons under a title they missed by a few px cost a whole row (an
+ * issue drawer at 599px, 4px short for its ? and x). The title shrinks a bit instead; a title that would have
+ * to go smaller than this lets them go under it.
  */
 export const ICON_ACTIONS_TITLE_SHRINK = 0.9;
 
@@ -611,8 +609,8 @@ export const actionDrawsNoWords = (action: IReqorePanelAction, narrow: boolean):
 const ACTIONS_GROW_BEFORE_TITLE = 1000;
 
 /**
- * The flex of the group of actions that do not collapse, beside a title in a NARROW bar
- * (qorus#646): sized from what the title leaves, between what its controls cannot do without and
+ * The flex of the group of actions that do not collapse, beside a title in a NARROW bar:
+ * sized from what the title leaves, between what its controls cannot do without and
  * its own width. See where it is used. A wide bar leaves the group at its own width (`0 0 auto`),
  * as it always was.
  */
@@ -626,7 +624,7 @@ const NON_RESPONSIVE_ACTIONS_CLASS = 'reqore-panel-non-responsive-actions';
 
 /**
  * The class of the group of actions that keep their words which the page lists before its first
- * folding action: drawn before the folding group, so the bar keeps the page's order (board f67).
+ * folding action: drawn before the folding group, so the bar keeps the page's order.
  */
 export const LEADING_ACTIONS_CLASS = 'reqore-panel-leading-actions';
 
@@ -636,7 +634,7 @@ export const TITLE_ACTIONS_CLASS = 'reqore-panel-title-actions';
  * Marks each group of a panel's actions, in its title bar and its bottom bar. A click inside one is the action's,
  * never the panel's (`isPanelOwnClick`). An action used to keep its click from the panel only when it had an
  * `onClick` of its own, so a custom (`as`) action without one, or one that did not hand an `onClick` on to its DOM (a
- * segmented choice), folded a collapsible panel (queue item 34) and was a click on a clickable card (item 36).
+ * segmented choice), folded a collapsible panel and was a click on a clickable card.
  */
 export const PANEL_ACTIONS_ATTRIBUTE = 'data-reqore-panel-actions';
 /** The props that mark a group of a panel's actions (`PANEL_ACTIONS_ATTRIBUTE`). */
@@ -672,7 +670,7 @@ const WRAPPED_TITLE_ACTIONS_STYLE: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   /* At the line's end, but never past its start: actions wider than their line under the title ran off
-     its left edge, the first choice of a filter out of sight (the IDE's recent orders, f66). Where they
+     its left edge, the first choice of a filter out of sight (a list of recent orders). Where they
      cannot fit they start at the line's start, in reading order. */
   justifyContent: 'safe flex-end',
   flex: '1 1 auto',
@@ -688,8 +686,8 @@ const RIGHT_BOTTOM_GROUP_STYLE: React.CSSProperties = { marginLeft: 'auto' };
  * A group of actions that keep their words, in that box: at its own width where the line has room, and down
  * to what its controls cannot do without where it does not, so a control that folds to its room (a
  * `foldToFit` segmented control) folds into the line under the title. At its own width always, the group
- * overflowed a phone's line with the whole filter, its first choices past the panel's edge (the IDE's
- * recent orders, f66). A button does not shrink (it is `fixed`): the group's least is its buttons.
+ * overflowed a phone's line with the whole filter, its first choices past the panel's edge (a list of
+ * recent orders). A button does not shrink (it is `fixed`): the group's least is its buttons.
  */
 const KEPT_ACTIONS_AT_THEIR_WIDTH: React.CSSProperties = { flex: '0 1 auto' };
 
@@ -700,7 +698,7 @@ let titleMeasureCanvas: HTMLCanvasElement | undefined;
  * The box of actions that hold something with no width of its own (a Collection's search input, a group the
  * caller made `fluid`): it claims half the bar, as the growing group did beside the title before the actions
  * could go under it, so the search fills the room the title leaves; where half the bar does not fit beside the
- * title the line breaks, and under the title the search fills the line (Filip, 18 Nov).
+ * title the line breaks, and under the title the search fills the line.
  */
 const FILLING_TITLE_ACTIONS_STYLE: React.CSSProperties = {
   ...WRAPPED_TITLE_ACTIONS_STYLE,
@@ -717,7 +715,7 @@ const BESIDE_TITLE_ACTIONS_STYLE: React.CSSProperties = {
 /**
  * The least a search in the actions' box that fills the bar is drawn at beside a title (`wrapActionsBelowTitle`):
  * where its placeholder needs more, that. A short title left a phone's search 107px, its placeholder cut to
- * "Sear" (queue item 27); where the title leaves less, the search goes to the line under it, at its full width.
+ * "Sear"; where the title leaves less, the search goes to the line under it, at its full width.
  */
 export const SEARCH_BESIDE_TITLE_MIN_PX = 160;
 
@@ -1359,7 +1357,7 @@ export const StyledPanelTitle = styled.div.withConfig({
          title's column grows to the line, so that is the whole line, not the title's width.
          Only in the title's column, which stretches it: a description on its own row under the bar
          (\`descriptionPosition='below'\`) is an inline-block sized by its words, and with no width of
-         its own it was 0px wide, a word or a letter to a line (the IDE's dashboard headings, f66). */
+         its own it was 0px wide, a word or a letter to a line (a dashboard's headings). */
       > .reqore-panel-title-header .reqore-panel-title-description {
         contain: inline-size;
       }
@@ -2240,7 +2238,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     }, [collapsible, _isCollapsed, onCollapseChange]);
 
     /* The bar folds the panel on a click on the bar itself, never on one of its actions nor on anything an action
-       opened in a portal (`isPanelOwnClick`, queue item 34). */
+       opened in a portal (`isPanelOwnClick`). */
     const handleTitleBarClick = useCallback(
       (event: React.MouseEvent<HTMLElement>) => {
         if (isPanelOwnClick(event)) {
@@ -2251,7 +2249,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     );
 
     /* A clickable panel (a card) is clicked by a click on itself, never by one on its actions, a nested panel's
-       included, nor on anything opened from it in a portal (`isPanelOwnClick`, queue item 36). */
+       included, nor on anything opened from it in a portal (`isPanelOwnClick`). */
     const { onClick: panelOnClick } = rest;
     const handlePanelClick = useCallback(
       (event: React.MouseEvent<HTMLDivElement>) => {
@@ -2273,7 +2271,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     );
 
     /**
-     * The page's order, whichever of its actions may fold (board f67). A bar draws the folding actions
+     * The page's order, whichever of its actions may fold. A bar draws the folding actions
      * in one group and the ones that keep their words (`responsive: false`) in another, and the kept
      * group came after the folding one in the title bar, so a kept action the page lists first ("Start
      * review", then "Show summary") was drawn second. The kept ones the page lists before its first
@@ -2308,7 +2306,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     /**
      * The actions go under the title where the two do not fit (`wrapActionsBelowTitle`), except a lone
      * destructive one: it stays at the end of the title's line, at its own size, as a row keeps a lone
-     * Delete at the end of its label's line on a phone (r-qs-19).
+     * Delete at the end of its label's line on a phone.
      */
     const wrapActions = useMemo(() => {
       if (!wrapActionsBelowTitle || !hasTitleHeader) {
@@ -2318,7 +2316,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       const shown = nonFloatingActions.filter((action) => action.show !== false);
 
       /* Nothing to put under the title, nothing to wrap: an empty actions box went to a row of its own under
-         a title of two lines, and the panel grew 5px for it (the admin portal's LeaderGlow on a phone). */
+         a title of two lines, and the panel grew 5px for it (a dashboard card on a phone). */
       if (!shown.length && !onClose && !collapsible) {
         return false;
       }
@@ -2402,7 +2400,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         /* A group's child: the group has been put in its bar already, so the child is drawn
            whatever its own \`responsive\` says, which then only decides whether its label folds.
            A child with \`responsive: false\` (a split button's words) was filtered out as though
-           it belonged to the other bar, and only the caret was drawn (qlip-ui). */
+           it belonged to the other bar, and only the caret was drawn. */
         inGroup = false
       ) => {
         if (
@@ -2433,7 +2431,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           ...rest
         }: IReqorePanelAction = action;
         const actionLabelText = typeof label === 'number' ? String(label) : label;
-        // the icon says it: drawn alone, its label its tooltip and its accessible name (f65)
+        // the icon says it: drawn alone, its label its tooltip and its accessible name
         const iconSaysIt = !!iconOnly && !!rest.icon && !!label;
 
         let { className }: IReqorePanelAction = action;
@@ -2756,8 +2754,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
      * The room is measured off the box the title sits in, and where a host sizes that box by what it
      * holds the measurement answers the fit it was asked for: a two-line title gets no slack, so a
      * box rounded to whole px read a pixel short, the title shrank a pixel, the header was left with
-     * room, the title grew back into it, and round again - "Address" in an IDE drawer measured 56, 52,
-     * 80, 56... for ever (t-96). A measurement that comes back to a room it has already given, for a
+     * room, the title grew back into it, and round again - "Address" in a drawer measured 56, 52,
+     * 80, 56... for ever. A measurement that comes back to a room it has already given, for a
      * title, badges, bar and size that have not changed, is going in circles; the title takes the most
      * room it was given and keeps it until one of those changes.
      */
@@ -2781,7 +2779,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       min: labelMinTextSize,
       lines: titleShrinksForIcons ? 1 : clampLines,
       /* Kept to one line for icons, a title that may wrap needs a pixel spare: with the one-line slack a size judged
-         to fit by a pixel was drawn on two lines ("Problem / wizard", the admin portal's tile on a phone). */
+         to fit by a pixel was drawn on two lines ("Problem / wizard", a dashboard tile on a phone). */
       slack: titleShrinksForIcons && clampLines > 1 ? TITLE_KEPT_ON_ONE_LINE_SLACK : undefined,
       enabled: fitLabel !== false && typeof label === 'string' && !labelEffect?.textSize,
     });
@@ -2795,9 +2793,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
      * its badges go under it (`$ownLine`). On that line it may fit at its natural size again, and if
      * that was what put its badges back beside it, they came back, it no longer fitted, it shrank,
      * they went under it: the title and its badges swapped lines on every render, forever. A title
-     * whose box is sized by what it holds (a title bar laid out as a column, as qlip-ui's pages do on
+     * whose box is sized by what it holds (a title bar laid out as a column, as some apps' pages do on
      * a phone) did it at "Notifications" beside "this browser", and under React's `act` a story's
-     * page never came back (board f64).
+     * page never came back.
      *
      * So the line is kept: by this title with these badges at this size, until the bar is wider than
      * it was when the line was taken - more room is the one thing that can let the badges back.
@@ -2897,8 +2895,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       const gaps = gap * besideTitle.length;
       /* What the title could still gain, which the box measured above does not show: the box is
          only as wide as the title at its present size, so a title shrunk on a narrow bar measured
-         that small box when the bar widened again, and stayed shrunk however wide the bar became
-         (qorus#646). The room is the title box's own beyond what it holds (it grows; what it holds
+         that small box when the bar widened again, and stayed shrunk however wide the bar
+         became. The room is the title box's own beyond what it holds (it grows; what it holds
          does not), and on a narrow bar the actions group's beyond its least (it gives way to the
          title, down to what its controls cannot do without). Neither moves when the title's font
          does: the sum is the title's whole claim on the bar. */
@@ -2982,9 +2980,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
      * Where the actions may go under the title (`wrapActionsBelowTitle`), what the title claims on its
      * line: its name alone, one line at its natural size, with the icon before it. Its badges are not
      * part of the claim: where the name and the actions fit on a line and the badges do not, the badges
-     * go under the name (decision 029) and the actions stay beside it; the actions go under only where
-     * the name itself and they do not fit. A title's content basis held its badges beside it, so the
-     * actions went under first, a line taller for nothing (the portal's template drawer on a phone).
+     * go under the name (what is beside the title gives way before the title wraps) and the actions
+     * stay beside it; the actions go under only where the name itself and they do not fit. A title's
+     * content basis held its badges beside it, so the actions went under first, a line taller for
+     * nothing (a template drawer on a phone).
      *
      * Measured at the natural size, by canvas as the fit measures: never from where the actions are,
      * so nothing it decides can change it. A title drawn by the caller (an element) has no text to
@@ -3016,8 +3015,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
           /* The actions go under only where that saves the title something: a line, or a shrink or a cut.
              A title that needs two lines with the whole line to itself needs two beside the actions too
-             (when they leave it room for that), and under it they only cost the panel a line (the admin
-             portal's experiment drawer and funnel widget on a phone, 43px and 37px). So the lines its
+             (when they leave it room for that), and under it they only cost the panel a line (an
+             experiment drawer and a funnel widget on a phone, 43px and 37px). So the lines its
              words take at their natural size are counted both ways, as the fit packs them, and where
              beside costs no more the title claims only the room the actions leave, and the bar keeps one
              line. Read from the actions as they are: actions that fold only ever leave more room, so what
@@ -3081,7 +3080,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             /* Actions drawn as icons alone stay beside a title that takes one line on its own and fits beside
                them on one line a little smaller (`ICON_ACTIONS_TITLE_SHRINK`): the title claims its name at that
                size, and its fit draws it on one line at the largest size the line leaves. Missed by a few px,
-               they took a row of their own (the IDE's issue drawer at 599px). Actions with words go under first,
+               they took a row of their own (an issue drawer at 599px). Actions with words go under first,
                and a title that cannot shrink (one the caller sizes, breadcrumbs) lets them. */
             const shrunkPx = Math.floor(px * ICON_ACTIONS_TITLE_SHRINK);
             const shrunkClaim = Math.ceil(before + name * (shrunkPx / px)) + 1;
@@ -3689,7 +3688,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   fluid={!hasTitleHeader}
                   {...PANEL_ACTIONS_MARK}
                   className={NON_RESPONSIVE_ACTIONS_CLASS}
-                  // Beside a title in a NARROW bar the title comes first (qorus#646). The group is
+                  // Beside a title in a NARROW bar the title comes first. The group is
                   // `0 0 auto`, so a narrow bar - a table in a card on a phone - squeezed the title
                   // to nothing and still pushed its last button past the panel's edge. Narrow, the
                   // title takes its whole width first and the group what is left, at least what its
@@ -3760,7 +3759,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               noHorizontalPadding={noHorizontalPadding}
               $cornerInset={cornerInset}
             >
-              {/* In the page's order, whichever may fold (`splitAtFirstFolding`, board f67). */}
+              {/* In the page's order, whichever may fold (`splitAtFirstFolding`). */}
               {hasNonResponsiveActions(leadingLeftBottomActions) ? (
                 <ReqoreControlGroup
                   {...PANEL_ACTIONS_MARK}

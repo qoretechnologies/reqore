@@ -23,7 +23,7 @@ const drawnBottom = (list: HTMLElement) =>
 /**
  * The interactions an author actually performs on a reference field.
  *
- * Written after a run of defects that were each reported from the live IDE
+ * Written after a run of defects that were each reported from a live app
  * rather than caught here: a caret placed past a chip that discarded every
  * keystroke, a template list that opened on the click starting an edit and
  * then covered the text being typed, and a value that reads as a chip in one
@@ -165,7 +165,7 @@ export const ClickingInOffersTheList: Story = {
 /**
  * ...and writing a value instead of picking one puts it away.
  *
- * `actions` is set because the Qorus IDE's `RichTextField` sets it on every
+ * `actions` is set because a host app's `RichTextField` sets it on every
  * rich-text field, and it is load-bearing here: the styling / undo / redo
  * buttons render as `customElements` of this SAME popover. A first cut of the
  * dismiss fix exempted surfaces carrying controls, which read as reasonable and
@@ -210,7 +210,7 @@ export const TypingDismissesTheList: Story = {
  *
  * The list's controls answered for the moment they were handed to the field, which got a fresh copy only
  * a render later: a key typed in that gap found the list "closed", did not put it away, and the list
- * opened over the text (qorus#646: a field chosen into a value, clicked back into and " Stk." typed after
+ * opened over the text (a field chosen into a value, clicked back into and " Stk." typed after
  * it). No wait between the click and the keys: that gap is the case.
  */
 export const TypingStraightAfterTheClickDismissesTheList: Story = {
@@ -496,7 +496,7 @@ const clickChip = async (doc: Document, editor: HTMLElement) => {
  * A click on a chip puts the cursor after it, and that is all: it does not list the templates, and
  * the page stays where it is.
  *
- * Reported from the Qorus IDE: with the cursor already in a reference field low on the page, a
+ * Reported from an app: with the cursor already in a reference field low on the page, a
  * click on a chip scrolled the page about 137px and showed nothing. The chip takes the focus from
  * the editor for the moment of the press; that move was taken for the author coming into the field
  * from the keyboard, the list opened, its keep-below rule scrolled the page by its height, and the
@@ -622,8 +622,8 @@ const expectTheListOpensBelowTheFieldInView = async (
 };
 
 /**
- * The list keeps its frame, and scrolls in one place (qorus#646, Foxhoundn on build #412: "Where is the bottom border
- * of the popover?"). Capped to the room below the field, the surface scrolled its whole content: the list's panel stayed
+ * The list keeps its frame, and scrolls in one place: its bottom border stays in view. Capped to the room below
+ * the field, the surface scrolled its whole content: the list's panel stayed
  * as tall as it was (382px in a 297px surface), its bottom border scrolled out of sight under the surface's edge, and
  * its rows scrolled inside that again. The panel is held to the cap instead: its whole frame, bottom border included,
  * is inside the surface and the window, and only its rows scroll.
@@ -674,7 +674,7 @@ export const TheListOpensInAShortWindow: Story = {
     docs: {
       description: {
         story:
-          'Renders a reference field 200px down a scrolling page, in a window 380px high, shorter than its list of twenty templates. When it is clicked, the list opens below the field and stays open: the page is scrolled until the field is at its top, never past it, and the list takes the room left under the field. The window made shorter with the list open, the list follows and still ends inside it. Before, the page was scrolled by the whole list, the field went out of view, and the list closed as it opened (qorus#646).',
+          'Renders a reference field 200px down a scrolling page, in a window 380px high, shorter than its list of twenty templates. When it is clicked, the list opens below the field and stays open: the page is scrolled until the field is at its top, never past it, and the list takes the room left under the field. The window made shorter with the list open, the list follows and still ends inside it. Before, the page was scrolled by the whole list, the field went out of view, and the list closed as it opened.',
       },
     },
     qlip: { viewport: { width: 980, height: 380 } },

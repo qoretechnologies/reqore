@@ -2,11 +2,11 @@
 /**
  * Two things a reader saw cut or crowded in the calm redesign:
  *
- * - A title inside its panel's corner (Filip, admin portal Qlip build #44: "I feel like the panel
- *   label is too close to the border radius?"). A title bar was padded by its size's step (6px for
+ * - A title inside its panel's corner (in a visual review: the panel's label sat too close to its
+ *   border radius). A title bar was padded by its size's step (6px for
  *   a small panel) while the corner was the theme's 14px, so the title started 7px in, under the
  *   curve. A container's label now starts at least its corner's radius in (`clearCorner`).
- * - A confirmation's warning cut mid-sentence (the IDE's order Retry: "If ReleaseSupplierPayment
+ * - A confirmation's warning cut mid-sentence (an order's Retry: "If ReleaseSupplierPayment
  *   had already done part of its…"). A modal's description was clamped to a panel's two lines; a
  *   dialog's message is now shown whole, and scrolls in its own box only past half the screen.
  */

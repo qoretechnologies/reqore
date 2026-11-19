@@ -94,7 +94,7 @@ export const ReqoreTreeManagementDialog = ({
             ) : (
               <ReqoreInput
                 disabled={data && parentType === 'array'}
-                // text from the start, empty for a new item: with none, the first key made it controlled (qorus#646)
+                // text from the start, empty for a new item: with none, the first key made it controlled
                 value={key ?? ''}
                 onChange={(e) => setKey(e.target.value)}
                 placeholder={keyPlaceholder}

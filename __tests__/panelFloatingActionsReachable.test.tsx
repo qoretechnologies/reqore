@@ -4,7 +4,7 @@
  *
  * They float above the panel's top-right corner, so the pointer leaves the panel through its top edge -
  * usually to the left of the actions, on a diagonal - before it reaches them. The hover ended as it left
- * the panel, the actions went, and the click landed on what they had covered (qorus#646: an expression's
+ * the panel, the actions went, and the click landed on what they had covered (an expression's
  * Remove landed on the Visual / Text switch beneath it).
  */
 import { act, fireEvent, render } from '@testing-library/react';

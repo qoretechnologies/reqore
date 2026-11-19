@@ -80,8 +80,7 @@ export type TReqoreEffectColorBase = TReqoreIntent | 'main' | TReqoreHexColor;
  * that merely MENTIONS a value of it — a conditional between two colours, an
  * object literal checked against `IReqoreEffect` — fails to compile with
  * `TS2590: Expression produces a union type that is too complex to represent`.
- * The Qorus IDE's map had to cast correctly-typed colours to `any` to get past
- * it.
+ * One app's map had to cast correctly-typed colours to `any` to get past it.
  *
  * The accepted spellings are unchanged. The ranges the manipulations are
  * DESIGNED for stay published as `TReqoreEffectColorManipulationMultiplier`

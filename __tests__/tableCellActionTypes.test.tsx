@@ -10,9 +10,9 @@ import { IReqoreTableColumn } from '../src/components/Table';
 
 /*
  * A table cell takes the actions a page gives a panel, a button group or a row as its own
- * (qorus#646): qorus-ide hands the same action lists to a panel and to a table column. Before
+ * (an app hands the same action lists to a panel and to a table column). Before
  * a7790c8f a cell action's type had no `label`, so any of them was accepted; a7790c8f typed it
- * `string`, then `string | number`, which rejected a button's (any content) - TS2322s in qorus-ide,
+ * `string`, then `string | number`, which rejected a button's (any content) - TS2322s in that app,
  * from a patch release. This file is type-checked by `yarn build:test`, so the assignments below
  * are a test as well.
  */

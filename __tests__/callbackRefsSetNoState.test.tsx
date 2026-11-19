@@ -5,7 +5,7 @@
  * ReqoreSegmentedControl measured its box through an arrow ref too. An arrow made in the render is a new ref every
  * time, so React called it with null and then the element on every render: two state updates for nothing. When the
  * page around the control rendered from no event (a request answering), React reported each as an update not wrapped
- * in act, and the Qorus IDE fails a story on any React warning (board t-96, f70).
+ * in act, and a host app that fails its stories on any React warning failed them.
  */
 import { render, waitFor } from '@testing-library/react';
 import { useEffect, useState } from 'react';

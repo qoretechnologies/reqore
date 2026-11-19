@@ -1,5 +1,5 @@
-// A date picker given a value it cannot read as an instant never throws from its render (qorus#646: the Qorus
-// IDE's Workflow Orders page went to the router's error page for "2026-06-02T08:00:00", a date-time with no zone).
+// A date picker given a value it cannot read as an instant never throws from its render (an
+// app's Workflow Orders page went to the router's error page for "2026-06-02T08:00:00", a date-time with no zone).
 //
 // The rule: a value with a zone or an offset is that instant, shown in the user's time zone; a date-time without one
 // is that wall-clock time in the user's time zone (ISO 8601 reads it as local time); a date alone is that day at

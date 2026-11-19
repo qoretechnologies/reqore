@@ -507,7 +507,7 @@ export const CustomPaddingSize: Story = {
   ),
 };
 
-/* A narrow row's actions (qorus#646). A row measures its OWN container - a severity row in a 320px drawer
+/* A narrow row's actions. A row measures its OWN container - a severity row in a 320px drawer
    on a 1920px screen is as narrow as one on a phone - and below 640px of it, its actions stack under the
    label, one to a line (each the row's width where its container is a phone's width or narrower): a severity row is a
    callout, and its buttons are the response
@@ -908,7 +908,7 @@ export const NarrowContainerLoneActionInMenuModeOnAPhone: Story = {
   },
 };
 
-/* What a row-end action says on a narrow line (David, qorus#646): its short label; with none, its icon alone
+/* What a row-end action says on a narrow line: its short label; with none, its icon alone
    where it has a tooltip; else its label, as before. Wide, every one says its label. A row-end action is drawn only
    where the row is narrow but its container wider than a phone: as narrow as a phone, it is under the label. */
 const SHORT_LABEL_SEVERITY_ROWS: Array<
@@ -1092,7 +1092,7 @@ export const NarrowSidebarList: Story = {
   },
 };
 
-/* A callout's actions (qorus#646): on a phone, a row in a card is narrower than the screen, and its
+/* A callout's actions: on a phone, a row in a card is narrower than the screen, and its
    actions stayed on one line that does not wrap - "See your subscription" and "Try again" reached past
    the card. Those two are what the row is there for, so a menu would hide its point: with
    `narrowActions='stack'` they stack under the label, one to a line (each the row's width on a phone), its label
@@ -1177,8 +1177,7 @@ const actionLines = (row: HTMLElement) =>
   new Set(stackedActions(row).map((button) => Math.round(button.getBoundingClientRect().top))).size;
 
 /** Narrow but wider than a phone: the row's actions side by side under the label, each as wide as its label, onto
- *  `lines` lines - another only where they do not fit - inside the row (Foxhoundn: the law of proximity; David,
- *  qorus#646). */
+ *  `lines` lines - another only where they do not fit - inside the row (the law of proximity). */
 const expectActionsSideBySide = async (root: ParentNode, lines: number) => {
   const row = await narrowRow(root);
   expect(row.getAttribute('data-actions')).toBe('row');
@@ -1224,7 +1223,7 @@ export const ActionsKeepTheirWidthJustWiderThanAPhone: Story = {
     docs: {
       description: {
         story:
-          "Renders the same callout row with its default `narrowActions` (`'stack'`) in three containers on a wide screen, each narrow for a severity row (under 640px). In the 560px one, wider than a phone, See your subscription and Try again sit side by side under the label, each as wide as its label. In the 500px one, with a third action, Ask your workspace owner for more, the three do not fit on one line, so the third goes onto the next, still as wide as its label. In the 480px one, a phone's width, they stack one to a line, each the row's width. Actions that answer one callout stay together, and stack only where the container is a phone's width or narrower (Foxhoundn: the law of proximity; David, qorus#646).",
+          "Renders the same callout row with its default `narrowActions` (`'stack'`) in three containers on a wide screen, each narrow for a severity row (under 640px). In the 560px one, wider than a phone, See your subscription and Try again sit side by side under the label, each as wide as its label. In the 500px one, with a third action, Ask your workspace owner for more, the three do not fit on one line, so the third goes onto the next, still as wide as its label. In the 480px one, a phone's width, they stack one to a line, each the row's width. Actions that answer one callout stay together, and stack only where the container is a phone's width or narrower (the law of proximity).",
       },
     },
   },
@@ -1318,7 +1317,7 @@ export const ADestructiveActionKeepsItsSizeOnAPhone: Story = {
     docs: {
       description: {
         story:
-          "Renders two critical rows in a card on a phone (390 px): one whose only action deletes the alert (a bin marked `destructive`, its tooltip Delete alert), and one whose only action is Investigate, in the severity's danger intent. The Delete stays at the end of its row's label line, its bin alone - it is not a bar across the callout. Investigate still goes under the text, the row's width: on a severity row a danger intent is the severity's colour, not a sign that the action destroys anything, so only the marker counts (r-qs-19).",
+          "Renders two critical rows in a card on a phone (390 px): one whose only action deletes the alert (a bin marked `destructive`, its tooltip Delete alert), and one whose only action is Investigate, in the severity's danger intent. The Delete stays at the end of its row's label line, its bin alone - it is not a bar across the callout. Investigate still goes under the text, the row's width: on a severity row a danger intent is the severity's colour, not a sign that the action destroys anything, so only the marker counts.",
       },
     },
   },

@@ -23,7 +23,7 @@ const ITEMS = [{ label: 'Orders' }, { label: 'Invoices' }];
 const COLUMNS = [{ dataId: 'name', header: { label: 'Name' } }];
 const ROWS = [{ name: 'Orders' }, { name: 'Invoices' }];
 
-// An empty list never asks the reader to change a search they never made (board 24).
+// An empty list never asks the reader to change a search they never made.
 describe('an empty collection', () => {
   test('with nothing searched says there is nothing yet', () => {
     renderInProvider(<ReqoreCollection label='Variables' items={[]} filterable />);

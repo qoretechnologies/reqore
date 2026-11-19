@@ -1,5 +1,5 @@
 // A table's header cell hands the button and the menu it draws the same handlers and objects while what they are made
-// of is unchanged (qorus#646, DeepScan: REACT_INEFFICIENT_PURE_COMPONENT_PROP). Both are memo components; a click
+// of is unchanged (DeepScan: REACT_INEFFICIENT_PURE_COMPONENT_PROP). Both are memo components; a click
 // handler and an effect made anew on every render drew them again each time the cell was - when another column was
 // sorted, or the cell moved - for nothing.
 //

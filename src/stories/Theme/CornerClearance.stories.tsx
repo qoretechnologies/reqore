@@ -20,7 +20,7 @@ import {
 } from '../utils/cornerClearance';
 import { requiredElement } from '../utils/required';
 
-/** The calm theme's one corner for every card (the admin portal's and the IDE's). */
+/** The calm theme's one corner for every card, in every app that takes it. */
 const THEME_RADIUS = 14;
 
 const meta = {
@@ -179,7 +179,7 @@ export const OtherContainers: Story = {
         radiusSize='massive'
         paddingSize='micro'
         quote='It just works.'
-        author='Dana'
+        author='Lena'
         role='Operations'
       />
       <ReqoreCollection

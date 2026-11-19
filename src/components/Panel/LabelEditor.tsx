@@ -18,10 +18,10 @@ export interface IReqoreLabelEditorProps extends Omit<IReqoreHeadingProps, 'onSu
  * At rest it draws the `label` it is given, in the same render: the panel measures the title it
  * draws right after that render (how much room it has, which line its badges go to), and a title
  * copied into state by an effect showed the old words for that render. A drawer whose name
- * arrived with its data ("A/B test", then "Hero: Qonsole input vs problem wizard" with "Running ·
+ * arrived with its data ("A/B test", then "Hero: Console input vs problem wizard" with "Running ·
  * phase 2") was measured as the short name beside its badge, and its long name was fitted to the
  * room left beside the badge, 137px, one line at 14px where two at 20px fitted the whole line
- * (the admin portal's ExperimentDrawer › Removed Version). `name` is only the draft while editing.
+ * (an experiment drawer showing a removed version). `name` is only the draft while editing.
  */
 export const LabelEditor = memo(
   ({ label, onSubmit, inputProps, iconProps, effect, ...rest }: IReqoreLabelEditorProps) => {

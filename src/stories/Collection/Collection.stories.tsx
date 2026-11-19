@@ -1118,10 +1118,10 @@ export const ThemedPanelSurface: Story = {
   ),
 };
 
-/** A template's comments, as the admin portal lists them: each card's Delete is a calm red bin. */
+/** A template's comments, listed as cards: each card's Delete is a calm red bin. */
 const COMMENT_CARDS: IReqoreCollectionProps['items'] = [
   {
-    label: 'Dana Novak',
+    label: 'Lena Novak',
     className: 'comment-lone-delete',
     content: 'Works for our three warehouses after one change to the retry.',
     wrapActionsBelowTitle: true,
@@ -1166,7 +1166,7 @@ export const ACardsDestructiveActionOnAPhone: Story = {
     docs: {
       description: {
         story:
-          "A template's comments on a phone (390 px), as the admin portal lists them. The first card's only action deletes the comment: a red bin marked `destructive`. Its cards put their actions under the title where the two do not fit (`wrapActionsBelowTitle`), but a lone destructive one stays at the end of the title's line, its bin alone. The second card's \"⋯\" opens Pin and Delete comment: Delete comment is drawn in danger there, where the red bin is not drawn. The marker never reaches the DOM (r-qs-19).",
+          "A template's comments on a phone (390 px), listed as cards. The first card's only action deletes the comment: a red bin marked `destructive`. Its cards put their actions under the title where the two do not fit (`wrapActionsBelowTitle`), but a lone destructive one stays at the end of the title's line, its bin alone. The second card's \"⋯\" opens Pin and Delete comment: Delete comment is drawn in danger there, where the red bin is not drawn. The marker never reaches the DOM.",
       },
     },
   },
@@ -1217,7 +1217,7 @@ const CATALOGUE_APPS: IReqoreCollectionProps['items'] = [
 ];
 
 const CATALOGUE_GROUPS: IReqoreCollectionProps['groups'] = {
-  // after every business category, in either sort (r-qs-47)
+  // after every business category, in either sort
   'Other applications': { order: 1 },
 };
 
@@ -1232,7 +1232,7 @@ export const AGroupPlacedLastStaysLast: Story = {
     docs: {
       description: {
         story:
-          'An app catalogue in two sorts, A to Z and Z to A. Its apps are grouped by business category, and those in none are under "Other applications", placed after them (`groups[\'Other applications\'].order: 1`). In both sorts the categories turn and "Other applications" stays last; the saved favorite, in no group, stays first. Sorted by name, "Other applications" landed between Logistics and Warehouse (r-qs-47).',
+          'An app catalogue in two sorts, A to Z and Z to A. Its apps are grouped by business category, and those in none are under "Other applications", placed after them (`groups[\'Other applications\'].order: 1`). In both sorts the categories turn and "Other applications" stays last; the saved favorite, in no group, stays first. Sorted by name, "Other applications" landed between Logistics and Warehouse.',
       },
     },
   },
@@ -1287,8 +1287,8 @@ const searchHeader = (root: HTMLElement) => {
 
 /**
  * The search takes the room the title leaves it: an input is worth exactly as much as it is given, so under the
- * actions' default (they go under a title they do not fit beside, f66) it still fills the bar where there is room,
- * and the line under the title where they go there (Filip, 18 Nov).
+ * actions' default (they go under a title they do not fit beside) it still fills the bar where there is room,
+ * and the line under the title where they go there.
  */
 const expectSearchFillsTheRoom = async (root: HTMLElement) => {
   await waitFor(() => expect(searchHeader(root).search).toBeTruthy());
@@ -1318,7 +1318,7 @@ export const ItsSearchFillsTheBar: Story = {
     docs: {
       description: {
         story:
-          'A sortable, searchable collection in a 1440px page. The search box takes the room the title "Collection of items" and the sort control leave it, as it did before the actions went under a title they do not fit beside by default (Filip, 18 Nov).',
+          'A sortable, searchable collection in a 1440px page. The search box takes the room the title "Collection of items" and the sort control leave it, as it did before the actions went under a title they do not fit beside by default.',
       },
     },
   },
@@ -1356,7 +1356,7 @@ export const ItsSearchFillsItsLineOnAPhone: Story = {
 };
 
 /* ------------------------------------------------------------------------------------------------
- * an empty collection says so, and asks for another search only when a search emptied it (board 24)
+ * an empty collection says so, and asks for another search only when a search emptied it
  * ---------------------------------------------------------------------------------------------- */
 
 /** What the empty collection in `box` says. */
@@ -1371,7 +1371,7 @@ export const AnEmptyListSaysSo: Story = {
     docs: {
       description: {
         story:
-          'A searchable collection with no items, in a 1440px and a 390px box, nobody having searched it: it says "Nothing here yet." and nothing about a search. Its sentence used to be "Nothing to show. Try another search, or fewer filters." whether or not anyone had searched, so sixteen IDE lists with no message of their own asked the reader to change a search they never typed (a Qog\'s variables, board 24). The third box gives the collection its own `emptyMessage`, which it still says.',
+          'A searchable collection with no items, in a 1440px and a 390px box, nobody having searched it: it says "Nothing here yet." and nothing about a search. Its sentence used to be "Nothing to show. Try another search, or fewer filters." whether or not anyone had searched, so many lists in an app with no message of their own asked the reader to change a search they never typed (a list of variables, for one). The third box gives the collection its own `emptyMessage`, which it still says.',
       },
     },
   },
@@ -1447,7 +1447,7 @@ export const ASearchThatHidesEveryItemSaysSo: Story = {
 };
 
 /* ------------------------------------------------------------------------------------------------
- * a search beside a title keeps the room its placeholder needs (queue item 27)
+ * a search beside a title keeps the room its placeholder needs
  * ---------------------------------------------------------------------------------------------- */
 
 /** Every character of the search's placeholder fits its box, beside its icon and its clear button. */
@@ -1483,7 +1483,7 @@ export const ASearchBesideATitleKeepsTheRoomItsPlaceholderNeedsOnAPhone: Story =
     docs: {
       description: {
         story:
-          'Two searchable, sortable collections in 390px boxes, a phone\'s width: one titled "Variables", one "Collection of items". Beside "Variables", half the bar left the search about 107px and cut its placeholder to "Sear". A search beside a title now keeps at least the width its placeholder needs (160px at the least): "Variables" leaves it that much, so it stays on the title\'s line with its placeholder whole. "Collection of items" leaves less, so the search goes to the line under the title and fills it (queue item 27).',
+          'Two searchable, sortable collections in 390px boxes, a phone\'s width: one titled "Variables", one "Collection of items". Beside "Variables", half the bar left the search about 107px and cut its placeholder to "Sear". A search beside a title now keeps at least the width its placeholder needs (160px at the least): "Variables" leaves it that much, so it stays on the title\'s line with its placeholder whole. "Collection of items" leaves less, so the search goes to the line under the title and fills it.',
       },
     },
   },
@@ -1520,7 +1520,7 @@ export const ASearchBesideATitleStaysThereOnADesktop: Story = {
     docs: {
       description: {
         story:
-          'The same two collections in 1440px boxes: the search stays on the title\'s line, at half the bar, its placeholder whole. The width a search keeps beside a title moves nothing where there is room (queue item 27).',
+          'The same two collections in 1440px boxes: the search stays on the title\'s line, at half the bar, its placeholder whole. The width a search keeps beside a title moves nothing where there is room.',
       },
     },
   },
@@ -1546,7 +1546,7 @@ export const ASearchBesideATitleStaysThereOnADesktop: Story = {
 };
 
 /* ------------------------------------------------------------------------------------------------
- * a filter the page draws itself (`filtered`, queue item 29)
+ * a filter the page draws itself (`filtered`)
  * ---------------------------------------------------------------------------------------------- */
 
 export const AListThePageFilteredSaysSo: Story = {
@@ -1554,7 +1554,7 @@ export const AListThePageFilteredSaysSo: Story = {
     docs: {
       description: {
         story:
-          'An empty collection and an empty table that a filter of the page\'s own (its toolbar, not their search) has emptied, said with `filtered`: each draws the search icon and says the search sentence, "Nothing to show. Try another search, or fewer filters.", or the page\'s own words where it gives some ("No tickets match these filters"). Without the flag they said "Nothing here yet." beside an inbox icon, as if nothing had been filtered (the admin portal\'s support queue filtered to empty).',
+          'An empty collection and an empty table that a filter of the page\'s own (its toolbar, not their search) has emptied, said with `filtered`: each draws the search icon and says the search sentence, "Nothing to show. Try another search, or fewer filters.", or the page\'s own words where it gives some ("No tickets match these filters"). Without the flag they said "Nothing here yet." beside an inbox icon, as if nothing had been filtered (a support queue filtered to empty, for one).',
       },
     },
   },

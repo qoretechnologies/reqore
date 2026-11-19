@@ -1177,7 +1177,7 @@ test('`plain` draws keys and values as words, not outlined chips', () => {
 });
 
 /*
- * The labels a consumer gives are the words the view draws (qorus#646).
+ * The labels a consumer gives are the words the view draws.
  * `labels` was declared, documented and passed by consumers, and never read:
  * every summary, affordance and type name was the built-in English, and a
  * consumer translating the view (or naming a hash in plain words) changed

@@ -67,7 +67,7 @@ interface IVitestBrowser {
  * makes, so `(pointer: coarse)` and `(hover: none)` match and the touches are a finger's - and nothing turns
  * that on or off. Turning Chromium's touch emulation off over the DevTools protocol does not give a page back
  * the mouse Playwright launched it with, but the hover and pointer the machine reports, and a Linux CI runner
- * reports none: every later story in that page found `(hover: none)` (qorus#646). The other stories run in a
+ * reports none: every later story in that page found `(hover: none)`. The other stories run in a
  * context that never was a phone.
  */
 export const TOUCH_STORY_PROJECT = 'storybook-touch';

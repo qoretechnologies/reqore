@@ -465,7 +465,7 @@ test('<Collection /> ranks search matches by relevance when opted in', () => {
   ]);
 });
 
-describe('<Collection /> group places (r-qs-47)', () => {
+describe('<Collection /> group places', () => {
   const APPS: IReqoreCollectionItemProps[] = [
     { label: 'Payroll', groups: ['Finance'] },
     { label: 'Misc tool', groups: ['Other applications'] },

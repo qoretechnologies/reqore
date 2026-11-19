@@ -13,7 +13,7 @@ import {
  * An icon's scale (0.85 at rest, 0.93 under the pointer, on focus or active) changes at once; its
  * color, opacity and rotation still ease. Animating the transform promoted the icon to a compositor
  * layer that the browser dropped some time after, so a screenshot drew the icon's box a shade apart
- * from run to run (Qlip: focused-control stories alternated between two images).
+ * from run to run (in visual tests, focused-control stories alternated between two images).
  */
 test('no icon animates its transform', () => {
   render(

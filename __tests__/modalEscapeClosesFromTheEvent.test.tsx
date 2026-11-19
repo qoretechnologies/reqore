@@ -5,7 +5,7 @@ import { ReqoreModal, ReqoreUIProvider } from '../src';
 import { useReqoreProperty } from '../src/hooks/useReqoreContext';
 
 /**
- * qorus#646 (React's warning, found by the story run's warning gate): Escape closed a modal by calling its
+ * Found by the story run's warning gate (React's warning): Escape closed a modal by calling its
  * `onClose` inside the state updater that took it off the provider's Escape stack. React runs an updater while it
  * renders the provider, so the host's own state was set during another component's render - React warned "Cannot
  * update a component while rendering a different component" (Modal › Can Be Closed With Esc Key With

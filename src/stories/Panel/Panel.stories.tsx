@@ -2198,7 +2198,6 @@ export const HoverActionReachableWithoutHover: Story = {
     // rest on a hovering pointer, so the capture is a plain panel with nothing
     // to review — noise on the dashboard. The play test below is the real
     // coverage and still runs in CI; only the screenshot is skipped.
-    // (Requested by Foxhoundn on qlip build #174.)
     qlip: { skip: true },
     docs: {
       description: {
@@ -2244,7 +2243,7 @@ export const HoverActionReachableWithoutHover: Story = {
  *  title and the text under it compete for the same column. Shared by all four columns so their
  *  heights compare. */
 const PANEL_DESCRIPTION =
-  'Share this Qog with your team and publish it to the marketplace so anyone can install it.';
+  'Share this flow with your team and publish it to the marketplace so anyone can install it.';
 
 export const FitLabelComparison: Story = {
   parameters: {
@@ -2267,7 +2266,7 @@ export const FitLabelComparison: Story = {
             <div key={w} style={{ width: `${w}px` }}>
               <ReqorePanel
                 {...(variant.below ? { descriptionPosition: 'below' as const } : {})}
-                label='Publish this Qog to the Template Marketplace'
+                label='Publish this flow to the Template Marketplace'
                 description={PANEL_DESCRIPTION}
                 icon='Upload2Line'
                 collapsible
@@ -2296,7 +2295,7 @@ export const DescriptionExpandsOnClick: Story = {
   render: () => (
     <div style={{ width: '300px' }}>
       <ReqorePanel
-        label='Publish this Qog'
+        label='Publish this flow'
         description={`${PANEL_DESCRIPTION} Anyone in the organisation can then find it in the marketplace, preview the flow, and install it into their own instance with one click.`}
         icon='Upload2Line'
         collapsible
@@ -2401,7 +2400,7 @@ const TILE_VARIANTS: {
   {
     id: 'element',
     width: 200,
-    // A title the caller draws itself, as the admin portal's tiles do: one line, cut by its own
+    // A title the caller draws itself, as some dashboards' tiles do: one line, cut by its own
     // ellipsis when it has to be.
     label: (
       <ReqoreH4
@@ -2546,7 +2545,7 @@ export const ATitleShrinksBeforeItsWordsAreCut: Story = {
     docs: {
       description: {
         story:
-          'A 190px tile under the calm heading sizes (`typeScale.heading[3]: 16`), titled "Design changes built" with a "Last 30 days" badge, a help button and a "more" menu, as the admin portal draws it, its bar kept on one line (`wrapActionsBelowTitle={false}`). The badge moves under the title, and the title has two lines of 98px. Its length (about 160px) fits those two lines, but its words do not: at 16px they break "Design / changes / built", and the clamp at two lines cut "built" from a title kept at full size. The fit now packs the words as the browser breaks them, so the title shrinks until they fit two lines, and reads whole (decision 029: wrap, then shrink, then cut).',
+          'A 190px tile under the calm heading sizes (`typeScale.heading[3]: 16`), titled "Design changes built" with a "Last 30 days" badge, a help button and a "more" menu, as a dashboard draws it, its bar kept on one line (`wrapActionsBelowTitle={false}`). The badge moves under the title, and the title has two lines of 98px. Its length (about 160px) fits those two lines, but its words do not: at 16px they break "Design / changes / built", and the clamp at two lines cut "built" from a title kept at full size. The fit now packs the words as the browser breaks them, so the title shrinks until they fit two lines, and reads whole (wrap, then shrink, then cut).',
       },
     },
   },
@@ -2612,7 +2611,7 @@ export const ATitleSettlesWhenItsBoxFollowsItsText: Story = {
     docs: {
       description: {
         story:
-          'Four collapsed panels at a phone\'s width (343px), each with a "this browser" badge, in a host that lays its title bars out as a column, so a title\'s box is as wide as what it holds - as qlip-ui\'s pages do on a phone. Each title and its badge settle: the badge goes under the title, the title keeps that line at its own size, and each panel draws a handful of times and stops. A title that shrank to fit beside its badge took its line, fitted there at full size, gave the line back, no longer fitted, and shrank again, forever: "Notifications", "Reviewers" and "Tokens" did, and under the play\'s `act` the page never came back (board f64).',
+          'Four collapsed panels at a phone\'s width (343px), each with a "this browser" badge, in a host that lays its title bars out as a column, so a title\'s box is as wide as what it holds - as some apps\' pages do on a phone. Each title and its badge settle: the badge goes under the title, the title keeps that line at its own size, and each panel draws a handful of times and stops. A title that shrank to fit beside its badge took its line, fitted there at full size, gave the line back, no longer fitted, and shrank again, forever: "Notifications", "Reviewers" and "Tokens" did, and under the play\'s `act` the page never came back.',
       },
     },
   },
@@ -2669,7 +2668,7 @@ export const ATitleSettlesWhenItsBoxFollowsItsText: Story = {
   },
 };
 
-/** The IDE's titles: 16px at weight 600, in the platform's own face (its `TYPE_SCALE`). */
+/** An app's titles: 16px at weight 600, in the platform's own face (its `TYPE_SCALE`). */
 const IDE_TITLE_THEME = {
   fontFamily:
     "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
@@ -2684,7 +2683,7 @@ export const ATitleBesideALongDescriptionSettles: Story = {
     docs: {
       description: {
         story:
-          'Six small sections in an IDE drawer\'s width (590px and 600px), titled "Address", "Name" and "Security", each with a sentence beside its title too long for the line, under the IDE\'s 16px titles. Each title settles at its size and each panel draws a handful of times. Its box was as wide as the title, so it read its room a pixel short and shrank; a smaller title shrinks its description with it, which left the header room to grow back into, and the title took turns between the two for ever - "Address" measured 56, 52, 80, 56... and the IDE\'s Add Server story hung (t-96). A room the title has already been given, for the same title, description, actions and width, now ends the turns: it keeps the most room it was given.',
+          'Six small sections in a drawer\'s width (590px and 600px), titled "Address", "Name" and "Security", each with a sentence beside its title too long for the line, under an app\'s 16px titles. Each title settles at its size and each panel draws a handful of times. Its box was as wide as the title, so it read its room a pixel short and shrank; a smaller title shrinks its description with it, which left the header room to grow back into, and the title took turns between the two for ever - "Address" measured 56, 52, 80, 56... and a host app\'s Add Server story hung. A room the title has already been given, for the same title, description, actions and width, now ends the turns: it keeps the most room it was given.',
       },
     },
   },
@@ -2762,7 +2761,7 @@ export const APageHeadsActionsFitAPhone: Story = {
     docs: {
       description: {
         story:
-          "A page's head on a phone (390 px), as Qlip's build page draws it: a large title with a sentence under it and four actions. The two that matter, Review next pending and Save, keep their words (`responsive: false`); Upload and Settings may give theirs up, and go into the \"⋯\" when there is no room for them at all; the \"⋯\" is their size, as Qlip draws it. Every action, the \"⋯\" whole, stays inside the panel, and the panel draws a handful of times and stops. With all four keeping their words nothing could give way, and the fourth ran off the screen (f65, Filip: fold into \"⋯\").",
+          "A page's head on a phone (390 px), as a visual review app's build page draws it: a large title with a sentence under it and four actions. The two that matter, Review next pending and Save, keep their words (`responsive: false`); Upload and Settings may give theirs up, and go into the \"⋯\" when there is no room for them at all; the \"⋯\" is their size. Every action, the \"⋯\" whole, stays inside the panel, and the panel draws a handful of times and stops. With all four keeping their words nothing could give way, and the fourth ran off the screen.",
       },
     },
   },
@@ -2785,7 +2784,7 @@ export const APageHeadsActionsFitAPhone: Story = {
           padded={false}
           description='Snapshots captured for this build, against the baseline on develop.'
           actions={PAGE_HEAD_ACTIONS}
-          // the "⋯" is a head action like the others, at their size (as qlip-ui draws it)
+          // the "⋯" is a head action like the others, at their size
           responsiveActionsWrapperProps={{ size: 'small' }}
         />
       </Profiler>
@@ -3006,10 +3005,10 @@ export const ThemedPanelSurface: Story = {
 };
 
 /* ------------------------------------------------------------------------------------------------
- * the page's order, whichever actions may fold (board f67)
+ * the page's order, whichever actions may fold
  * ---------------------------------------------------------------------------------------------- */
 
-/** A build page's head actions, as qlip-ui lists them: its primary first, keeping its words. */
+/** A build page's head actions, as a review app lists them: its primary first, keeping its words. */
 const ORDERED_ACTIONS: IReqorePanelAction[] = [
   {
     label: 'Start review',
@@ -3071,7 +3070,7 @@ export const ActionsKeepThePagesOrder: Story = {
     docs: {
       description: {
         story:
-          'A panel whose title bar lists Start review (it keeps its words, `responsive: false`), then Show summary and Settings (they may fold), and whose bottom bar lists Help then Keep on the left and Discard then Preview on the right. Each bar draws them in that order. The title bar drew the folding ones first, so Show summary came before Start review although the page lists them the other way round (board f67, qlip-ui\'s build page); the bottom bar\'s right side did the same with Discard.',
+          'A panel whose title bar lists Start review (it keeps its words, `responsive: false`), then Show summary and Settings (they may fold), and whose bottom bar lists Help then Keep on the left and Discard then Preview on the right. Each bar draws them in that order. The title bar drew the folding ones first, so Show summary came before Start review although the page lists them the other way round (a review app\'s build page); the bottom bar\'s right side did the same with Discard.',
       },
     },
   },
@@ -3102,7 +3101,7 @@ export const ActionsKeepThePagesOrderOnAPhone: Story = {
     docs: {
       description: {
         story:
-          'The same panel on a phone (390 px). Start review keeps its words and stays first; Show summary and Settings give theirs up for their icons, or go into the "⋯" where there is no room, after it. Nothing runs off the panel (board f67).',
+          'The same panel on a phone (390 px). Start review keeps its words and stays first; Show summary and Settings give theirs up for their icons, or go into the "⋯" where there is no room, after it. Nothing runs off the panel.',
       },
     },
   },
@@ -3141,10 +3140,10 @@ export const ActionsKeepThePagesOrderOnAPhone: Story = {
 };
 
 /* ------------------------------------------------------------------------------------------------
- * the actions go under a title they do not fit beside (board f66)
+ * the actions go under a title they do not fit beside
  * ---------------------------------------------------------------------------------------------- */
 
-/** A pull request's page head on Qlip: its primary and its way back keep their words. */
+/** A pull request's page head in a review app: its primary and its way back keep their words. */
 const PULL_REQUEST_ACTIONS: IReqorePanelAction[] = [
   { label: 'Start review', icon: 'PlayLine', size: 'small', responsive: false },
   { label: 'Pull request', icon: 'GitPullRequestLine', size: 'small', responsive: false },
@@ -3153,8 +3152,8 @@ const PULL_REQUEST_ACTIONS: IReqorePanelAction[] = [
 ];
 
 /**
- * A page head as qlip-ui draws it, its actions going under the title where both do not fit: the default
- * since 18 Nov; `wrap={false}` is a page that opts out.
+ * A page head as a review app draws it, its actions going under the title where both do not fit: the
+ * default; `wrap={false}` is a page that opts out.
  */
 const WrappingPageHead = ({
   id,
@@ -3184,7 +3183,7 @@ const WrappingPageHead = ({
         padded={false}
         description={description}
         actions={actions}
-        // the "⋯" is a head action like the others, at their size (as qlip-ui draws it)
+        // the "⋯" is a head action like the others, at their size
         responsiveActionsWrapperProps={{ size: 'small' }}
         {...(wrap === undefined ? {} : { wrapActionsBelowTitle: wrap })}
       />
@@ -3255,7 +3254,7 @@ export const ActionsGoUnderATitleTheyDoNotFitBeside: Story = {
     docs: {
       description: {
         story:
-          'Three page heads with `wrapActionsBelowTitle`, as Qlip draws a pull request\'s: at 900px the title and its four actions share a line, and the description under the title has the room the actions leave, on one line. In a 360px column the four do not fit beside "feature/mvp #42", so they go to the line under it, at its end, together and in order, and the title keeps its words at its own size. "Logs" and one action fit on one line, and stay there (board f66; decision 029: the title keeps its words, what is beside it gives way first).',
+          'Three page heads with `wrapActionsBelowTitle`, as a review app draws a pull request\'s: at 900px the title and its four actions share a line, and the description under the title has the room the actions leave, on one line. In a 360px column the four do not fit beside "feature/mvp #42", so they go to the line under it, at its end, together and in order, and the title keeps its words at its own size. "Logs" and one action fit on one line, and stay there (the title keeps its words, what is beside it gives way first).',
       },
     },
   },
@@ -3328,7 +3327,7 @@ export const ActionsGoUnderATitleOnAPhone: Story = {
     docs: {
       description: {
         story:
-          'Qlip\'s pull request page head on a phone (390 px), with `wrapActionsBelowTitle`. "feature/mvp #42" has its line to itself at its own size, whole; Start review and Pull request keep their words on the line under it, at its end, and Upload and Settings give theirs up or go into the "⋯". Without the option the title was squeezed beside the actions and ran to two lines in 130px (board f66). A second head whose only action is a destructive Delete keeps it at the end of the title\'s line, its bin alone, as a row keeps a lone Delete on a phone (r-qs-19).',
+          'A review app\'s pull request page head on a phone (390 px), with `wrapActionsBelowTitle`. "feature/mvp #42" has its line to itself at its own size, whole; Start review and Pull request keep their words on the line under it, at its end, and Upload and Settings give theirs up or go into the "⋯". Without the option the title was squeezed beside the actions and ran to two lines in 130px. A second head whose only action is a destructive Delete keeps it at the end of the title\'s line, its bin alone, as a row keeps a lone Delete on a phone.',
       },
     },
   },
@@ -3396,7 +3395,7 @@ export const ActionsGoUnderATitleOnAPhone: Story = {
 };
 
 /* ------------------------------------------------------------------------------------------------
- * a destructive action says so in a panel action's own menu (r-qs-19)
+ * a destructive action says so in a panel action's own menu
  * ---------------------------------------------------------------------------------------------- */
 
 export const ADestructiveEntryInAPanelActionsMenu: Story = {
@@ -3404,7 +3403,7 @@ export const ADestructiveEntryInAPanelActionsMenu: Story = {
     docs: {
       description: {
         story:
-          'A template panel whose "⋯" action opens a menu of Rename and Delete template. Delete template is marked `destructive` and gives no intent: in the menu, where a calm red icon is not drawn, it is drawn in danger. Rename is not. The marker never reaches the DOM (r-qs-19: it means the same wherever an action is drawn).',
+          'A template panel whose "⋯" action opens a menu of Rename and Delete template. Delete template is marked `destructive` and gives no intent: in the menu, where a calm red icon is not drawn, it is drawn in danger. Rename is not. The marker never reaches the DOM (it means the same wherever an action is drawn).',
       },
     },
   },
@@ -3451,7 +3450,7 @@ export const ADestructiveEntryInAPanelActionsMenu: Story = {
 /** Short names an app drawer is titled with: "slack" was 50.4px wide and shrank a step in 50. */
 const SHORT_NAMES = ['slack', 'Slack', 'Telegram', 'NewApp', 'Order sync'];
 
-/** An app drawer's head, as the admin portal draws it: a status, a copy button and a close. */
+/** An app drawer's head, as a dashboard draws it: a status, a copy button and a close. */
 const AppHead = ({ name, wrap }: { name: string; wrap: boolean }) => (
   <ReqorePanel
     className={`app-head${wrap ? ' app-head-wrap' : ''}`}
@@ -3485,7 +3484,7 @@ export const AShortTitleKeepsItsSizeWhereActionsMayGoUnder: Story = {
     docs: {
       description: {
         story:
-          'App drawer heads (a key icon, a status, a copy button and a close) titled slack, Slack, Telegram, NewApp and Order sync, in a 390px and a 1440px box, each drawn with `wrapActionsBelowTitle` and without. Every title fits, and each is drawn at the same size both ways. With the option, "slack" (50.4px wide) was drawn a step smaller, 19px for 20: the room its fit measured was its own width rounded down (the admin portal, f66).',
+          'App drawer heads (a key icon, a status, a copy button and a close) titled slack, Slack, Telegram, NewApp and Order sync, in a 390px and a 1440px box, each drawn with `wrapActionsBelowTitle` and without. Every title fits, and each is drawn at the same size both ways. With the option, "slack" (50.4px wide) was drawn a step smaller, 19px for 20: the room its fit measured was its own width rounded down.',
       },
     },
   },
@@ -3535,7 +3534,7 @@ export const BadgesGiveWayBeforeTheActionsOnAPhone: Story = {
     docs: {
       description: {
         story:
-          'A template drawer\'s head on a phone (390 px, the screen\'s width), with `wrapActionsBelowTitle`: "Order Sync Template", its badges Submitted, v3 and flow, a sentence under it, a copy button and a close. The name and the actions fit on one line and the badges do not, so the badges go under the name (decision 029) and the actions stay beside it. The actions went under too, below the description, a line taller for nothing: the title claimed the width of its name and its badges (the admin portal, f66).',
+          'A template drawer\'s head on a phone (390 px, the screen\'s width), with `wrapActionsBelowTitle`: "Order Sync Template", its badges Submitted, v3 and flow, a sentence under it, a copy button and a close. The name and the actions fit on one line and the badges do not, so the badges go under the name (what is beside the title gives way before it wraps) and the actions stay beside it. The actions went under too, below the description, a line taller for nothing: the title claimed the width of its name and its badges.',
       },
     },
   },
@@ -3586,7 +3585,7 @@ export const ActionsGoUnderATitleByDefault: Story = {
     docs: {
       description: {
         story:
-          'Two page heads in a 360px column, neither naming `wrapActionsBelowTitle`. The first takes the default: its four actions do not fit beside "feature/mvp #42", so they go to the line under it and the title keeps its line and its size. The second opts out (`wrapActionsBelowTitle={false}`) and keeps one line, the title squeezed beside the actions, as every bar did before the default (Filip, 18 Nov).',
+          'Two page heads in a 360px column, neither naming `wrapActionsBelowTitle`. The first takes the default: its four actions do not fit beside "feature/mvp #42", so they go to the line under it and the title keeps its line and its size. The second opts out (`wrapActionsBelowTitle={false}`) and keeps one line, the title squeezed beside the actions, as every bar did before the default.',
       },
     },
   },
@@ -3623,7 +3622,7 @@ export const AnObviousActionIsItsIcon: Story = {
     docs: {
       description: {
         story:
-          'A page head whose Refresh and Settings say what they do with their icon (`iconOnly`): each is drawn as its icon at every width, its words its tooltip and its accessible name. "Compare with period before" is a mode the icon cannot carry, so it keeps its words (FRONTEND "Obvious actions are icons only", board f65).',
+          'A page head whose Refresh and Settings say what they do with their icon (`iconOnly`): each is drawn as its icon at every width, its words its tooltip and its accessible name. "Compare with period before" is a mode the icon cannot carry, so it keeps its words.',
       },
     },
   },
@@ -3686,7 +3685,7 @@ export const ActionsStayBesideATitleThatNeedsTwoLinesAnyway: Story = {
     docs: {
       description: {
         story:
-          'On a phone (390 px), a widget titled "Hero: Qonsole input vs problem wizard" with its help and "more" buttons, and a short one, "Visitors", with the same two. The long title needs two lines even with the whole line to itself, and two beside the buttons, so the buttons going under it would save it nothing and cost the panel a line: they stay beside it, and the title takes its two lines there at its own size. "Visitors" fits beside them on one line. (The admin portal\'s experiment drawer and funnel widget on a phone lost 43px and 37px this way.)',
+          'On a phone (390 px), a widget titled "Hero: Console input vs problem wizard" with its help and "more" buttons, and a short one, "Visitors", with the same two. The long title needs two lines even with the whole line to itself, and two beside the buttons, so the buttons going under it would save it nothing and cost the panel a line: they stay beside it, and the title takes its two lines there at its own size. "Visitors" fits beside them on one line. (An experiment drawer and a funnel widget on a phone lost 43px and 37px this way.)',
       },
     },
   },
@@ -3695,7 +3694,7 @@ export const ActionsStayBesideATitleThatNeedsTwoLinesAnyway: Story = {
       {/* full-width tiles, as a dashboard lays its widgets out on a phone */}
       <div data-widget='long'>
           <ReqorePanel
-            label='Hero: Qonsole input vs problem wizard'
+            label='Hero: Console input vs problem wizard'
             labelSize={3}
             actions={[
               { icon: 'QuestionLine', tooltip: 'What this shows', size: 'small', flat: true },
@@ -3764,14 +3763,14 @@ export const APanelWithNoActionsDrawsNoActionsRow: Story = {
     docs: {
       description: {
         story:
-          'On a phone (390 px), a panel titled "Leaders this month by the revenue their deals closed" and no actions at all. Its bar is its title: no empty actions row under a title of two lines (it made the admin portal\'s leader panel 5px taller).',
+          'On a phone (390 px), a panel titled "Leaders this month by the revenue their deals closed" and no actions at all. Its bar is its title: no empty actions row under a title of two lines (it made a leader panel 5px taller).',
       },
     },
   },
   render: () => (
     <div style={{ padding: '12px 16px' }} data-widget='bare'>
       <ReqorePanel label='Leaders this month by the revenue their deals closed' labelSize={3} padded>
-        Dana · 42 deals
+        Lena · 42 deals
       </ReqorePanel>
     </div>
   ),
@@ -3799,10 +3798,10 @@ export const APanelWithNoActionsDrawsNoActionsRow: Story = {
 };
 
 /* ------------------------------------------------------------------------------------------------
- * under the actions' default: a description below, a caption, a filter, and icons beside a title (f66)
+ * under the actions' default: a description below, a caption, a filter, and icons beside a title
  * ---------------------------------------------------------------------------------------------- */
 
-/** A section heading as the IDE's dashboard draws it: a name, its count, a filter, a sentence under it. */
+/** A section heading as an operator dashboard draws it: a name, its count, a filter, a sentence under it. */
 const SectionHeading = ({ wrap, width }: { wrap?: boolean; width: number }) => (
   <div
     data-heading={`${width}-${wrap === false ? 'off' : 'default'}`}
@@ -3832,7 +3831,7 @@ export const ADescriptionBelowTakesTheWholeWidth: Story = {
     docs: {
       description: {
         story:
-          'A dashboard section heading ("Needs you", its count 25 and an "All areas" filter) with a sentence under it (`descriptionPosition=\'below\'`), at 1440px and 390px, drawn with the actions\' default and with `wrapActionsBelowTitle={false}`. The sentence takes the full width under the name and the filter both ways, and reads on the same lines. Under the default it was laid out 0px wide, a word to a line ("What / needs / a / person…", the IDE\'s operator dashboard, f66).',
+          'A dashboard section heading ("Needs you", its count 25 and an "All areas" filter) with a sentence under it (`descriptionPosition=\'below\'`), at 1440px and 390px, drawn with the actions\' default and with `wrapActionsBelowTitle={false}`. The sentence takes the full width under the name and the filter both ways, and reads on the same lines. Under the default it was laid out 0px wide, a word to a line ("What / needs / a / person…", an operator dashboard).',
       },
     },
   },
@@ -3884,7 +3883,7 @@ const onOneLine = (element: HTMLElement) => {
   return tops.length > 0 && Math.max(...tops) - Math.min(...tops) < 4;
 };
 
-/** The IDE's recent orders section: a name, its count, which orders it holds, a folding filter, a link. */
+/** A recent orders section: a name, its count, which orders it holds, a folding filter, a link. */
 const OrdersSection = ({ width }: { width: number }) => {
   const [filter, setFilter] = useState<string | undefined>('all');
 
@@ -3934,7 +3933,7 @@ export const ACaptionAndAFilterKeepTheirRoomWhenTheActionsGoUnder: Story = {
     docs: {
       description: {
         story:
-          'A detail page\'s "Recent orders" section at 1440px and 390px: its count ("4 failing") beside the name, which orders it holds ("Newest 4 of 120") under it, a filter that folds to its room and "Browse orders". At 1440px the actions sit beside the name; at 390px they go under it, and the filter folds into that line. The count and the caption keep their width and their one line both ways, and the filter stays inside the panel. Under the default the caption was drawn a letter to a line ("N e w e s t 4"), and on a phone the filter kept its whole width under the name and ran off the panel\'s left edge (the IDE\'s detail pages, f66).',
+          'A detail page\'s "Recent orders" section at 1440px and 390px: its count ("4 failing") beside the name, which orders it holds ("Newest 4 of 120") under it, a filter that folds to its room and "Browse orders". At 1440px the actions sit beside the name; at 390px they go under it, and the filter folds into that line. The count and the caption keep their width and their one line both ways, and the filter stays inside the panel. Under the default the caption was drawn a letter to a line ("N e w e s t 4"), and on a phone the filter kept its whole width under the name and ran off the panel\'s left edge (an app\'s detail pages).',
       },
     },
   },
@@ -3982,7 +3981,7 @@ export const ACaptionAndAFilterKeepTheirRoomWhenTheActionsGoUnder: Story = {
   },
 };
 
-/** An issue drawer's head, as the IDE draws it: an icon, a name, its state, a help button and a close. */
+/** An issue drawer's head, as an app draws it: an icon, a name, its state, a help button and a close. */
 const IssueHead = ({ id, width, words }: { id: string; width: number; words?: boolean }) => (
   <div data-issue={id} style={{ width, maxWidth: '100%' }}>
     <ReqorePanel
@@ -4014,7 +4013,7 @@ export const IconActionsStayBesideATitleThatFitsALittleSmaller: Story = {
     docs: {
       description: {
         story:
-          'An issue drawer\'s head (an alert icon, "#24011 in Order-to-Cash → payment-author", its state "Open", a help button drawn as its icon and a close), each in a box sized from the wide one\'s own parts. At 1440px everything fits on one line. In a box 4px too narrow for the name beside the two icons at its own size (the IDE\'s issue drawer at 599px), the icons stay beside it and the name is drawn a step smaller, on one line and whole, its state under it. They went to a row of their own, a row lost for 4px (f66). A name may be drawn up to a tenth smaller for icons (Filip, 18 Nov). In a box where it would have to be drawn smaller than that, the icons go under it; and a help button that keeps its word ("Help") goes under in the 4px-short box, as actions with words always have.',
+          'An issue drawer\'s head (an alert icon, "#24011 in Order-to-Cash → payment-author", its state "Open", a help button drawn as its icon and a close), each in a box sized from the wide one\'s own parts. At 1440px everything fits on one line. In a box 4px too narrow for the name beside the two icons at its own size (an issue drawer at 599px), the icons stay beside it and the name is drawn a step smaller, on one line and whole, its state under it. They went to a row of their own, a row lost for 4px. A name may be drawn up to a tenth smaller for icons. In a box where it would have to be drawn smaller than that, the icons go under it; and a help button that keeps its word ("Help") goes under in the 4px-short box, as actions with words always have.',
       },
     },
   },
@@ -4096,10 +4095,10 @@ export const IconActionsStayBesideATitleThatFitsALittleSmaller: Story = {
 };
 
 /* ------------------------------------------------------------------------------------------------
- * icons beside a title kept to one line: the title never wraps beside them (queue item 28)
+ * icons beside a title kept to one line: the title never wraps beside them
  * ---------------------------------------------------------------------------------------------- */
 
-/** A dashboard tile, as the admin portal's WidgetFrame draws one: its name, help and "more" as icons. */
+/** A dashboard tile, as a dashboard's widget frame draws one: its name, help and "more" as icons. */
 const IconTile = ({ id, label, width }: { id: string; label: string; width: number }) => (
   <div data-tile={id} style={{ width, maxWidth: '100%' }}>
     <ReqorePanel
@@ -4135,7 +4134,7 @@ export const IconsBesideATitleKeepItOnOneLine: Story = {
     docs: {
       description: {
         story:
-          'Dashboard tiles titled "Problem wizard" and "Monthly revenue gained and lost", with a help and a "more" button drawn as icons, at 330px and 218px, and in boxes 1px too narrow for each title beside the icons at its own size (sized from the wide tile\'s own parts). Wherever the icons sit beside a title, the title is on one line and whole, a step smaller where it must be. In the 1px-short boxes the title fitted with the one-line fit\'s 2px of slack, kept its size and wrapped its last word beside the icons ("Problem / wizard", "… gained and / lost", the admin portal on a phone).',
+          'Dashboard tiles titled "Problem wizard" and "Monthly revenue gained and lost", with a help and a "more" button drawn as icons, at 330px and 218px, and in boxes 1px too narrow for each title beside the icons at its own size (sized from the wide tile\'s own parts). Wherever the icons sit beside a title, the title is on one line and whole, a step smaller where it must be. In the 1px-short boxes the title fitted with the one-line fit\'s 2px of slack, kept its size and wrapped its last word beside the icons ("Problem / wizard", "… gained and / lost", on a phone).',
       },
     },
   },

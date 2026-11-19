@@ -1,5 +1,5 @@
 // A panel's sticky header is drawn above everything in its body, and a pinned column's header cell hides the header
-// cells that scroll under it (qorus#646). Scrolled, a table's pinned columns - sticky at the header's own z-index,
+// cells that scroll under it. Scrolled, a table's pinned columns - sticky at the header's own z-index,
 // and later in the document - were drawn over its sticky header, and a pinned column's header cell painted nothing,
 // so the headers passing under it showed through. How the layers are drawn is checked in a browser by the stories
 // "Layout/Panel · Sticky Header Above Its Body" and "Collections/Table · Sticky Header Above Pinned Columns"; this
@@ -112,7 +112,7 @@ describe('A panel with a sticky header', () => {
     expect(getComputedStyle(body).isolation).toBe('isolate');
   });
 
-  // Decision 028: a short panel's pinned header was a band with nothing under it to label.
+  // A short panel's pinned header was a band with nothing under it to label.
   test('lets a short panel scroll away with its header, which otherwise looks the same', async () => {
     measureEverythingAs(window.innerHeight * STICKY_HEADER_TALL_SCREENS - 100);
     const { container } = render(

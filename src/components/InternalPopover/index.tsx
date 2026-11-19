@@ -92,7 +92,7 @@ const ARROW_BOX_CENTRE = 5;
  * colour, with the hairline on its two OUTER sides only. It replaces a triangle with a
  * second, 2px larger triangle behind it as its rim. Those were two translucent layers, so
  * where they overlapped each other and the body's ring the hairline was drawn twice, and the
- * arrow's three points stood out brighter than its sides (Filip, 2026-11-16). One element
+ * arrow's three points stood out brighter than its sides. One element
  * draws one even 1px edge. Its centre sits 1px outside the body's edge, in the direction the
  * arrow points (`outwards`): its borderless inner half covers the body's ring across the
  * arrow's base, and its bordered sides start where the ring ends.
@@ -275,11 +275,11 @@ export const StyledPopoverContent = styled.div<{ $capped?: boolean }>`
   /* A surface with a height cap (maxHeight, or the room held below its target) keeps what it holds inside the
      cap. The cap was on the surface alone, and the content - 100% of a height the surface never sets - kept
      its own: a 382px list in a surface capped at 297px ran off the bottom of the window, past the surface's
-     edge (qorus#646). The arrow is drawn outside the surface, so the surface itself does not clip.
+     edge. The arrow is drawn outside the surface, so the surface itself does not clip.
      What can scroll its own content - a panel (its body scrolls) or a menu - is held to the cap: it shrinks
      to it and keeps its whole frame, its bottom border too, and only its own content scrolls. Scrolling the
      whole surface instead left the panel as tall as before, its bottom border scrolled out of sight under the
-     surface's edge, and its rows scrolling inside that again (Foxhoundn on qorus#646). Anything else keeps
+     surface's edge, and its rows scrolling inside that again. Anything else keeps
      its height, and the surface scrolls it, as before.
      (No backticks in here: this comment lives inside a template literal.) */
   ${({ $capped }) =>
@@ -445,7 +445,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
             /* The field never leaves view: it is scrolled up at most to the top of what shows it (its
                scroller, or the window where the scroller starts above it). Scrolled by the whole deficit, a
                list taller than a short window took the field out of sight - from y=209 to y=-59 in a 380px
-               canvas - Popper marked it hidden, and the list closed as it opened (qorus#646). What is still
+               canvas - Popper marked it hidden, and the list closed as it opened. What is still
                missing then is taken from the list's height below, or it flips. */
             const shownFrom = Math.max(scroller.getBoundingClientRect().top, visibleTop());
             const toTheTop = Math.max(targetElement.getBoundingClientRect().top - shownFrom, 0);
@@ -467,8 +467,8 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
       /* The surface is never taller than the room on the side it is drawn: its height is capped at that
          room, which caps nothing while it fits. Made once, the cap stayed what it was at the opening: a
          window made shorter, a phone turned on its side, the keyboard coming up or the page scrolled while
-         the list was open, and the list ran off the bottom of the screen (qorus#646, Foxhoundn: a popover
-         should never outgrow the viewport). So it follows the room as it changes, on the events that change
+         the list was open, and the list ran off the bottom of the screen, and a popover
+         should never outgrow the viewport. So it follows the room as it changes, on the events that change
          it: the window's and the visual viewport's size, any scroll, the target's size - at most once a
          frame. */
       const clamp = () => {
@@ -586,7 +586,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     // with `flushSync`), and a new position can change the popover's size -
     // a layout change inside the callback that the browser must leave
     // unreported for the frame, which it reports as "ResizeObserver loop
-    // completed with undelivered notifications" (qorus#646: five Dropdown
+    // completed with undelivered notifications" (in five Dropdown
     // stories, Select's and MultiSelect's). One recalculation per frame,
     // however many reports came in.
     useEffect(() => {
@@ -636,7 +636,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
         // gradient, stays the arrow's colour there.
         const painted = !!style && style.backgroundImage !== 'none';
         // Only a flat body: a bordered one (flat={false}) draws its edge in the arrow's
-        // formula colour, and the arrow continues that border (Qlip build 20261116-141018).
+        // formula colour, and the arrow continues that border.
         if (hairline && !painted && color && color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)') {
           popperElement.style.setProperty('--reqore-popover-surface', color);
         } else {

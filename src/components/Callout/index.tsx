@@ -181,7 +181,7 @@ const StyledCallout = styled(StyledEffect).withConfig({
      line box runs 2-7px short of it (15px against 17px at small, 26px against
      33px at huge), and a description, rendered a size step down, runs shorter
      still (11px against 17px at small). So the text sat visibly above the
-     icon: measured 3px between their centres in qorus-ide's template drawer
+     icon: measured 3px between their centres in a template drawer
      with a description, 3.5px at huge with a label. The icon is centred on the
      text instead. A one-line hint lines up exactly; a wrapped one gets the
      banner convention of an icon centred on its message rather than pinned to

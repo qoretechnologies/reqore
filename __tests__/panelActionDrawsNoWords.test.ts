@@ -3,7 +3,7 @@
 import '../src';
 import { ICON_ACTIONS_TITLE_SHRINK, actionDrawsNoWords } from '../src/components/Panel';
 
-// Which bar actions are drawn as their icon alone: those stay beside a title a little smaller (f66 c).
+// Which bar actions are drawn as their icon alone: those stay beside a title a little smaller.
 describe('a panel action draws no words', () => {
   test('when it is an icon with no label, or says its icon is enough', () => {
     expect(actionDrawsNoWords({ icon: 'QuestionLine', tooltip: 'Help' }, false)).toBe(true);

@@ -104,7 +104,7 @@ const ReqoreDropdownListWrapper = memo(
         intent={rest.intent}
         {...wrapperProps}
         /* Its body lays the list out as a column, so a list held to a short popover's cap gives its rows
-           the room left under its search and tags, and only the rows scroll (qorus#646). */
+           the room left under its search and tags, and only the rows scroll. */
         contentStyle={{ display: 'flex', flexDirection: 'column', ...wrapperProps?.contentStyle }}
       >
         <ReqoreDropdownList

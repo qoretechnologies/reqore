@@ -71,7 +71,7 @@ export interface IUseFoldedActionWidths {
 }
 
 /**
- * How wide each folded actions column must be for its cells' words (qorus#646): a row's one action with
+ * How wide each folded actions column must be for its cells' words: a row's one action with
  * no icon says its `shortLabel`, or its label, and a column folded to the menu button's square cut it
  * to "T…". Over the rows given (the table's rows, so the width holds as they scroll and page), the
  * widest of a column's words is measured with the browser's text metrics in the font of a button drawn

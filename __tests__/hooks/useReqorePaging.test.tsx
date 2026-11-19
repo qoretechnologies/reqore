@@ -346,7 +346,7 @@ test('useReqorePaging still opens a paged (non-infinite) list on page 1 when its
 
 /* Two next() calls from one render at the page before the last (an infinite collection's auto-load observers,
    each firing next()) took the page past the last one: the page read as undefined, the collection showed no rows
-   and still offered "Load more" (qorus#646, the IDE's App Connections Manager). Each step stops at the last page. */
+   and still offered "Load more" (in an app's connections list). Each step stops at the last page. */
 test('useReqorePaging never goes past the last page, however many steps one render takes', () => {
   const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
   const rows = Array.from({ length: 110 }, (_, i) => ({ id: i + 1 }));

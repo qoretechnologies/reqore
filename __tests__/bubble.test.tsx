@@ -137,7 +137,7 @@ test('Renders <Bubble /> corners from radiusSize when given, from size otherwise
 });
 
 // A run of same-side bubbles is one moment: only its last bubble prints a time,
-// so a burst of messages doesn't repeat the clock. Matches Qonsole's rule.
+// so a burst of messages doesn't repeat the clock.
 test('Renders one timestamp per same-side run inside a <BubbleGroup />', () => {
   renderBubbles(
     <ReqoreBubbleGroup>

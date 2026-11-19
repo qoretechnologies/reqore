@@ -11,13 +11,13 @@ import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreCustomTheme, IWithReqoreSize } from '../../types/global';
 import ReqoreStatistic, { IReqoreStatisticProps } from '../Statistic';
 
-/** The most figures a group shows (instruction-files decision 010): a sixth belongs in the detail. */
+/** The most figures a group shows: a sixth belongs in the detail. */
 export const STATISTIC_GROUP_MAX = 5;
 
 export interface IReqoreStatisticGroupItem extends IReqoreStatisticProps {
   /**
    * The figure is a filter that is on: a line in the info colour under it (blue says "a filter is
-   * on", decision 001). Give the statistic its own `onClick` and `aria-pressed` to make it one.
+   * on"). Give the statistic its own `onClick` and `aria-pressed` to make it one.
    */
   active?: boolean;
 }
@@ -46,7 +46,7 @@ export interface IReqoreStatisticGroupProps
    * How the group lays out its figures:
    * - `'scroll'` (default): always one row; the figures share it while each can be at least
    *   `minItemWidth` wide, and past that the row scrolls sideways. A strip never breaks into two
-   *   rows on a small screen, and on a wide one nothing scrolls (decision 010, Filip 2026-11-17);
+   *   rows on a small screen, and on a wide one nothing scrolls;
    * - `'wrap'`: one row while the group is wider than `narrowBelow`, two figures to a row at or
    *   below it. Kept for a host that has asked for it; no calm app uses it.
    *
@@ -58,7 +58,7 @@ export interface IReqoreStatisticGroupProps
   /** The least a figure is wide before a `'scroll'` group scrolls, in px. @default 96 */
   minItemWidth?: number;
   /**
-   * The most figures drawn. A group shows at most five (decision 010); one given more draws the
+   * The most figures drawn. A group shows at most five; one given more draws the
    * first five and says so in the console. Raise it only where every figure passes the test
    * "does this number change what I do next?".
    *
@@ -178,7 +178,7 @@ const ITEM_DEFAULTS: Partial<IReqoreStatisticProps> = {
 
 /**
  * A strip of up to five figures with hairlines between them, and above and below: the calm KPI
- * strip (decision 010), drawn once here rather than by hand in every app. One row, always: its
+ * strip, drawn once here rather than by hand in every app. One row, always: its
  * figures share it while they fit and it scrolls sideways once they do not, measured on its own
  * width, so a strip in a drawer behaves as one on a phone does (`narrowLayout`).
  */
@@ -223,7 +223,7 @@ export const ReqoreStatisticGroup = memo(
           // eslint-disable-next-line no-console
           console.warn(
             `ReqoreStatisticGroup: ${all.length} figures given, ${max} drawn. A strip shows at ` +
-              'most five figures (decision 010); the rest belong in the detail.'
+              'most five figures; the rest belong in the detail.'
           );
         }
 

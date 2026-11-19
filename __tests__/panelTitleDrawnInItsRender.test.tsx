@@ -4,7 +4,7 @@
  *
  * The title copied its label into state by an effect, so for one render it still showed the old words. A drawer whose
  * name arrived with its data was measured as "A/B test" beside its badge and fitted its long name to the room left
- * beside the badge: one line at 14px where two lines at 20px fitted (the admin portal's ExperimentDrawer › Removed
+ * beside the badge: one line at 14px where two lines at 20px fitted (an experiment drawer titled Removed
  * Version; story `Dialogs/Drawer · The Same Title At The Same Size Beside A Long Word`).
  */
 import { act, fireEvent, render } from '@testing-library/react';
@@ -45,13 +45,13 @@ test('a new label is drawn in the render that brings it', () => {
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <Measured label='Hero: Qonsole input vs problem wizard' />
+          <Measured label='Hero: Console input vs problem wizard' />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
   );
 
-  expect(seen).toEqual(['A/B test', 'Hero: Qonsole input vs problem wizard']);
+  expect(seen).toEqual(['A/B test', 'Hero: Console input vs problem wizard']);
 });
 
 test('an editable title still starts its draft from the label it shows', () => {

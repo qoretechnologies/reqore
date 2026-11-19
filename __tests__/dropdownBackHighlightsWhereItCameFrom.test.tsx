@@ -6,7 +6,7 @@ import { IReqoreDropdownItem } from '../src/components/Dropdown/list';
 
 /**
  * Back at a level with the left arrow, the row the keys opened is the one highlighted, so the right arrow
- * opens it again and Enter acts on it (qorus#646, Foxhoundn's review of Dropdown · Keyboard Navigation With
+ * opens it again and Enter acts on it (seen in Dropdown · Keyboard Navigation With
  * Left Arrow Navigates Back). The level cleared its highlight when it opened the row; it looked highlighted
  * after Left only while it also heard the keys pressed in the level it showed, which it no longer does.
  */

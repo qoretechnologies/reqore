@@ -60,9 +60,9 @@ export interface IWithReqoreDestructive {
   /**
    * The action destroys something (Delete chat, Remove key). It says so apart from its look: a calm
    * theme draws a destructive action as a red icon on a quiet button, with no `danger` intent,
-   * because a danger intent there is a red box at the end of every row (Filip, 16 Nov).
+   * because a danger intent there is a red box at the end of every row.
    *
-   * It means the same wherever an action is drawn (r-qs-19). Where its own look is not drawn - an
+   * It means the same wherever an action is drawn. Where its own look is not drawn - an
    * entry in a menu, a row's "⋯", a panel action's own menu - it is drawn in `danger`. Where a
    * narrow surface moves its actions to a line of their own (an entity or severity row on a phone, a
    * panel with `wrapActionsBelowTitle`), a lone destructive one stays at the end of the line it was

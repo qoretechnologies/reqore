@@ -57,7 +57,7 @@ export {
   MODAL_MIN_HEIGHT,
   MODAL_MIN_WIDTH,
 } from './components/Drawer';
-/* The window size classes (Material 3's, decision 031): the numbers, the media queries and the
+/* The window size classes (Material 3's): the numbers, the media queries and the
    class of a width. Apps read these instead of writing a width of their own; the provider's
    `windowSizeClass`, `isMobile` and `isTablet` answer the same queries. The container rules
    below them are a component's own box, not the window. */

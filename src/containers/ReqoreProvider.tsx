@@ -167,7 +167,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
   // Live media queries in a browser, fixed defaults in jsdom — see
   // `useReqoreMedia` for why that is decided once per module load.
   // One chain of "narrower than" queries, so a width is in exactly one window size class (the
-  // flags were two ranges that were both true at 480px). Material 3's classes, decision 031.
+  // flags were two ranges that were both true at 480px). Material 3's classes.
   const isBelowMedium = useReqoreMedia(reqoreMedia.below('medium'));
   const isBelowExpanded = useReqoreMedia(reqoreMedia.below('expanded'));
   const isBelowLarge = useReqoreMedia(reqoreMedia.below('large'));
@@ -233,7 +233,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
    * Takes a modal off the Escape stack. With `onRemove` it is Escape asking the modal to close: only the top-most
    * one answers, and it is closed - after the confirmation, when it asks for one - by calling `onRemove` from the
    * key or the confirmation, never from a state updater. An updater runs while React renders this provider, so
-   * the host's own state was set during another component's render (React warned, qorus#646). Without it the modal
+   * the host's own state was set during another component's render (React warned). Without it the modal
    * is going: it leaves the stack wherever it is in it, where only the top-most used to.
    */
   const removeEscClosableModal = useCallback(

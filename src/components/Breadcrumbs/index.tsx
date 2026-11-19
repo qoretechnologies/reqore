@@ -318,7 +318,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   /* The crumbs folded from the start of the trail into its menu: as many as it takes for every part the
      trail draws to lie inside it - the current page too, into one dropdown labelled with it, when even it
      does not fit. It is settled before the browser paints, so no frame ever draws a crumb past the trail
-     (qorus#646: when the page changed its crumbs, the trail used to fold one crumb per frame, and a phone
+     (when the page changed its crumbs, the trail used to fold one crumb per frame, and a phone
      showed "… › New chat" running 79px past the trail for 50ms). After each render a layout effect
      measures the parts and folds one more crumb while one reaches past the trail (or the crumb holding
      tabs clips them, see `trailOverflows`), or one fewer while everything fits and the trail is

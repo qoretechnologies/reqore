@@ -576,7 +576,7 @@ export const FormControlMobile: Story = {
 
 /* -------------------------------------------------------------------------------------------
  * A label that wraps (`wrapLabel`) in less room than the box and the label on one line take
- * (qorus#646: the Qorus IDE's "Skip totals rows" ran past its 38px row). The label sat in two
+ * (an app's "Skip totals rows" ran past its 38px row). The label sat in two
  * control groups that kept the width of its one line, so it never wrapped, and the checkbox was
  * as high as one line, so a label that did wrap would have run out of it.
  * ----------------------------------------------------------------------------------------- */
@@ -623,7 +623,7 @@ const expectWrappedInside = async (name: string, lines: number, oneLine: number)
 
 /**
  * Every checkbox in every box of the story - its row, its box and its label - is inside that box: nothing a box holds
- * is drawn past its border (qorus#646, David: a label drawn outside its box).
+ * is drawn past its border.
  */
 const expectEveryCheckboxInsideItsBox = async () => {
   const boxes = Array.from(document.querySelectorAll<HTMLElement>('[class^="story-narrow-"]'));
@@ -654,7 +654,7 @@ export const ALongLabelWrapsInANarrowBox: Story = {
     docs: {
       description: {
         story:
-          'Renders two checkboxes with `wrapLabel` in 160px boxes. The first has a long label, wider than the box can hold on one line: it wraps inside the box, beside the checkbox. The second has a short label, which fits the box on one line. Every checkbox and label is inside its box (qorus#646).',
+          'Renders two checkboxes with `wrapLabel` in 160px boxes. The first has a long label, wider than the box can hold on one line: it wraps inside the box, beside the checkbox. The second has a short label, which fits the box on one line. Every checkbox and label is inside its box.',
       },
     },
   },
@@ -680,7 +680,7 @@ export const ALongLabelOnTheLeftWrapsInANarrowBox: Story = {
     docs: {
       description: {
         story:
-          'The same with the label on the left of the checkbox (`labelPosition="left"`): the long label wraps inside its 160px box, the short one fits on one line, and each checkbox stays beside its label, inside its box (qorus#646).',
+          'The same with the label on the left of the checkbox (`labelPosition="left"`): the long label wraps inside its 160px box, the short one fits on one line, and each checkbox stays beside its label, inside its box.',
       },
     },
   },
@@ -706,7 +706,7 @@ export const AThreeLineLabelMakesTheCheckboxAsHigh: Story = {
     docs: {
       description: {
         story:
-          'Renders a checkbox whose label takes three lines in its 160px box, a switch whose label does in its 200px box, and a short label on one line. Each control is as high as its label, inside its box, and what comes after it starts below it (qorus#646).',
+          'Renders a checkbox whose label takes three lines in its 160px box, a switch whose label does in its 200px box, and a short label on one line. Each control is as high as its label, inside its box, and what comes after it starts below it.',
       },
     },
   },
@@ -740,7 +740,7 @@ export const LongLabelsWrapOnAPhone: Story = {
     docs: {
       description: {
         story:
-          'Renders settings with long labels on a phone (390px), each a checkbox or a switch that wraps its label. Every label wraps inside the screen, nothing runs past it, and a tap on a wrapped label checks its box (qorus#646).',
+          'Renders settings with long labels on a phone (390px), each a checkbox or a switch that wraps its label. Every label wraps inside the screen, nothing runs past it, and a tap on a wrapped label checks its box.',
       },
     },
     qlip: { viewport: { width: 390, height: 844 } },
