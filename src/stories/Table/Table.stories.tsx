@@ -17,6 +17,7 @@ import { TReqorePaginationType } from '../../constants/paging';
 import { SIZES, SIZE_TO_PX, TEXT_FROM_SIZE, TOUCH_TARGET_PX } from '../../constants/sizes';
 import { sleep } from '../../helpers/utils';
 import {
+  ReqoreButton,
   ReqoreControlGroup,
   ReqorePanel,
   ReqoreH3,
@@ -1923,6 +1924,67 @@ export const ExpandableRows: Story = {
     // An open row is still a row: its header must contain its own cells, and the
     // panel below it is not licence for either to spill.
     await expectTableContentWithinItsRows(canvasElement);
+  },
+};
+
+/** A table whose rows change height while it is mounted, as rows a page restyles at a wider width do. */
+const RowsThatChangeHeight = () => {
+  const [rowHeight, setRowHeight] = useState(56);
+
+  return (
+    <ReqoreControlGroup vertical fluid gapSize='big'>
+      <ReqoreButton fixed className='shorter-rows' onClick={() => setRowHeight(40)}>
+        Shorter rows
+      </ReqoreButton>
+      <ReqoreTable
+        label={`Rows ${rowHeight}px tall`}
+        rowHeight={rowHeight}
+        columns={[
+          { dataId: 'firstName', header: { label: 'First name' }, width: 200 },
+          { dataId: 'occupation', header: { label: 'Occupation' }, grow: 1 },
+        ]}
+        data={slice(tableData.data, 0, 18)}
+        renderExpandedRow={(row: any) => <ReqoreP>{row.occupation}</ReqoreP>}
+      />
+    </ReqoreControlGroup>
+  );
+};
+
+export const ExpandableRowsChangeHeightWhileMounted: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A table whose rows can open, sized to its 18 rows, mounted with rows 56px tall, then given 40px rows (Shorter rows), as a page that restyles its rows at a wider width does. The rows close up to 40px apart and the last row sits inside the body. The list used to keep the offsets it had worked out for 56px rows, so 40px rows sat 56px apart and the tail fell out of the body.',
+      },
+    },
+  },
+  render: () => <RowsThatChangeHeight />,
+  play: async ({ canvasElement }) => {
+    const rowTops = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('.reqore-table-row'))
+        .map((row) => row.getBoundingClientRect().top)
+        .sort((a, b) => a - b);
+    const gaps = () => {
+      const tops = rowTops();
+      return tops.slice(1, 6).map((top, index) => Math.round(top - tops[index]));
+    };
+
+    await waitFor(() => expect(rowTops().length).toBeGreaterThan(5));
+    await expect(gaps(), 'rows 56px apart at first').toEqual([56, 56, 56, 56, 56]);
+
+    await fireEvent.click(canvasElement.querySelector('.shorter-rows')!);
+
+    await waitFor(() =>
+      expect(canvasElement.textContent).toContain('Rows 40px tall')
+    );
+    await expect(gaps(), 'rows 40px apart once they are 40px tall').toEqual([40, 40, 40, 40, 40]);
+    // The body is as tall as its 18 rows, and the last of them is inside it, not past its end.
+    const body = canvasElement.querySelector<HTMLElement>('.reqore-table-body')!.getBoundingClientRect();
+    await waitFor(() => expect(rowTops().length).toBe(18));
+    await expect(Math.max(...rowTops()) + 40, 'the last row is inside the body').toBeLessThanOrEqual(
+      Math.ceil(body.bottom) + 1
+    );
   },
 };
 

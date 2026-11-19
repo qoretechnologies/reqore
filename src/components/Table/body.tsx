@@ -308,6 +308,19 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       if (expandable) listRef.current?.resetAfterIndex(0);
     }, [expandedIds, expandable]);
 
+    /* The rows' height changed on a mounted list: a caller's `rowHeight` that follows the
+       width, or a size or touch target that does. The variable list keeps every offset it
+       has worked out, each a multiple of the old height, so the rows went on sitting at
+       the old spacing at their new height (56px apart at 40px tall) until something else
+       reset it. Reset before paint, so no frame shows the old spacing. The fixed list
+       works its offsets out from `itemSize` on every render and needs nothing. */
+    const laidOutRowHeight = useRef(rowHeight);
+    useLayoutEffect(() => {
+      if (laidOutRowHeight.current === rowHeight) return;
+      laidOutRowHeight.current = rowHeight;
+      listRef.current?.resetAfterIndex(0);
+    }, [rowHeight]);
+
     /**
      * How tall the body's content is, with any open panels included.
      *
