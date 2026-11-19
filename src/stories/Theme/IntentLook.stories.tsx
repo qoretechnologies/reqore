@@ -1,6 +1,6 @@
 import { StoryObj } from '@storybook/react';
 import { ReactNode } from 'react';
-import { expect } from 'storybook/test';
+import { expect, userEvent } from 'storybook/test';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreUIProvider from '../../containers/UIProvider';
 import {
@@ -141,7 +141,7 @@ export const Outline: Story = {
     docs: {
       description: {
         story:
-          'The default fill (left) and `intentLook: { danger: "outline" }` (right): a destructive control says so at rest — red words and icon and a red border on the ordinary button, the bin included, never a red block. Under the pointer the border is the full red.',
+          'The default fill (left) and `intentLook: { danger: "outline" }` (right): a destructive control says so at rest — red words and icon and a red border on the ordinary button, never a red block. Under the pointer the border is the full red. The icon-only bin is its red icon, with no border and no fill.',
       },
     },
   },
@@ -159,15 +159,92 @@ export const Outline: Story = {
     const fill = canvasElement.querySelector<HTMLElement>('.side-fill .specimen-delete')!;
     const button = canvasElement.querySelector<HTMLElement>('.side-outline .specimen-delete')!;
     const bin = canvasElement.querySelector<HTMLElement>('.side-outline .specimen-bin')!;
-    for (const el of [button, bin]) {
-      await expect(el.getAttribute('data-intent-text')).toBe('outline');
-      // At rest, with no pointer on it: red words or icon, and a red edge.
-      await expect(isRed(getComputedStyle(el).color)).toBe(true);
-      await expect(isRed(edgeColour(el))).toBe(true);
-    }
+    await expect(button.getAttribute('data-intent-text')).toBe('outline');
+    // At rest, with no pointer on it: red words and icon, and a red edge.
+    await expect(isRed(getComputedStyle(button).color)).toBe(true);
+    await expect(isRed(edgeColour(button))).toBe(true);
+    // The bin is its red icon, with no edge.
+    await expect(bin.getAttribute('data-intent-text')).toBe('outline-icon');
+    await expect(isRed(getComputedStyle(bin).color)).toBe(true);
+    await expect(isRed(edgeColour(bin))).toBe(false);
     // Not a red block: the outline button keeps an ordinary surface.
     await expect(getComputedStyle(button).backgroundColor).not.toBe(
       getComputedStyle(fill).backgroundColor
     );
+  },
+};
+
+/** Whether a button draws a box: a fill, a border, an inset ring or a hover ring. */
+const drawsABox = (el: HTMLElement) => {
+  const style = getComputedStyle(el);
+  const fill = channels(style.backgroundColor);
+  const filled = !!fill && !/rgba\([^)]*,\s*0\)$|transparent/.test(style.backgroundColor);
+  const bordered = parseFloat(style.borderTopWidth) > 0 && !/,\s*0\)$/.test(style.borderTopColor);
+  const ringed = style.boxShadow !== 'none';
+  const outlined = style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0;
+  return filled || bordered || ringed || outlined;
+};
+
+export const AnIconOnlyDangerButtonIsItsRedIcon: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'With `intentLook: { danger: "outline" }`, an icon-only button with `intent="danger"` is its red icon and nothing else: no border and no fill, at rest, under the pointer and disabled, flat or not, and as a panel action. A labelled danger button beside it keeps its red outline.',
+      },
+    },
+  },
+  render: () => (
+    <Side label='Outline' className='side-outline' theme={OUTLINE}>
+      <ReqoreControlGroup fluid={false}>
+        <ReqoreButton className='labelled-delete' intent='danger' icon='DeleteBinLine'>
+          Delete workflow
+        </ReqoreButton>
+        <ReqoreButton className='bin-bordered' intent='danger' icon='DeleteBinLine' tooltip='Delete' />
+        <ReqoreButton
+          className='bin-flat'
+          intent='danger'
+          icon='DeleteBinLine'
+          flat
+          tooltip='Delete'
+        />
+        <ReqoreButton
+          className='bin-disabled'
+          intent='danger'
+          icon='DeleteBinLine'
+          disabled
+          tooltip='Delete'
+        />
+      </ReqoreControlGroup>
+      <ReqorePanel
+        label='Order intake'
+        flat
+        actions={[
+          { icon: 'EditLine', tooltip: 'Edit' },
+          { icon: 'DeleteBinLine', intent: 'danger', tooltip: 'Delete', className: 'panel-bin' },
+        ]}
+      >
+        <ReqoreP size='small'>Receives orders from the shop and hands them to fulfilment.</ReqoreP>
+      </ReqorePanel>
+    </Side>
+  ),
+  play: async ({ canvasElement }) => {
+    const find = (name: string) => canvasElement.querySelector<HTMLElement>(`.${name}`)!;
+    const labelled = find('labelled-delete');
+    await expect(isRed(edgeColour(labelled))).toBe(true);
+
+    for (const name of ['bin-bordered', 'bin-flat', 'bin-disabled', 'panel-bin']) {
+      const bin = find(name);
+      await expect(bin.getAttribute('data-intent-text')).toBe('outline-icon');
+      await expect(isRed(getComputedStyle(bin).color)).toBe(true);
+      await expect(drawsABox(bin)).toBe(false);
+    }
+    // under the pointer, still no box
+    for (const name of ['bin-bordered', 'bin-flat', 'panel-bin']) {
+      await userEvent.hover(find(name));
+      await expect(drawsABox(find(name))).toBe(false);
+      await expect(isRed(getComputedStyle(find(name)).color)).toBe(true);
+    }
+    await userEvent.unhover(find('panel-bin'));
   },
 };

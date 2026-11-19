@@ -10,6 +10,12 @@ const TEXT_LOOK: Partial<IReqoreTheme> = {
   buttons: { intentLook: { danger: 'text' } },
 };
 
+const OUTLINE_LOOK: Partial<IReqoreTheme> = {
+  main: MAIN,
+  intents: { danger: DANGER } as IReqoreTheme['intents'],
+  buttons: { intentLook: { danger: 'outline' } },
+};
+
 const Wrapper = ({ theme, children }: { theme?: Partial<IReqoreTheme>; children: any }) => (
   <ReqoreUIProvider theme={theme}>
     <ReqoreLayoutContent>
@@ -101,5 +107,46 @@ describe('theme.buttons.intentLook', () => {
       </Wrapper>
     );
     expect(screen.getByRole('button', { name: 'Save' }).getAttribute('data-intent-text')).toBeNull();
+  });
+});
+
+/**
+ * `intentLook: { danger: 'outline' }`: a labelled destructive button keeps its red outline, and an
+ * icon-only one is its red icon with no box: no fill, no border, no ring.
+ */
+describe("theme.buttons.intentLook 'outline'", () => {
+  const isTransparent = (color: string) => color === 'transparent' || /,\s*0\)$/.test(color);
+
+  test('an icon-only danger button draws no box', () => {
+    render(
+      <Wrapper theme={OUTLINE_LOOK}>
+        <ReqoreButton intent='danger' icon='DeleteBinLine' tooltip='Delete' />
+        <ReqoreButton intent='danger' icon='DeleteBinLine' tooltip='Delete flat' flat />
+      </Wrapper>
+    );
+    for (const name of ['Delete', 'Delete flat']) {
+      const button = screen.getByRole('button', { name });
+      expect(button.getAttribute('data-intent-text')).toBe('outline-icon');
+      expect(button.style.getPropertyValue('--reqore-button-intent-text')).not.toBe('');
+      const style = getComputedStyle(button);
+      expect(isTransparent(style.backgroundColor)).toBe(true);
+      expect(isTransparent(style.borderTopColor) || parseFloat(style.borderTopWidth) === 0).toBe(
+        true
+      );
+      expect(style.boxShadow === '' || style.boxShadow === 'none').toBe(true);
+    }
+  });
+
+  test('a labelled danger button keeps its outline', () => {
+    render(
+      <Wrapper theme={OUTLINE_LOOK}>
+        <ReqoreButton intent='danger' icon='DeleteBinLine'>
+          Delete
+        </ReqoreButton>
+      </Wrapper>
+    );
+    const button = screen.getByRole('button', { name: 'Delete' });
+    expect(button.getAttribute('data-intent-text')).toBe('outline');
+    expect(isTransparent(getComputedStyle(button).backgroundColor)).toBe(false);
   });
 });

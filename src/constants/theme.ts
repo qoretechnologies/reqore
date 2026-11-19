@@ -229,10 +229,12 @@ export interface IReqoreCustomTheme {
    * theme's destructive button is red words on a plain button, not a red block. A `'text'` button
    * with no label (an icon-only bin) is the ordinary button at rest and takes the intent's colour
    * only under the pointer — a row of bins is not a row of red.
-   * `'outline'` keeps the ordinary fill too, and draws the intent at rest on every such button,
-   * labelled or icon-only: its words and icons in the intent's readable colour and a border in
-   * the intent — a destructive control that says so before anyone points at it, without being
-   * a block of colour.
+   * `'outline'` keeps the ordinary fill too, and draws the intent at rest on a labelled button:
+   * its words and icons in the intent's readable colour and a border in the intent — a
+   * destructive control that says so before anyone points at it, without being a block of
+   * colour. An icon-only `'outline'` button (no label, no children) is its icon in the intent's
+   * colour and nothing else, at rest, under the pointer and disabled: no border, no fill, so a
+   * row of bins is a row of red icons, not of red boxes. The keyboard's focus ring stays.
    */
   intentLook?: Partial<Record<TReqoreIntent, 'fill' | 'text' | 'outline'>>;
 }

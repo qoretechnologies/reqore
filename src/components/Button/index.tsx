@@ -683,6 +683,23 @@ export const StyledButton = styled(StyledEffect).withConfig({
             border-color: var(--reqore-button-intent-text);
           `}
   }
+
+  /* An icon-only button whose intent is drawn as an outline: its icon in the intent's readable
+     colour, and no box in any state (no border, no fill, no hover ring). A row of bins carrying
+     \`intent='danger'\` is a row of red icons, not of red boxes; a labelled one keeps its outline.
+     The keyboard's focus ring is every control's, and stays. */
+  &&[data-intent-text='outline-icon'],
+  &&[data-intent-text='outline-icon']:hover,
+  &&[data-intent-text='outline-icon']:active {
+    color: var(--reqore-button-intent-text);
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  &&[data-intent-text='outline-icon']:not(:disabled):not(:focus-visible):hover,
+  &&[data-intent-text='outline-icon']:not(:disabled):not(:focus-visible):active {
+    outline: none;
+  }
 `;
 
 export const StyledButtonContent = styled.div.withConfig({
@@ -881,6 +898,8 @@ const ReqoreButton = memo(
       const intentAsOutline = intentLook === 'outline';
       const intentAsText = intentLook === 'text' || intentAsOutline;
       const fillIntent = intentAsText ? undefined : intent;
+      /* An icon-only button whose intent is an outline is its icon in the intent: no surface. */
+      const intentOnIconOnly = intentAsOutline && !(label || children);
       const theme = useReqoreTheme('main', customTheme, fillIntent);
       const fixedEffect = useReqoreEffect('buttons', theme, effect);
       const { targetRef, setRef } = useCombinedRefs(ref);
@@ -1031,7 +1050,13 @@ const ReqoreButton = memo(
                caller's own `style` still wins. */
             ...(intentTextColor
               ? {
-                  'data-intent-text': intentAsOutline ? 'outline' : _children ? 'label' : 'icon',
+                  'data-intent-text': intentAsOutline
+                    ? _children
+                      ? 'outline'
+                      : 'outline-icon'
+                    : _children
+                      ? 'label'
+                      : 'icon',
                   style: {
                     ...(_children && !intentAsOutline ? { color: intentTextColor } : {}),
                     '--reqore-button-intent-text': intentTextColor,
@@ -1052,7 +1077,7 @@ const ReqoreButton = memo(
             alignSelf,
             maxWidth,
             minimal,
-            transparent,
+            transparent: transparent || intentOnIconOnly,
             size,
             intent: fillIntent,
             color: customColor,
