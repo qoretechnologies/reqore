@@ -77,7 +77,7 @@ export interface IReqoreCollapsibleContentProps
    *   painted gradient, so there is no fade colour to match and everything still in view stays
    *   clickable. Use it when the last thing in view is interactive (a tile, a row with actions),
    *   or when the content sits on a surface the ambient theme does not know about.
-   * @default 'overlay'
+   * @default 'overlay', or `'below'` where the theme draws its reveals quiet (`theme.revealLook`)
    */
   buttonPlacement?: 'overlay' | 'below';
   /**
@@ -267,7 +267,7 @@ export const ReqoreCollapsibleContent = memo(
         revealOn = 'always',
         buttonAlign = 'center',
         buttonFluid = false,
-        buttonPlacement = 'overlay',
+        buttonPlacement: buttonPlacementProp,
         animated = false,
         buttonProps,
         size = 'normal',
@@ -406,9 +406,21 @@ export const ReqoreCollapsibleContent = memo(
         [disabled, buttonProps]
       );
 
+      /* A theme that draws its reveals quiet (`theme.revealLook`) puts them below what they clip, as the quiet
+         inline action under it: no border, no fill, no blur, its words in the text's weight. A reveal's own
+         placement and `buttonProps` still win. */
+      const quiet = theme.revealLook === 'quiet';
+      const buttonPlacement = buttonPlacementProp ?? (quiet ? 'below' : 'overlay');
+      const quietButtonProps = useMemo<Partial<IReqoreButtonProps>>(
+        () => (quiet ? { flat: true, transparent: true } : {}),
+        [quiet]
+      );
       const mergedButtonEffect = useMemo(
-        () => mergeButtonEffect(buttonProps?.effect),
-        [buttonProps?.effect]
+        () =>
+          quiet
+            ? { weight: 'normal' as const, ...buttonProps?.effect }
+            : mergeButtonEffect(buttonProps?.effect),
+        [quiet, buttonProps?.effect]
       );
 
       const below = buttonPlacement === 'below';
@@ -425,6 +437,7 @@ export const ReqoreCollapsibleContent = memo(
           fluid={buttonFluid}
           disabled={disabled}
           aria-expanded={false}
+          {...quietButtonProps}
           {...buttonProps}
           effect={mergedButtonEffect}
           onClick={handleExpand}
@@ -446,6 +459,7 @@ export const ReqoreCollapsibleContent = memo(
           fluid={below ? buttonFluid : true}
           disabled={disabled}
           aria-expanded
+          {...quietButtonProps}
           {...buttonProps}
           effect={mergedButtonEffect}
           onClick={handleCollapse}

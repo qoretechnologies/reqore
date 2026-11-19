@@ -5,6 +5,9 @@ import {
   ReqoreCollapsibleContent,
 } from '../../components/CollapsibleContent';
 import ReqoreButton from '../../components/Button';
+import ReqoreContent from '../../components/Content';
+import ReqoreLayoutContent from '../../components/Layout/content';
+import ReqoreUIProvider from '../../containers/UIProvider';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import { ReqoreP } from '../../components/Paragraph';
 import { DEFAULT_INTENTS } from '../../constants/theme';
@@ -626,3 +629,97 @@ export const ButtonBelow: Story = {
     expect(getComputedStyle(clip).maskImage).toBe('none');
   },
 };
+
+/** Eighteen orders, a list taller than its reveal's clip. */
+const ORDERS = Array.from({ length: 18 }, (_, index) => `Order ${1040 + index} is waiting for payment`);
+
+/** A reveal under a list, in a theme that draws its reveals quiet (`theme.revealLook: 'quiet'`). */
+const QuietRevealOfAList = () => (
+  <div className='quiet-reveal' style={{ width: 420 }}>
+    <ReqoreUIProvider theme={{ main: '#121212', revealLook: 'quiet' }}>
+      <ReqoreLayoutContent>
+        <ReqoreContent style={{ padding: 16 }}>
+          <ReqoreCollapsibleContent
+            maxCollapsedHeight={160}
+            showMoreLabel='Show all 18 orders'
+            showLessLabel='Show fewer orders'
+          >
+            {ORDERS.map((order) => (
+              <ReqoreP key={order}>{order}</ReqoreP>
+            ))}
+          </ReqoreCollapsibleContent>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  </div>
+);
+
+const quietReveal = async (canvasElement: HTMLElement) =>
+  waitFor(() => {
+    const el = canvasElement.querySelector<HTMLButtonElement>(
+      '.quiet-reveal .reqore-collapsible-content-reveal'
+    );
+    expect(el).toBeTruthy();
+    return el!;
+  });
+
+export const AQuietRevealSitsBelowWhatItClips: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a list of 18 orders clipped to 160px in a theme that draws its reveals quiet (`theme.revealLook: \'quiet\'`), with no `buttonPlacement` of its own. "Show all 18 orders" sits on its own line under the clipped list, never over its last lines in view, and the edge fades through a mask.',
+      },
+    },
+  },
+  render: () => <QuietRevealOfAList />,
+  play: async ({ canvasElement }) => {
+    const reveal = await quietReveal(canvasElement);
+    const clip = canvasElement.querySelector<HTMLElement>(
+      '.quiet-reveal .reqore-collapsible-content-clip'
+    )!;
+    await expect(reveal.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      clip.getBoundingClientRect().bottom - 0.5
+    );
+    await expect(
+      canvasElement.querySelector('.quiet-reveal .reqore-collapsible-content-fade')
+    ).toBeNull();
+  },
+};
+
+export const AQuietRevealIsTheQuietInlineAction: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same list in a theme that draws its reveals quiet: "Show all 18 orders" is the quiet inline action under the list, with no border, no fill and its words in the text\'s weight, not a bordered bold button. Opened, "Show fewer orders" is drawn the same way.',
+      },
+    },
+  },
+  render: () => <QuietRevealOfAList />,
+  play: async ({ canvasElement }) => {
+    const isQuiet = (button: HTMLElement) => {
+      const style = getComputedStyle(button);
+      return {
+        border:
+          parseFloat(style.borderTopWidth) === 0 ||
+          /,\s*0\)$|transparent/.test(style.borderTopColor),
+        fill: /rgba\([^)]*,\s*0\)$|transparent/.test(style.backgroundColor),
+        weight: Number(style.fontWeight) <= 400,
+      };
+    };
+    const reveal = await quietReveal(canvasElement);
+    await expect(isQuiet(reveal)).toEqual({ border: true, fill: true, weight: true });
+
+    await fireEvent.click(reveal);
+    const collapse = await waitFor(() => {
+      const el = canvasElement.querySelector<HTMLButtonElement>(
+        '.quiet-reveal .reqore-collapsible-content-collapse'
+      );
+      expect(el).toBeTruthy();
+      return el!;
+    });
+    await expect(isQuiet(collapse)).toEqual({ border: true, fill: true, weight: true });
+  },
+};
+

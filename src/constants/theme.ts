@@ -203,6 +203,15 @@ export interface IReqoreTheme {
    * so on and off read apart without a colour. Decided once here for every switch in the app.
    */
   switchOnLook?: 'tint' | 'filled';
+  /**
+   * How a reveal (`ReqoreCollapsibleContent`) is drawn. `'button'` (the default, unchanged): its
+   * button sits inside the fade, over the last lines in view, as a bordered button. `'quiet'`
+   * (the calm look): it sits below the clipped content, on its own line, so it never covers it
+   * (`buttonPlacement='below'`, unless a reveal sets its own), and it is the quiet inline action
+   * under what it reveals: no border, no fill, its words in the text's weight. Decided once here,
+   * so a reveal nobody remembered to set does not cover its content.
+   */
+  revealLook?: 'button' | 'quiet';
   header?: IReqoreNavbarTheme;
   footer?: IReqoreNavbarTheme;
   breadcrumbs?: IReqoreBreadcrumbsTheme;
