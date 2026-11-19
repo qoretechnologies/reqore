@@ -2,6 +2,7 @@ import { StoryObj } from '@storybook/react';
 import { ReqoreButton, ReqoreControlGroup, ReqoreVerticalSpacer } from '../..';
 import { IReqoreCollectionProps, ReqoreCollection } from '../../components/Collection';
 import { IReqoreColumnsProps } from '../../components/Columns';
+import ReqoreTable from '../../components/Table';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import items, { bigCollection, collectionWithGroups } from '../../mock/collectionData';
 
@@ -1540,6 +1541,63 @@ export const ASearchBesideATitleStaysThereOnADesktop: Story = {
         expect(searchBox.width, id).toBeGreaterThan(bar.getBoundingClientRect().width * 0.4);
         expectPlaceholderWhole(search);
       });
+    }
+  },
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * a filter the page draws itself (`filtered`, queue item 29)
+ * ---------------------------------------------------------------------------------------------- */
+
+export const AListThePageFilteredSaysSo: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'An empty collection and an empty table that a filter of the page\'s own (its toolbar, not their search) has emptied, said with `filtered`: each draws the search icon and says the search sentence, "Nothing to show. Try another search, or fewer filters.", or the page\'s own words where it gives some ("No tickets match these filters"). Without the flag they said "Nothing here yet." beside an inbox icon, as if nothing had been filtered (the admin portal\'s support queue filtered to empty).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <div data-filtered='collection' style={{ width: 720 }}>
+        <ReqoreCollection label='Tickets' items={[]} filterable filtered />
+      </div>
+      <div data-filtered='collection-own' style={{ width: 720 }}>
+        <ReqoreCollection
+          label='Tickets'
+          items={[]}
+          filterable
+          filtered
+          emptyMessage='No tickets match these filters'
+        />
+      </div>
+      <div data-filtered='table' style={{ width: 720 }}>
+        <ReqoreTable
+          label='Queue'
+          columns={[{ dataId: 'subject', header: { label: 'Subject' } }]}
+          data={[]}
+          filtered
+          emptyMessage='No tickets match these filters'
+        />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const message = (id: string) =>
+      canvasElement.querySelector<HTMLElement>(
+        `[data-filtered="${id}"] .reqore-collection-empty, [data-filtered="${id}"] .reqore-table-empty`
+      );
+
+    await waitFor(() => {
+      expect(message('collection')?.textContent?.trim()).toBe(
+        'Nothing to show. Try another search, or fewer filters.'
+      );
+      expect(message('collection-own')?.textContent?.trim()).toBe('No tickets match these filters');
+      expect(message('table')?.textContent?.trim()).toBe('No tickets match these filters');
+    });
+    for (const id of ['collection', 'collection-own', 'table']) {
+      expect(message(id)!.className, id).toContain('-searched');
     }
   },
 };

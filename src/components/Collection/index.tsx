@@ -174,6 +174,12 @@ export interface IReqoreCollectionProps
    * one is given (it was shown in both cases before), otherwise `'Nothing here yet.'`.
    */
   noItemsMessage?: string;
+  /**
+   * A filter the page draws itself (its own toolbar, not this collection's search) is narrowing `items`: an empty
+   * collection then says `emptyMessage`, with the search icon, as it does when its own search emptied it, and
+   * not that there is nothing yet (queue item 29: the admin portal's support queue filtered to empty).
+   */
+  filtered?: boolean;
   sortButtonTooltip?: (sort?: 'asc' | 'desc') => string;
   displayButtonTooltip?: (display?: 'list' | 'grid') => string;
   inputPlaceholder?: (items?: IReqoreCollectionItemProps[]) => string;
@@ -279,6 +285,7 @@ export const ReqoreCollection = memo(
     searchDelay = 300,
     emptyMessage: emptyMessageProp,
     noItemsMessage: noItemsMessageProp,
+    filtered,
     sortButtonTooltip = (sort) => (sort === 'desc' ? 'Sort ascending' : 'Sort descending'),
     displayButtonTooltip = (display) => (display === 'grid' ? 'Show as list' : 'Show as grid'),
     inputPlaceholder = (items) => `Search in ${size(items)} items`,
@@ -320,7 +327,7 @@ export const ReqoreCollection = memo(
     );
     /* The search sentence only while a search is what emptied the list: sixteen IDE lists with no message
        of their own told a reader to change a search they never typed (a Qog's variables, board 24). */
-    const searched = String(query ?? '') !== '';
+    const searched = String(query ?? '') !== '' || !!filtered;
     const emptyText = searched
       ? (emptyMessageProp ?? SEARCH_EMPTY_MESSAGE)
       : (noItemsMessageProp ?? emptyMessageProp ?? NO_ITEMS_MESSAGE);

@@ -334,6 +334,12 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * where one is given (it was shown in both cases before), otherwise `'Nothing here yet.'`.
    */
   noItemsMessage?: string;
+  /**
+   * A filter the page draws itself (its own toolbar, not this table's search or column filters) is narrowing
+   * `data`: an empty table then says `emptyMessage`, with the search icon, as it does when its own search emptied
+   * it, and not that there is nothing yet (queue item 29: the admin portal's support queue filtered to empty).
+   */
+  filtered?: boolean;
   showHelp?: boolean;
   showColumnsOptions?: boolean;
   /**
@@ -670,6 +676,7 @@ const ReqoreTable = ({
   filterRanking = 'none',
   emptyMessage: emptyMessageProp,
   noItemsMessage: noItemsMessageProp,
+  filtered: filteredByPage,
   headerCellComponent,
   headerEffect,
   headerDividers = true,
@@ -880,7 +887,9 @@ const ReqoreTable = ({
   /* The search sentence only while a search or a column filter is what emptied the table: an empty table
      told a reader to change a search they never typed (board 24). */
   const narrowed =
-    normalizedQuery.length > 0 || normalizedFilters.some(([, filterValue]) => filterValue !== '');
+    !!filteredByPage ||
+    normalizedQuery.length > 0 ||
+    normalizedFilters.some(([, filterValue]) => filterValue !== '');
   const emptyText = narrowed
     ? (emptyMessageProp ?? SEARCH_EMPTY_MESSAGE)
     : (noItemsMessageProp ?? emptyMessageProp ?? NO_ITEMS_MESSAGE);

@@ -79,3 +79,21 @@ describe('an empty table', () => {
     expect(screen.getByText(SEARCH_EMPTY_MESSAGE)).toBeTruthy();
   });
 });
+
+describe('a list a filter of the page emptied (`filtered`)', () => {
+  test('a collection asks for another search', () => {
+    renderInProvider(<ReqoreCollection items={[]} filtered />);
+
+    expect(screen.getByText(SEARCH_EMPTY_MESSAGE)).toBeTruthy();
+    expect(document.querySelector('.reqore-collection-empty-searched')).toBeTruthy();
+  });
+
+  test("a table says the page's own words, with the search icon's class", () => {
+    renderInProvider(
+      <ReqoreTable columns={COLUMNS} data={[]} filtered emptyMessage='No tickets match these filters' />
+    );
+
+    expect(screen.getByText('No tickets match these filters')).toBeTruthy();
+    expect(document.querySelector('.reqore-table-empty-searched')).toBeTruthy();
+  });
+});
