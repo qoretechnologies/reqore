@@ -1,4 +1,4 @@
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
 import { Fragment, useState } from 'react';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
@@ -740,5 +740,46 @@ export const SelectOnlyClearable: Story = {
     isClearable: true,
     placeholder: 'Select date',
     popoverProps: {},
+  },
+};
+
+export const APlainDateKeepsItsDay: Story = {
+  // run again in a browser east of UTC, where a day sent through UTC is the day before
+  tags: ['east-of-utc'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a plain-date picker holding 17 Oct 2026, with no time. Picking the 20th gives back "2026-10-20", a day with no time and no zone, in any zone the browser is in (it runs again in Auckland, east of UTC).',
+      },
+    },
+  },
+  args: {
+    plainDate: true,
+    value: '2026-10-17',
+    popoverProps: {},
+    onChange: fn(),
+  },
+  async play({ canvasElement, args }) {
+    const canvas = within(canvasElement);
+
+    // the day it holds, read in this zone, and no time
+    await expect(await canvas.findByLabelText('day, Datepicker')).toHaveTextContent('17');
+    await expect(await canvas.findByLabelText('month, Datepicker')).toHaveTextContent('10');
+    await expect(canvas.queryByLabelText('hour, Datepicker')).toBeNull();
+
+    await userEvent.click(canvasElement.querySelector('input') as HTMLElement);
+    // the calendar, with no time field under it
+    const popover = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>('.reqore-popover-content');
+      expect(found).toBeTruthy();
+      return found as HTMLElement;
+    });
+    await expect(within(popover).queryByLabelText('hour, Time')).toBeNull();
+    await userEvent.click(within(popover).getByText('20'));
+
+    // the day picked, as a plain date
+    await waitFor(() => expect(args.onChange).toHaveBeenLastCalledWith('2026-10-20'));
+    await expect(await canvas.findByLabelText('day, Datepicker')).toHaveTextContent('20');
   },
 };

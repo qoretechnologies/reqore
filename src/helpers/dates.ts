@@ -1,8 +1,10 @@
 import {
+  DateValue,
   getLocalTimeZone,
   parseAbsoluteToLocal,
   parseDate,
   parseDateTime,
+  toCalendarDate,
   toZoned,
   ZonedDateTime,
 } from '@internationalized/date';
@@ -65,6 +67,13 @@ export const isUnreadableDate = (date?: Date | string | null): boolean =>
 
 // utility to convert date to ZonedDateTime because datepicker can't use Date
 export const toDate = (date?: Date | string | null) => readDate(date);
+
+/**
+ * The day a date falls on where it is read, as a plain date: `YYYY-MM-DD`, with no time and no zone (the date
+ * picker's `plainDate`). The day is taken from the date's own fields, never through UTC, so a day picked east of
+ * UTC is not the day before.
+ */
+export const toPlainDate = (date: DateValue): string => toCalendarDate(date).toString();
 
 export type TDateFormat = 'date' | 'iso' | 'epoch' | 'object';
 export type TDateObjectFormat = {

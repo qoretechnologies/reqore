@@ -5,6 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { configDefaults, defineConfig, mergeConfig } from 'vitest/config';
+import { EAST_OF_UTC_ZONE } from './src/stories/utils/eastOfUtc.mts';
 import { POSIX_LANGUAGE } from './src/stories/utils/posixLocale.mts';
 import viteConfig from './vite.config.mts';
 
@@ -55,7 +56,9 @@ const qlip = qlipVitestPlugin({
  * is POSIX, which the stories tagged `posix-locale` run on (`src/stories/utils/posixLocale.mts`). A
  * new object for each project: Vitest names a project's browser instances on the objects themselves.
  */
-const storyBrowser = (kind: 'desktop' | 'phone' | 'scrollbars' | 'posix-locale' = 'desktop') => ({
+const storyBrowser = (
+  kind: 'desktop' | 'phone' | 'scrollbars' | 'posix-locale' | 'east-of-utc' = 'desktop'
+) => ({
   enabled: true,
   // Vitest 4's @vitest/browser-playwright no longer applies
   // `browser.viewport` to the Playwright context (the line is
@@ -87,6 +90,10 @@ const storyBrowser = (kind: 'desktop' | 'phone' | 'scrollbars' | 'posix-locale' 
   // Mac's takes the system's. So the `posix-locale` project does not ask the platform for it: its
   // context is given the language itself (`locale`), which Chromium then reports as it is, Intl's
   // default locale following it, on every platform and build.
+  //
+  // The `east-of-utc` project's browser is in a zone well east of UTC (`EAST_OF_UTC_ZONE`), given
+  // through Playwright's `timezoneId`: there a local midnight is the day before in UTC, so a day sent
+  // through UTC moves. The CI runs in UTC, and the other projects in whatever zone the machine is in.
   provider: playwright({
     ...(kind === 'scrollbars'
       ? { launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } }
@@ -97,6 +104,7 @@ const storyBrowser = (kind: 'desktop' | 'phone' | 'scrollbars' | 'posix-locale' 
         : {
             viewport: { width: 1920, height: 1080 },
             ...(kind === 'posix-locale' ? { locale: POSIX_LANGUAGE } : {}),
+            ...(kind === 'east-of-utc' ? { timezoneId: EAST_OF_UTC_ZONE } : {}),
           },
   }),
   headless: true,
@@ -208,6 +216,26 @@ export default mergeConfig(
             exclude: [...configDefaults.exclude, ...storyFilesWithoutTag('posix-locale')],
             sequence: { groupOrder: 3 },
             browser: storyBrowser('posix-locale'),
+            ...storyTest,
+          },
+        },
+        // The stories tagged `east-of-utc` again, in a browser whose zone is well east of UTC: those
+        // whose dates depend on the browser's zone. No qlip: their frames are the desktop project's.
+        {
+          extends: true,
+          plugins: [
+            storybookTest({
+              configDir: path.join(dirname, '.storybook'),
+              storybookScript: 'yarn storybook --no-open',
+              // a touch story runs on the phone only (`.storybook/vitest.setup.ts`)
+              tags: { include: ['east-of-utc'], exclude: ['touch'] },
+            }),
+          ],
+          test: {
+            name: 'storybook-east-of-utc',
+            exclude: [...configDefaults.exclude, ...storyFilesWithoutTag('east-of-utc')],
+            sequence: { groupOrder: 3 },
+            browser: storyBrowser('east-of-utc'),
             ...storyTest,
           },
         },

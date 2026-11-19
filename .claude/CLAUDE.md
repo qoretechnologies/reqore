@@ -237,6 +237,16 @@ workflow can be run by hand.
   never raw. A touch story is not run there. Write the tag in the story file, as `touch` is written:
   the projects read it from the source. The project has no qlip plugin, so it makes no captures.
   `.storybook/vitest.setup.ts` checks that its browser reports `en-US@posix`, on every platform.
+- **East-of-UTC stories:** the CI runs in UTC, where a local midnight is the same day in UTC, so a date
+  sent through UTC (an instant written as ISO) looks right there and moves to the day before for anyone east
+  of Greenwich. A story tagged `east-of-utc` runs a second time in the `storybook-east-of-utc` project, a
+  desktop whose browser is in `Pacific/Auckland` (`EAST_OF_UTC_ZONE`, `src/stories/utils/eastOfUtc.mts`,
+  given through Playwright's `timezoneId`). Tag a story `east-of-utc` when what it draws or gives back depends
+  on the browser's zone: a date read or written as a day (`ReqoreDatePicker plainDate`). Write the tag in the
+  story file, as `touch` is written. The project has no qlip plugin; `.storybook/vitest.setup.ts` checks its
+  browser is in that zone. In a unit test, set Node's zone too (`process.env.TZ`) when you set
+  `@internationalized/date`'s (`setLocalTimeZone`): it reads the offset of the zone it calls local from
+  Node's `Date`, so a zone set for it alone keeps the machine's offset.
 - **A measurement settles:** an effect that measures the layout and sets state from it must
   reach a state it leaves alone. A choice it makes from a measurement (a title taking its own
   line, a fold) must not be undone by the very measurement it changes, or the two take turns for
