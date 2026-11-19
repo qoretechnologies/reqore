@@ -4389,3 +4389,75 @@ export const AnActionsClickIsNotTheCards: Story = {
     await waitFor(() => expect(onOpen).toHaveBeenCalledTimes(1));
   },
 };
+
+/** A dialog's actions that keep their words: none of them folds into a menu. */
+const KEPT_BOTTOM_ACTIONS: IReqorePanelProps['bottomActions'] = [
+  { label: 'Cancel', icon: 'CloseLine', responsive: false, position: 'left' },
+  { label: 'Save as a draft', icon: 'SaveLine', responsive: false, position: 'right' },
+  { label: 'Publish to production', icon: 'UploadCloudLine', responsive: false, position: 'right', intent: 'info' },
+];
+/** A bar with a folding action beside a kept one: it stays one line. */
+const MIXED_BOTTOM_ACTIONS: IReqorePanelProps['bottomActions'] = [
+  { label: 'Cancel', icon: 'CloseLine', position: 'left' },
+  { label: 'Publish to production', icon: 'UploadCloudLine', responsive: false, position: 'right', intent: 'info' },
+];
+
+/** The bottom actions of the panel in the box `name`, and the panel. */
+const keptBottomActionsOf = (name: string) => {
+  const panel = document.querySelector<HTMLElement>(`.kept-bottom-${name} .reqore-panel`)!;
+  const buttons = [
+    ...panel.querySelectorAll<HTMLElement>('.reqore-panel-bottom-actions .reqore-button'),
+  ].map((button) => button.getBoundingClientRect());
+
+  return { panel: panel.getBoundingClientRect(), buttons };
+};
+
+export const KeptBottomActionsWrapInANarrowPanel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a 320px panel and a 720px one, each with three bottom actions that do not fold (Cancel, Save as a draft, Publish to production). In the narrow one they go to the next line, inside the panel, and the right-hand two keep the right edge; in the wide one they share one line. A third 720px panel, with a Cancel that folds beside a kept Publish to production, keeps its bar on one line.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical>
+      {(
+        [
+          ['narrow', 320, KEPT_BOTTOM_ACTIONS],
+          ['wide', 720, KEPT_BOTTOM_ACTIONS],
+          ['mixed', 720, MIXED_BOTTOM_ACTIONS],
+        ] as const
+      ).map(([name, width, bottomActions]) => (
+        <div key={name} className={`kept-bottom-${name}`} style={{ width }}>
+          <ReqorePanel label='Publish the release' bottomActions={bottomActions}>
+            <ReqoreP>The release goes to every instance on the next deploy.</ReqoreP>
+          </ReqorePanel>
+        </div>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    await waitFor(() =>
+      expect(document.querySelectorAll('.reqore-panel-bottom-actions .reqore-button')).toHaveLength(8)
+    );
+
+    const narrow = keptBottomActionsOf('narrow');
+    for (const button of narrow.buttons) {
+      await expect(button.right).toBeLessThanOrEqual(narrow.panel.right + 0.5);
+      await expect(button.left).toBeGreaterThanOrEqual(narrow.panel.left - 0.5);
+    }
+    // on more than one line
+    await expect(new Set(narrow.buttons.map((button) => Math.round(button.top))).size).toBeGreaterThan(1);
+    // the right-hand actions (Save as a draft, Publish to production) keep the right edge on each of their lines
+    const [, save, publish] = narrow.buttons;
+    await expect(Math.abs(save.right - publish.right)).toBeLessThanOrEqual(0.5);
+
+    const wide = keptBottomActionsOf('wide');
+    await expect(new Set(wide.buttons.map((button) => Math.round(button.top))).size).toBe(1);
+    // a bar with a folding action stays one line: the folding group fills the bar and folds to fit
+    const mixed = keptBottomActionsOf('mixed');
+    await expect(new Set(mixed.buttons.map((button) => Math.round(button.top))).size).toBe(1);
+  },
+};

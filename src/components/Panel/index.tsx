@@ -681,6 +681,15 @@ const WRAPPED_TITLE_ACTIONS_STYLE: React.CSSProperties = {
 
 /** The bottom bar's right-hand folding group, at the bar's trailing edge. */
 const RIGHT_BOTTOM_GROUP_STYLE: React.CSSProperties = { marginLeft: 'auto' };
+/**
+ * A group of bottom actions that do not fold (`responsive: false`), on the left or the right of the bar: never wider
+ * than the bar, and wrapping its own buttons where it would be, so it stacks on a phone instead of running off it.
+ * The right group keeps every line at its right edge (`horizontalAlign='flex-end'` pushes only its first button).
+ */
+const KEPT_BOTTOM_GROUP_STYLE = {
+  left: { marginRight: 'auto', maxWidth: '100%', minWidth: 0 },
+  right: { marginLeft: 'auto', maxWidth: '100%', minWidth: 0, justifyContent: 'flex-end' },
+} satisfies Record<string, React.CSSProperties>;
 
 /**
  * A group of actions that keep their words, in that box: at its own width where the line has room, and down
@@ -1562,6 +1571,17 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
     !flat
       ? `1px solid ${rgba(getPanelHairlineColor(theme), opacity)}`
       : null};
+  /* A bar of actions that do not fold (\`responsive: false\`): those that do not fit beside each other go to the next
+     line, and a group wider than the bar wraps its own buttons (\`KEPT_BOTTOM_GROUP_STYLE\`); on a phone a dialog's
+     kept actions ran off its edge on one line. A bar with a folding group stays one line: that group is as wide as
+     the bar (\`fluid\`) and folds into its "⋯" to fit, so on a wrapping line it would take a line of its own. */
+  ${({ $wrapKept, size }: IStyledPanel & { $wrapKept?: boolean }) =>
+    $wrapKept
+      ? css`
+          flex-flow: row wrap;
+          row-gap: ${PADDING_FROM_SIZE[size] / 2}px;
+        `
+      : undefined}
 `;
 
 export const StyledPanelContent = styled.div<IStyledPanel>`
@@ -2374,6 +2394,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         responsiveActions &&
         data.some((action) => action.responsive !== false && action.show !== false),
       [actions, bottomActions, responsiveActions, showActionsWhenCollapsed, _isCollapsed]
+    );
+    /** The bottom bar wraps its actions only where none of them folds (`StyledPanelBottomActions`). */
+    const wrapKeptBottomActions = useMemo(
+      () => !hasResponsiveActions(leftBottomActions) && !hasResponsiveActions(rightBottomActions),
+      [hasResponsiveActions, leftBottomActions, rightBottomActions]
     );
 
     const renderNonResponsiveActions = useCallback(
@@ -3758,13 +3783,15 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               size={contentSize || panelSize}
               noHorizontalPadding={noHorizontalPadding}
               $cornerInset={cornerInset}
+              $wrapKept={wrapKeptBottomActions}
             >
               {/* In the page's order, whichever may fold (`splitAtFirstFolding`). */}
               {hasNonResponsiveActions(leadingLeftBottomActions) ? (
                 <ReqoreControlGroup
                   {...PANEL_ACTIONS_MARK}
                   size={panelSize}
-                  style={{ marginRight: 'auto' }}
+                  wrap
+                  style={KEPT_BOTTOM_GROUP_STYLE.left}
                 >
                   {leadingLeftBottomActions.map(renderNonResponsiveActions('flex-start'))}
                 </ReqoreControlGroup>
@@ -3785,7 +3812,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 <ReqoreControlGroup
                   {...PANEL_ACTIONS_MARK}
                   size={panelSize}
-                  style={{ marginRight: 'auto' }}
+                  wrap
+                  style={KEPT_BOTTOM_GROUP_STYLE.left}
                 >
                   {trailingLeftBottomActions.map(renderNonResponsiveActions('flex-start'))}
                 </ReqoreControlGroup>
@@ -3795,7 +3823,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   {...PANEL_ACTIONS_MARK}
                   horizontalAlign='flex-end'
                   size={panelSize}
-                  style={{ marginLeft: 'auto' }}
+                  wrap
+                  style={KEPT_BOTTOM_GROUP_STYLE.right}
                 >
                   {leadingRightBottomActions.map(renderNonResponsiveActions())}
                 </ReqoreControlGroup>
@@ -3822,7 +3851,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   {...PANEL_ACTIONS_MARK}
                   horizontalAlign='flex-end'
                   size={panelSize}
-                  style={{ marginLeft: 'auto' }}
+                  wrap
+                  style={KEPT_BOTTOM_GROUP_STYLE.right}
                 >
                   {trailingRightBottomActions.map(renderNonResponsiveActions())}
                 </ReqoreControlGroup>
