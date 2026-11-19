@@ -1,6 +1,7 @@
 // Copyright 2026 Qore Technologies, s.r.o.
 /**
- * Reqore is a public, open-source library: what it says in its sources, stories, tests and docs is read by anyone.
+ * Reqore is a public, open-source library: what it says in its sources, stories, tests, docs and agent rules
+ * (`.claude/`) is read by anyone.
  * So it names nothing of the private world it was built in: the apps that use it and their screens, private issues,
  * people, review and board ids, internal documents and hosts. A reason stays (what a component does and why); where
  * it came from does not. The gate is `__tests__/publicText.test.ts`; `node scripts/publicTextGate.mjs <files>` lists
@@ -28,12 +29,35 @@ export const DENIED = [
 const MADE_UP_PEOPLE = /^src\/mock\//;
 /** The gate itself, which has to name what it denies. */
 const THE_GATE = /^(?:scripts\/publicTextGate\.mjs|__tests__\/publicText\.test\.ts)$/;
+/**
+ * The agent rules, whose bootstrap has to say where the shared rules live: the instruction-files repo, whose clone
+ * `.instruction-files-path` caches. That name is all they may say of it; the rest of our world they need is imported
+ * from that repo.
+ */
+const AGENT_RULES = /^\.claude\//;
+const WHERE_THE_SHARED_RULES_LIVE = /^instruction-files$/;
+
+/** A name the list denies that this file may still say. */
+const isAllowed = (file, kind, text) =>
+  (kind === 'a person or a persona' && MADE_UP_PEOPLE.test(file)) ||
+  (AGENT_RULES.test(file) && WHERE_THE_SHARED_RULES_LIVE.test(text));
+
+/** Where the public text lives: the library, its tests, docs, stories, agent rules and configs. */
+const PUBLIC_PATHS = [
+  'src',
+  '__tests__',
+  'docs',
+  '.storybook',
+  '.claude',
+  'scripts',
+  'README.md',
+  'vitest.config.mts',
+  'vite.config.mts',
+];
 
 /** Every public text file the gate reads. */
 export const publicFiles = () =>
-  execSync('git ls-files src __tests__ docs .storybook scripts README.md vitest.config.mts vite.config.mts', {
-    encoding: 'utf8',
-  })
+  execSync(`git ls-files ${PUBLIC_PATHS.join(' ')}`, { encoding: 'utf8' })
     .split('\n')
     .filter((file) => /\.(?:tsx?|mts|mjs|js|md|mdx)$/.test(file) && !THE_GATE.test(file));
 
@@ -43,17 +67,11 @@ export const findInternalNames = (files) =>
     readFileSync(file, 'utf8')
       .split('\n')
       .flatMap((text, index) =>
-        DENIED.flatMap(([kind, pattern]) => {
-          if (kind === 'a person or a persona' && MADE_UP_PEOPLE.test(file)) {
-            return [];
-          }
-          return [...text.matchAll(new RegExp(pattern.source, pattern.flags))].map((match) => ({
-            file,
-            line: index + 1,
-            kind,
-            text: match[0],
-          }));
-        })
+        DENIED.flatMap(([kind, pattern]) =>
+          [...text.matchAll(new RegExp(pattern.source, pattern.flags))]
+            .filter((match) => !isAllowed(file, kind, match[0]))
+            .map((match) => ({ file, line: index + 1, kind, text: match[0] }))
+        )
       )
   );
 
