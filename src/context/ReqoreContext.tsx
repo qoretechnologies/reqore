@@ -12,6 +12,17 @@ import type {
   TReqoreCustomModal,
 } from '../containers/ReqoreProvider';
 
+/** The widths a modal takes when it passes none of its own (`dialogWidth`). */
+export interface IReqoreDialogWidths {
+  /** An ordinary dialog: a form, a confirmation, a message. */
+  form?: string;
+  /** A dialog that says it is wide (`ReqoreModal wide`): a table, a diff, a picker of many. */
+  wide?: string;
+}
+
+/** The calm look's dialog widths: a form reads at 720px, a wide dialog at 960px. */
+export const CALM_DIALOG_WIDTHS: Required<IReqoreDialogWidths> = { form: '720px', wide: '960px' };
+
 export interface IReqoreContext {
   readonly confirmAction: (data: IReqoreConfirmationModal) => void;
   readonly notifications?: IReqoreNotificationData[] | null;
@@ -104,6 +115,13 @@ export interface IReqoreContext {
    */
   readonly dialogOpacity?: number;
   /**
+   * The width a modal takes when it passes no `width` of its own: `form` for an ordinary dialog,
+   * `wide` for one that says it is wide (`ReqoreModal wide`). Unset, a modal is `80vw` as before,
+   * which is about 2,100px on a wide screen. `CALM_DIALOG_WIDTHS` is the calm look's (720px,
+   * 960px). A dialog's own `width` still wins.
+   */
+  readonly dialogWidth?: IReqoreDialogWidths;
+  /**
    * How much a see-through modal or drawer panel blurs what shows through it, in px. Applies
    * only below an opacity of 1 (a solid panel has nothing to blur). Unset: no frost.
    */
@@ -144,6 +162,7 @@ export default createContext<IReqoreContext>({
   shortcutHints: true,
   backdropBlur: undefined,
   dialogOpacity: undefined,
+  dialogWidth: undefined,
   dialogBlur: undefined,
   escClosableModals: [],
   addEscClosableModal: null,

@@ -29,6 +29,7 @@ export interface IReqoreOptions
     | 'shortcutHints'
     | 'backdropBlur'
     | 'dialogOpacity'
+    | 'dialogWidth'
     | 'dialogBlur'
     | 'schedule'
   > {

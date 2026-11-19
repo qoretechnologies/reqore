@@ -7,6 +7,7 @@ import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreModalProps } from '../../components/Modal';
 import { sleep } from '../../helpers/utils';
 import {
+  CALM_DIALOG_WIDTHS,
   ReqoreButton,
   ReqoreCollection,
   ReqoreModal,
@@ -536,6 +537,55 @@ const SearchDialog = ({ titleBar }: { titleBar?: boolean }) => {
       </ReqoreModal>
     </>
   );
+};
+
+/** The width a modal is drawn at: its sized box, the one with an inline width. */
+const drawnWidth = () => {
+  const root = document.querySelector<HTMLElement>('.reqore-modal')!;
+  const sized = [root, ...Array.from(root.querySelectorAll<HTMLElement>('*'))].find(
+    (element) => element.style.width
+  )!;
+  return sized.getBoundingClientRect().width;
+};
+
+export const AFormDialogTakesTheAppsWidth: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A dialog that gives no width of its own, in an app that sets the calm dialog widths (`options.dialogWidth: CALM_DIALOG_WIDTHS`): a form dialog is 720px wide on a wide screen, where 80vw was about 1,500px here and 2,100px on a wider one.',
+      },
+    },
+  },
+  args: { options: { dialogWidth: CALM_DIALOG_WIDTHS } },
+  render: () => (
+    <ReqoreModal isOpen label='Add a connection'>
+      <ReqoreP>Name the connection and say where it points.</ReqoreP>
+    </ReqoreModal>
+  ),
+  play: async () => {
+    await waitFor(() => expect(Math.round(drawnWidth())).toBe(720));
+  },
+};
+
+export const AWideDialogTakesTheAppsWideWidth: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A dialog that says it is wide (`wide`), in an app that sets the calm dialog widths: 960px. A dialog\'s own `width` still wins over both.',
+      },
+    },
+  },
+  args: { options: { dialogWidth: CALM_DIALOG_WIDTHS } },
+  render: () => (
+    <ReqoreModal isOpen wide label='Compare the two versions'>
+      <ReqoreP>The left column is the saved version; the right is yours.</ReqoreP>
+    </ReqoreModal>
+  ),
+  play: async () => {
+    await waitFor(() => expect(Math.round(drawnWidth())).toBe(960));
+  },
 };
 
 export const WithoutTitleBar: Story = {

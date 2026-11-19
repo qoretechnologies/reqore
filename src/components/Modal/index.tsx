@@ -5,7 +5,13 @@ import { IReqoreDrawerProps, ReqoreDrawer } from '../Drawer';
 
 export interface IReqoreModalProps extends Omit<IReqoreDrawerProps, 'position' | 'draggable'> {
   position?: 'top' | 'center' | 'bottom';
+  /** The modal's width. Unset: the app's (`dialogWidth` on the provider), else `80vw`. */
   width?: string;
+  /**
+   * A dialog that needs the room (a table, a diff, a picker of many): it takes the app's wide
+   * width (`dialogWidth.wide`) where it gives no `width` of its own.
+   */
+  wide?: boolean;
   height?: string;
   /** Whether to trap focus within the modal when open. Defaults to true. */
   focusTrap?: boolean;
@@ -51,7 +57,8 @@ export interface IReqoreModalStyle extends IReqoreModalProps {
 
 export const ReqoreModal = memo(
   ({
-    width = '80vw',
+    width: widthProp,
+    wide,
     height = 'fit-content',
     confirmOnClose,
     draggable,
@@ -64,6 +71,9 @@ export const ReqoreModal = memo(
        (`useReqoreEscClose`), the app's `closeModalsOnEscPress` unless the modal says. */
     const isMobile = useReqoreProperty('isMobile');
     const closeModalsOnEscPress = useReqoreProperty('closeModalsOnEscPress');
+    const dialogWidth = useReqoreProperty('dialogWidth');
+    // its own width, else the app's for its kind, else the 80vw it always had
+    const width = widthProp ?? (wide ? dialogWidth?.wide : dialogWidth?.form) ?? '80vw';
 
     return (
       <ReqoreDrawer

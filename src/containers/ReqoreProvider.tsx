@@ -358,6 +358,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
       shortcutHints: options?.shortcutHints ?? true,
       backdropBlur: options?.backdropBlur,
       dialogOpacity: options?.dialogOpacity,
+      dialogWidth: options?.dialogWidth,
       dialogBlur: options?.dialogBlur,
       errorBoundaryOptions: options?.errorBoundaryOptions || DEFAULT_ERROR_BOUNDARY_OPTIONS,
       schedule: options?.schedule ?? scheduleOnTimer,
@@ -397,6 +398,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
         shortcutHints: resolvedOptions.shortcutHints,
         backdropBlur: resolvedOptions.backdropBlur,
         dialogOpacity: resolvedOptions.dialogOpacity,
+        dialogWidth: resolvedOptions.dialogWidth,
         dialogBlur: resolvedOptions.dialogBlur,
         closePopoversOnEscPress: resolvedOptions.closePopoversOnEscPress,
         // ESC Closable modals management

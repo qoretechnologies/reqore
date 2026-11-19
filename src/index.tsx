@@ -266,6 +266,8 @@ export type {
 } from './containers/ReqoreProvider';
 export { default as ReqoreUIProvider } from './containers/UIProvider';
 export { default as ReqoreContext } from './context/ReqoreContext';
+export { CALM_DIALOG_WIDTHS } from './context/ReqoreContext';
+export type { IReqoreDialogWidths } from './context/ReqoreContext';
 export { default as ReqoreThemeContext } from './context/ThemeContext';
 export { useCloneThroughFragments } from './hooks/useCloneThroughFragments';
 export { default as useLatestZIndex } from './hooks/useLatestZIndex';
