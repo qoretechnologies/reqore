@@ -75,6 +75,14 @@ const getMessagePanelColors = (theme: IReqoreTheme) => {
 /** The intents that need a person: their panel-surface message glows in its corner. */
 const GLOWING_MESSAGE_INTENTS: TReqoreIntent[] = ['danger', 'warning'];
 
+/**
+ * The corner glow's shape: an ellipse from the top-left corner, as wide as 45% of the message and
+ * as tall as the message. A message about 700px wide keeps the 320px glow it had; a short, wide
+ * one (a line in a card) glows in its first part and is the panel surface after it. A fixed
+ * 320px circle covered the whole of a small message, so it read as a red or amber fill.
+ */
+export const MESSAGE_GLOW_SHAPE = 'ellipse 45% 100% at 0% 0%';
+
 /** Whether a message is drawn on the panel surface rather than tinted with its intent. */
 export const isPanelSurfaceMessage = (theme: IReqoreTheme, asMessage?: boolean) =>
   !!asMessage && theme.messageSurface === 'panel';
@@ -167,7 +175,7 @@ export const StyledReqoreNotification = styled(StyledEffect).withConfig({
           !minimal &&
           css`
             background-image: radial-gradient(
-              circle 320px at 0% 0%,
+              ${MESSAGE_GLOW_SHAPE},
               ${rgba(getNotificationIntent(theme, intent), 0.22)},
               transparent
             );
