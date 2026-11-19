@@ -12,6 +12,7 @@ import {
   ReqoreMenuItem,
   ReqoreP,
   ReqorePanel,
+  ReqoreTable,
 } from '../../index';
 import { StoryMeta } from '../utils';
 
@@ -248,6 +249,48 @@ export const AnIconOnlyDangerButtonIsItsRedIcon: Story = {
       await expect(isRed(getComputedStyle(find(name)).color)).toBe(true);
     }
     await userEvent.unhover(find('panel-bin'));
+  },
+};
+
+export const ADangerTableActionIsItsRedWordsAndEdge: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'With `intentLook: { danger: "outline" }`, a table whose toolbar carries "Delete all drafts" with `intent="danger"`, as a list page filtered to its drafts does. The table hands its actions to its panel, which keeps the intent, so the action is red words and icon with a red edge on an ordinary button, like any labelled danger button.',
+      },
+    },
+  },
+  render: () => (
+    <Side label='Outline' className='side-outline' theme={OUTLINE}>
+      <ReqoreTable
+        label='Services'
+        height={160}
+        columns={[{ dataId: 'name', header: { label: 'Name' }, grow: 1 }]}
+        data={[
+          { id: 1, name: 'order-sync' },
+          { id: 2, name: 'invoice-export' },
+        ]}
+        actions={[
+          {
+            label: 'Delete all drafts',
+            icon: 'DeleteBin6Line',
+            intent: 'danger',
+            minimal: true,
+            flat: false,
+            compact: true,
+            className: 'table-delete-drafts',
+          },
+        ]}
+      />
+    </Side>
+  ),
+  play: async ({ canvasElement }) => {
+    const action = canvasElement.querySelector<HTMLElement>('.table-delete-drafts')!;
+    await expect(action).toBeTruthy();
+    await expect(action.getAttribute('data-intent-text')).toBe('outline');
+    await expect(isRed(getComputedStyle(action).color), 'its words are red').toBe(true);
+    await expect(isRed(edgeColour(action)), 'its edge is red').toBe(true);
   },
 };
 
