@@ -8,6 +8,8 @@ import {
   ReqoreContent,
   ReqoreControlGroup,
   ReqoreLayoutContent,
+  ReqoreMenu,
+  ReqoreMenuItem,
   ReqoreP,
   ReqorePanel,
 } from '../../index';
@@ -248,3 +250,46 @@ export const AnIconOnlyDangerButtonIsItsRedIcon: Story = {
     await userEvent.unhover(find('panel-bin'));
   },
 };
+
+export const ADangerMenuEntryIsItsRedWords: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'With `intentLook: { danger: "outline" }`, a menu of an editor\'s actions: Save as it is, and Discard, Cancel and Delete with `intent="danger"`. Each danger entry is its red words and icon and nothing else: no border, no fill, no ring, at rest and under the pointer. A menu of them was a column of red boxes.',
+      },
+    },
+  },
+  render: () => (
+    <Side label='Outline' className='side-outline' theme={OUTLINE}>
+      <div style={{ width: 260 }}>
+        <ReqoreMenu>
+          <ReqoreMenuItem icon='SaveLine'>Save</ReqoreMenuItem>
+          <ReqoreMenuItem className='menu-discard' intent='danger' icon='DeleteBack2Line'>
+            Discard
+          </ReqoreMenuItem>
+          <ReqoreMenuItem className='menu-cancel' intent='danger' icon='CloseLine'>
+            Cancel
+          </ReqoreMenuItem>
+          <ReqoreMenuItem className='menu-delete' intent='danger' icon='DeleteBinLine'>
+            Delete
+          </ReqoreMenuItem>
+        </ReqoreMenu>
+      </div>
+    </Side>
+  ),
+  play: async ({ canvasElement }) => {
+    const entry = (name: string) =>
+      canvasElement.querySelector<HTMLElement>(`.menu-${name}.reqore-menu-item`)!;
+    for (const name of ['discard', 'cancel', 'delete']) {
+      await expect(entry(name).getAttribute('data-intent-text')).toBe('outline');
+      await expect(isRed(getComputedStyle(entry(name)).color)).toBe(true);
+      await expect(drawsABox(entry(name))).toBe(false);
+    }
+    // under the pointer, still no box
+    await userEvent.hover(entry('delete'));
+    await expect(drawsABox(entry('delete'))).toBe(false);
+    await userEvent.unhover(entry('delete'));
+  },
+};
+

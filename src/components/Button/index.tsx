@@ -687,17 +687,24 @@ export const StyledButton = styled(StyledEffect).withConfig({
   /* An icon-only button whose intent is drawn as an outline: its icon in the intent's readable
      colour, and no box in any state (no border, no fill, no hover ring). A row of bins carrying
      \`intent='danger'\` is a row of red icons, not of red boxes; a labelled one keeps its outline.
-     The keyboard's focus ring is every control's, and stays. */
+     A menu's entry (\`.reqore-menu-item\`) is drawn the same way, its words and icon in the
+     intent: a menu of Discard, Cancel and Delete was a column of red boxes. The keyboard's focus
+     ring is every control's, and stays. */
   &&[data-intent-text='outline-icon'],
   &&[data-intent-text='outline-icon']:hover,
-  &&[data-intent-text='outline-icon']:active {
+  &&[data-intent-text='outline-icon']:active,
+  &&.reqore-menu-item[data-intent-text='outline'],
+  &&.reqore-menu-item[data-intent-text='outline']:hover,
+  &&.reqore-menu-item[data-intent-text='outline']:active {
     color: var(--reqore-button-intent-text);
     background-color: transparent;
     border-color: transparent;
     box-shadow: none;
   }
   &&[data-intent-text='outline-icon']:not(:disabled):not(:focus-visible):hover,
-  &&[data-intent-text='outline-icon']:not(:disabled):not(:focus-visible):active {
+  &&[data-intent-text='outline-icon']:not(:disabled):not(:focus-visible):active,
+  &&.reqore-menu-item[data-intent-text='outline']:not(:disabled):not(:focus-visible):hover,
+  &&.reqore-menu-item[data-intent-text='outline']:not(:disabled):not(:focus-visible):active {
     outline: none;
   }
 `;
