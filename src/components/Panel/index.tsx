@@ -632,6 +632,15 @@ export const LEADING_ACTIONS_CLASS = 'reqore-panel-leading-actions';
 
 /** The class of the box that holds a bar's actions where they may go under its title. */
 export const TITLE_ACTIONS_CLASS = 'reqore-panel-title-actions';
+/**
+ * Marks each group of a title bar's actions. A click inside one is the action's, never the bar's: the bar folds a
+ * collapsible panel only on a click that lands on the bar itself. An action used to keep its click from the bar only
+ * when it had an `onClick` of its own, so a custom (`as`) action without one, or one that did not hand an `onClick`
+ * on to its DOM (a segmented choice), folded the panel when it was used (queue item 34).
+ */
+export const PANEL_ACTIONS_ATTRIBUTE = 'data-reqore-panel-actions';
+/** The props that mark a group of a title bar's actions (`PANEL_ACTIONS_ATTRIBUTE`). */
+const PANEL_ACTIONS_MARK = { [PANEL_ACTIONS_ATTRIBUTE]: '' };
 
 /**
  * The box a bar's actions are drawn in where they may go to the line under the title
@@ -2210,6 +2219,29 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       }
     }, [collapsible, _isCollapsed, onCollapseChange]);
 
+    /* The bar folds the panel on a click on the bar itself: not on one of its actions (whatever the action is,
+       and whether or not it has an `onClick` of its own), and not on anything an action opened in a portal (a
+       menu), whose clicks reach the bar through React but land outside its DOM (queue item 34). */
+    const handleTitleBarClick = useCallback(
+      (event: React.MouseEvent<HTMLElement>) => {
+        const bar = event.currentTarget;
+        const target = event.target as Element | null;
+
+        if (!target || !bar.contains(target)) {
+          return;
+        }
+
+        const actions = target.closest?.(`[${PANEL_ACTIONS_ATTRIBUTE}]`);
+
+        if (actions && bar.contains(actions)) {
+          return;
+        }
+
+        handleCollapseClick();
+      },
+      [handleCollapseClick]
+    );
+
     const leftBottomActions: IReqorePanelBottomAction[] = useMemo(
       () => bottomActions.filter(({ position }) => position === 'left' || !position),
       [bottomActions]
@@ -3276,7 +3308,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               isCollapsed={_isCollapsed}
               collapsible={collapsible}
               className='reqore-panel-title'
-              onClick={handleCollapseClick}
+              onClick={handleTitleBarClick}
               theme={theme}
               minimal={minimal || opacity === 0}
               size={contentSize || panelSize}
@@ -3538,6 +3570,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               >
                 {hasNonResponsiveActions(leadingTitleActions) ? (
                   <ReqoreControlGroup
+                    {...PANEL_ACTIONS_MARK}
                     className={LEADING_ACTIONS_CLASS}
                     fixed
                     horizontalAlign='flex-end'
@@ -3574,6 +3607,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                     customTheme={theme}
                     size={panelSize}
                     {...responsiveActionsWrapperProps}
+                    {...PANEL_ACTIONS_MARK}
                     // The cap is the whole fix. Half the bar guarantees the title the other half,
                     // and the moment the buttons need more than their share the group overflows —
                     // which is what `responsive` collapse watches (`scrollWidth > clientWidth`), so
@@ -3632,6 +3666,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   expandTooltip={expandTooltip}
                   closeTooltip={closeTooltip}
                   fluid={!hasTitleHeader}
+                  {...PANEL_ACTIONS_MARK}
                   className={NON_RESPONSIVE_ACTIONS_CLASS}
                   // Beside a title in a NARROW bar the title comes first (qorus#646). The group is
                   // `0 0 auto`, so a narrow bar - a table in a card on a phone - squeezed the title

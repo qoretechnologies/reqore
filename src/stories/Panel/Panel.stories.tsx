@@ -4225,3 +4225,76 @@ export const IconsBesideATitleKeepItOnOneLine: Story = {
     }
   },
 };
+
+/** A collapsible panel whose head holds a segmented choice and a tag: custom (`as`) actions with no `onClick`. */
+const RunHistory = () => {
+  const [range, setRange] = useState<string | undefined>('day');
+
+  return (
+    <ReqorePanel
+      label='Run history'
+      collapsible
+      actions={[
+        {
+          as: ReqoreSegmentedControl,
+          props: {
+            size: 'small',
+            value: range,
+            onChange: setRange,
+            items: [
+              { value: 'day', label: 'Today' },
+              { value: 'week', label: 'This week' },
+            ],
+          },
+          responsive: false,
+        },
+        { as: ReqoreTag, props: { label: 'Draft', className: 'run-history-draft' }, responsive: false },
+      ]}
+    >
+      <ReqoreP className='run-history-body'>
+        {range === 'week' ? 'Eighty runs this week' : 'Twelve runs today'}, all of them on time.
+      </ReqoreP>
+    </ReqorePanel>
+  );
+};
+
+/** Whether the panel's body is on screen (a folded panel hides or drops it). */
+const runHistoryShown = (canvasElement: HTMLElement) =>
+  canvasElement.querySelector<HTMLElement>('.run-history-body')?.checkVisibility() ?? false;
+
+export const ACustomActionsClickNeverFoldsThePanel: Story = {
+  render: () => <RunHistory />,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a collapsible panel whose head holds a segmented choice and a tag, custom actions with no onClick of their own. Choosing "This week" and clicking the tag leave the panel open on its week; a click on the title still folds it, and another opens it again.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(runHistoryShown(canvasElement)).toBe(true));
+
+    const segment = [...canvasElement.querySelectorAll<HTMLElement>('button')].find((button) =>
+      button.textContent?.includes('This week')
+    );
+    // used, each action leaves the panel open (two folds would cancel out, so each is checked on its own)
+    for (const action of [segment, canvasElement.querySelector<HTMLElement>('.run-history-draft')]) {
+      await userEvent.click(action as HTMLElement);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(runHistoryShown(canvasElement)).toBe(true);
+    }
+    // on what was chosen
+    expect(canvasElement.querySelector('.run-history-body')?.textContent).toContain('this week');
+
+    // the bar itself still folds it, and opens it again
+    const title = () =>
+      [...canvasElement.querySelectorAll<HTMLElement>('.reqore-panel-title h4, .reqore-panel-title span')].find(
+        (element) => element.textContent === 'Run history'
+      ) as HTMLElement;
+    await userEvent.click(title());
+    await waitFor(() => expect(runHistoryShown(canvasElement)).toBe(false));
+    await userEvent.click(title());
+    await waitFor(() => expect(runHistoryShown(canvasElement)).toBe(true));
+  },
+};
