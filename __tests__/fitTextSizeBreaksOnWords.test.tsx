@@ -145,3 +145,21 @@ describe('the font a title is measured in', () => {
     expect(textPaintingElement(box)).toBe(box);
   });
 });
+
+// A title kept to one line for icons, which may otherwise wrap, keeps a pixel spare (queue item 28).
+describe('the slack of a one-line fit', () => {
+  test('lets a line run 2px past its room by default', () => {
+    expect(wordsFitLines([100], 4, 99, 1)).toBe(true);
+  });
+
+  test('can ask for a pixel spare instead', () => {
+    expect(wordsFitLines([100], 4, 99, 1, -1)).toBe(false);
+    expect(wordsFitLines([100], 4, 101, 1, -1)).toBe(true);
+    expect(
+      largestFittingTextSize({ words: [100], space: 4, available: 99, max: 20, floor: 12, slack: -1 })
+    ).toBeLessThan(20);
+    expect(largestFittingTextSize({ words: [100], space: 4, available: 99, max: 20, floor: 12 })).toBe(
+      20
+    );
+  });
+});

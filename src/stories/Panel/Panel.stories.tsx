@@ -4094,3 +4094,134 @@ export const IconActionsStayBesideATitleThatFitsALittleSmaller: Story = {
     await expectBadgesUnderTitle(parts('icons').panel);
   },
 };
+
+/* ------------------------------------------------------------------------------------------------
+ * icons beside a title kept to one line: the title never wraps beside them (queue item 28)
+ * ---------------------------------------------------------------------------------------------- */
+
+/** A dashboard tile, as the admin portal's WidgetFrame draws one: its name, help and "more" as icons. */
+const IconTile = ({ id, label, width }: { id: string; label: string; width: number }) => (
+  <div data-tile={id} style={{ width, maxWidth: '100%' }}>
+    <ReqorePanel
+      label={label}
+      labelSize={3}
+      labelEffect={{ color: '#e8e8e8' }}
+      responsiveTitle={false}
+      actions={[
+        { icon: 'QuestionLine', tooltip: 'What this shows', size: 'small', flat: true },
+        { icon: 'MoreLine', tooltip: 'More', size: 'small', flat: true },
+      ]}
+      padded
+    >
+      12.4%
+    </ReqorePanel>
+  </div>
+);
+
+const TILE_TITLES = { wizard: 'Problem wizard', revenue: 'Monthly revenue gained and lost' };
+
+/** What the controls in a bar's actions box span, without the sliver of the line the box grows by. */
+const controlsWidth = (actions: HTMLElement) => {
+  const groups = Array.from(actions.children) as HTMLElement[];
+
+  return (
+    groups.reduce((sum, group) => sum + group.getBoundingClientRect().width, 0) +
+    (parseFloat(getComputedStyle(actions).columnGap) || 0) * Math.max(0, groups.length - 1)
+  );
+};
+
+export const IconsBesideATitleKeepItOnOneLine: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Dashboard tiles titled "Problem wizard" and "Monthly revenue gained and lost", with a help and a "more" button drawn as icons, at 330px and 218px, and in boxes 1px too narrow for each title beside the icons at its own size (sized from the wide tile\'s own parts). Wherever the icons sit beside a title, the title is on one line and whole, a step smaller where it must be. In the 1px-short boxes the title fitted with the one-line fit\'s 2px of slack, kept its size and wrapped its last word beside the icons ("Problem / wizard", "… gained and / lost", the admin portal on a phone).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big' fluid>
+      {Object.entries(TILE_TITLES).map(([key, label]) => (
+        <ReqoreControlGroup key={key} vertical fluid>
+          <IconTile id={`${key}-wide`} label={label} width={1440} />
+          <IconTile id={`${key}-330`} label={label} width={330} />
+          <IconTile id={`${key}-218`} label={label} width={218} />
+          <IconTile id={`${key}-short`} label={label} width={330} />
+        </ReqoreControlGroup>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const parts = (id: string) => {
+      const panel = canvasElement.querySelector<HTMLElement>(`[data-tile="${id}"] .reqore-panel`)!;
+
+      return {
+        panel,
+        bar: panel.querySelector<HTMLElement>('.reqore-panel-title')!,
+        header: panel.querySelector<HTMLElement>('.reqore-panel-title-header')!,
+        heading: panel.querySelector<HTMLElement>('.reqore-panel-title .reqore-heading')!,
+        actions: panel.querySelector<HTMLElement>('.reqore-panel-title-actions')!,
+        buttons: Array.from(
+          panel.querySelectorAll<HTMLElement>('.reqore-panel-title-actions .reqore-button')
+        ),
+      };
+    };
+    const beside = (id: string) => {
+      const { heading, buttons } = parts(id);
+
+      return buttons.every(
+        (button) => button.getBoundingClientRect().top < heading.getBoundingClientRect().bottom
+      );
+    };
+
+    await waitFor(() => expect(parts('wizard-wide').buttons).toHaveLength(2));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    // 1px short of each title beside the icons at its own size, measured off the wide tile
+    for (const key of Object.keys(TILE_TITLES)) {
+      const { bar, header, heading, actions } = parts(`${key}-wide`);
+      const barStyle = getComputedStyle(bar);
+      // the tile's own edge (its border) and the bar's sides, the title, the gap and the controls
+      const edge =
+        canvasElement.querySelector<HTMLElement>(`[data-tile="${key}-wide"]`)!.getBoundingClientRect()
+          .width - bar.getBoundingClientRect().width;
+      const width =
+        edge +
+        (parseFloat(barStyle.paddingLeft) || 0) +
+        (parseFloat(barStyle.paddingRight) || 0) +
+        (heading.getBoundingClientRect().left - header.getBoundingClientRect().left) +
+        heading.getBoundingClientRect().width +
+        (parseFloat(barStyle.columnGap) || 0) +
+        controlsWidth(actions) -
+        1;
+
+      canvasElement.querySelector<HTMLElement>(`[data-tile="${key}-short"]`)!.style.width = `${width}px`;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const naturalPx = parseFloat(getComputedStyle(parts('wizard-wide').heading).fontSize);
+
+    for (const key of Object.keys(TILE_TITLES)) {
+      for (const at of ['330', '218', 'short']) {
+        const id = `${key}-${at}`;
+
+        await waitFor(() => {
+          // icons beside a title: the title on one line
+          if (beside(id)) {
+            expect(linesOf(parts(id).heading), id).toBe(1);
+          }
+        });
+        if (beside(id)) {
+          await expectTitleWhole(parts(id).panel);
+        }
+      }
+      // the short box keeps its icons beside the title, a step smaller
+      await waitFor(() => {
+        expect(beside(`${key}-short`), `${key}-short`).toBe(true);
+        expect(
+          parseFloat(getComputedStyle(parts(`${key}-short`).heading).fontSize),
+          `${key}-short`
+        ).toBeLessThan(naturalPx);
+      });
+    }
+  },
+};

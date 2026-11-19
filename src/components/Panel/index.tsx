@@ -573,6 +573,9 @@ const TITLE_TAKES_THE_ROOM = 1000;
  */
 export const ICON_ACTIONS_TITLE_SHRINK = 0.9;
 
+/** The px a title kept to one line for icons, which may otherwise wrap, keeps spare in its fit (see its use). */
+const TITLE_KEPT_ON_ONE_LINE_SLACK = -1;
+
 /**
  * Whether a bar action is drawn as its icon alone, with no words: `iconOnly`, an icon with no label, or a
  * label a narrow bar drops (as `renderActions` does). A control the caller draws (`as`) or a menu that keeps
@@ -2725,6 +2728,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       max: labelNaturalPx,
       min: labelMinTextSize,
       lines: titleShrinksForIcons ? 1 : clampLines,
+      /* Kept to one line for icons, a title that may wrap needs a pixel spare: with the one-line slack a size judged
+         to fit by a pixel was drawn on two lines ("Problem / wizard", the admin portal's tile on a phone). */
+      slack: titleShrinksForIcons && clampLines > 1 ? TITLE_KEPT_ON_ONE_LINE_SLACK : undefined,
       enabled: fitLabel !== false && typeof label === 'string' && !labelEffect?.textSize,
     });
     const badgeKey = badgeSignature(badge);

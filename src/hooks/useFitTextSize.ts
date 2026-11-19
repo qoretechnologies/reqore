@@ -49,6 +49,13 @@ export interface IUseFitTextSizeOptions {
   lines?: number;
   /** Off returns `max`. */
   enabled?: boolean;
+  /**
+   * The px a one-line fit may run past `available` (`FIT_TOLERANCE_PX` by default), or must keep spare when
+   * negative. A box whose text may still wrap (a title clamped to two lines, kept to one so that icons stay beside
+   * it) takes none and a pixel spare: a size judged to fit by the slack was drawn on two lines, its last word wrapped
+   * ("Problem / wizard", the admin portal's tile on a phone).
+   */
+  slack?: number;
 }
 
 /**
@@ -65,9 +72,10 @@ export const wordsFitLines = (
   words: number[],
   space: number,
   available: number,
-  lines: number
+  lines: number,
+  slack: number = FIT_TOLERANCE_PX
 ): boolean => {
-  const room = lines > 1 ? available : available + FIT_TOLERANCE_PX;
+  const room = lines > 1 ? available : available + slack;
   let line = 1;
   let used = 0;
 
@@ -123,6 +131,7 @@ export const largestFittingTextSize = ({
   max,
   floor,
   lines = 1,
+  slack,
 }: {
   words: number[];
   space: number;
@@ -130,6 +139,8 @@ export const largestFittingTextSize = ({
   max: number;
   floor: number;
   lines?: number;
+  /** See `IUseFitTextSizeOptions.slack`. */
+  slack?: number;
 }): number => {
   const capacity = Math.max(1, Math.floor(lines) || 1);
   const fitsAt = (size: number) => {
@@ -139,7 +150,8 @@ export const largestFittingTextSize = ({
       words.map((word) => word * ratio),
       space * ratio,
       available,
-      capacity
+      capacity,
+      slack
     );
   };
 
@@ -179,6 +191,7 @@ export const useFitTextSize = <T extends HTMLElement = HTMLDivElement>({
   min,
   lines = 1,
   enabled = true,
+  slack,
 }: IUseFitTextSizeOptions): [React.MutableRefObject<T | null>, number] => {
   const ref = useRef<T | null>(null);
   const [size, setSize] = useState(max);
@@ -221,8 +234,8 @@ export const useFitTextSize = <T extends HTMLElement = HTMLDivElement>({
       .map((word) => context.measureText(word).width + letterSpacing * word.length);
     const space = context.measureText(' ').width + letterSpacing;
 
-    setSize(largestFittingTextSize({ words, space, available, max, floor, lines }));
-  }, [text, available, max, floor, lines, enabled]);
+    setSize(largestFittingTextSize({ words, space, available, max, floor, lines, slack }));
+  }, [text, available, max, floor, lines, enabled, slack]);
 
   return [ref, size];
 };
