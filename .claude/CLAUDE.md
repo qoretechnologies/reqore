@@ -15,9 +15,14 @@ descriptions, the brand / UI-design rules (read them before building any visual
 surface), and more. **Everything below this section is specific to ReQore**;
 `projects/reqore.md` uses the same section names.
 
-**If the imports above did not load** — you don't see the shared rules because
-this repo is cloned somewhere other than `~/Projects/instruction-files` — find
-the shared repo before doing any frontend work:
+**If you're contributing from outside Qore, skip this:** the shared rules are a
+private repository of the maintainers', and the rules below and the repo's own
+docs (`src/components/COMPONENTS.md`, `.tasks/NEW_COMPONENT.md`) are all you need.
+
+**If the imports above did not load** (you are a maintainer, and you don't see the
+shared rules because this repo is cloned somewhere other than
+`~/Projects/instruction-files`), find the shared repo before doing any frontend
+work:
 
 1. Check for a gitignored **`.instruction-files-path`** file at this repo's
    root. If it exists, read the path `P` from it, then read `P/CLAUDE.md`,
@@ -27,9 +32,11 @@ the shared repo before doing any frontend work:
    `~/Projects/instruction-files`, then your other project roots). If found at
    `P`, write `P` into `.instruction-files-path` (create it — it's gitignored)
    so future sessions skip the search, then read the files above.
-3. If it isn't cloned anywhere, **STOP and ask the user to clone it**:
+3. If it isn't cloned anywhere and you are a maintainer, **stop and ask the user
+   to clone it**:
    `git clone git@github.com:qoretechnologies/instruction-files.git ~/Projects/instruction-files`
-   Do not proceed with frontend work until the shared rules are loaded.
+   and do not go on with frontend work until the shared rules are loaded. An outside
+   contributor goes on without them (see above).
 
 # ReQore — project-specific rules
 
