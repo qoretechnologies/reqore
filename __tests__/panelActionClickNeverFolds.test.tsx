@@ -90,3 +90,36 @@ describe("a title bar's actions", () => {
     expect(open()).toBe(true);
   });
 });
+
+describe("a clickable panel's actions", () => {
+  it("are never the panel's click, in its head, its foot or a portal; its own click is", () => {
+    const onOpen = vi.fn();
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqorePanel
+              label='Order 4211'
+              onClick={onOpen}
+              actions={[
+                { as: Choices, props: { onPick: vi.fn() }, responsive: false },
+                { as: Opener, responsive: false },
+              ]}
+              bottomActions={[{ label: 'Open in a new tab', className: 'foot-action' }]}
+            >
+              <p className='card-body'>Two lines</p>
+            </ReqorePanel>
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    fireEvent.click(screen.getByText('Today'));
+    fireEvent.click(document.querySelector('.in-a-portal') as HTMLElement);
+    fireEvent.click(document.querySelector('.foot-action') as HTMLElement);
+    expect(onOpen).not.toHaveBeenCalled();
+
+    fireEvent.click(document.querySelector('.card-body') as HTMLElement);
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+});

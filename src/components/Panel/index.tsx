@@ -633,14 +633,34 @@ export const LEADING_ACTIONS_CLASS = 'reqore-panel-leading-actions';
 /** The class of the box that holds a bar's actions where they may go under its title. */
 export const TITLE_ACTIONS_CLASS = 'reqore-panel-title-actions';
 /**
- * Marks each group of a title bar's actions. A click inside one is the action's, never the bar's: the bar folds a
- * collapsible panel only on a click that lands on the bar itself. An action used to keep its click from the bar only
- * when it had an `onClick` of its own, so a custom (`as`) action without one, or one that did not hand an `onClick`
- * on to its DOM (a segmented choice), folded the panel when it was used (queue item 34).
+ * Marks each group of a panel's actions, in its title bar and its bottom bar. A click inside one is the action's,
+ * never the panel's (`isPanelOwnClick`). An action used to keep its click from the panel only when it had an
+ * `onClick` of its own, so a custom (`as`) action without one, or one that did not hand an `onClick` on to its DOM (a
+ * segmented choice), folded a collapsible panel (queue item 34) and was a click on a clickable card (item 36).
  */
 export const PANEL_ACTIONS_ATTRIBUTE = 'data-reqore-panel-actions';
-/** The props that mark a group of a title bar's actions (`PANEL_ACTIONS_ATTRIBUTE`). */
+/** The props that mark a group of a panel's actions (`PANEL_ACTIONS_ATTRIBUTE`). */
 const PANEL_ACTIONS_MARK = { [PANEL_ACTIONS_ATTRIBUTE]: '' };
+
+/**
+ * Whether a click that reached a panel's element (`event.currentTarget`: the panel, or its title bar) is the panel's
+ * own: it landed inside that element, and not in one of the panel's action groups (`PANEL_ACTIONS_ATTRIBUTE`, a nested
+ * panel's included), nor in anything opened in a portal (a menu, a dropdown), whose clicks reach the panel through
+ * React but land outside its DOM. Only its own click folds a collapsible panel or is a clickable panel's `onClick`.
+ * The one place this is decided; nothing stops the click, so a page's outside-click listeners still hear it.
+ */
+export const isPanelOwnClick = (event: React.MouseEvent<HTMLElement>): boolean => {
+  const own = event.currentTarget;
+  const target = event.target as Element | null;
+
+  if (!target || !own?.contains?.(target)) {
+    return false;
+  }
+
+  const actions = target.closest?.(`[${PANEL_ACTIONS_ATTRIBUTE}]`);
+
+  return !(actions && own.contains(actions));
+};
 
 /**
  * The box a bar's actions are drawn in where they may go to the line under the title
@@ -2219,27 +2239,27 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       }
     }, [collapsible, _isCollapsed, onCollapseChange]);
 
-    /* The bar folds the panel on a click on the bar itself: not on one of its actions (whatever the action is,
-       and whether or not it has an `onClick` of its own), and not on anything an action opened in a portal (a
-       menu), whose clicks reach the bar through React but land outside its DOM (queue item 34). */
+    /* The bar folds the panel on a click on the bar itself, never on one of its actions nor on anything an action
+       opened in a portal (`isPanelOwnClick`, queue item 34). */
     const handleTitleBarClick = useCallback(
       (event: React.MouseEvent<HTMLElement>) => {
-        const bar = event.currentTarget;
-        const target = event.target as Element | null;
-
-        if (!target || !bar.contains(target)) {
-          return;
+        if (isPanelOwnClick(event)) {
+          handleCollapseClick();
         }
-
-        const actions = target.closest?.(`[${PANEL_ACTIONS_ATTRIBUTE}]`);
-
-        if (actions && bar.contains(actions)) {
-          return;
-        }
-
-        handleCollapseClick();
       },
       [handleCollapseClick]
+    );
+
+    /* A clickable panel (a card) is clicked by a click on itself, never by one on its actions, a nested panel's
+       included, nor on anything opened from it in a portal (`isPanelOwnClick`, queue item 36). */
+    const { onClick: panelOnClick } = rest;
+    const handlePanelClick = useCallback(
+      (event: React.MouseEvent<HTMLDivElement>) => {
+        if (isPanelOwnClick(event)) {
+          panelOnClick?.(event);
+        }
+      },
+      [panelOnClick]
     );
 
     const leftBottomActions: IReqorePanelBottomAction[] = useMemo(
@@ -3251,6 +3271,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       <ReqoreErrorBoundary {...errorBoundaryOptions}>
         <ReqoreTooltipComponent
           {...omit(rest, ['onResize'])}
+          onClick={panelOnClick ? handlePanelClick : undefined}
           {..._resizable}
           as={rest.as || (isResizableElement ? Resizable : 'div')}
           isCollapsed={_isCollapsed}
@@ -3741,12 +3762,17 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             >
               {/* In the page's order, whichever may fold (`splitAtFirstFolding`, board f67). */}
               {hasNonResponsiveActions(leadingLeftBottomActions) ? (
-                <ReqoreControlGroup size={panelSize} style={{ marginRight: 'auto' }}>
+                <ReqoreControlGroup
+                  {...PANEL_ACTIONS_MARK}
+                  size={panelSize}
+                  style={{ marginRight: 'auto' }}
+                >
                   {leadingLeftBottomActions.map(renderNonResponsiveActions('flex-start'))}
                 </ReqoreControlGroup>
               ) : null}
               {hasResponsiveActions(leftBottomActions) && (
                 <ReqoreControlGroup
+                  {...PANEL_ACTIONS_MARK}
                   fluid={responsiveActions}
                   responsive={responsiveActions}
                   customTheme={theme}
@@ -3757,12 +3783,17 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 </ReqoreControlGroup>
               )}
               {hasNonResponsiveActions(trailingLeftBottomActions) ? (
-                <ReqoreControlGroup size={panelSize} style={{ marginRight: 'auto' }}>
+                <ReqoreControlGroup
+                  {...PANEL_ACTIONS_MARK}
+                  size={panelSize}
+                  style={{ marginRight: 'auto' }}
+                >
                   {trailingLeftBottomActions.map(renderNonResponsiveActions('flex-start'))}
                 </ReqoreControlGroup>
               ) : null}
               {hasNonResponsiveActions(leadingRightBottomActions) ? (
                 <ReqoreControlGroup
+                  {...PANEL_ACTIONS_MARK}
                   horizontalAlign='flex-end'
                   size={panelSize}
                   style={{ marginLeft: 'auto' }}
@@ -3772,6 +3803,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               ) : null}
               {hasResponsiveActions(rightBottomActions) && (
                 <ReqoreControlGroup
+                  {...PANEL_ACTIONS_MARK}
                   fluid={responsiveActions}
                   horizontalAlign='flex-end'
                   responsive={responsiveActions}
@@ -3788,6 +3820,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               )}
               {hasNonResponsiveActions(trailingRightBottomActions) ? (
                 <ReqoreControlGroup
+                  {...PANEL_ACTIONS_MARK}
                   horizontalAlign='flex-end'
                   size={panelSize}
                   style={{ marginLeft: 'auto' }}

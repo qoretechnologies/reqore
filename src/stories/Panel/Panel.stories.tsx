@@ -1,7 +1,7 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { Profiler, useEffect, useState } from 'react';
-import { expect, fireEvent, userEvent, waitFor } from 'storybook/test';
+import { expect, fireEvent, fn, userEvent, waitFor } from 'storybook/test';
 import ReqoreButton, { TReqoreBadge } from '../../components/Button';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import { ReqoreH4 } from '../../components/Header';
@@ -4296,5 +4296,97 @@ export const ACustomActionsClickNeverFoldsThePanel: Story = {
     await waitFor(() => expect(runHistoryShown(canvasElement)).toBe(false));
     await userEvent.click(title());
     await waitFor(() => expect(runHistoryShown(canvasElement)).toBe(true));
+  },
+};
+
+/** A clickable card (a list's order) whose head and foot hold actions: a menu, a tag and words, and a choice. */
+const OrderCard = ({ onOpen }: { onOpen?: () => void }) => {
+  const [view, setView] = useState<string | undefined>('lines');
+
+  return (
+    <ReqorePanel
+      label='Order 4211'
+      className='order-card'
+      onClick={onOpen}
+      actions={[
+        { as: ReqoreTag, props: { label: 'Paid', className: 'order-card-paid' }, responsive: false },
+        { label: 'Archive', icon: 'ArchiveLine', className: 'order-card-archive', responsive: false },
+        {
+          icon: 'More2Line',
+          className: 'order-card-menu',
+          tooltip: 'More',
+          responsive: false,
+          actions: [{ label: 'Retry the order', icon: 'RefreshLine', onClick: noop }],
+        },
+      ]}
+      bottomActions={[
+        {
+          as: ReqoreSegmentedControl,
+          props: {
+            size: 'small',
+            value: view,
+            onChange: setView,
+            items: [
+              { value: 'lines', label: 'Lines' },
+              { value: 'history', label: 'History' },
+            ],
+          },
+          responsive: false,
+        },
+        { label: 'Open in a new tab', className: 'order-card-tab', onClick: noop, position: 'right' },
+      ]}
+    >
+      <ReqoreP className='order-card-body'>Two lines, shipped on Monday.</ReqoreP>
+    </ReqorePanel>
+  );
+};
+
+export const AnActionsClickIsNotTheCards: Story = {
+  render: (args) => <OrderCard onOpen={args.onClick as () => void} />,
+  args: { onClick: fn() },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a clickable order card whose head holds a tag, "Archive" and a menu, and whose foot holds a Lines / History choice and "Open in a new tab". Using any of them, the menu\'s "Retry the order" included, never opens the card; a click on the card\'s own text does.',
+      },
+    },
+  },
+  play: async ({ canvasElement, args }) => {
+    const onOpen = args.onClick as ReturnType<typeof fn>;
+    const inCard = (selector: string) => canvasElement.querySelector(selector) as HTMLElement;
+    const button = (words: string) =>
+      [...canvasElement.querySelectorAll<HTMLElement>('button')].find((element) =>
+        element.textContent?.includes(words)
+      ) as HTMLElement;
+
+    await waitFor(() => expect(inCard('.order-card-body')).toBeTruthy());
+
+    // the head's tag and words, the foot's choice and link, each on its own
+    for (const action of [
+      () => inCard('.order-card-paid'),
+      () => inCard('.order-card-archive'),
+      () => button('History'),
+      () => inCard('.order-card-tab'),
+    ]) {
+      await userEvent.click(action());
+      expect(onOpen).not.toHaveBeenCalled();
+    }
+
+    // a menu the head opened, in a portal: its entry is not the card's either
+    await userEvent.click(inCard('.order-card-menu'));
+    const retry = await waitFor(() => {
+      const found = [...document.querySelectorAll<HTMLElement>('.reqore-menu-item')].find((item) =>
+        item.textContent?.includes('Retry the order')
+      );
+      expect(found).toBeTruthy();
+      return found as HTMLElement;
+    });
+    await userEvent.click(retry);
+    expect(onOpen).not.toHaveBeenCalled();
+
+    // the card's own text opens it
+    await userEvent.click(inCard('.order-card-body'));
+    await waitFor(() => expect(onOpen).toHaveBeenCalledTimes(1));
   },
 };
