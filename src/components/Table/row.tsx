@@ -153,6 +153,9 @@ export interface IReqoreTableRowStyle {
  * `clip` is not a scroll container, so they stick to the body, which is what
  * scrolls.
  */
+/** A number cell's figure: upright, and in tabular figures where the font has them (`content: 'number'`). */
+const NUMBER_CELL_STYLE: React.CSSProperties = { fontStyle: 'normal', fontVariantNumeric: 'tabular-nums' };
+
 const StyledTableRowGroup = styled.div`
   display: flex;
   flex-flow: column;
@@ -485,12 +488,14 @@ const ReqoreTableRow = memo(
                 </ReqoreP>
               );
             case 'number':
+              /* A figure is upright, its digits each as wide as the next (tabular figures, where the font has
+                 them), so a column of numbers lines up where its column aligns it. It was drawn in italics. */
               return (
                 <ReqoreP
-                  className='reqore-table-text'
+                  className='reqore-table-text reqore-table-number'
                   intent={intent as TReqoreIntent}
                   size={size}
-                  effect={{ italic: true }}
+                  style={NUMBER_CELL_STYLE}
                 >
                   {datum}
                 </ReqoreP>

@@ -3439,3 +3439,59 @@ export const ThemedPanelSurface: Story = {
     </ThemedSurfaceComparison>
   ),
 };
+
+export const ANumberCellIsUpright: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a coverage table whose Covered and Lines columns are number cells (`cell: { content: "number" }`), right-aligned. Each figure is upright and in tabular figures, so the digits line up down the column; it was drawn in italics.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 480 }}>
+      <ReqoreTable
+        className='number-cells'
+        label='Coverage'
+        columns={[
+          { dataId: 'file', header: { label: 'File' }, width: 200 },
+          {
+            dataId: 'covered',
+            header: { label: 'Covered' },
+            cell: { content: 'number' },
+            width: 100,
+            align: 'right',
+          },
+          {
+            dataId: 'lines',
+            header: { label: 'Lines' },
+            cell: { content: 'number' },
+            width: 100,
+            align: 'right',
+          },
+        ]}
+        data={[
+          { _id: 1, file: 'orders.ts', covered: 128, lines: 140 },
+          { _id: 2, file: 'payments.ts', covered: 96, lines: 111 },
+          { _id: 3, file: 'stock.ts', covered: 1204, lines: 1310 },
+        ]}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const figures = await waitFor(() => {
+      const found = canvasElement.querySelectorAll<HTMLElement>(
+        '.number-cells .reqore-table-number'
+      );
+      expect(found).toHaveLength(6);
+      return [...found];
+    });
+    for (const figure of figures) {
+      const style = getComputedStyle(figure);
+      await expect(style.fontStyle).toBe('normal');
+      await expect(style.fontVariantNumeric).toContain('tabular-nums');
+    }
+  },
+};
+
