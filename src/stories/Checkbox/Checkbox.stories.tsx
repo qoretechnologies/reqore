@@ -633,7 +633,7 @@ const expectEveryCheckboxInsideItsBox = async () => {
     const border = box.getBoundingClientRect();
     for (const part of Array.from(
       box.querySelectorAll<HTMLElement>(
-        '.reqore-checkbox, .reqore-checkbox-box, .reqore-checkbox-label'
+        '.reqore-checkbox, .reqore-checkbox-box, .reqore-checkbox-label, .reqore-checkbox-description'
       )
     )) {
       const rect = part.getBoundingClientRect();
@@ -790,5 +790,46 @@ export const LongLabelsWrapOnAPhone: Story = {
         ).toBe(true)
       );
     });
+  },
+};
+
+/** A sentence that explains a choice, wider than a 320px box holds on one line. */
+const LONG_DESCRIPTION =
+  "Nothing runs. The answer is the Simulated Output, or an example built from the endpoint's schema when there is none.";
+
+export const ADescriptionWrapsInsideItsBox: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders two checkboxes with a short label and a long description, the label on the right and on the left, in 320px boxes, with no `wrapLabel`. Each description wraps inside its box and the checkbox is as high as it; nothing is drawn past the box (reqore#662).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical>
+      <NarrowBox name='description-right' width={320}>
+        <ReqoreCheckbox label='Simulated' description={LONG_DESCRIPTION} checked />
+      </NarrowBox>
+      <NarrowBox name='description-left' width={320}>
+        <ReqoreCheckbox label='Simulated' description={LONG_DESCRIPTION} labelPosition='left' />
+      </NarrowBox>
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    await waitFor(() =>
+      expect(document.querySelector('.story-narrow-description-left .reqore-checkbox-description')).toBeTruthy()
+    );
+    await expectEveryCheckboxInsideItsBox();
+
+    for (const name of ['description-right', 'description-left']) {
+      const checkbox = partOf(name, '');
+      const label = partOf(name, ' .reqore-checkbox-label');
+      const description = partOf(name, ' .reqore-checkbox-description');
+
+      // wrapped, and inside the checkbox
+      await expect(description.height, name).toBeGreaterThan(label.height * 1.5);
+      await expect(description.bottom, name).toBeLessThanOrEqual(checkbox.bottom + 0.5);
+    }
   },
 };

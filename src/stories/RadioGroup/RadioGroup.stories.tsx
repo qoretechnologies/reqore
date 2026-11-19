@@ -366,3 +366,71 @@ export const FormControlMobile: Story = {
     expect(form.scrollWidth).toBeLessThanOrEqual(form.clientWidth + 1);
   },
 };
+
+/** How an answer is made, as a test's request panel offers it: each choice explained in a sentence or two. */
+const ANSWER_CHOICES = [
+  {
+    label: 'Simulated',
+    value: 'simulated',
+    description:
+      "Nothing runs. The answer is the Simulated Output, or an example built from the endpoint's schema when there is none.",
+  },
+  {
+    label: 'Live',
+    value: 'live',
+    description: 'Calls the endpoint on the instance and takes its real answer, with its status and headers.',
+  },
+  { label: 'Recorded', value: 'recorded', description: 'Plays back the answer a run recorded.' },
+];
+
+/** The parts of every choice in the box, and the box. */
+const choicePartsIn = (box: HTMLElement) =>
+  Array.from(
+    box.querySelectorAll<HTMLElement>(
+      '.reqore-checkbox, .reqore-checkbox-label, .reqore-checkbox-description'
+    )
+  );
+
+export const LongDescriptionsWrapInsideTheirBox: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a radio group of three choices, each explained in a sentence or two, in a 320px box. Every description wraps inside the box, under its choice, and no choice is drawn past the box (reqore#662: the descriptions ran on one line past a 490px panel and were cut).',
+      },
+    },
+  },
+  render: () => {
+    const [selected, setSelected] = useState('simulated');
+
+    return (
+      <div className='story-answer-box' style={{ width: 320, border: '1px dashed #666' }}>
+        <ReqoreRadioGroup items={ANSWER_CHOICES} selected={selected} onSelectClick={setSelected} />
+      </div>
+    );
+  },
+  play: async () => {
+    const box = await waitFor(() => {
+      const found = document.querySelector<HTMLElement>('.story-answer-box');
+      expect(found?.querySelector('.reqore-checkbox-description')).toBeTruthy();
+      return found as HTMLElement;
+    });
+    const border = box.getBoundingClientRect();
+
+    for (const part of choicePartsIn(box)) {
+      const rect = part.getBoundingClientRect();
+      await expect(rect.right, `${part.className.split(' ').pop()} ends inside the box`).toBeLessThanOrEqual(
+        border.right + 0.5
+      );
+    }
+
+    // the first choice's sentence takes more than one line, inside its choice
+    const choice = box.querySelector<HTMLElement>('.reqore-checkbox')!.getBoundingClientRect();
+    const label = box.querySelector<HTMLElement>('.reqore-checkbox-label')!.getBoundingClientRect();
+    const description = box
+      .querySelector<HTMLElement>('.reqore-checkbox-description')!
+      .getBoundingClientRect();
+    await expect(description.height).toBeGreaterThan(label.height * 1.5);
+    await expect(description.bottom).toBeLessThanOrEqual(choice.bottom + 0.5);
+  },
+};

@@ -68,6 +68,10 @@ export interface IReqoreCheckboxProps
   switchTextEffect?: IReqoreEffect;
   labelEffect?: IReqoreEffect;
   margin?: 'left' | 'right' | 'both' | 'none';
+  /**
+   * The label wraps: the checkbox is as high as its lines and never wider than its container. Always so for a
+   * checkbox with a `description`, which is prose: its text wraps in the room the checkbox has (reqore#662).
+   */
   wrapLabel?: boolean;
 
   onCheckClick?: () => void;
@@ -540,8 +544,11 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
     };
 
     /* The groups the label is in keep the width of its one line unless told to give way: a group that is not
-       fluid does not shrink. A label that wraps is let wrap in the room the checkbox has (qorus#646). */
-    const labelGroupStyle = wrapLabel ? WRAPPING_LABEL_GROUP_STYLE : undefined;
+       fluid does not shrink. A label that wraps is let wrap in the room the checkbox has (qorus#646), and so is a
+       label with a description, which is prose: kept to one line, it pushed the checkbox past its container's edge
+       (reqore#662: a radio group's descriptions cut at a 490px panel's edge). */
+    const wraps = !!wrapLabel || !!description;
+    const labelGroupStyle = wraps ? WRAPPING_LABEL_GROUP_STYLE : undefined;
 
     const { Component, props } = useComponentTooltip(
       {
@@ -554,7 +561,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         disabled,
         checked,
         readOnly,
-        $wrapLabel: wrapLabel,
+        $wrapLabel: wraps,
         className: `${className || ''} reqore-checkbox reqore-control`,
       },
       StyledCheckbox,
@@ -578,7 +585,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                   effect={{
                     ...labelEffect,
                     interactive: !disabled && !readOnly && !checked,
-                    noWrap: !wrapLabel,
+                    noWrap: !wraps,
                   }}
                 >
                   {label}
@@ -726,7 +733,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                   effect={{
                     ...labelEffect,
                     interactive: !disabled && !readOnly && !checked,
-                    noWrap: !wrapLabel,
+                    noWrap: !wraps,
                   }}
                 >
                   {label}
