@@ -179,6 +179,46 @@ export const OnAPhone: Story = {
   },
 };
 
+export const AScrollingStripFadesItsCutEdgeOnAPhone: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders the five figures on a phone (390 px): the strip scrolls sideways, so the figure its edge cuts fades out at that edge, and reads as one to scroll to rather than as the last. Scrolled to its end, the fade there goes and the start, which now cuts a figure, fades instead.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ padding: '0 16px', maxWidth: PHONE_VIEWPORT.width, boxSizing: 'border-box' }}>
+      <ReqoreStatisticGroup items={FIGURES} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await withViewport(PHONE_VIEWPORT.width, PHONE_VIEWPORT.height, async () => {
+      const group = groupIn(canvasElement);
+
+      // at its start: its end cuts a figure and fades, its start does not
+      await waitFor(() => {
+        expect(group.scrollWidth).toBeGreaterThan(group.clientWidth);
+        expect(group.getAttribute('data-cut-end')).toBe('true');
+        expect(group.hasAttribute('data-cut-start')).toBe(false);
+      });
+      await expect(getComputedStyle(group).maskImage).toContain('linear-gradient');
+
+      // scrolled to its end: the fade there goes, and the start fades
+      group.scrollLeft = group.scrollWidth;
+      await waitFor(() => {
+        expect(group.hasAttribute('data-cut-end')).toBe(false);
+        expect(group.getAttribute('data-cut-start')).toBe('true');
+      });
+      group.scrollLeft = 0;
+      await waitFor(() => expect(group.hasAttribute('data-cut-start')).toBe(false));
+    });
+  },
+};
+
 export const ActiveFilterFigure: Story = {
   parameters: {
     docs: {

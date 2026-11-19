@@ -1,4 +1,13 @@
-import { Children, forwardRef, isValidElement, memo, ReactNode, useMemo } from 'react';
+import {
+  Children,
+  forwardRef,
+  isValidElement,
+  memo,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { css } from 'styled-components';
 import { PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
@@ -73,7 +82,84 @@ export interface IReqoreStatisticGroupStyle {
   $layout: 'row' | 'wrap' | 'scroll';
   $pad: number;
   $minItemWidth: number;
+  /** A scrolling strip cuts a figure at its start (it has been scrolled) or at its end. */
+  $cut?: ICutEdges;
 }
+
+/** The edges of a strip that scrolls sideways that cut a figure: where there is more to scroll to. */
+interface ICutEdges {
+  start: boolean;
+  end: boolean;
+}
+
+const NO_CUT: ICutEdges = { start: false, end: false };
+
+/** How far a cut edge fades out, in px. */
+export const STATISTIC_GROUP_CUT_FADE_PX = 32;
+
+/**
+ * A strip's cut edges fade out (a mask, so whatever the strip sits on shows through): a figure cut by the
+ * edge reads as one the strip scrolls to, not as the last. The fade at an end goes once the strip is
+ * scrolled to it.
+ */
+const cutEdgeMask = ({ start, end }: ICutEdges) => {
+  if (!start && !end) return undefined;
+  const fade = `${STATISTIC_GROUP_CUT_FADE_PX}px`;
+  const stops = [
+    start ? `transparent 0, #000 ${fade}` : '#000 0',
+    end ? `#000 calc(100% - ${fade}), transparent 100%` : '#000 100%',
+  ];
+  const gradient = `linear-gradient(to right, ${stops.join(', ')})`;
+  return css`
+    -webkit-mask-image: ${gradient};
+    mask-image: ${gradient};
+  `;
+};
+
+/**
+ * Which edges of a strip that scrolls sideways cut a figure, measured when it scrolls and when it resizes,
+ * once a frame and set only when it changes, so it settles.
+ */
+const useCutEdges = (
+  element: { current?: HTMLElement | null },
+  scrolls: boolean,
+  figures: number
+) => {
+  const [edges, setEdges] = useState<ICutEdges>(NO_CUT);
+
+  useEffect(() => {
+    const strip = element.current;
+    if (!scrolls || !strip) {
+      setEdges(NO_CUT);
+      return undefined;
+    }
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      const rest = strip.scrollWidth - strip.clientWidth - strip.scrollLeft;
+      const start = strip.scrollLeft > 1;
+      const end = rest > 1;
+      setEdges((current) =>
+        current.start === start && current.end === end ? current : { start, end }
+      );
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+    measure();
+    strip.addEventListener('scroll', schedule, { passive: true });
+    const observer =
+      typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(schedule);
+    observer?.observe(strip);
+    return () => {
+      strip.removeEventListener('scroll', schedule);
+      observer?.disconnect();
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [element, scrolls, figures]);
+
+  return edges;
+};
 
 const hairline = ({ theme, $dividers }: IReqoreStatisticGroupStyle) =>
   $dividers ? getPanelHairlineColor(theme) : 'transparent';
@@ -88,6 +174,8 @@ export const StyledStatisticGroup = styled.div<IReqoreStatisticGroupStyle>`
   box-shadow:
     inset 0 1px 0 ${outerLine},
     inset 0 -1px 0 ${outerLine};
+
+  ${({ $layout, $cut }) => ($layout === 'scroll' && $cut ? cutEdgeMask($cut) : undefined)}
 
   ${({ $layout, $minItemWidth }) =>
     $layout === 'scroll'
@@ -203,7 +291,7 @@ export const ReqoreStatisticGroup = memo(
     ) => {
       const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
       const [containerRef, isNarrow] = useNarrowContainer<HTMLDivElement>(narrowBelow);
-      const { setRef } = useCombinedRefs<HTMLDivElement>(ref, containerRef);
+      const { setRef, targetRef } = useCombinedRefs<HTMLDivElement>(ref, containerRef);
 
       const figures = useMemo(() => {
         const all: { key: string | number; node: ReactNode; active?: boolean }[] = items
@@ -232,6 +320,7 @@ export const ReqoreStatisticGroup = memo(
 
       // One row that scrolls only when its figures do not fit, at every width; or the opt-in fold.
       const layout = narrowLayout === 'scroll' ? 'scroll' : isNarrow ? 'wrap' : 'row';
+      const cut = useCutEdges(targetRef, layout === 'scroll', figures.length);
 
       return (
         <StyledStatisticGroup
@@ -240,6 +329,9 @@ export const ReqoreStatisticGroup = memo(
           theme={theme}
           className={`${className || ''} reqore-statistic-group`.trim()}
           data-narrow={isNarrow ? 'true' : 'false'}
+          data-cut-start={cut.start ? 'true' : undefined}
+          data-cut-end={cut.end ? 'true' : undefined}
+          $cut={cut}
           $dividers={dividers}
           $layout={layout}
           $pad={PADDING_FROM_SIZE[size as TSizes] ?? PADDING_FROM_SIZE.normal}

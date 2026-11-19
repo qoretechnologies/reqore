@@ -201,7 +201,11 @@ export { ReqoreSpan } from './components/Span';
 export { ReqoreSpinner } from './components/Spinner';
 export { default as ReqoreStackedBar } from './components/StackedBar';
 export { default as ReqoreStatistic } from './components/Statistic';
-export { ReqoreStatisticGroup, STATISTIC_GROUP_MAX } from './components/StatisticGroup';
+export {
+  ReqoreStatisticGroup,
+  STATISTIC_GROUP_CUT_FADE_PX,
+  STATISTIC_GROUP_MAX,
+} from './components/StatisticGroup';
 export type {
   IReqoreStatisticGroupItem,
   IReqoreStatisticGroupProps,
