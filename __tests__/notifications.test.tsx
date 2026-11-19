@@ -427,3 +427,37 @@ test('a notification with lift={false} keeps its surface and throws no shadow', 
   // and the surface itself is untouched
   expect(getComputedStyle(inline).backgroundColor).toBe(getComputedStyle(lifted).backgroundColor);
 });
+
+/**
+ * An action is quiet unless it sets its own intent: a failure toast's "Copy details" was drawn red, as the toast's
+ * first action took its intent.
+ */
+test("A notification's actions are quiet unless they set their own intent", async () => {
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <AddButton
+          id='failed'
+          intent='danger'
+          actions={[
+            { label: 'Copy details' },
+            { label: 'Show log' },
+            { label: 'Roll back', intent: 'danger' },
+          ]}
+        />
+      </ReqoreUIProvider>
+    );
+  });
+
+  fireEvent.click(screen.getByText('Add Notification'));
+  act(() => vi.advanceTimersByTime(500));
+
+  const [copy, log, rollBack] = Array.from(
+    document.querySelectorAll<HTMLElement>('.reqore-notification-actions button')
+  ).map((button) => getComputedStyle(button).color);
+  // the first action is drawn as the second, not in the toast's danger
+  expect(copy).toBe(log);
+  // an action with its own intent still has it
+  expect(rollBack).not.toBe(copy);
+});
+

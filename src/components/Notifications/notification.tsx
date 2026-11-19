@@ -743,7 +743,9 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             flat
             raised
             compact
-            intent={index === 0 ? resolvedIntent : undefined}
+            /* An action is quiet unless it sets its own intent (in `rest`): the toast's intent is its
+               bloom, its icon and its timer line, never its buttons. A failure toast's "Copy details"
+               was drawn red, as though copying were the failure. */
             {...rest}
             onClick={(event) => {
               event.stopPropagation();
