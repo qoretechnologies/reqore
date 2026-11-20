@@ -155,6 +155,13 @@ export interface IReqoreCustomTagProps
     IWithReqoreFlat,
     IWithReqoreCustomTheme {
   fixed?: boolean | 'key' | 'label';
+  /**
+   * A tag inside a sentence: it flows with the text around it and wraps across lines as a word does, each line's
+   * piece keeping its own edge and fill (box-decoration-break: clone), and its whole label shown, never cut. A
+   * tag in prose was an unbreakable box, so on a phone the text before it, the tag and the text after it took a
+   * line each.
+   */
+  inline?: boolean;
   align?: 'left' | 'right' | 'center';
   size?: TSizes;
   label?: string | number;
@@ -352,6 +359,7 @@ export const REQORE_TAG_STYLE_PROPS = listReqoreStyleProps<
   verticalAlign: true,
   width: true,
   wrap: true,
+  inline: true,
 });
 
 // The layout flags a containing `ReqoreControlGroup` hands the tag are not the element's either
@@ -404,6 +412,44 @@ export const StyledTag = styled(StyledEffect).withConfig({
   outline-width: 2px;
   outline-color: transparent;
   outline-offset: -2px;
+
+  /* A tag inside a sentence (inline): inline all the way down, so it breaks across lines with the text around
+     it, each piece drawn whole; its label is shown in full. NO BACKTICKS in this comment. */
+  ${({ inline }: IReqoreTagStyle) =>
+    inline &&
+    css`
+      display: inline;
+      flex: none;
+      min-width: 0;
+      max-width: none;
+      overflow: visible;
+      vertical-align: baseline;
+      line-height: inherit;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+
+      .reqore-tag-content,
+      .reqore-tag-content > *,
+      .reqore-tag-label {
+        display: inline;
+        min-height: 0;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
+      }
+
+      /* The leading icon stays one small box on the line of the words after it: a flex box inside an
+         inline one would take a line of its own. */
+      .reqore-tag-key-content {
+        display: inline-flex;
+        min-height: 0;
+        vertical-align: middle;
+      }
+    `}
 
   ${({ align }) => {
     if (align === 'left') {

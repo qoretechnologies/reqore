@@ -3,7 +3,8 @@ import { expect, waitFor } from 'storybook/test';
 import { noop } from 'lodash';
 import { IReqoreTagProps } from '../../components/Tag';
 import { IReqoreTagGroup } from '../../components/Tag/group';
-import { ReqoreTag, ReqoreTagGroup, ReqoreVerticalSpacer } from '../../index';
+import { ReqoreP, ReqoreTag, ReqoreTagGroup, ReqoreVerticalSpacer } from '../../index';
+import { withViewport } from '../utils/viewport';
 import { StoryMeta } from '../utils';
 import { ALL_SIZES, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
@@ -1096,5 +1097,53 @@ export const TextMobile: Story = {
     for (const tag of Array.from(document.querySelectorAll('.appearance-matrix .reqore-tag'))) {
       expect(tag.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth);
     }
+  },
+};
+
+export const ATagInASentenceFlowsLikeText: Story = {
+  parameters: {
+    qlip: { viewport: { width: 390, height: 844 } },
+    docs: {
+      description: {
+        story:
+          'A tag inside a sentence on a phone (390 px), as a template reference reads in prose: with `inline` it flows with the text, starting on the line where the text before it ends and wrapping across lines as a word does, each piece with its own edge and fill. Without it the tag was an unbreakable box: the text before it, the tag and the text after it took a line each.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 'min(330px, 100%)' }}>
+      <ReqoreP className='sentence'>
+        The key is order-
+        <ReqoreTag
+          className='inline-tag'
+          inline
+          size='small'
+          icon='PriceTag3Line'
+          label='Receive order › Customer › Shipping address › Postal code'
+        />
+        -suffix, as the step names it.
+      </ReqoreP>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await withViewport(390, 844, async () => {
+      const tag = await waitFor(() => {
+        const element = canvasElement.querySelector<HTMLElement>('.inline-tag');
+        expect(element).toBeTruthy();
+        return element!;
+      });
+      const sentence = canvasElement.querySelector<HTMLElement>('.sentence')!;
+      const pieces = Array.from(tag.getClientRects());
+      // it wraps with the text: more than one piece
+      await expect(pieces.length, 'the tag wraps across lines').toBeGreaterThan(1);
+      // and starts on the first line, where "The key is order-" ends
+      const firstLine = sentence.getClientRects()[0] ?? sentence.getBoundingClientRect();
+      await expect(
+        Math.abs(pieces[0].top - firstLine.top) < 8,
+        'the tag starts on the line of the text before it'
+      ).toBe(true);
+      // its whole label is there, never cut
+      await expect(tag.textContent).toContain('Postal code');
+    });
   },
 };

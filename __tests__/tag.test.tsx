@@ -601,3 +601,52 @@ describe('appearance', () => {
     expect(tagStyle().backgroundColor).toBe('rgba(142, 68, 173, 0.2)');
   });
 });
+
+describe('ReqoreTag inline', () => {
+  afterEach(cleanup);
+
+  const renderInSentence = (inline?: boolean) =>
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <p>
+              The key is order-
+              <ReqoreTag
+                inline={inline}
+                icon='PriceTag3Line'
+                label='Receive order › Customer › Shipping address › Postal code'
+              />
+              -suffix.
+            </p>
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+  test('a tag inside a sentence is inline all the way down, so it wraps with the words', () => {
+    renderInSentence(true);
+    const tag = document.querySelector<HTMLElement>('.reqore-tag')!;
+    const style = window.getComputedStyle(tag);
+
+    expect(style.display).toBe('inline');
+    expect(style.whiteSpace).toBe('normal');
+    expect(window.getComputedStyle(tag.querySelector('.reqore-tag-content')!).display).toBe(
+      'inline'
+    );
+    // the leading icon stays one small box on the line, not a line of its own
+    expect(window.getComputedStyle(tag.querySelector('.reqore-tag-key-content')!).display).toBe(
+      'inline-flex'
+    );
+    // its whole label is there, and the flag is not an attribute of the element
+    expect(tag.textContent).toContain('Postal code');
+    expect(tag.hasAttribute('inline')).toBe(false);
+  });
+
+  test('without inline a tag stays the one box it always was', () => {
+    renderInSentence();
+    const tag = document.querySelector<HTMLElement>('.reqore-tag')!;
+
+    expect(window.getComputedStyle(tag).display).toBe('inline-flex');
+  });
+});
