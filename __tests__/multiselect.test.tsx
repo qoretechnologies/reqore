@@ -110,7 +110,11 @@ test('Renders disabled <ReqoreMultiSelect /> when items are empty and items CANN
     render(<MultiSelectItemsTestComponent />);
   });
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
 
   expect(document.querySelector('.reqore-input')?.getAttribute('disabled')).toBe('');
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
@@ -121,7 +125,11 @@ test('Renders empty <ReqoreMultiSelect /> when items are empty and items CAN be 
     render(<MultiSelectItemsTestComponent canCreateItems />);
   });
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
 
   vi.advanceTimersByTime(1);
 
@@ -135,7 +143,11 @@ test('Renders <ReqoreMultiSelect /> and selects / deselects items from the list'
     render(<MultiSelectItemsTestComponent items={MultiSelectItems} />);
   });
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
 
   vi.advanceTimersByTime(1);
 
@@ -245,7 +257,11 @@ test('Renders <ReqoreMultiSelect /> and items can be searched and created using 
   // 4 items + 1 button for clearable input
   expect(document.querySelectorAll('.reqore-button').length).toBe(1);
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'Existing item' },
   });
@@ -261,7 +277,11 @@ test('Renders <ReqoreMultiSelect /> and items can be searched and created using 
   expect(document.querySelectorAll('.reqore-tag').length).toBe(1);
   expect(screen.getAllByText('Existing item')).toBeTruthy();
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'Existing item' },
   });
@@ -269,7 +289,11 @@ test('Renders <ReqoreMultiSelect /> and items can be searched and created using 
   // 6 again because the item is already created, so the Create button is not there
   expect(document.querySelectorAll('.reqore-button').length).toBe(5);
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
   // Does not create new item if the query is empty
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: '' },
@@ -291,7 +315,11 @@ test('Renders <ReqoreMultiSelect /> and does not create new item on ENTER when n
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
   // Add some text
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'New item' },
@@ -326,7 +354,11 @@ test('Renders <ReqoreMultiSelect /> and deselects an item using the ENTER key', 
   expect(screen.getAllByText('Existing item 3')).toBeTruthy();
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'Existing item 3' },
   });
@@ -361,7 +393,11 @@ test('Renders <ReqoreMultiSelect /> and calls onValueChange when value changes',
   expect(screen.getAllByText('Existing item 3')).toBeTruthy();
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'Existing item 3' },
   });
@@ -428,7 +464,11 @@ test('Renders <ReqoreMultiSelect /> and calls onItemAdded when an item is added'
 
   const item = MultiSelectItems.find((item) => item.value === 'Existing item 3');
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'Existing item 3' },
   });
@@ -444,7 +484,9 @@ test('Renders <ReqoreMultiSelect /> and calls onItemAdded when an item is added'
   expect(onItemAdd).toHaveBeenNthCalledWith(1, item!.value);
 
   // Add completely new item
+  // the list opens at a press on the box, not at a focus
   fireEvent.focus(document.querySelector('.reqore-input')!);
+  fireEvent.click(document.querySelector('.reqore-input')!);
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'Some new item' },
   });

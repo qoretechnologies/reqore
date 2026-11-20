@@ -9,6 +9,9 @@ import { IReqoreIconName } from '../../types/icons';
 import { StoryMeta } from '../utils';
 import { FlatArg, IconArg, MinimalArg, SizeArg, argManager } from '../utils/args';
 import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
+import { withViewport } from '../utils/viewport';
+import { ReqoreP } from '../../index';
+import { sleep } from '../../helpers/utils';
 
 const { createArg } = argManager<IReqoreSelectSingleProps>();
 
@@ -486,7 +489,7 @@ export const FocusedThenTappedOnAPhoneKeepsItsChoices: Story = {
     docs: {
       description: {
         story:
-          "Renders an empty Select on a phone (390 px) whose box has the focus, as a form that focuses its first field leaves it, so its list of choices is already open. A finger taps the box, then taps it again: the list stays open both times, and a choice can still be seen and picked. A tap on a box that already has the focus sends only the click, and the list's click toggled it shut, so the choices a focus had shown went away at the first tap and never came back.",
+          "Renders an empty Select on a phone (390 px) whose box has the focus, as a form that focuses its first field leaves it: its list stays closed, since a focus is no request for it. A finger taps the box and the list opens, then taps it again and the list stays open, and a choice can still be seen and picked. The list opens one way only, at the tap: when a focus opened it too, the tap's click toggled shut what the focus had shown.",
       },
     },
   },
@@ -497,7 +500,8 @@ export const FocusedThenTappedOnAPhoneKeepsItsChoices: Story = {
   play: async ({ canvasElement }) => {
     const input = selectInput(canvasElement);
     input.focus();
-    await waitFor(() => expect(choicesList()).toBeTruthy());
+    await sleep(300);
+    await expect(choicesList(), 'a focus leaves the list closed').toBeNull();
 
     await withTouchScreen(async (touch) => {
       await touch.tap(input);
@@ -518,7 +522,7 @@ export const FocusedThenClickedKeepsItsChoices: Story = {
     docs: {
       description: {
         story:
-          'Renders an empty Select whose box has the focus, so its list of choices is open, and clicks the box twice with the mouse: the list stays open. Only a click outside, Escape or a pick closes it - a click on the box it was opened from never does.',
+          'Renders an empty Select whose box has the focus, its list closed, and clicks the box twice with the mouse: the first click opens the list and the second leaves it open. Only a click outside, Escape or a pick closes it - a click on the box it was opened from never does.',
       },
     },
     // Interaction-only: the open list is pictured by `FocusedThenTappedOnAPhoneKeepsItsChoices`.
@@ -531,7 +535,8 @@ export const FocusedThenClickedKeepsItsChoices: Story = {
   play: async ({ canvasElement }) => {
     const input = selectInput(canvasElement);
     input.focus();
-    await waitFor(() => expect(choicesList()).toBeTruthy());
+    await sleep(300);
+    await expect(choicesList(), 'a focus leaves the list closed').toBeNull();
 
     await userEvent.click(input);
     await waitFor(() => expect(choicesList()).toBeTruthy());
@@ -540,5 +545,90 @@ export const FocusedThenClickedKeepsItsChoices: Story = {
 
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(choicesList()).toBeNull());
+  },
+};
+
+export const AFocusFromCodeLeavesTheListClosed: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an empty Select whose box a form has put the caret in (a focus from code, as a form that focuses its first field gives): the list stays closed. The keyboard asks for it with ArrowDown, ArrowUp, or Enter with nothing typed, and Escape puts it away again.',
+      },
+    },
+    // Interaction-only: the open list is pictured by `FocusedThenTappedOnAPhoneKeepsItsChoices`.
+    qlip: { skip: true },
+  },
+  render: Template,
+  args: {
+    value: undefined,
+  },
+  play: async ({ canvasElement }) => {
+    const input = selectInput(canvasElement);
+    input.focus();
+    await sleep(300);
+    await expect(choicesList(), 'a focus leaves the list closed').toBeNull();
+
+    for (const key of ['{ArrowDown}', '{ArrowUp}', '{Enter}']) {
+      await userEvent.keyboard(key);
+      await waitFor(() => expect(choicesList(), `${key} opens the list`).toBeTruthy());
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(choicesList()).toBeNull());
+    }
+  },
+};
+
+/** A form with its labels to the left of its fields, and room for a list only beside the field. */
+const LabelledSelect = () => {
+  const [selected, setSelected] = useState<string | undefined>();
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 400, padding: '0 16px' }}>
+      <ReqoreP className='form-label' style={{ flex: '0 0 420px' }}>
+        Interface kind
+      </ReqoreP>
+      <div style={{ flex: '0 0 300px' }}>
+        <ReqoreSelect
+          value={selected}
+          onValueChange={setSelected}
+          items={MultiSelectItems}
+          selectorProps={{ listHeight: '600px' }}
+        />
+      </div>
+    </div>
+  );
+};
+
+export const InANarrowFormTheListSitsUnderItsInput: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A Select in a form with its label to the left of its field, in a window too short for its list above or below the field, with room beside it over the label. Opened, the list sits under the field (or over it), aligned with it, and never beside it over the label: placed where there was the most room, it lay over the form labels.',
+      },
+    },
+    qlip: { viewport: { width: 800, height: 420 } },
+  },
+  render: () => <LabelledSelect />,
+  play: async ({ canvasElement }) => {
+    await withViewport(800, 420, async () => {
+      const input = selectInput(canvasElement);
+      await userEvent.click(input);
+      const list = await waitFor(() => {
+        const element = document.querySelector<HTMLElement>('[data-popper-placement]');
+        expect(element, 'the list is open').toBeTruthy();
+        return element!;
+      });
+      await waitFor(() =>
+        expect(list.getAttribute('data-popper-placement'), 'under or over the field').toMatch(
+          /^(bottom|top)/
+        )
+      );
+      const box = input.getBoundingClientRect();
+      const label = canvasElement.querySelector('.form-label')!.getBoundingClientRect();
+      const placed = list.getBoundingClientRect();
+      await expect(Math.abs(placed.left - box.left), 'aligned with the field').toBeLessThan(24);
+      await expect(placed.left, 'not over the label').toBeGreaterThanOrEqual(label.right);
+    });
   },
 };

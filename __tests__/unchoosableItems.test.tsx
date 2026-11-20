@@ -68,7 +68,9 @@ const rowFor = (label: string): HTMLElement =>
   screen.getAllByText(label).at(-1)!.closest('.reqore-menu-item') as HTMLElement;
 
 const openList = () => {
+  // the list opens at a press on the box, not at a focus
   fireEvent.focus(document.querySelector('.reqore-input')!);
+  fireEvent.click(document.querySelector('.reqore-input')!);
   vi.advanceTimersByTime(1);
 };
 
