@@ -4,15 +4,15 @@ import React, { forwardRef, useCallback, useId, useLayoutEffect, useRef, useStat
 import { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
-  CONTROL_TEXT_FROM_SIZE,
   PADDING_FROM_SIZE,
   PILL_RADIUS_MODIFIER,
   resolveRadius,
   SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { changeLightness, getFocusRingColor, getReadableColor } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -128,7 +128,7 @@ export const StyledInputWrapper = styled.div.withConfig({
   min-width: 60px;
   flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 auto' : '0 1 auto')};
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
-  font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
+  font-size: ${({ _size, theme }) => getControlTextSize(theme, _size)}px;
   position: relative;
   overflow: hidden;
   border-radius: ${({ minimal, rounded, _size, radiusSize, pill }) =>
@@ -143,7 +143,7 @@ export const StyledInputWrapper = styled.div.withConfig({
       display: flex;
     }
 
-    outline: 2px solid ${({ theme }) => changeLightness(theme.main, 0.25)};
+    outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
     outline-offset: -2px;
 
     ${ActiveIconScale}
@@ -226,7 +226,7 @@ export const StyledInput = styled(StyledEffect).withConfig({
   padding-left: ${({ hasIcon, _size }) => (hasIcon ? SIZE_TO_PX[_size] : 7)}px;
   /* The page's font (or the theme's), not the browser's form-control font. */
   font-family: inherit;
-  font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
+  font-size: ${({ _size, theme }) => getControlTextSize(theme, _size)}px;
   transition: all 0.2s ease-out;
   border-radius: inherit;
 
@@ -418,7 +418,9 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
             ...rest?.effect,
           }}
           onChange={!readOnly && !rest?.disabled ? rest?.onChange : undefined}
-          ref={(ref) => setInputRef(ref)}
+          // The setter itself, which keeps its identity: an arrow made here was a new ref on every render, so React
+          // called it with null and then the element each time, two updates for nothing.
+          ref={setInputRef}
           theme={theme}
           _size={size}
           minimal={minimal}

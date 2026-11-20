@@ -4,6 +4,7 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 import { IReqoreDropdownProps } from '.';
 import { TReqorePaginationType } from '../../constants/paging';
 import { ReqorePaginationContainer } from '../../containers/Paging';
+import { getPanelHairlineColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreComponent, IReqoreIntent, IWithReqoreCustomTheme } from '../../types/global';
 import ReqoreButton from '../Button';
@@ -34,6 +35,11 @@ export interface IReqoreDropdownItem<Metadata extends Record<string, any> = Reco
   metadata?: Metadata;
   items?: TReqoreDropdownItems;
   onClick?: TDropdownItemOnClick;
+  /**
+   * Choosing this item leaves the menu open, as every item of a `multiSelect` list does: for a
+   * toggle among several in an ordinary menu, such as a column picker in a page's "⋯".
+   */
+  keepOpen?: boolean;
   divider?: boolean;
   dividerAlign?: 'left' | 'center' | 'right';
   dividerPadded?: 'top' | 'bottom' | 'both' | 'none';
@@ -53,19 +59,25 @@ export interface IDropdownKeyboardControls {
 }
 
 /**
- * The list's own style: it may shrink in its panel's column (qorus#646). One object for every render, as the control
+ * The list's own style: it may shrink in its panel's column. One object for every render, as the control
  * group it is handed to is memoised (a new object each render would draw it again for nothing).
  */
 const SHRINKABLE_LIST_STYLE: React.CSSProperties = { minHeight: 0 };
 
 export interface IReqoreDropdownListProps
   extends IReqoreComponent,
-    Pick<IReqoreDropdownProps, 'customElements'>,
+    Pick<IReqoreDropdownProps, 'customElements' | 'customElementsPosition'>,
     IWithReqoreCustomTheme,
     IReqoreIntent {
   items?: TReqoreDropdownItems;
   multiSelect?: boolean;
   listStyle?: React.CSSProperties;
+  /**
+   * The items as rows in one card: each flat and on no surface of its own, a hairline between them,
+   * the list's surface their card. An item's own `flat`, `transparent` and `minimal` give way to it.
+   * Without it each item is drawn as it asks, which for a bordered item is a card per item.
+   */
+  asRows?: boolean;
   width?: string;
   height?: string;
 
@@ -79,6 +91,8 @@ export interface IReqoreDropdownListProps
    */
   filterRanking?: TReqoreFilterRanking;
   filter?: string | number;
+  /** The name of an opened level's back button. Defaults to `'Back'`. */
+  backLabel?: string;
   filterPlaceholder?: string;
   /**
    * Builder for the filter input's placeholder when `filterPlaceholder` is
@@ -193,6 +207,7 @@ const ReqoreDropdownList = memo(
     items,
     multiSelect,
     listStyle,
+    asRows,
     closePopover,
     filterable,
     filterRanking = 'none',
@@ -205,9 +220,11 @@ const ReqoreDropdownList = memo(
     onFilterChange,
     filterPlaceholder,
     filterPlaceholderBuilder = (count) => `Search ${count} items...`,
+    backLabel = 'Back',
     noItemsFoundText = 'No items found',
     filter,
     customElements,
+    customElementsPosition = 'start',
     customTheme,
         inheritCustomTheme,
     intent,
@@ -230,7 +247,24 @@ const ReqoreDropdownList = memo(
     // Determine which item is currently selected based on selectedItems stack
     const currentSelectedItem = useMemo(() => {
       if (_level < selectedItems.length) {
-        return selectedItems[_level];
+        const opened = selectedItems[_level];
+
+        /* The opened level as the items are NOW: the stack keeps the item as it was clicked, so a
+           level whose items changed while it was open (a column picker, its checks following the
+           columns) showed them as they were. Matched by identity, else by id, value or label. */
+        return opened
+          ? items?.find((item) => item === opened) ??
+              items?.find(
+                (item) =>
+                  !!size(item.items) &&
+                  (opened.id !== undefined
+                    ? item.id === opened.id
+                    : opened.value !== undefined
+                      ? item.value === opened.value
+                      : item.label === opened.label)
+              ) ??
+              opened
+          : opened;
       }
       // If no selected item at this level, auto-select first item with subitems if at root level
       if (size(items) === 1 && size(items[0].items) && !items[0]?.disabled && _level === 0) {
@@ -323,10 +357,12 @@ const ReqoreDropdownList = memo(
 
     const handleItemSelectClick = useCallback(
       (item: IReqoreDropdownItem, event: React.MouseEvent<HTMLElement>): void => {
+        const staysOpen = multiSelect || item.keepOpen;
+
         if (item.onClick) {
           item.onClick(item, event);
 
-          if (!multiSelect) {
+          if (!staysOpen) {
             closePopover?.();
           }
         }
@@ -334,7 +370,7 @@ const ReqoreDropdownList = memo(
         if (onItemSelect) {
           onItemSelect(item, event);
 
-          if (!multiSelect) {
+          if (!staysOpen) {
             closePopover?.();
           }
         }
@@ -441,7 +477,7 @@ const ReqoreDropdownList = memo(
     /* Back at this level from the level it showed by the keys (the left arrow), the row that level came
        from is highlighted, as the keys left it: the right arrow opens it again and Enter acts on it.
        Opening it cleared the highlight, and it showed again on the way back only while this level also
-       heard the keys pressed in the level it showed (qorus#646, Foxhoundn). The same holds for a lone row
+       heard the keys pressed in the level it showed. The same holds for a lone row
        the list opened by itself. Back by a click (the back button, a crumb) says nothing of the keys:
        nothing is highlighted, as before - a highlighted row looks picked to a pointer. */
     const levelItShowed = useRef<IReqoreDropdownItem | undefined>(undefined);
@@ -547,6 +583,7 @@ const ReqoreDropdownList = memo(
             items: currentSelectedItem.items,
             multiSelect,
             listStyle,
+            asRows,
             filterable,
             // an opened level is the same list: it ranks, says and is reached as the list does
             filterRanking,
@@ -560,6 +597,7 @@ const ReqoreDropdownList = memo(
             onFilterChange,
             filterPlaceholder,
             filterPlaceholderBuilder,
+            backLabel,
             noItemsFoundText,
             filter,
             customTheme,
@@ -593,12 +631,12 @@ const ReqoreDropdownList = memo(
 
     return (
       // In a popover held to the room below its field, the list shrinks to it (min-height 0 in the panel's
-      // column) and its rows, the menu, take what its search and tags leave: one place scrolls (qorus#646).
+      // column) and its rows, the menu, take what its search and tags leave: one place scrolls.
       <ReqoreControlGroup vertical fluid style={SHRINKABLE_LIST_STYLE}>
         {/* An array prop: keyed here, so a caller passing elements without keys draws no warning.
             `toArray` keeps the keys a caller gave rather than putting keys by position over them,
             and takes a single node too, which `map` threw on. */}
-        {React.Children.toArray(customElements)}
+        {customElementsPosition === 'start' ? React.Children.toArray(customElements) : null}
         {(size(items) && filterable) || _onBackClick ? (
           <>
             <ReqoreControlGroup fluid>
@@ -609,6 +647,9 @@ const ReqoreDropdownList = memo(
                   fixed={filterable}
                   onClick={goBackByClick}
                   className='reqore-dropdown-back-button'
+                  // An arrow alone named nothing for a screen reader.
+                  tooltip={backLabel}
+                  aria-label={backLabel}
                   customTheme={theme}
                   intent={intent}
                 />
@@ -673,7 +714,8 @@ const ReqoreDropdownList = memo(
 
             return (
               <ReqoreMenu
-                style={listStyle}
+                // rows in one card touch: the hairline between them is their only gap
+                style={asRows ? { gap: 0, ...listStyle } : listStyle}
                 width={width}
                 maxHeight={height || '300px'}
                 padded={false}
@@ -724,8 +766,21 @@ const ReqoreDropdownList = memo(
                           'items' in item && size(item.items) ? 'ArrowRightSLine' : item.rightIcon
                         }
                         customTheme={theme}
-                        intent={intent}
+                        // an entry that destroys something is drawn in danger, not in the list's tint
+                        intent={item.destructive ? undefined : intent}
                         {...item}
+                        {...(asRows ?
+                          {
+                            flat: true,
+                            transparent: true,
+                            minimal: true,
+                            style: {
+                              ...item.style,
+                              borderRadius: 0,
+                              ...(index > 0 ? { borderTop: `1px solid ${getPanelHairlineColor(theme)}` } : {}),
+                            },
+                          }
+                        : {})}
                         rightAction={getAction(item, 'right')}
                         leftAction={getAction(item, 'left')}
                         disabled={
@@ -750,6 +805,7 @@ const ReqoreDropdownList = memo(
             );
           }}
         </ReqorePaginationContainer>
+        {customElementsPosition === 'end' ? React.Children.toArray(customElements) : null}
       </ReqoreControlGroup>
     );
   }

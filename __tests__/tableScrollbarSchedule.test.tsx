@@ -5,7 +5,7 @@ import { ReqoreTableScrollbar } from '../src/components/Table/scrollbar';
 
 /* A table's scrollbar thumb shows while its body scrolls and fades a while after. That while now waits on the app's
    clock when the app gives one (`options.schedule`), as the navigation rail's dwell does: an app that captures its
-   pages (the IDE's story runner) caught the thumb on one run and not on the next (qorus#646). */
+   pages (a story runner) caught the thumb on one run and not on the next. */
 
 /** An app's clock: what waits on it, run when the test says. */
 const appSchedule = () => {

@@ -15,6 +15,7 @@ import {
 } from '../../index';
 import { StoryMeta } from '../utils';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const meta = {
   title: 'Navigation/Nav Rail',
   component: ReqoreNavRail,
@@ -75,8 +76,8 @@ const MANY_ITEMS: IReqoreNavRailItem[] = [
  *  against a branded surface. */
 const THEMED_ITEMS: IReqoreNavRailItem[] = [
   {
-    id: 'qonsole',
-    label: 'Qonsole',
+    id: 'console',
+    label: 'Console',
     icon: 'Chat3Line',
     effect: {
       gradient: { colors: { 0: '#7b3ff2', 50: '#b83fd6', 100: '#ff5db1' }, direction: 'to bottom right' },
@@ -214,7 +215,7 @@ const logo = (bg: string, letter: string) =>
 const IMAGE_ITEMS: IReqoreNavRailItem[] = [
   {
     id: 'qogs',
-    label: 'Qogs',
+    label: 'Flows',
     iconImage: logo('#7b3ff2', 'Q'),
     items: [
       { id: 'flows', label: 'Flows', icon: 'FlowChart' },
@@ -235,7 +236,7 @@ export const ImageMarks: Story = {
     docs: {
       description: {
         story:
-          'A mark renders an image instead of a font icon via `iconImage` (Qogs / Apps show logo images from `data:` URIs), and `props` forwards any extra `ReqoreButton` prop onto a mark — here a `badge` on Reports. Marks ARE `ReqoreButton`s, so anything the button accepts is reachable; the rail keeps its own shape, selection, tooltip and active effect.',
+          'A mark renders an image instead of a font icon via `iconImage` (the first two marks show logo images from `data:` URIs), and `props` forwards any extra `ReqoreButton` prop onto a mark — here a `badge` on Reports. Marks ARE `ReqoreButton`s, so anything the button accepts is reachable; the rail keeps its own shape, selection, tooltip and active effect.',
       },
     },
   },
@@ -486,7 +487,7 @@ export const Collapsed: Story = {
 };
 
 /** OVERFLOW MENU — the collapsed `⋮` opens a floating menu of the hidden items.
- *  This story opens it (play) so the flyout is captured in every Qlip build. */
+ *  This story opens it (play) so the flyout is captured in every visual build. */
 export const OverflowMenu: Story = {
   args: {
     items: ITEMS,
@@ -1196,5 +1197,31 @@ export const RaisedGlow: Story = {
     <Backdrop>
       <ReqoreNavRail {...args} />
     </Backdrop>
+  ),
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a navigation rail on the default and on the themed surface: with `theme.panel` set the rail sits on the panel surface, edged with the hairline.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <div style={{ height: 260 }}>
+        <ReqoreNavRail
+          activeId='dashboard'
+          position='static'
+          items={[
+            { id: 'dashboard', label: 'Dashboard', icon: 'DashboardLine' },
+            { id: 'workflows', label: 'Workflows', icon: 'GitBranchLine' },
+            { id: 'services', label: 'Services', icon: 'ServerLine' },
+          ]}
+        />
+      </div>
+    </ThemedSurfaceComparison>
   ),
 };

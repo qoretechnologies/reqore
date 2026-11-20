@@ -23,7 +23,7 @@ const KEYWORD_TRACK_SIZE = /^(auto|min-content|max-content|fit-content\(.*\))$/;
 
 /**
  * A column's minimum, never more than the container: `minmax(400px, 1fr)` laid a 400px column out in a 342px
- * dialog on a phone, its cards running past the dialog (qorus#646). The width is the narrowest a column is where
+ * dialog on a phone, its cards running past the dialog. The width is the narrowest a column is where
  * the container has room for it, not a width it keeps where there is less. A keyword (`auto`, `min-content`, ...)
  * is kept as it is: it already sizes to what is there.
  */

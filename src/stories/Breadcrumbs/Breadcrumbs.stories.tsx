@@ -344,7 +344,7 @@ export const CollapsedAdoptsLeafTheme: Story = {
   },
 };
 
-/* A crumb that changes width after the trail measured it (qorus#646). The trail decides what fits from
+/* A crumb that changes width after the trail measured it. The trail decides what fits from
    the crumbs' widths, and a crumb can grow after that: its size changes, or its padding animates
    (`transition: all`) after it is drawn - a crumb that grew from 151 to 160px over 200ms while the
    trail had measured it once, at the start, left the last crumb clipped by 1-2px. The
@@ -644,14 +644,55 @@ export const FoldedCurrentPageIsNamedInFull: Story = {
   },
 };
 
-/* A trail whose crumbs the page changes (qorus#646). The trail folds what does not fit before the browser
+export const AFoldedCurrentPageWithNoRoomIsItsIcon: Story = {
+  parameters: {
+    qlip: { viewport: { width: 390, height: 844 } },
+    docs: {
+      description: {
+        story:
+          'The same trail on a phone (390 px) beside a long action rail, which leaves the trail about 60 px: too little to read any of the current page\'s name. The dropdown standing in for the trail is the page\'s icon alone, named in full by its accessible name and its tooltip. It used to keep its icon, a cut letter and its chevron.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 'min(390px, 100%)' }}>
+      <ReqoreBreadcrumbs
+        flat
+        padded={false}
+        items={LONG_LEAF_TRAIL}
+        rightElement={<div className='action-rail' style={{ width: 300, height: 32 }} />}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const { withViewport } = await import('../utils/viewport');
+    await withViewport(390, 844, async () => {
+      const current = await waitFor(() => {
+        const button = canvasElement.querySelector<HTMLElement>(
+          '.reqore-breadcrumbs-overflow-current'
+        );
+        expect(button).toBeTruthy();
+        return button!;
+      });
+      // the icon alone: no cut letter of its name, no badge, no chevron
+      await waitFor(() =>
+        expect((current.textContent ?? '').trim(), 'no cut letter of its name').toBe('')
+      );
+      await expect(current.querySelectorAll('.reqore-icon').length, 'its icon alone').toBe(1);
+      // named in full
+      await expect(current).toHaveAttribute('aria-label', LONG_LEAF_NAME);
+    });
+  },
+};
+
+/* A trail whose crumbs the page changes. The trail folds what does not fit before the browser
    draws it: no frame shows a crumb past the trail's end. It used to fold one crumb per step after the
    browser had drawn the last one, so a page that changed its crumbs showed them all, running past the
    trail, until it had folded enough - on a 390 px phone, "… › New chat" ran 79 px past a 120 px trail for
    50 ms. */
 
 const QONSOLE_TRAIL: IReqoreBreadcrumbItem[] = [
-  { label: 'Qonsole', icon: 'TerminalBoxLine' },
+  { label: 'Console', icon: 'TerminalBoxLine' },
   { label: 'Design mode', icon: 'PencilRulerLine' },
   { label: 'New chat', icon: 'ChatNewLine' },
 ];
@@ -768,7 +809,7 @@ export const CrumbChangeIsFoldedBeforeItIsDrawn: Story = {
   },
 };
 
-/* A trail holding tabs folds crumbs rather than squeeze its tabs (qorus#646). The crumb holding the tabs
+/* A trail holding tabs folds crumbs rather than squeeze its tabs. The crumb holding the tabs
    can be squeezed - it clips them - so the trail folds another crumb whenever it would be: the tabs keep
    their room and stay tabs, rather than folding into their "More" menu. Checked as the trail is first
    drawn, before the tabs measure the room they were given. */
@@ -853,7 +894,7 @@ const drawnLabels = (canvasElement: HTMLElement): string[] =>
 const trailMenu = (canvasElement: HTMLElement) =>
   canvasElement.querySelector('.reqore-breadcrumbs-overflow-list .reqore-dropdown-control');
 
-/* A trail made wider by its own props (qorus#646). The trail unfolds what fits when it gets wider,
+/* A trail made wider by its own props. The trail unfolds what fits when it gets wider,
    and so when the render that changes its bar's props draws it wider: a right element that goes, a
    `maxWidth` lifted (a page that goes full width lifts its 1280px). That
    render used to be taken as the width the trail had been measured at, so its observer saw no
@@ -920,7 +961,7 @@ export const UnfoldsWhenItsPropsMakeItWider: Story = {
   },
 };
 
-/* The tabs get their room back when the trail widens again (qorus#646). Squeezed, the tabs put some
+/* The tabs get their room back when the trail widens again. Squeezed, the tabs put some
    of theirs in a "More" menu and draw narrower; a crumb only as wide as the tabs it draws kept them
    there however wide the trail got again, while the trail unfolded its crumbs into the room
    instead. At the end of the trail, the crumb holding tabs takes the room the other parts leave,
@@ -968,8 +1009,8 @@ export const TabsGetTheirRoomBackWhenTheTrailWidens: Story = {
   },
 };
 
-/* A fold made inside the trail's ResizeObserver keeps the trail's height for that frame
-   (qorus#646). The trail folds what no longer fits there and then, before the frame is painted. A
+/* A fold made inside the trail's ResizeObserver keeps the trail's height for that frame.
+   The trail folds what no longer fits there and then, before the frame is painted. A
    crumb with a description is taller than the others, so folding it makes the trail lower, and with
    it whatever holds the trail: a size another observer watches (a panel's, a page layout's) changed
    inside an observer's callback is left unreported until the next frame, and the browser reports a

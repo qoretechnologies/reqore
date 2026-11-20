@@ -21,7 +21,7 @@ const assignRef = <T>(ref: React.Ref<T> | undefined | null, node: T | null) => {
  * every ref has the element before the browser paints it. They used to be handed it in an effect, after the
  * paint: a popover drawn around a button learnt of the button only then, and armed its click listener in
  * the render after that - a click that landed on the button as soon as it was drawn opened nothing, and
- * nothing on the page said when it would (qorus#646: the Qorus IDE's template selector kept a sleep for it).
+ * nothing on the page said when it would (an app's template selector kept a sleep for it).
  * The effect also ran after every render, since the list of refs is new each time.
  *
  * A component that draws the element through a ref callback of its own calls `setRef` from it.

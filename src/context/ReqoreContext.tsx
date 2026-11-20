@@ -1,4 +1,5 @@
 import { IReqoreMarqueeOptions } from '../hooks/useMarqueeOnHover';
+import { TReqoreWindowSizeClass } from '../constants/breakpoints';
 import { createContext } from 'use-context-selector';
 import { IReqoreErrorBoundaryProps } from '../components/ErrorBoundary';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
@@ -11,6 +12,17 @@ import type {
   TReqoreCustomModal,
 } from '../containers/ReqoreProvider';
 
+/** The widths a modal takes when it passes none of its own (`dialogWidth`). */
+export interface IReqoreDialogWidths {
+  /** An ordinary dialog: a form, a confirmation, a message. */
+  form?: string;
+  /** A dialog that says it is wide (`ReqoreModal wide`): a table, a diff, a picker of many. */
+  wide?: string;
+}
+
+/** The calm look's dialog widths: a form reads at 720px, a wide dialog at 960px. */
+export const CALM_DIALOG_WIDTHS: Required<IReqoreDialogWidths> = { form: '720px', wide: '960px' };
+
 export interface IReqoreContext {
   readonly confirmAction: (data: IReqoreConfirmationModal) => void;
   readonly notifications?: IReqoreNotificationData[] | null;
@@ -22,9 +34,19 @@ export interface IReqoreContext {
   ) => string;
   readonly removeModal?: (id: string) => void;
   readonly removeNotification?: (id: string) => any;
+  /** A phone: the window is narrower than 600px (`windowSizeClass` 'compact'). */
   readonly isMobile?: boolean;
+  /** A tablet: 600-1199px (`windowSizeClass` 'medium' or 'expanded'). */
   readonly isTablet?: boolean;
+  /** A phone or a tablet: narrower than 1200px. */
   readonly isMobileOrTablet?: boolean;
+  /**
+   * The window's size class, Material 3's: `compact` (< 600px, a phone), `medium` (600-839),
+   * `expanded` (840-1199), `large` (1200-1599, a desktop), `extraLarge` (>= 1600). The numbers
+   * are `REQORE_BREAKPOINTS`, and `reqoreMedia` gives the same classes as CSS media queries.
+   * In jsdom, where no query can be answered, it is `extraLarge` (every flag above false).
+   */
+  readonly windowSizeClass?: TReqoreWindowSizeClass;
   /**
    * Whether the primary pointer can hover — `true` for a mouse, `false` for touch.
    *
@@ -81,6 +103,29 @@ export interface IReqoreContext {
    * @default true
    */
   readonly shortcutHints?: boolean;
+  /**
+   * How much the page behind a modal's or drawer's backdrop is blurred, in px, when the modal or
+   * drawer passes no `blur` of its own. Decided once for an app (`options.backdropBlur`) so every
+   * dialog softens what is behind it the same way. Unset: no blur.
+   */
+  readonly backdropBlur?: number;
+  /**
+   * A modal's or drawer's own panel opacity (0–1) when it passes no `opacity` of its own. Below
+   * 1 the panel is frosted glass: see-through, and blurred by `dialogBlur`. Unset: solid.
+   */
+  readonly dialogOpacity?: number;
+  /**
+   * The width a modal takes when it passes no `width` of its own: `form` for an ordinary dialog,
+   * `wide` for one that says it is wide (`ReqoreModal wide`). Unset, a modal is `80vw` as before,
+   * which is about 2,100px on a wide screen. `CALM_DIALOG_WIDTHS` is the calm look's (720px,
+   * 960px). A dialog's own `width` still wins.
+   */
+  readonly dialogWidth?: IReqoreDialogWidths;
+  /**
+   * How much a see-through modal or drawer panel blurs what shows through it, in px. Applies
+   * only below an opacity of 1 (a solid panel has nothing to blur). Unset: no frost.
+   */
+  readonly dialogBlur?: number;
   readonly customPortalId?: string;
   readonly closePopoversOnEscPress?: boolean;
   readonly closeModalsOnEscPress?: boolean;
@@ -115,6 +160,10 @@ export default createContext<IReqoreContext>({
   closePopoversOnEscPress: true,
   closeModalsOnEscPress: true,
   shortcutHints: true,
+  backdropBlur: undefined,
+  dialogOpacity: undefined,
+  dialogWidth: undefined,
+  dialogBlur: undefined,
   escClosableModals: [],
   addEscClosableModal: null,
   removeEscClosableModal: null,

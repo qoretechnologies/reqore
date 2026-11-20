@@ -1,5 +1,7 @@
 /* @flow */
+import type { IReqoreEffect, TReqoreHexColor } from '../Effect';
 import { TReqoreFilterRanking } from '../../helpers/search';
+import classNames from 'classnames';
 import { size as count, isArray } from 'lodash';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
@@ -15,12 +17,15 @@ import {
   useReqoreTheme,
 } from '../..';
 import { TReqorePaginationType, getPagingObjectFromType } from '../../constants/paging';
+import { NO_ITEMS_MESSAGE, SEARCH_EMPTY_MESSAGE } from '../../constants/emptyState';
 import { RADIUS_FROM_SIZE, TABLE_SIZE_TO_PX, TOUCH_TARGET_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { useDragToScroll } from '../../hooks/useDragToScroll';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
-import { IReqoreIntent, IReqoreTooltip } from '../../types/global';
+import { IReqoreTableControls } from './controls';
+import { getTableColumnsPickerItems } from './helpers';
+import { IReqoreIntent, IReqoreTooltip, IWithReqoreDestructive } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
@@ -169,7 +174,9 @@ export interface IReqoreTableColumn extends IReqoreIntent {
  * action; anything else gives way to its string `tooltip`.
  */
 export type TReqoreTableCellAction = Omit<IReqoreButtonProps, 'children' | 'label' | 'rightIcon'> &
-  IReqoreRowActionShortLabel & {
+  IReqoreRowActionShortLabel &
+  // folded into the column's menu, a destructive action is drawn in danger there
+  IWithReqoreDestructive & {
     label?: React.ReactNode;
   };
 
@@ -249,6 +256,12 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * `'Toggle selection on all data'`.
    */
   selectToggleAllTooltip?: string;
+  /**
+   * How a row's selection control is drawn. `'circle'` (default) is the round
+   * glyph the table has always drawn; `'checkbox'` is a square box — the shape
+   * a person expects when the column means "build a set of rows".
+   */
+  selectionStyle?: 'circle' | 'checkbox';
 
   /**
    * Renders the detail panel for an expanded row.
@@ -283,15 +296,60 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   /** Tooltip on an expanded row's expander. Defaults to `'Hide details'`. */
   collapseRowTooltip?: string;
   /**
+   * Where the expander goes when rows can open. `'start'` (default) prepends a
+   * column with a caret; `'end'` appends one after the last column; `'none'`
+   * draws no column at all. A row opens from its own click in every case, so
+   * `'none'` is for a table that wants the whole row as the control and nothing
+   * in the way of its first column.
+   */
+  expanderPosition?: 'start' | 'end' | 'none';
+  /**
    * Height a virtualised list assumes for a panel it has not measured yet.
    * Only affects the first frame after a row opens. Defaults to 200.
    */
   estimatedExpandedRowHeight?: number;
 
   striped?: boolean;
+  /**
+   * Whether rows are divided by a hairline. Default: the opposite of `flat`, as before — a flat
+   * table drew neither a panel border nor row dividers. Set it to keep the dividers on a `flat`
+   * table (a borderless list that still reads as rows), or to drop them on one that is not.
+   */
+  rowDividers?: boolean;
+  /**
+   * The surface behind the table, which a pinned column paints so the cells scrolling under it
+   * do not show through. Default: the panel surface, for a table inside a panel. A table drawn
+   * straight on the page (a `transparent` table) passes the page's colour, or its pinned columns
+   * read as a lighter block over the rows beside them.
+   */
+  pinnedSurface?: TReqoreHexColor;
+  /**
+   * What a table says when its search or a column filter has hidden all its rows. Defaults to
+   * `'Nothing to show. Try another search, or fewer filters.'`.
+   */
   emptyMessage?: string;
+  /**
+   * What a table with no rows says when nothing is searched or filtered: an empty table must not
+   * ask the reader to change a search they never made. Defaults to the caller's `emptyMessage`
+   * where one is given (it was shown in both cases before), otherwise `'Nothing here yet.'`.
+   */
+  noItemsMessage?: string;
+  /**
+   * A filter the page draws itself (its own toolbar, not this table's search or column filters) is narrowing
+   * `data`: an empty table then says `emptyMessage`, with the search icon, as it does when its own search emptied
+   * it, and not that there is nothing yet (a support queue filtered to empty, say).
+   */
+  filtered?: boolean;
   showHelp?: boolean;
   showColumnsOptions?: boolean;
+  /**
+   * Drives the column picker and the export from outside the table, from a page's own toolbar:
+   * the result of `useReqoreTableControls()`. The table hands them over and draws neither in its
+   * own toolbar (whatever `showColumnsOptions` and `exportable` say), nor a "⋯" just for the
+   * column reset, so a table with nothing else in its toolbar starts with its headers. Put the
+   * controls' `menuActions` in the page's "⋯".
+   */
+  controls?: IReqoreTableControls;
 
   /**
    * Divider label at the top of the "show / hide columns" dropdown.
@@ -317,6 +375,8 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   searchToggleLabel?: string;
   /** Tooltip on the "scroll to top" action. Defaults to `'Scroll to top'`. */
   scrollToTopTooltip?: string;
+  /** The name of the toolbar's "⋯" (its tooltip and accessible name). Defaults to `'More'`. */
+  moreActionsLabel?: string;
   /** Label of the "Reset all" more-menu action. Defaults to `'Reset all'`. */
   resetAllLabel?: string;
   /** Label of the "Help" more-menu action. Defaults to `'Help'`. */
@@ -443,6 +503,33 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    */
   onScrollChange?: (isScrolled: boolean) => void;
   headerCellComponent?: IReqoreCustomHeaderCellComponent;
+  /**
+   * Typography for every header cell, merged over the table's own default
+   * (upper-case, tracked, thick). A per-column `header.effect` still wins. Pass
+   * `{ uppercase: false, spaced: 0, weight: 'bold' }` for a sentence-case header.
+   */
+  headerEffect?: IReqoreEffect;
+  /**
+   * Whether the column dividers — the resize handles between header cells —
+   * are drawn at rest. `false` keeps the handles (columns still resize) but
+   * shows them only while the header is hovered, as `minimal` does. Default
+   * `true`.
+   */
+  headerDividers?: boolean;
+  /**
+   * When a row's action buttons (`cell.actions`) are shown in full. `'always'`
+   * (default) draws them as they are; `'hover'` dims them until their row is
+   * hovered or holds focus, so a column of three icons per row reads as the
+   * quiet affordance it is. On a device that cannot hover they stay in full.
+   */
+  actionsRevealOn?: 'always' | 'hover';
+  /**
+   * How the sorted column says so. `'wash'` (default) tints the header cell with the
+   * `info` colour; `'arrow'` draws an up / down arrow beside the label and leaves the
+   * colour alone — for a table where blue has a meaning of its own (a filter) and
+   * sorting narrows nothing.
+   */
+  sortIndicator?: 'wash' | 'arrow';
   rowComponent?: IReqoreTableRowOptions['rowComponent'];
   bodyCellComponent?: IReqoreTableRowOptions['cellComponent'];
   /**
@@ -494,6 +581,22 @@ export interface IReqoreTableSort {
 }
 
 const StyledTableWrapper = styled.div`
+  /* actionsRevealOn='hover': a row's action buttons rest at half strength and
+     come up with the row. Not on a device that cannot hover — there they would
+     never come up at all. */
+  &.reqore-table-actions-reveal-hover .reqore-table-cell-actions {
+    opacity: 0.5;
+    transition: opacity 0.12s ease;
+  }
+  &.reqore-table-actions-reveal-hover .reqore-table-row:hover .reqore-table-cell-actions,
+  &.reqore-table-actions-reveal-hover .reqore-table-row:focus-within .reqore-table-cell-actions {
+    opacity: 1;
+  }
+  @media (hover: none) {
+    &.reqore-table-actions-reveal-hover .reqore-table-cell-actions {
+      opacity: 1;
+    }
+  }
   display: flex;
   flex-flow: column;
   width: 100%;
@@ -556,6 +659,8 @@ const ReqoreTable = ({
   onRowClick,
   onScrollChange,
   striped,
+  rowDividers,
+  pinnedSurface,
   selectedRowIntent = 'info',
   size = 'normal',
   wrapperSize = 'normal',
@@ -569,8 +674,14 @@ const ReqoreTable = ({
   onFilterChange,
   filterProps,
   filterRanking = 'none',
-  emptyMessage = 'No data in this table, try changing your search query or filters',
+  emptyMessage: emptyMessageProp,
+  noItemsMessage: noItemsMessageProp,
+  filtered: filteredByPage,
   headerCellComponent,
+  headerEffect,
+  headerDividers = true,
+  actionsRevealOn = 'always',
+  sortIndicator = 'wash',
   rowComponent,
   bodyCellComponent,
   getRowProps,
@@ -580,6 +691,7 @@ const ReqoreTable = ({
   exportMapper,
   showHelp,
   showColumnsOptions,
+  controls,
   virtualized,
   wrap,
   maxCellHeight,
@@ -587,6 +699,7 @@ const ReqoreTable = ({
   rowHeight,
   overscanRowCount,
   selectToggleAllTooltip = 'Toggle selection on all data',
+  selectionStyle = 'circle',
   renderExpandedRow,
   defaultExpanded,
   expanded,
@@ -594,6 +707,7 @@ const ReqoreTable = ({
   expandSingle,
   expandRowTooltip = 'Show details',
   collapseRowTooltip = 'Hide details',
+  expanderPosition = 'start',
   estimatedExpandedRowHeight = 200,
   columnsToggleLabel = 'Show / hide columns',
   filterPlaceholder,
@@ -601,6 +715,7 @@ const ReqoreTable = ({
   searchToggleLabel = 'Search',
   scrollToTopTooltip = 'Scroll to top',
   resetAllLabel = 'Reset all',
+  moreActionsLabel = 'More',
   helpLabel = 'Help',
   helpModalLabel = 'Table help',
   helpContent,
@@ -719,6 +834,14 @@ const ReqoreTable = ({
     300,
     onFilterChange
   );
+  // `filter` is the query whenever the caller changes it. It used to seed the query once,
+  // so a page that set or cleared the search from outside (a figure, a link, "Clear
+  // filters") changed nothing after the first render.
+  useUpdateEffect(() => {
+    const next = filter.toString();
+    setPreQuery(next);
+    setQuery(next);
+  }, [filter]);
   const normalizedQuery = useMemo(() => query.toString().toLowerCase(), [query]);
 
   // Column filters live in `columnModifiers` once the user edits them, and on the column
@@ -761,6 +884,15 @@ const ReqoreTable = ({
       ]),
     [filters]
   );
+  /* The search sentence only while a search or a column filter is what emptied the table: an empty table
+     told a reader to change a search they never typed. */
+  const narrowed =
+    !!filteredByPage ||
+    normalizedQuery.length > 0 ||
+    normalizedFilters.some(([, filterValue]) => filterValue !== '');
+  const emptyText = narrowed
+    ? (emptyMessageProp ?? SEARCH_EMPTY_MESSAGE)
+    : (noItemsMessageProp ?? emptyMessageProp ?? NO_ITEMS_MESSAGE);
 
   const transformedData = useMemo(() => {
     const hasQuery = normalizedQuery.length > 0;
@@ -859,16 +991,17 @@ const ReqoreTable = ({
 
     return activeSelected.length === count(selectableData) ? 'all' : 'some';
   }, [activeSelected, selectableData]);
+  const box = selectionStyle === 'checkbox';
   const selectedIcon = useMemo(() => {
     switch (selectedQuant) {
       case 'all':
-        return 'CheckboxCircleLine';
+        return box ? 'CheckboxLine' : 'CheckboxCircleLine';
       case 'some':
-        return 'IndeterminateCircleLine';
+        return box ? 'CheckboxIndeterminateLine' : 'IndeterminateCircleLine';
       default:
-        return 'CheckboxBlankCircleLine';
+        return box ? 'CheckboxBlankLine' : 'CheckboxBlankCircleLine';
     }
-  }, [selectedQuant]);
+  }, [selectedQuant, box]);
 
   const updateSelected = useCallback(
     (
@@ -973,8 +1106,8 @@ const ReqoreTable = ({
   // A finger needs a bigger button than a mouse: the column, and the rows, make room for one.
   const touch = useReqoreProperty('isHoverCapable') === false;
   /* A folded column is as wide as what its cells draw: the square for a menu or an icon, and a row's
-     one action with no icon its words - its short label, or its label - whole in their button
-     (qorus#646). Measured over the table's rows, not the ones on screen, so the width holds as they
+     one action with no icon its words - its short label, or its label - whole in their button.
+     Measured over the table's rows, not the ones on screen, so the width holds as they
      scroll and page. */
   const { widths: foldedTextWidths, probe: foldedActionsProbe } = useFoldedActionWidths(
     _internalColumns,
@@ -1014,7 +1147,11 @@ const ReqoreTable = ({
               icon: !_selectId
                 ? 'Forbid2Line'
                 : activeSelected?.find((s) => s.toString() === _selectId.toString())
-                ? 'CheckboxCircleLine'
+                ? box
+                  ? 'CheckboxLine'
+                  : 'CheckboxCircleLine'
+                : box
+                ? 'CheckboxBlankLine'
                 : 'CheckboxBlankCircleLine',
               intent: !_selectId ? 'muted' : undefined,
               onClick: _selectId ? () => handleSelectClick(_selectId) : undefined,
@@ -1026,9 +1163,11 @@ const ReqoreTable = ({
 
     /* Unshifted AFTER the select box so it ends up to its LEFT. The expander is
        about the row you are looking at; the checkbox is about a set you are
-       building. The one that acts on this row alone comes first. */
-    if (renderExpandedRow) {
-      fullColumns.unshift({
+       building. The one that acts on this row alone comes first. With
+       `expanderPosition='end'` it goes after the last column instead, pinned
+       there; with `'none'` there is no column and the row's own click opens it. */
+    if (renderExpandedRow && expanderPosition !== 'none') {
+      const expanderColumn: IReqoreTableColumn = {
         /* Wider than the select box's 20px. That column holds a checkbox glyph
            that happens to fit; this one holds a real icon button, and at 20px
            with no padding the chevron was clipped by its own cell and read as a
@@ -1074,7 +1213,13 @@ const ReqoreTable = ({
             ];
           },
         },
-      });
+      };
+
+      if (expanderPosition === 'end') {
+        fullColumns.push({ ...expanderColumn, pin: 'right' });
+      } else {
+        fullColumns.unshift(expanderColumn);
+      }
     }
 
     return foldActionsColumns(
@@ -1093,6 +1238,8 @@ const ReqoreTable = ({
     foldedTextWidths,
     selectable,
     selectedIcon,
+    box,
+    expanderPosition,
     selectToggleTooltip,
     selectToggleAllTooltip,
     activeSelected,
@@ -1205,43 +1352,15 @@ const ReqoreTable = ({
     }
   }, [searchShown, searchToggleId, searchFieldId, preQuery]);
 
-  const columnsList = useMemo(() => {
-    const _columnsList: IReqorePanelSubAction[] = [];
-
-    const addColumn = (column: IReqoreTableColumn) => {
-      _columnsList.push({
-        label: typeof column.header?.label === 'string' ? column.header.label : column.dataId,
-        selected: column.show !== false,
-        onClick: () =>
-          handleColumnsUpdate(column.dataId, 'show', column.show !== false ? false : true),
-        intent: column.show !== false ? 'info' : undefined,
-      });
-    };
-
-    finalColumns.forEach((column) => {
-      if (column.hideable === false || column.enabled === false) {
-        // If the column is not hideable or enabled, we skip it
-        return;
-      }
-
-      if (column.header?.columns) {
-        column.header?.columns.forEach((subColumn) => {
-          addColumn(subColumn);
-        });
-      } else {
-        addColumn(column);
-      }
-    });
-
-    if (count(_columnsList)) {
-      _columnsList.unshift({
-        divider: true,
-        label: columnsToggleLabel,
-      });
-    }
-
-    return _columnsList;
-  }, [finalColumns, columnsToggleLabel]);
+  const columnsList = useMemo(
+    () =>
+      getTableColumnsPickerItems(
+        finalColumns,
+        (dataId, show) => handleColumnsUpdate(dataId, 'show', show),
+        columnsToggleLabel
+      ),
+    [finalColumns, columnsToggleLabel, handleColumnsUpdate]
+  );
 
   const handleScrollToTop = useCallback(() => {
     mainTableRef.current?.scrollTo({
@@ -1252,6 +1371,39 @@ const ReqoreTable = ({
     setIsScrolled(false);
   }, []);
 
+  /* The column picker and the export handed to a page that keeps them in its own toolbar
+     (`controls`). Handed over whenever they change; the controls draw the page again only when
+     what they show does. */
+  const connectControls = controls?.connect;
+  const shownColumnsCount =
+    getColumnsCount(getOnlyShownColumns(finalColumns, sizes.width)) - (selectable ? 1 : 0);
+  const hasColumnChanges = !!count(columnModifiers);
+  const columnsHidden = hasHiddenColumns(finalColumns);
+  const resetColumns = useCallback(() => setColumnModifiers({}), []);
+  const openExport = useCallback((type: 'current' | 'full') => setShowExportModal(type), []);
+
+  useEffect(() => {
+    connectControls?.({
+      columns: columnsList,
+      shownColumns: shownColumnsCount,
+      hasHiddenColumns: columnsHidden,
+      hasColumnChanges,
+      resetColumns,
+      openExport,
+    });
+  }, [
+    connectControls,
+    columnsList,
+    shownColumnsCount,
+    columnsHidden,
+    hasColumnChanges,
+    resetColumns,
+    openExport,
+  ]);
+
+  // Handed back on unmount, so the page's menu does not offer a table that is gone.
+  useEffect(() => () => connectControls?.(undefined), [connectControls]);
+
   const tableActions = useMemo<IReqorePanelAction[]>(() => {
     const finalActions: IReqorePanelAction[] = [...actions];
 
@@ -1259,7 +1411,7 @@ const ReqoreTable = ({
       return finalActions;
     }
 
-    if (count(columnsList) && showColumnsOptions) {
+    if (count(columnsList) && showColumnsOptions && !controls) {
       let columnsCount = getColumnsCount(getOnlyShownColumns(finalColumns, sizes.width));
 
       if (selectable) {
@@ -1268,6 +1420,9 @@ const ReqoreTable = ({
 
       finalActions.push({
         icon: 'LayoutColumnLine',
+        // An icon alone named nothing for a screen reader: it says what it opens.
+        tooltip: columnsToggleLabel,
+        'aria-label': columnsToggleLabel,
         className: 'reqore-table-columns-options',
         badge: columnsCount,
         active: hasHiddenColumns(finalColumns) ? true : undefined,
@@ -1342,10 +1497,14 @@ const ReqoreTable = ({
       });
     }
 
-    if (count(columnModifiers) || zoomable || filterable || exportable || showHelp) {
+    // With `controls` the export and the column reset are the page's: they do not open a "⋯" here.
+    const ownExport = exportable && !controls;
+    const ownColumnChanges = !controls && !!count(columnModifiers);
+
+    if (ownColumnChanges || zoomable || filterable || ownExport || showHelp) {
       let moreActions: IReqorePanelSubAction[] = [];
 
-      if (exportable) {
+      if (ownExport) {
         moreActions = [
           ...moreActions,
           ...getExportActions((type) => setShowExportModal(type)),
@@ -1363,11 +1522,13 @@ const ReqoreTable = ({
 
       const moreActionsWrapper: IReqorePanelAction = {
         icon: 'MoreLine',
+        tooltip: moreActionsLabel,
+        'aria-label': moreActionsLabel,
         className: 'reqore-table-more',
         actions: [],
       };
 
-      if (count(columnModifiers) || zoomable || filterable || exportable) {
+      if (ownColumnChanges || zoomable || filterable || ownExport) {
         moreActionsWrapper.actions = [
           ...moreActions,
           {
@@ -1426,6 +1587,8 @@ const ReqoreTable = ({
     addModal,
     columnModifiers,
     columnsList,
+    columnsToggleLabel,
+    controls,
     data,
     exportable,
     filterProps,
@@ -1446,6 +1609,7 @@ const ReqoreTable = ({
     zoomable,
     scrollToTopTooltip,
     resetAllLabel,
+    moreActionsLabel,
     helpLabel,
     helpModalLabel,
     helpContent,
@@ -1474,6 +1638,9 @@ const ReqoreTable = ({
     return badgeList;
   }, [rest.badge, rest.label, transformedData]);
 
+  // The rows' own flatness: no divider under each row. Follows `flat` unless `rowDividers` says.
+  const rowsFlat = rowDividers === undefined ? rest.flat : !rowDividers;
+
   /* Under a coarse pointer, a row with its actions folded into a menu button is at least a finger
      tall, so the button is a finger's size both ways. The row's border is the 1px the body adds to a
      table that is not flat. */
@@ -1481,10 +1648,10 @@ const ReqoreTable = ({
     if (!touch || !actionsMenuColumnIds.length) {
       return rowHeight;
     }
-    const border = rest.flat ? 0 : 1;
+    const border = rowsFlat ? 0 : 1;
 
     return Math.max(rowHeight ?? TABLE_SIZE_TO_PX[zoomSize] + border, TOUCH_TARGET_PX + border);
-  }, [touch, actionsMenuColumnIds, rowHeight, zoomSize, rest.flat]);
+  }, [touch, actionsMenuColumnIds, rowHeight, zoomSize, rowsFlat]);
 
   const renderTable = (items: IReqoreTableRowData[]) => {
     if (count(finalColumns) === 0 || count(data) === 0) {
@@ -1494,7 +1661,9 @@ const ReqoreTable = ({
     return (
       <StyledTableWrapper
         ref={wrapperRef}
-        className={`reqore-table-wrapper${dragToScroll ? ' reqore-table-wrapper-draggable' : ''}`}
+        className={`reqore-table-wrapper${
+          actionsRevealOn === 'hover' ? ' reqore-table-actions-reveal-hover' : ''
+        }${dragToScroll ? ' reqore-table-wrapper-draggable' : ''}`}
         rounded={rest.rounded !== false && rest.flat !== false}
         size={rest.flat === false ? wrapperSize : zoomSize}
       >
@@ -1513,6 +1682,10 @@ const ReqoreTable = ({
           component={headerCellComponent}
           tableWidth={sizes.width}
           minimal={rest.minimal}
+          headerEffect={headerEffect}
+          pinnedSurface={pinnedSurface}
+          dividers={headerDividers}
+          sortIndicator={sortIndicator}
           sortAscendingLabel={sortAscendingLabel}
           sortDescendingLabel={sortDescendingLabel}
           pinLeftLabel={pinLeftLabel}
@@ -1537,7 +1710,8 @@ const ReqoreTable = ({
             selectedRowIntent={selectedRowIntent}
             size={zoomSize}
             striped={striped}
-            flat={rest.flat}
+            pinnedSurface={pinnedSurface}
+            flat={rowsFlat}
             wrap={wrap}
             maxCellHeight={maxCellHeight}
             expandHeightButtonProps={expandHeightButtonProps}
@@ -1591,6 +1765,11 @@ const ReqoreTable = ({
         padded={false}
         contentStyle={{ display: 'flex', flexFlow: 'column', overflow: 'hidden' }}
         responsiveActions={false}
+        /* A table keeps its title whole on one line its own way: a narrow toolbar folds its search into a
+           button, and the open search takes the toolbar's line. Moved under the title, the toolbar would
+           hold an open search field wider than its line, which pushed "50 rows" past the card's edge. So
+           its bar stays one line unless the page asks (`wrapActionsBelowTitle`, the panels' default). */
+        wrapActionsBelowTitle={false}
         {...rest}
         // the open search takes the toolbar's line; the title is back when it closes
         {...(searchOpenFolded ? { label: undefined, icon: undefined } : {})}
@@ -1627,10 +1806,14 @@ const ReqoreTable = ({
                       <ReqoreMessage
                         flat
                         size={size}
-                        icon='Search2Line'
+                        icon={narrowed ? 'Search2Line' : 'InboxLine'}
                         margin={count(data) ? 'top' : 'none'}
+                        className={classNames(
+                          'reqore-table-empty',
+                          narrowed && 'reqore-table-empty-searched'
+                        )}
                       >
-                        {emptyMessage}
+                        {emptyText}
                       </ReqoreMessage>
                     )
                   : null}

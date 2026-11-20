@@ -313,3 +313,25 @@ test('<Button /> keeps the tabIndex it is given', () => {
   // A disabled button is never a tab stop, whatever it was asked for.
   expect(document.querySelector('.disabled')?.getAttribute('tabindex')).toBe('-1');
 });
+
+test('A one-line description keeps its height and ellipsises at the button edge', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreButton
+            description='A very long description that would run past the edge of the cell'
+            descriptionEffect={{ noWrap: true }}
+          >
+            Name
+          </ReqoreButton>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+  const description = document.querySelector('.reqore-button-description') as HTMLElement;
+  const style = getComputedStyle(description);
+  expect(style.textOverflow).toBe('ellipsis');
+  expect(style.flexShrink).toBe('0');
+  expect(style.maxWidth).toBe('100%');
+});

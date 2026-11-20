@@ -70,6 +70,19 @@ export interface IReqoreGlowConfig {
 const GLOW_INHERIT_CHROMA_FLOOR = 0.02;
 const GLOW_INHERIT_CHROMA_SPAN = 0.06;
 
+/** A slow pulse — a live status, a recording, a process that is running. */
+const HeartbeatKeyframes = keyframes`
+  0%,
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+  50% {
+    scale: 1.3;
+    opacity: 0.55;
+  }
+`;
+
 const SpinKeyframes = keyframes`
   0% {
     rotate: 0deg;
@@ -106,7 +119,12 @@ export const StyledIconWrapper = styled(StyledEffect).withConfig({
   justify-content: center;
   align-items: center;
   vertical-align: text-bottom;
+  /* Everything but its scale eases: the scale a button, a tag or a field gives its icon on hover,
+     focus and active (0.85 -> 0.93) changes at once. Animating a transform promoted the icon to a
+     compositor layer that was demoted some time later, so a capture drew the icon's box a shade
+     apart run to run (the focused-control stories' captures alternated between two images). */
   transition: all 0.2s ease-out;
+  transition-property: color, background-color, border-color, opacity, filter, box-shadow, rotate;
   overflow: hidden;
 
   border-radius: ${({ rounded }) => (rounded ? '50%' : undefined)};
@@ -144,6 +162,16 @@ export const StyledIconWrapper = styled(StyledEffect).withConfig({
     animation === 'spin' &&
     css`
       animation: ${SpinKeyframes} 1s linear infinite;
+    `}
+
+  ${({ animation }) =>
+    animation === 'heartbeat' &&
+    css`
+      animation: ${HeartbeatKeyframes} 2.4s ease-in-out infinite;
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+      }
     `}
 `;
 

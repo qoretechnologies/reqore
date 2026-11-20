@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { mockAllIsIntersecting } from 'react-intersection-observer/test-utils';
 import { ReqoreCollection, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
+import { compareCollectionGroups, TReqoreCollectionGroups } from '../src/components/Collection';
 import { IReqoreCollectionItemProps } from '../src/components/Collection/item';
 import items, { bigCollection } from '../src/mock/collectionData';
 
@@ -462,4 +463,69 @@ test('<Collection /> ranks search matches by relevance when opted in', () => {
     'Gmail',
     'Slack',
   ]);
+});
+
+describe('<Collection /> group places', () => {
+  const APPS: IReqoreCollectionItemProps[] = [
+    { label: 'Payroll', groups: ['Finance'] },
+    { label: 'Misc tool', groups: ['Other applications'] },
+    { label: 'Shipments', groups: ['Logistics'] },
+    { label: 'Saved favorite' },
+  ];
+
+  test.each(['asc', 'desc'] as const)(
+    'puts a group with a later place last, under the %s sort, the ungrouped items still first',
+    (sort) => {
+      render(
+        <ReqoreUIProvider>
+          <ReqoreLayoutContent>
+            <ReqoreCollection
+              items={APPS}
+              defaultSort={sort}
+              groups={{ 'Other applications': { order: 1 } }}
+            />
+          </ReqoreLayoutContent>
+        </ReqoreUIProvider>
+      );
+
+      const named = sort === 'asc' ? ['Finance', 'Logistics'] : ['Logistics', 'Finance'];
+      const groups = Array.from(document.querySelectorAll('.reqore-collection-group')).map(
+        (panel) => panel.querySelector('.reqore-panel-title-label-row')?.textContent?.trim()
+      );
+      expect(groups).toEqual([...named, 'Other applications']);
+      // its place is the collection's, never written on the group's panel
+      document
+        .querySelectorAll('.reqore-collection-group')
+        .forEach((panel) => expect(panel.hasAttribute('order')).toBe(false));
+    }
+  );
+
+  test('orders by place, then by name in the sort; the ungrouped items lead unless placed', () => {
+    const order = (names: string[], groups: TReqoreCollectionGroups, sort: 'asc' | 'desc') =>
+      [...names].sort((a, b) => compareCollectionGroups(a, b, groups, sort));
+    const names = ['Other', 'Finance', 'Ungrouped', 'Logistics', 'Pinned'];
+
+    expect(order(names, { Other: { order: 1 }, Pinned: { order: -1 } }, 'asc')).toEqual([
+      'Ungrouped',
+      'Pinned',
+      'Finance',
+      'Logistics',
+      'Other',
+    ]);
+    expect(order(names, { Other: { order: 1 }, Pinned: { order: -1 } }, 'desc')).toEqual([
+      'Ungrouped',
+      'Pinned',
+      'Logistics',
+      'Finance',
+      'Other',
+    ]);
+    // placed, the ungrouped items are where they are put
+    expect(order(names, { Ungrouped: { order: 2 } }, 'asc')).toEqual([
+      'Finance',
+      'Logistics',
+      'Other',
+      'Pinned',
+      'Ungrouped',
+    ]);
+  });
 });

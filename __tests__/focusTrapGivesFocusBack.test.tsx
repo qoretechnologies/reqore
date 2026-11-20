@@ -4,7 +4,7 @@ import { useFocusTrap } from '../src/hooks/useFocusTrap';
 
 /* A dialog or drawer traps focus while it is open and gives it back to what had it when it closes. The give-back
    read its saved element one frame after clearing it, so it never happened: focus fell to the page when the dialog
-   went away, or stayed on the opener only when the dialog closed before its first frame (qorus#646, where a story
+   went away, or stayed on the opener only when the dialog closed before its first frame (where a story
    ended with its tab focused on one run and with nothing focused on the next). The frames are run by hand, so
    each test says exactly which frame does what. */
 

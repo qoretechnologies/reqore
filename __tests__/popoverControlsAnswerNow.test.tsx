@@ -18,7 +18,7 @@ import { IPopoverControls } from '../src/components/Popover';
  * `isOpen` was a closure over the render that passed it, and the holder got a fresh copy only after an
  * effect and a render of its own. A template list opened by a click was therefore still "closed" to the
  * field that owns it when a key typed straight after the click arrived: typing did not put the list away,
- * and it opened over the text being written (qorus#646: a field chosen into a value, then " Stk." typed
+ * and it opened over the text being written (a field chosen into a value, then " Stk." typed
  * after it).
  */
 
@@ -102,7 +102,7 @@ describe("a popover's controls", () => {
     act(() => first.open());
     expect(isOpen()).toBe(true);
     /* A close and an open before the popover renders again: a list that closed itself (Popper found its
-       field out of sight) and the field asking for it again with a key typed (qorus#646, reqraft's
+       field out of sight) and the field asking for it again with a key typed (reqraft's
        creatable value field). `open()` read the render's "open" and did nothing, while `isOpen()` said
        it was closed. */
     act(() => {
@@ -134,7 +134,7 @@ describe('a template list', () => {
       fireEvent.click(field);
     });
     expect(isOpen()).toBe(true);
-    // a touch keyboard sends no keydown for the character, only the input it makes (qorus#646: the list
+    // a touch keyboard sends no keydown for the character, only the input it makes (the list
     // stayed open over the completion list a typed `@` opened, which then could not be seen)
     act(() => {
       fireEvent(
@@ -198,7 +198,7 @@ describe('a template list', () => {
  *
  * The popover heard Escape on the document, after every handler in the page: an editor around the field
  * (reqraft's form row, where Escape discards the edit) heard it first, so one Escape meant for the list
- * also closed the editor and threw away what had been typed (qorus#646: a fill value of 42 back to empty).
+ * also closed the editor and threw away what had been typed (a fill value of 42 back to empty).
  */
 describe('Escape with a list open', () => {
   const Editor = ({ onEscape }: { onEscape: () => void }) => (

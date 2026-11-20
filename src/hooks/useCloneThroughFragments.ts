@@ -22,7 +22,7 @@ export const useCloneThroughFragments = (
   /* The style each child was last handed, by its place, kept while it says the same. A mapper makes the
      style anew on every render - a stacked control group squares the corners that meet and tucks each
      border under the one before - so it was a prop that always changed, and a memo child (a button, a
-     dropdown) was drawn again with its group each time, whatever else it was handed (qorus#646). */
+     dropdown) was drawn again with its group each time, whatever else it was handed. */
   const keptStyles = useRef(new Map<number, React.CSSProperties>());
 
   const clone = useCallback((children: React.ReactNode): React.ReactNode => {

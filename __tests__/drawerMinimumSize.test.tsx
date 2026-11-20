@@ -104,7 +104,7 @@ describe('the size a modal cannot be dragged below', () => {
 
   it('is still under every modal it is applied to, so nothing is resized by it', () => {
     // The floor may not push a modal about: the narrowest modal across reqore,
-    // reqraft and qorus-ide is 480px, and every one of them is taller than its
+    // reqraft and the apps that use them is 480px, and every one of them is taller than its
     // own 55px header.
     inLayout(
       <ReqoreModal isOpen label='Narrow' width='480px' onClose={() => undefined}>

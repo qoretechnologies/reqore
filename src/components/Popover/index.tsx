@@ -464,8 +464,8 @@ export const ReqorePopover = memo(
            pointer being elsewhere is not news about it, and closing on that
            reading takes it down on the first mouse movement anywhere on the
            page. Three of reqore's own stories lost their auto-opened popovers
-           to exactly that, and two live surfaces do the same thing: the Qorus
-           IDE's FSM error tooltip, and reqraft's LSP hover documentation, whose
+           to exactly that, and two live surfaces do the same thing: a state
+           machine editor's error tooltip, and reqraft's LSP hover documentation, whose
            anchor is a 1x1 `pointer-events: none` span and therefore a trigger
            the pointer can never be on.
 

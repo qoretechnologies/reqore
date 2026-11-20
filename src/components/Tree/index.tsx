@@ -10,6 +10,7 @@ import {
 } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { copyText } from '../../helpers/secureContextApis';
+import { useColorDataByType } from '../../hooks/useColorDataByType';
 import styled from '../../helpers/styled';
 import {
   ReqoreErrorBoundary,
@@ -64,16 +65,34 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize, IR
   defaultZoom?: TReqoreZoom;
   editable?: boolean;
 
+  /**
+   * Colour keys (blue) and values by their type (a boolean green or red, a number blue).
+   * Default `theme.colorDataByType` (`true` unless the theme says otherwise). `false` draws keys
+   * as quiet labels and values as plain text.
+   */
+  colorByType?: boolean;
+
   // Components provided here must be valid JSX components
   KeyRenderer?: React.ComponentType<IReqoreTreeCustomRendererProps>;
   ValueRenderer?: React.ComponentType<IReqoreTreeCustomRendererProps>;
 
-  /** Label of the "Expand all" panel action. Defaults to `'Expand all'`. */
+  /** Label of the action that opens every level. Defaults to `'Show all'`. */
   expandAllLabel?: string;
-  /** Label of the "Collapse all" panel action. Defaults to `'Collapse all'`. */
+  /** Label of the action that closes every level. Defaults to `'Show top level'`. */
   collapseAllLabel?: string;
   /** Label of the "Show types" panel action. Defaults to `'Show types'`. */
   showTypesLabel?: string;
+  /**
+   * The name of each editable row's edit button (its tooltip and accessible name: the button is
+   * an icon alone). Defaults to `'Edit'`.
+   */
+  editLabel?: string;
+  /** The name of each editable row's delete button. Defaults to `'Delete'`. */
+  deleteLabel?: string;
+  /** The name of the buttons that add an item (to an object, and to the tree). Defaults to `'Add an item'`. */
+  addLabel?: string;
+  /** The name of each row's copy button (`withLabelCopy`). Defaults to `'Copy the value'`. */
+  copyLabel?: string;
   /**
    * Rendered when `data` is nullish. Defaults to a `<p>` containing `'No data'`.
    */
@@ -162,9 +181,14 @@ export const ReqoreTree = ({
   errorBoundaryOptions,
   KeyRenderer,
   ValueRenderer,
-  expandAllLabel = 'Expand all',
-  collapseAllLabel = 'Collapse all',
+  colorByType: colorByTypeProp,
+  expandAllLabel = 'Show all',
+  collapseAllLabel = 'Show top level',
   showTypesLabel = 'Show types',
+  editLabel = 'Edit',
+  deleteLabel = 'Delete',
+  addLabel = 'Add an item',
+  copyLabel = 'Copy the value',
   noDataContent,
   copySuccessMessage = 'Successfully copied to clipboard',
   copyFailedTitle = 'Could not copy',
@@ -185,6 +209,17 @@ export const ReqoreTree = ({
   const [allExpanded, setAllExpanded] = useState(expanded || !showControls);
   const [_showTypes, setShowTypes] = useState(showTypes);
   const addNotification = useReqoreProperty('addNotification');
+  const themeColorsDataByType = useColorDataByType();
+  const colorByType = colorByTypeProp ?? themeColorsDataByType;
+  // A key: blue when the tree colours by type, else a quieter label beside its value (the
+  // data view's plain key).
+  const keyEffect = useMemo(
+    () =>
+      colorByType
+        ? ({ weight: 'normal', color: 'info:lighten:5' } as const)
+        : ({ weight: 'normal', opacity: 0.65 } as const),
+    [colorByType]
+  );
   const [zoom, setZoom] = useState<number>(clampZoom(defaultZoom ?? sizeToZoom[size]));
   // The size the tree paints at — `zoom` is the size as a number, this is it back as a
   // size. `??` and not `||`, so `defaultZoom={0}` means `tiny` rather than "not given".
@@ -305,6 +340,9 @@ export const ReqoreTree = ({
             minimal
             className='reqore-tree-edit'
             icon='EditLine'
+            // An icon alone named nothing for a screen reader.
+            tooltip={editLabel}
+            aria-label={editLabel}
             flat
             size='tiny'
             onClick={(e) => {
@@ -343,6 +381,8 @@ export const ReqoreTree = ({
             transparent
             className='reqore-tree-delete'
             icon='IndeterminateCircleLine'
+            tooltip={deleteLabel}
+            aria-label={deleteLabel}
             intent='muted'
             flat
             size='tiny'
@@ -389,10 +429,7 @@ export const ReqoreTree = ({
               ) : (
                 <ReqoreP
                   className='reqore-tree-toggle'
-                  effect={{
-                    weight: 'normal',
-                    color: 'info:lighten:5',
-                  }}
+                  effect={keyEffect}
                   tooltip={getItemTooltip?.([...path, key], 'key', _pathWithoutArrayKeys)}
                 >
                   {displayKey}:
@@ -406,6 +443,8 @@ export const ReqoreTree = ({
                     flat
                     transparent
                     icon='AddCircleLine'
+                    tooltip={addLabel}
+                    aria-label={addLabel}
                     onClick={() => {
                       setManagementDialog({
                         open: true,
@@ -449,7 +488,7 @@ export const ReqoreTree = ({
               ) : (
                 <ReqoreP
                   {...{
-                    customTheme: { text: { color: 'info:lighten:5' } },
+                    effect: keyEffect,
                     style: { flexShrink: 0 },
                     size: zoomSize,
                   }}
@@ -467,7 +506,9 @@ export const ReqoreTree = ({
                   className='reqore-tree-label'
                   customTheme={{
                     text: {
-                      color: isBoolean(_data[key])
+                      color: !colorByType
+                        ? undefined
+                        : isBoolean(_data[key])
                         ? _data[key]
                           ? 'success:lighten:5'
                           : 'danger:lighten:10'
@@ -490,6 +531,8 @@ export const ReqoreTree = ({
                   icon='ClipboardLine'
                   size='tiny'
                   className='reqore-tree-copy'
+                  tooltip={copyLabel}
+                  aria-label={copyLabel}
                   onClick={() => void handleCopyValue(JSON.stringify(_data[key]))}
                 />
               )}
@@ -708,6 +751,8 @@ export const ReqoreTree = ({
             fixed
             className='reqore-tree-add'
             icon='AddCircleLine'
+            tooltip={addLabel}
+            aria-label={addLabel}
             onClick={() => {
               setManagementDialog({
                 open: true,

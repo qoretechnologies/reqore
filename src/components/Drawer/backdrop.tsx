@@ -32,6 +32,8 @@ export const StyledBackdrop = styled(animated.div).withConfig({
 export const ReqoreBackdrop = memo(
   ({ onClose, zIndex, blur, opacity, ...rest }: IReqoreBackdropProps) => {
     const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
+    // the app's default (`options.backdropBlur`) when the dialog passes none of its own
+    const defaultBlur = useReqoreProperty('backdropBlur');
     const finalZIndex = useMemo(
       () => zIndex || getAndIncreaseZIndex(),
       [zIndex, getAndIncreaseZIndex]
@@ -62,7 +64,7 @@ export const ReqoreBackdrop = memo(
         onClick={handleClick}
         closable={!!onClose}
         zIndex={finalZIndex}
-        blur={blur}
+        blur={blur ?? defaultBlur}
         style={style}
       />
     );

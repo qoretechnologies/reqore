@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { ReqoreButton, ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 
 /* An icon-only button is read by its name. With no label of its own and no `aria-label`, it had none: assistive
-   technology heard "button", and a test that finds buttons by name found nothing to test (the Qorus IDE's
-   Interfaces view had 24 of 29 visible buttons unnamed, qorus#646). A string tooltip is the words such a button
+   technology heard "button", and a test that finds buttons by name found nothing to test (one app's
+   list view had 24 of 29 visible buttons unnamed). A string tooltip is the words such a button
    would say, so it names it. A tooltip that is a node or an object is left to the caller, and a button that has
    a label, or is named already, is not named twice. */
 

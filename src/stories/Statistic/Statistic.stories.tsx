@@ -49,6 +49,49 @@ export const WithLabel: Story = {
   ),
 };
 
+/** The figure first, then the label, then the description — a dashboard strip's order. */
+export const LabelBelow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`labelPosition='below'` leads with the figure and names it underneath, then the description — the order a KPI strip reads in, where the number is what the eye lands on. The default (`'above'`) is unchanged.",
+      },
+    },
+  },
+  render: (args) => (
+    <ReqoreControlGroup gapSize='huge'>
+      <ReqoreStatistic
+        {...args}
+        align='left'
+        labelPosition='below'
+        value='89.1'
+        suffix='%'
+        label='Success rate'
+        labelEffect={{ uppercase: false, spaced: 0, opacity: 1 }}
+        description='41 of 46 finished · target 95%'
+      />
+      <ReqoreStatistic
+        {...args}
+        align='left'
+        labelPosition='below'
+        value={3}
+        label='Need attention'
+        labelEffect={{ uppercase: false, spaced: 0, opacity: 1 }}
+        description='Errored or waiting to retry'
+      />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const tile = canvasElement.querySelector('.reqore-statistic-content')!;
+    const parts = Array.from(tile.children).map((child) => child.className);
+    const valueAt = parts.findIndex((name) => name.includes('reqore-statistic-value-row'));
+    const labelAt = parts.findIndex((name) => name.includes('reqore-statistic-label'));
+    await waitFor(() => expect(valueAt).toBeGreaterThanOrEqual(0));
+    expect(labelAt).toBeGreaterThan(valueAt);
+  },
+};
+
 export const WithIcon: Story = {
   parameters: {
     docs: {
@@ -853,7 +896,7 @@ export const CountUpWhenInView: Story = {
   },
 };
 
-/* A label's words stay whole (qorus#646): "DEPENDENCIES" on a 120px KPI tile broke mid-word
+/* A label's words stay whole: "DEPENDENCIES" on a 120px KPI tile broke mid-word
    ("DEPEND / ENCI / ES"). A label wraps between its words, and a word breaks only when it alone is
    wider than its tile. A tile narrows to the share its row gives it (min-width 0), so a row that
    sizes its tiles by their content keeps every word whole where it has the room. */
@@ -937,7 +980,7 @@ export const LabelWordWiderThanItsTile: Story = {
   },
 };
 
-/* Four tiles in a 320px grid of four equal columns (qorus#646): a tile is as narrow as its column,
+/* Four tiles in a 320px grid of four equal columns: a tile is as narrow as its column,
    not as wide as the longest word of its label. Kept at that word's width, "Dependencies" and
    "Connections" pushed the row past its box and the tiles over each other; a word now breaks only
    when it cannot fit its tile, which here is every long one. */
@@ -992,7 +1035,7 @@ export const NarrowGridTilesStayInTheirCells: Story = {
       // and its label inside it
       const label = tile.querySelector('.reqore-statistic-label') as HTMLElement;
       expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
-      // centred line by line, a broken label as a whole one is (Foxhoundn's review of #708)
+      // centred line by line, a broken label as a whole one is (from the review of reqore#708)
       expect(getComputedStyle(label).textAlign).toBe('center');
       const text = document.createRange();
       text.selectNodeContents(label);
@@ -1001,5 +1044,24 @@ export const NarrowGridTilesStayInTheirCells: Story = {
         expect(Math.abs(line.left + line.width / 2 - middle)).toBeLessThanOrEqual(2);
       });
     });
+  },
+};
+
+export const WithDescription: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with a description line under the value — what the number is measured ' +
+          'against — and tabular figures, so digits line up when values change.',
+      },
+    },
+  },
+  args: {
+    value: '8,782',
+    label: 'Events processed',
+    description: '+5.9% vs the day before',
+    align: 'left',
+    valueEffect: { tabularNums: true },
   },
 };

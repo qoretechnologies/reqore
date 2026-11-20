@@ -1,12 +1,17 @@
-import { nanoid } from 'nanoid';
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo } from 'react';
 import { useReqoreProperty } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../Drawer';
 
 export interface IReqoreModalProps extends Omit<IReqoreDrawerProps, 'position' | 'draggable'> {
   position?: 'top' | 'center' | 'bottom';
+  /** The modal's width. Unset: the app's (`dialogWidth` on the provider), else `80vw`. */
   width?: string;
+  /**
+   * A dialog that needs the room (a table, a diff, a picker of many): it takes the app's wide
+   * width (`dialogWidth.wide`) where it gives no `width` of its own.
+   */
+  wide?: boolean;
   height?: string;
   /** Whether to trap focus within the modal when open. Defaults to true. */
   focusTrap?: boolean;
@@ -20,6 +25,29 @@ export interface IReqoreModalProps extends Omit<IReqoreDrawerProps, 'position' |
    * HTML attribute of the same name: it never reaches the DOM.
    */
   draggable?: boolean;
+  /**
+   * How many lines the description may wrap to before it is ellipsized. Default `0`: none — a
+   * dialog's description is the message it exists to say (a confirmation's warning above all), so
+   * it is shown whole, wrapped. A panel's own default of 2 suits a subtitle in a crowded header,
+   * not a dialog. See `descriptionMaxHeight` for a message too long for the screen.
+   *
+   * @default 0
+   */
+  descriptionMaxLines?: number;
+  /**
+   * The height a whole description scrolls past, in its own box, with the title and the buttons
+   * left on screen. Default `'50vh'`: a message has to be genuinely huge to scroll.
+   *
+   * @default '50vh'
+   */
+  descriptionMaxHeight?: string;
+  /**
+   * The modal's width on a phone (`isMobile`). Default `'100%'`, which the modal's phone maximum
+   * (`MODAL_PHONE_WIDTH`, `calc(100vw - 32px)`) holds to the page's own 16px gutter each side,
+   * where 80vw left ~40px and a third of the screen's width unused. (Not `calc()` itself: the
+   * resizable box does not take one as a width.) `null` keeps `width` on a phone too.
+   */
+  phoneWidth?: string | null;
 }
 
 export interface IReqoreModalStyle extends IReqoreModalProps {
@@ -29,61 +57,33 @@ export interface IReqoreModalStyle extends IReqoreModalProps {
 
 export const ReqoreModal = memo(
   ({
-    width = '80vw',
+    width: widthProp,
+    wide,
     height = 'fit-content',
     confirmOnClose,
     draggable,
+    phoneWidth = '100%',
+    descriptionMaxLines = 0,
+    descriptionMaxHeight = '50vh',
     ...rest
   }: IReqoreModalProps) => {
-    const id = useMemo(() => nanoid(), []);
-    const escClosableModals = useReqoreProperty('escClosableModals');
+    /* Escape is the drawer's: a modal is a drawer, and the drawer closes on Escape itself
+       (`useReqoreEscClose`), the app's `closeModalsOnEscPress` unless the modal says. */
+    const isMobile = useReqoreProperty('isMobile');
     const closeModalsOnEscPress = useReqoreProperty('closeModalsOnEscPress');
-    const add = useReqoreProperty('addEscClosableModal');
-    const remove = useReqoreProperty('removeEscClosableModal');
-
-    const isEscClosable =
-      rest.isOpen &&
-      rest.onClose &&
-      !rest.disabled &&
-      (rest.closeOnEscPress ?? closeModalsOnEscPress);
-
-    // Close last popover when ESC is pressed
-    const handleKeyDown = useCallback(
-      (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-          remove(id, rest.onClose, confirmOnClose);
-        }
-      },
-      [id, rest.onClose, remove, confirmOnClose]
-    );
-
-    useEffect(() => {
-      if (isEscClosable) {
-        document.addEventListener('keydown', handleKeyDown);
-      }
-
-      return () => {
-        document.removeEventListener('keydown', handleKeyDown);
-      };
-    }, [escClosableModals, isEscClosable, handleKeyDown]);
-
-    useEffect(() => {
-      if (rest.isOpen) {
-        add(id);
-      }
-
-      return () => {
-        remove(id);
-      };
-    }, [id, rest.isOpen]);
+    const dialogWidth = useReqoreProperty('dialogWidth');
+    // its own width, else the app's for its kind, else the 80vw it always had
+    const width = widthProp ?? (wide ? dialogWidth?.wide : dialogWidth?.form) ?? '80vw';
 
     return (
       <ReqoreDrawer
         closeOnEscPress={closeModalsOnEscPress}
         {...rest}
         confirmOnClose={confirmOnClose}
-        width={width}
+        width={isMobile && phoneWidth !== null ? phoneWidth : width}
         height={height}
+        descriptionMaxLines={descriptionMaxLines}
+        descriptionMaxHeight={descriptionMaxHeight}
         position='left'
         _isModal
         _draggable={draggable}

@@ -14,6 +14,7 @@ import {
 import { StoryMeta } from '../utils';
 import { IntentArg, argManager } from '../utils/args';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreMenuProps>();
 
 const meta = {
@@ -475,11 +476,11 @@ const MenuWithActionDropdown = (args: IReqoreMenuProps) => (
         tooltip: { content: 'Automation shortcuts' },
         actions: [
           { divider: true, label: 'Browse', dividerAlign: 'left' },
-          { icon: 'DashboardLine', label: 'Show all Qogs', onClick: () => alert('all qogs') },
+          { icon: 'DashboardLine', label: 'Show all flows', onClick: () => alert('all flows') },
           { icon: 'CloudLine', label: 'Automation templates', onClick: () => alert('templates') },
           { icon: 'Apps2Fill', label: 'Explore apps', onClick: () => alert('apps') },
           { divider: true, label: 'Create', dividerAlign: 'left' },
-          { icon: 'AddLine', label: 'Create Qog', onClick: () => alert('create qog') },
+          { icon: 'AddLine', label: 'Create flow', onClick: () => alert('create flow') },
         ],
       }}
     >
@@ -493,7 +494,7 @@ export const ItemActionDropdown: Story = {
     docs: {
       description: {
         story:
-          "A menu item whose right action is a dropdown. The row navigates on click, while the trailing `+` opens a popover of grouped shortcuts — `divider` items form the groups (Browse / Create). Set `rightAction={{ icon, actions: [...] }}`; tune the popover (placement, caret, filtering) via `actionsProps`. This is what backs the qorus-ide sidebar's Workflows Hub / Automation Hub entries.",
+          "A menu item whose right action is a dropdown. The row navigates on click, while the trailing `+` opens a popover of grouped shortcuts — `divider` items form the groups (Browse / Create). Set `rightAction={{ icon, actions: [...] }}`; tune the popover (placement, caret, filtering) via `actionsProps`. This is what backs an app sidebar's hub entries (a Workflows Hub, an Automation Hub).",
       },
     },
   },
@@ -590,4 +591,24 @@ export const WithEffect: Story = {
       },
     },
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a menu on the default and on the themed surface: with `theme.panel` set the menu sits on the panel surface.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreMenu width='210px' rounded>
+        <ReqoreMenuItem icon='EditLine' label='Edit' />
+        <ReqoreMenuItem icon='FileCopyLine' label='Duplicate' />
+        <ReqoreMenuItem icon='DeleteBinLine' label='Delete' intent='danger' />
+      </ReqoreMenu>
+    </ThemedSurfaceComparison>
+  ),
 };

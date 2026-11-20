@@ -15,6 +15,14 @@ const FOCUSABLE_SELECTOR = [
   'details > summary:first-of-type',
 ].join(',');
 
+/**
+ * The element a trap gives focus to when it opens: the one its content marks with
+ * `data-reqore-initial-focus` (a confirmation's Cancel, ahead of the x in its title bar: a dialog
+ * that asks opens on its least destructive answer), else the first focusable one.
+ */
+const initialOf = (focusable: HTMLElement[]): HTMLElement =>
+  focusable.find((element) => element.hasAttribute('data-reqore-initial-focus')) ?? focusable[0];
+
 export interface IUseFocusTrapOptions {
   /** Whether the focus trap is active */
   active?: boolean;
@@ -22,7 +30,27 @@ export interface IUseFocusTrapOptions {
   restoreFocus?: boolean;
   /** Whether to auto-focus the first focusable element when activated */
   autoFocus?: boolean;
+  /**
+   * Whether Tab is kept inside the container (a modal dialog). Off, the container only takes focus
+   * when it activates and gives it back when it ends (a dialog that is not modal: a drawer with no
+   * backdrop, beside a page that stays usable). Default true.
+   */
+  trap?: boolean;
+  /**
+   * What takes focus when it activates: the first focusable element (`'first'`, the default), or
+   * the container itself (`'container'`, focused without a ring or a scroll), so a dialog that is
+   * not modal does not act on its first control for the reader.
+   */
+  initialFocus?: 'first' | 'container';
 }
+
+/**
+ * The traps that hold Tab, innermost last. Only the last one answers a Tab: two active traps
+ * fought, the outer pulling focus to its first element and the inner pulling it back (a
+ * confirmation over a drawer with a backdrop). When the inner one ends, the one under it answers
+ * again.
+ */
+const trapStack: symbol[] = [];
 
 /**
  * Hook that traps focus within a container element.
@@ -36,7 +64,15 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
   containerRef: RefObject<T>,
   options: IUseFocusTrapOptions = {}
 ): void {
-  const { active = true, restoreFocus = true, autoFocus = true } = options;
+  const {
+    active = true,
+    restoreFocus = true,
+    autoFocus = true,
+    trap = true,
+    initialFocus = 'first',
+  } = options;
+  // This trap's place in the stack.
+  const trapId = useRef(Symbol('focus-trap')).current;
 
   // Store the element that was focused before the trap was activated
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
@@ -62,6 +98,8 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key !== 'Tab' || !containerRef.current) return;
+      // Only the innermost trap holds Tab.
+      if (trapStack[trapStack.length - 1] !== trapId) return;
 
       const focusableElements = getFocusableElements();
       if (focusableElements.length === 0) return;
@@ -127,10 +165,16 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
         const focusAlreadyInside = activeElement && containerRef.current.contains(activeElement);
 
         // Only auto-focus if focus is not already inside the container
-        if (!focusAlreadyInside) {
+        if (!focusAlreadyInside && initialFocus === 'container') {
+          // A dialog that is not modal takes focus as a whole: its box, not its first control.
+          const box = containerRef.current;
+          box.setAttribute('tabindex', '-1');
+          box.style.outline = 'none';
+          box.focus({ preventScroll: true });
+        } else if (!focusAlreadyInside) {
           const focusableElements = getFocusableElements();
           if (focusableElements.length > 0) {
-            focusableElements[0].focus();
+            initialOf(focusableElements).focus();
           } else {
             // If no focusable elements, focus the container itself...
             const waiting = containerRef.current;
@@ -139,8 +183,8 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
             // ...until its content brings one, which then takes focus, as it would have had it been there when
             // the trap opened. Unless the user has moved focus by then: focus that has left the container is
             // left where it is. Which of the two a drawer ended with depended on whether its content had rendered
-            // by the first frame (qorus#646, a drawer captured with its first tab focused on one run and with the
-            // drawer focused on the next).
+            // by the first frame (a drawer captured with its first tab focused on one run and with the drawer
+            // focused on the next).
             if (typeof MutationObserver !== 'undefined') {
               awaitContent = new MutationObserver(() => {
                 if (document.activeElement !== waiting) {
@@ -148,7 +192,8 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
                   awaitContent = undefined;
                   return;
                 }
-                const first = getFocusableElements()[0];
+                const focusable = getFocusableElements();
+                const first = focusable.length ? initialOf(focusable) : undefined;
                 if (first) {
                   awaitContent?.disconnect();
                   awaitContent = undefined;
@@ -167,11 +212,18 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
       });
     }
 
-    // Add the keydown listener
-    document.addEventListener('keydown', handleKeyDown);
+    // Add the keydown listener, and take the top of the stack, when this trap holds Tab
+    if (trap) {
+      trapStack.push(trapId);
+      document.addEventListener('keydown', handleKeyDown);
+    }
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      const place = trapStack.indexOf(trapId);
+      if (place !== -1) {
+        trapStack.splice(place, 1);
+      }
 
       // A trap that ends before its first frame does not pull focus into a container it no longer traps
       if (autoFocusFrame !== undefined) {
@@ -181,7 +233,7 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
       awaitContent = undefined;
 
       // Give focus back to what had it before the trap opened. Read here, not in the frame: the ref is cleared
-      // now, so a frame that read it found nothing and focus was never given back (qorus#646).
+      // now, so a frame that read it found nothing and focus was never given back.
       const previouslyFocused = previouslyFocusedRef.current;
       previouslyFocusedRef.current = null;
       if (restoreFocus && previouslyFocused) {
@@ -201,7 +253,17 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
         });
       }
     };
-  }, [active, autoFocus, restoreFocus, containerRef, getFocusableElements, handleKeyDown]);
+  }, [
+    active,
+    autoFocus,
+    restoreFocus,
+    trap,
+    initialFocus,
+    trapId,
+    containerRef,
+    getFocusableElements,
+    handleKeyDown,
+  ]);
 }
 
 export default useFocusTrap;

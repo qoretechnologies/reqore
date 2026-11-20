@@ -1,5 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { expect, fireEvent, waitFor } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor } from 'storybook/test';
 import { noop } from 'lodash';
 import { useLayoutEffect, useState } from 'react';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
@@ -20,8 +20,15 @@ import {
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
 import { IDragPointerOptions, dragPointer } from '../utils/pointer';
-import { PHONE_STORY } from '../utils/touchScreen';
+import {
+  expectBadgesUnderTitle,
+  expectIconBesideTitle,
+  expectTitleWhole,
+} from '../utils/titleBadges';
+import { PHONE_STORY, PHONE_VIEWPORT as PHONE_SCREEN } from '../utils/touchScreen';
+import { withViewport } from '../utils/viewport';
 
+import { ThemedSurface } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreDrawerProps>();
 
 const meta = {
@@ -354,6 +361,30 @@ export const Transparent: Story = {
   },
 };
 
+export const FrostedByAppDefaults: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Drawer as frosted glass decided once for the app: `options.dialogOpacity: 0.72` makes every dialog panel see-through and `options.dialogBlur: 22` blurs what shows through it, over a backdrop softened by `options.backdropBlur: 5`. The drawer passes none of them itself.',
+      },
+    },
+  },
+  // The meta's own opacity and blur would win over the app's defaults, and Storybook drops an
+  // `undefined` arg rather than letting it override, so they are taken out here.
+  render: (args, context) => Template({ ...args, opacity: undefined, blur: undefined }, context),
+  args: {
+    options: { dialogOpacity: 0.72, dialogBlur: 22, backdropBlur: 5 },
+  },
+  play: async () => {
+    await _testsWaitForText('This is a test');
+    const panel = document.querySelector('.reqore-drawer') as HTMLElement;
+    // the app's opacity reached the panel; the frost it turns on is asserted in
+    // __tests__/drawerDialogSurface.test.tsx (this runner's browser reports no backdrop filter)
+    await expect(window.getComputedStyle(panel).backgroundColor).toMatch(/, 0\.72\)$/);
+  },
+};
+
 export const WithSize: Story = {
   parameters: {
     docs: {
@@ -393,10 +424,10 @@ export const WithBackgroundBlur: Story = {
   },
 };
 
-/* `responsiveLayout` is qorus-ide's bottom-sheet behaviour moved into the
-   library, so the stories pin down what the IDE gets back: WHERE it switches
+/* `responsiveLayout` is a host app's bottom-sheet behaviour moved into the
+   library, so the stories pin down what that app gets back: WHERE it switches
    (900px, not the provider's 480px), HOW TALL the sheet is (90vh, like every
-   IDE drawer today) and what each knob changes. Every story shares one set of
+   drawer it had) and what each knob changes. Every story shares one set of
    drawer args; only the viewport and the `responsiveLayout` config differ. */
 const SHEET_ARGS = {
   responsiveLayout: true,
@@ -416,7 +447,7 @@ const PHONE_VIEWPORT = {
  * `PHONE_VIEWPORT` for a story whose frame after the play shows nothing of the feature — the
  * page with the sheet gone, or a sheet at rest that `ResponsiveSheetMobile` already captures.
  * The play still runs at phone width (the Storybook `viewport` parameter sizes the page before
- * it); only the Qlip capture is skipped, so no empty or duplicate snapshot is produced.
+ * it); only the visual capture is skipped, so no empty or duplicate snapshot is produced.
  */
 const PHONE_VIEWPORT_UNCAPTURED = {
   ...PHONE_VIEWPORT,
@@ -496,7 +527,7 @@ export const ResponsiveSheetBelowBreakpoint: Story = {
     docs: {
       description: {
         story:
-          'The same drawer in an 800px window: wider than the provider’s 480px mobile breakpoint, narrower than the 900px sheet breakpoint (`DRAWER_SHEET_BREAKPOINT`, the number qorus-ide uses for all of its drawers). It is still a sheet — a 720px panel would leave 80px of page here, which is no page at all.',
+          'The same drawer in an 800px window: wider than the provider’s 600px phone breakpoint, narrower than the 900px sheet breakpoint (`DRAWER_SHEET_BREAKPOINT`, the number a host app used for all of its drawers). It is still a sheet — a 720px panel would leave 80px of page here, which is no page at all.',
       },
     },
   },
@@ -511,7 +542,7 @@ export const ResponsiveSheetProviderBreakpoint: Story = {
     docs: {
       description: {
         story:
-          'The same 800px window with `responsiveLayout={{ below: "mobile" }}`: the switch now follows the provider’s phone breakpoint (≤ 480px) instead of the 900px default, so at 800px the caller’s 720px right-hand panel renders unchanged, hide control included. Compare with the story above, which differs only in `below`.',
+          'The same 800px window with `responsiveLayout={{ below: "mobile" }}`: the switch now follows the provider’s phone breakpoint (< 600px) instead of the 900px default, so at 800px the caller’s 720px right-hand panel renders unchanged, hide control included. Compare with the story above, which differs only in `below`.',
       },
     },
   },
@@ -821,7 +852,7 @@ export const SheetSwipeInProgress: Story = {
     docs: {
       description: {
         story:
-          'A phone-width sheet caught mid-swipe: its title bar has been dragged down by 30% of its height and is still held, so the sheet sits that far below its edge with the page showing above it, the root carries `.reqore-drawer-dragging`, and nothing is animating. The one swipe story Qlip captures — the others end on a closed sheet or a sheet at rest.',
+          'A phone-width sheet caught mid-swipe: its title bar has been dragged down by 30% of its height and is still held, so the sheet sits that far below its edge with the page showing above it, the root carries `.reqore-drawer-dragging`, and nothing is animating. The one swipe story the visual tests capture — the others end on a closed sheet or a sheet at rest.',
       },
     },
   },
@@ -920,5 +951,445 @@ export const FloatingSheetOnAPhone: Story = {
       expect(Math.round(frame.right)).toBe(0);
     });
     await expectSheet({ heightRatio: 0.9, edge: 'bottom' });
+  },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an open drawer on the themed surface: with `theme.panel` set it is a panel like any other — the panel surface, title bar included, and the hairline.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurface>
+      <ReqoreDrawer isOpen position='right' size='420px' label='A drawer on the themed surface'>
+        <ReqoreP>Drawers are panels, so they follow theme.panel.</ReqoreP>
+      </ReqoreDrawer>
+    </ThemedSurface>
+  ),
+};
+
+export const TitleBadgesBelowOnAPhone: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders a template drawer on a phone (390 px): an icon, the title "Order Sync Template", three badges (its status, version and kind), a description, a copy button and the close button. The badges do not fit beside the title, so they move to a line under it, on its left edge; the kind icon stays beside the title, and the title is whole: every word on screen, none cut.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreDrawer
+      isOpen
+      responsiveLayout
+      size='600px'
+      position='right'
+      label='Order Sync Template'
+      description='by Jane Novak · 12 Nov 2026'
+      icon='FileListLine'
+      onClose={noop}
+      badge={[
+        { label: 'In review', icon: 'TimeLine', appearance: 'text' },
+        { label: 'v3', appearance: 'soft' },
+        { label: 'workflow', appearance: 'soft' },
+      ]}
+      actions={[{ icon: 'FileCopyLine', tooltip: 'Copy ID', 'aria-label': 'Copy ID', flat: true }]}
+    >
+      <ReqoreP>The template's states and comments.</ReqoreP>
+    </ReqoreDrawer>
+  ),
+  play: async () => {
+    await withViewport(PHONE_SCREEN.width, PHONE_SCREEN.height, async () => {
+      await waitFor(() => expect(document.querySelector('.reqore-drawer')).toBeTruthy());
+
+      const drawer = document.querySelector('.reqore-drawer') as HTMLElement;
+
+      await expectBadgesUnderTitle(drawer);
+      await expectTitleWhole(drawer);
+      await expectIconBesideTitle(drawer);
+    });
+  },
+};
+
+export const SplitButtonKeepsItsWordsOnAPhone: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders a review drawer on a phone (390 px) whose bottom bar holds a split button: "Reject" with its icon (`responsive: false`, so its words stay at any width) and a caret opening "Reject and comment", beside "Approve". Both halves of the split button are drawn, and "Reject" says its word; "Approve", which does not ask to keep its words, folds to its icon on the phone.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreDrawer
+      isOpen
+      responsiveLayout
+      size='600px'
+      position='right'
+      label='Snapshot review'
+      onClose={noop}
+      bottomActions={[
+        {
+          responsive: false,
+          position: 'left',
+          group: [
+            { label: 'Reject', icon: 'CloseLine', responsive: false, className: 'story-reject' },
+            {
+              icon: 'ArrowDownSLine',
+              className: 'story-reject-more',
+              'aria-label': 'More ways to reject',
+              actions: [{ label: 'Reject and comment' }],
+            },
+          ],
+        },
+        { label: 'Approve', icon: 'CheckLine', position: 'right', className: 'story-approve' },
+      ]}
+    >
+      <ReqoreP>Two pixels moved in the header.</ReqoreP>
+    </ReqoreDrawer>
+  ),
+  play: async () => {
+    await withViewport(PHONE_SCREEN.width, PHONE_SCREEN.height, async (narrowed) => {
+      const reject = await waitFor(() => {
+        const element = document.querySelector<HTMLElement>('.story-reject');
+        expect(element).toBeTruthy();
+        return element!;
+      });
+
+      // Both halves of the split button, and the words of the half that asks to keep them.
+      await expect(document.querySelector('.story-reject-more')).toBeTruthy();
+      await expect(reject.textContent).toContain('Reject');
+      if (narrowed) {
+        // A label that does not ask to stay folds to its icon on the phone, as before.
+        await waitFor(() =>
+          expect(document.querySelector('.story-approve')?.textContent ?? '').not.toContain(
+            'Approve'
+          )
+        );
+      }
+    });
+  },
+};
+
+export const CalmTitleSizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a drawer under the calm apps' heading sizes (`typeScale: { heading: { 3: 16 }, headingWeight: 600, dialogHeading: 20 }`): the drawer's own title at 20px, a card inside it at 16px, both at weight 600. A dialog's title is a step above a card's.",
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: { typeScale: { heading: { 3: 16 }, headingWeight: 600, dialogHeading: 20 } },
+  },
+  render: () => (
+    <ReqoreDrawer isOpen label='Order sync' position='right' size='600px' onClose={noop} hasBackdrop={false}>
+      <ReqorePanel label='Retry policy' className='story-card' flat={false} padded>
+        <ReqoreP>Three tries, a minute apart.</ReqoreP>
+      </ReqorePanel>
+    </ReqoreDrawer>
+  ),
+  play: async () => {
+    const title = await waitFor(() => {
+      const heading = Array.from(document.querySelectorAll<HTMLElement>('.reqore-drawer .reqore-heading')).find(
+        (element) => element.textContent?.includes('Order sync')
+      );
+      expect(heading).toBeTruthy();
+      return heading!;
+    });
+    const card = document.querySelector<HTMLElement>('.story-card .reqore-heading')!;
+
+    await expect(getComputedStyle(title).fontSize).toBe('20px');
+    await expect(getComputedStyle(card).fontSize).toBe('16px');
+    await expect(getComputedStyle(title).fontWeight).toBe('600');
+    await expect(getComputedStyle(card).fontWeight).toBe('600');
+  },
+};
+
+/** A page whose button opens a drawer with no backdrop, as a details panel beside a list. */
+const DetailsBesideThePage = () => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <ReqoreButton className='story-open-details' onClick={() => setOpen(true)}>
+        Open details
+      </ReqoreButton>
+      {open ? (
+        <ReqoreDrawer
+          isOpen
+          hasBackdrop={false}
+          size='400px'
+          label='Order details'
+          onClose={() => setOpen(false)}
+        >
+          <ReqoreP>Order 1042, shipped yesterday.</ReqoreP>
+          <ReqoreButton>Track it</ReqoreButton>
+        </ReqoreDrawer>
+      ) : null}
+    </>
+  );
+};
+
+export const KeyboardOpensAndClosesADrawer: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a page whose "Open details" button opens a drawer with no backdrop. From the keyboard: Enter opens it and focus moves into it (the drawer as a whole, not its first control), Escape closes it and focus returns to "Open details", drawn with the keyboard\'s ring. Captured after the close.',
+      },
+    },
+  },
+  render: () => <DetailsBesideThePage />,
+  play: async () => {
+    const opener = await waitFor(() =>
+      document.querySelector<HTMLButtonElement>('.story-open-details')!
+    );
+
+    opener.focus();
+    await userEvent.keyboard('{Enter}');
+    const wrapper = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>('.reqore-drawer-wrapper');
+      expect(element).not.toBeNull();
+      expect(document.activeElement).toBe(element);
+      return element!;
+    });
+    expect(wrapper.getAttribute('role')).toBe('dialog');
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.querySelector('.reqore-drawer-wrapper')).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(opener));
+  },
+};
+
+/**
+ * An A/B test's sheet on a phone: its icon, its long name and its status word with a dot, on the calm
+ * heading sizes. Only the status word differs between the two stories below.
+ */
+const ExperimentSheet = ({ status }: { status: string }) => {
+  const [loaded, setLoaded] = useState(false);
+
+  useLayoutEffect(() => {
+    const timer = setTimeout(() => setLoaded(true), 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <ReqoreDrawer
+      isOpen
+      position='bottom'
+      size='88vh'
+      flat
+      label={loaded ? 'Hero: Console input vs problem wizard' : 'A/B test'}
+      icon='FlaskLine'
+      badge={loaded ? { label: status, icon: 'CheckboxBlankCircleFill', appearance: 'text' } : undefined}
+      onClose={noop}
+    >
+      <ReqoreP>Visitors and conversion per version.</ReqoreP>
+    </ReqoreDrawer>
+  );
+};
+
+/** The sheet's title: its size, and how many lines it takes. */
+const sheetTitle = () =>
+  waitFor(() => {
+    const heading = document.querySelector<HTMLElement>('.reqore-drawer .reqore-heading');
+
+    expect(heading?.textContent).toContain('Hero: Console input');
+
+    // the lines its words are on: the tops of its text's boxes
+    const range = document.createRange();
+
+    range.selectNodeContents(heading!);
+
+    const tops = new Set(
+      Array.from(range.getClientRects())
+        .filter((rect) => rect.width > 0)
+        .map((rect) => Math.round(rect.top))
+    );
+
+    return { size: getComputedStyle(heading!).fontSize, lines: tops.size };
+  });
+
+/**
+ * The title at its natural size, wrapped to two lines, its status word under it. A word as long as "Running · phase
+ * 2" beside the title took the room the title was measured for: the title shrank to 16px to fit beside it, and then
+ * took its line whole with the word under it after all, one line at 16px where every other test showed two at 20
+ * (seen in an app's experiment drawer, its Removed Version at 390).
+ */
+const expectSheetTitleAtItsSize = async () => {
+  await withViewport(PHONE_SCREEN.width, PHONE_SCREEN.height, async () => {
+    const drawer = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>('.reqore-drawer');
+
+      expect(element).toBeTruthy();
+
+      return element!;
+    });
+
+    await expectBadgesUnderTitle(drawer);
+    await expectTitleWhole(drawer);
+    await waitFor(async () => expect(await sheetTitle()).toEqual({ size: '20px', lines: 2 }));
+  });
+};
+
+export const TheSameTitleAtTheSameSizeBesideAShortWord: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders an A/B test sheet on a phone (390 px) under the calm heading sizes: the title, a long test name, with its status word "Ended" under it. The title keeps its 20px and wraps to two lines.',
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: { typeScale: { heading: { 3: 16 }, headingWeight: 600, dialogHeading: 20 } },
+  },
+  render: () => <ExperimentSheet status='Ended' />,
+  play: expectSheetTitleAtItsSize,
+};
+
+export const TheSameTitleAtTheSameSizeBesideALongWord: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders the same A/B test sheet with a longer status word, "Running · phase 2". The word goes under the title before the title gives anything, so the title is drawn as beside "Ended": 20px, two lines.',
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: { typeScale: { heading: { 3: 16 }, headingWeight: 600, dialogHeading: 20 } },
+  },
+  render: () => <ExperimentSheet status='Running · phase 2' />,
+  play: expectSheetTitleAtItsSize,
+};
+
+/** A smaller phone than the touch stories' (390 px): the one a snapshot review app captures its phone stories at. */
+const SMALL_PHONE = { width: 375, height: 812 };
+
+const SMALL_PHONE_STORY = {
+  parameters: {
+    viewport: {
+      options: {
+        smallPhone: {
+          name: `Small phone (${SMALL_PHONE.width} × ${SMALL_PHONE.height})`,
+          styles: { width: `${SMALL_PHONE.width}px`, height: `${SMALL_PHONE.height}px` },
+          type: 'mobile' as const,
+        },
+      },
+    },
+    qlip: { viewport: SMALL_PHONE },
+  },
+  globals: { viewport: { value: 'smallPhone', isRotated: false } },
+};
+
+/** The code font a snapshot review app draws a story's path in. */
+const CODE_FONT =
+  "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace";
+
+export const AMonospaceTitleKeepsItsActionsBesideIt: Story = {
+  globals: SMALL_PHONE_STORY.globals,
+  parameters: {
+    ...SMALL_PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders a snapshot review sheet on a small phone (375 px), as a snapshot review app draws it: the story\'s path "Example/ProfileBadge · Unmasked" in a monospace font, its status word "To review" and two lines of figures under it, a "more" button and a close button. The path takes two lines with the whole line to itself, and two beside the buttons, so the buttons stay beside it rather than taking a line of their own under it.',
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: { typeScale: { heading: { 3: 16 }, headingWeight: 600, dialogHeading: 20 } },
+  },
+  render: () => (
+    <ReqoreDrawer
+      isOpen
+      position='right'
+      size='100vw'
+      hasBackdrop={false}
+      responsiveLayout
+      label='Example/ProfileBadge · Unmasked'
+      labelEffect={{ fontFamily: CODE_FONT }}
+      description='Build #128 · 3 of 12 · 375×812 · 2.41% changed · 1,234 px'
+      descriptionEffect={{ fontFamily: CODE_FONT }}
+      icon='FocusLine'
+      badge={{ label: 'To review', appearance: 'text', icon: 'CheckboxBlankCircleFill' }}
+      responsiveActions={false}
+      actions={[
+        {
+          icon: 'MoreLine',
+          flat: true,
+          raised: true,
+          responsive: false,
+          tooltip: 'More snapshot actions',
+          actions: [{ label: 'Add a comment', icon: 'MapPinLine' }],
+        },
+      ]}
+      onClose={noop}
+    >
+      <ReqoreP>The baseline and the new image, side by side.</ReqoreP>
+    </ReqoreDrawer>
+  ),
+  play: async () => {
+    await withViewport(SMALL_PHONE.width, SMALL_PHONE.height, async () => {
+      const drawer = await waitFor(() => {
+        const element = document.querySelector<HTMLElement>('.reqore-drawer');
+
+        expect(element).toBeTruthy();
+
+        return element!;
+      });
+      const header = drawer.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+      const heading = drawer.querySelector<HTMLElement>('.reqore-panel-title .reqore-heading')!;
+
+      await waitFor(() => {
+        const buttons = Array.from(
+          drawer.querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button')
+        );
+        const headerBox = header.getBoundingClientRect();
+
+        // the "more" button and the close button
+        expect(buttons.length).toBe(2);
+        // beside the title, not on a line of their own under it
+        buttons.forEach((button) =>
+          expect(
+            button.getBoundingClientRect().top,
+            `title ${Math.round(headerBox.top)}-${Math.round(headerBox.bottom)}`
+          ).toBeLessThan(headerBox.bottom)
+        );
+      });
+      // drawn in its own font, at the sheet's title size, on two lines
+      expect(getComputedStyle(heading.querySelector('.reqore-span')!).fontFamily).toContain(
+        'monospace'
+      );
+      await waitFor(() => expect(getComputedStyle(heading).fontSize).toBe('20px'));
+      await waitFor(() => {
+        const range = document.createRange();
+
+        range.selectNodeContents(heading);
+        expect(
+          new Set(
+            Array.from(range.getClientRects())
+              .filter((rect) => rect.width > 0)
+              .map((rect) => Math.round(rect.top))
+          ).size
+        ).toBe(2);
+      });
+      await expectTitleWhole(drawer);
+    });
   },
 };

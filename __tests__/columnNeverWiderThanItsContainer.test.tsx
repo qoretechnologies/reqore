@@ -1,4 +1,4 @@
-// A collection's column is never wider than what holds it (qorus#646). The column kept its zoom width (400px at
+// A collection's column is never wider than what holds it. The column kept its zoom width (400px at
 // 100%) as its minimum and laid its cards out past a 342px dialog on a phone. The browser stories (Collection ·
 // Narrow Container Keeps Its Items Inside, and its phone story) measure the layout; these check the rule that makes
 // it.

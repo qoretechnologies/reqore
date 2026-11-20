@@ -384,7 +384,7 @@ const CHIP_SAYS_NO_SIZE = (): IReqoreTagProps => ({ intent: 'info' });
 /**
  * A chip that says its own size is that size; one that does not is a size less than its editor. The editor's
  * size used to win: a chip that has to be `small` for a finger to press it was `tiny` in a `small` editor, its
- * label taller than its box (reqraft's reference chips, qorus#646).
+ * label taller than its box (reqraft's reference chips).
  */
 export const AChipKeepsTheSizeItAsksFor: Story = {
   parameters: {
@@ -800,7 +800,7 @@ export const UpdatesFromOutside: Story = {
 /**
  * Two clicks, then typing, on a value that already holds a tag.
  *
- * Reported from the Qorus IDE's assertion `Value` field: the row holds a
+ * Reported from an app's assertion `Value` field: the row holds a
  * `$.result` reference, the author clicks once to focus and again to put the
  * cursor after the template, and the control is then frozen — nothing types,
  * and the template does not go away either.
@@ -971,7 +971,7 @@ export const TabFromTheTextDoesNotStopOnItsChip: Story = {
     docs: {
       description: {
         story:
-          'Tab from the text leaves the editor; it does not stop on a chip inside it. The editor is the tab stop and a chip is reached with the caret. A chip that was a tab stop of its own took the focus from the text, and what was typed next was lost (qorus#646).',
+          'Tab from the text leaves the editor; it does not stop on a chip inside it. The editor is the tab stop and a chip is reached with the caret. A chip that was a tab stop of its own took the focus from the text, and what was typed next was lost.',
       },
     },
   },

@@ -1,4 +1,4 @@
-// A button is never wider than what holds it (qorus#646). A `fixed` button had no cap at all: one saying a value and
+// A button is never wider than what holds it. A `fixed` button had no cap at all: one saying a value and
 // its description stayed as wide as both on one line, 487-712px in a 346px card on a phone. The browser stories
 // (Button · Fixed Button Stays Inside Its Container, and its phone story) measure the layout; these check the rule
 // that makes it.

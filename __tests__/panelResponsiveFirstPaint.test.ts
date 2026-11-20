@@ -10,7 +10,7 @@ import { panelIsSmall } from '../src/components/Panel/responsive';
  * action groups wrapped, then snapped to the wide layout a frame later, moving
  * everything below it.
  *
- * Measured in the Qorus IDE's test editor before this: 33 elements jumped down
+ * Measured in an app's test editor before this: 33 elements jumped down
  * 51px in one frame when the case panel's action row appeared.
  */
 describe('panelIsSmall', () => {

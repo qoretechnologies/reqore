@@ -1,7 +1,8 @@
 import { forwardRef, memo, useMemo } from 'react';
 import styled from '../../helpers/styled';
-import { HEADER_LEVEL_TO_PX, HEADER_SIZE_TO_NUMBER, TSizes } from '../../constants/sizes';
+import { HEADER_SIZE_TO_NUMBER, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
+import { getHeadingSize } from '../../helpers/typeScale';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreEffect, IWithReqoreTooltip } from '../../types/global';
@@ -26,8 +27,17 @@ export const StyledHeader = styled(StyledTextEffect)`
   padding: 0;
   color: ${({ theme, intent }) => (intent ? theme.intents[intent] : 'inherit')};
 
-  font-size: ${({ _size }) =>
-    _size && HEADER_LEVEL_TO_PX[_size] ? `${HEADER_LEVEL_TO_PX[_size]}px` : 'inherit'};
+  /* The theme's px for its level (\`typeScale.heading\`), else Reqore's own. */
+  font-size: ${({ _size, theme }) => {
+    const px = _size ? getHeadingSize(theme, _size) : undefined;
+
+    return px ? `${px}px` : 'inherit';
+  }};
+  /* The theme's heading weight; an \`effect.weight\` given to the heading still wins. */
+  ${({ theme, effect }) =>
+    theme?.typeScale?.headingWeight && !effect?.weight
+      ? `font-weight: ${theme.typeScale.headingWeight};`
+      : ''}
 `;
 
 export const ReqoreHeading = memo(

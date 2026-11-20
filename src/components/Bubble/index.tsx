@@ -21,9 +21,9 @@ import {
   RADIUS_FROM_SIZE,
   resolveRadius,
   SIZE_TO_PX,
-  TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
@@ -44,7 +44,7 @@ import ReqoreIcon from '../Icon';
 import { ReqoreSpan } from '../Span';
 
 // Hoisted so the memoised timestamp span keeps a stable `effect` identity.
-// 0.35 matches Qonsole's timestamp — fainter than the label, clearly secondary.
+// 0.35 — fainter than the label, clearly secondary.
 const TIMESTAMP_EFFECT: IReqoreEffect = { opacity: 0.35 };
 
 export type TReqoreBubbleAlign = 'left' | 'right';
@@ -141,7 +141,7 @@ interface IStyledBubbleProps {
 
 // Border radius per group position: a run of same-side bubbles tightens the
 // corners that face the neighbour so the cluster reads as one — the pattern
-// Qonsole uses for its chat transcript.
+// of a chat transcript.
 function groupRadius(
   position: TReqoreBubbleGroupPosition,
   align: TReqoreBubbleAlign,
@@ -175,7 +175,7 @@ export const StyledBubble = styled(StyledEffect)<IStyledBubbleProps>`
     `${Math.round(PADDING_FROM_SIZE[$size] * 1.3)}px ${Math.round(
       PADDING_FROM_SIZE[$size] * 1.85
     )}px`};
-  font-size: ${({ $size }) => TEXT_FROM_SIZE[$size]}px;
+  font-size: ${({ $size, theme }) => getTextSize(theme, $size)}px;
   line-height: 1.5;
   word-break: break-word;
   cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
@@ -260,7 +260,7 @@ const StyledBubbleHeader = styled.div<{ $size: TSizes }>`
   margin-bottom: 4px;
 `;
 
-// The below-bubble timestamp, styled the way Qonsole treats its own: a small
+// The below-bubble timestamp, styled the way a chat transcript treats its own: a small
 // inset so it doesn't sit hard against the bubble's edge, and non-selectable so
 // dragging across the transcript skips the clock. `padding`/`user-select` aren't
 // ReqoreSpan props, which is why this is a styled wrapper rather than props.

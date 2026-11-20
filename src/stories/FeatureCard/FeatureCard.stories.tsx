@@ -8,6 +8,7 @@ import { DEFAULT_INTENTS } from '../../constants/theme';
 import { StoryMeta } from '../utils';
 import { ALL_SIZES, FlatArg, IntentArg, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreFeatureCardProps>();
 
 const meta = {
@@ -810,4 +811,24 @@ export const Footer: Story = {
     await expect(Math.abs(buy.right - priced.getBoundingClientRect().right)).toBeLessThanOrEqual(1);
     await expect(text.textContent).toBe('Updated September 2026');
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a feature card on the default and on the themed surface: with `theme.panel` set the card sits on the panel surface.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreFeatureCard
+        label='Getting started'
+        description='A focused summary card for onboarding steps.'
+        marker='line'
+      />
+    </ThemedSurfaceComparison>
+  ),
 };

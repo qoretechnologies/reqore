@@ -392,3 +392,30 @@ test('Renders <Statistic /> with custom paddingSize', () => {
 
   expect(document.querySelectorAll('.reqore-statistic').length).toBe(1);
 });
+
+test('<Statistic /> puts the label above the value by default and below it with labelPosition', () => {
+  const order = (labelPosition?: 'above' | 'below') => {
+    const { container, unmount } = render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreStatistic value={3} label='Need attention' labelPosition={labelPosition} />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+    const content = container.querySelector('.reqore-statistic-content')!;
+    const names = Array.from(content.children).map((child) => child.className);
+    const result = {
+      value: names.findIndex((name) => name.includes('reqore-statistic-value-row')),
+      label: names.findIndex((name) => name.includes('reqore-statistic-label')),
+    };
+    unmount();
+    return result;
+  };
+
+  const byDefault = order();
+  expect(byDefault.label).toBeLessThan(byDefault.value);
+  const below = order('below');
+  expect(below.label).toBeGreaterThan(below.value);
+});

@@ -1,5 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, fn, userEvent, waitFor, within } from 'storybook/test';
 import { noop } from 'lodash';
 import { useRef, useState } from 'react';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
@@ -11,6 +11,7 @@ import { sleep } from '../../helpers/utils';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreInput, ReqoreTextarea } from '../../index';
 import { StoryMeta } from '../utils';
 import { argManager } from '../utils/args';
+import { expectDrawnRed, expectNotDrawnRed } from '../utils/drawnRed';
 import { requiredElement } from '../utils/required';
 
 const { createArg, disableArg } = argManager<IReqoreDropdownProps>();
@@ -642,6 +643,44 @@ export const WithCustomElements: Story = {
     ],
   },
 };
+export const CustomElementsAtTheEnd: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A row\'s "⋯" menu with `customElementsPosition=\'end\'`: the actions people reach for (Run, Edit) come first and the custom element, a secondary "Disable" toggle, comes after them — with the default `\'start\'` it sat above them.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreDropdown
+      label='Actions'
+      isDefaultOpen
+      customElementsPosition='end'
+      items={[
+        { label: 'Run', icon: 'PlayLine' },
+        { label: 'Edit', icon: 'EditLine' },
+      ]}
+      customElements={[
+        <ReqoreButton key='disable' icon='ToggleLine' className='custom-disable' flat>
+          Disable
+        </ReqoreButton>,
+      ]}
+    />
+  ),
+  play: async () => {
+    await _testsWaitForText('Edit');
+    const edit = Array.from(document.querySelectorAll('.reqore-menu-item')).find((item) =>
+      item.textContent?.includes('Edit')
+    ) as Element;
+    const disable = document.querySelector('.custom-disable') as Element;
+    // Disable follows Edit in the document: it is drawn after the items.
+    await expect(
+      edit.compareDocumentPosition(disable) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  },
+};
+
 export const WithKeyboardNavigation: Story = {
   parameters: {
     docs: {
@@ -1430,7 +1469,7 @@ export const OnlyTheOpenLevelHearsTheKeys: Story = {
     docs: {
       description: {
         story:
-          'Renders a list opened from a text field, which keeps the focus while the list is used. "Group" is opened with a click, then ↓ and Enter pick its first row: only that row is picked. Before, the level above heard the keys too, and Enter also picked the row it had highlighted ("Inner 1 | Plain") (qorus#646).',
+          'Renders a list opened from a text field, which keeps the focus while the list is used. "Group" is opened with a click, then ↓ and Enter pick its first row: only that row is picked. Before, the level above heard the keys too, and Enter also picked the row it had highlighted ("Inner 1 | Plain").',
       },
     },
   },
@@ -1496,7 +1535,7 @@ export const AnOpenedLevelSaysAndRanksAsTheListDoes: Story = {
     docs: {
       description: {
         story:
-          'Renders a list in German that ranks its matches by relevance and names its rows for a screen reader (`listId`), with a group of connections. Opened, the group is the same list: its search says "2 Einträge durchsuchen", "telegram" puts Telegram first, the highlighted row has its id, and a search that finds nothing says "Nichts gefunden". Before, an opened level dropped the five options it was not handed, and said "Search 2 items..." and "No items found" (qorus#646).',
+          'Renders a list in German that ranks its matches by relevance and names its rows for a screen reader (`listId`), with a group of connections. Opened, the group is the same list: its search says "2 Einträge durchsuchen", "telegram" puts Telegram first, the highlighted row has its id, and a search that finds nothing says "Nichts gefunden". Before, an opened level dropped the five options it was not handed, and said "Search 2 items..." and "No items found".',
       },
     },
   },
@@ -1539,5 +1578,73 @@ export const AnOpenedLevelSaysAndRanksAsTheListDoes: Story = {
     await userEvent.type(searchField(), 'zzz');
     await waitFor(() => expect(openListElement()).toHaveTextContent('Nichts gefunden'));
     await expect(rowLabels()).toEqual([]);
+  },
+};
+
+const onOpenView = fn();
+const onDeleteView = fn();
+
+export const ADestructiveEntryAndActionSaySo: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Saved views, as an analytics bar offers them. Each view\'s Delete is its row\'s own action, a red bin marked `destructive` (`rightAction`); Delete every view is an entry marked `destructive` with no intent of its own, and is drawn in danger: in a menu its words are its look. A bin deletes its view without opening it, and the marker never reaches the DOM (it means the same wherever an action is drawn).',
+      },
+    },
+  },
+  args: {
+    label: 'Saved views',
+    icon: 'BookmarkLine',
+    filterable: false,
+    items: [
+      { label: 'Save what I see now', icon: 'AddLine', className: 'view-save' },
+      { divider: true, label: 'Your saved views' },
+      ...['EU payers', 'Last quarter'].map((name) => ({
+        label: name,
+        icon: 'BookmarkLine' as const,
+        className: 'view-open',
+        onClick: () => onOpenView(name),
+        rightAction: {
+          icon: 'DeleteBinLine' as const,
+          tooltip: `Delete "${name}"`,
+          'aria-label': `Delete ${name}`,
+          flat: true,
+          transparent: true,
+          iconColor: 'danger' as const,
+          destructive: true,
+          onClick: () => onDeleteView(name),
+        },
+      })),
+      { divider: true },
+      {
+        label: 'Delete every view',
+        icon: 'DeleteBinLine',
+        className: 'view-delete-all',
+        destructive: true,
+      },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    onOpenView.mockClear();
+    onDeleteView.mockClear();
+    await userEvent.click(within(canvasElement).getByText('Saved views'));
+    const entries = await waitFor(() => {
+      const found = document.querySelectorAll<HTMLElement>('.reqore-menu-item');
+      expect(found.length).toBeGreaterThanOrEqual(4);
+      return found;
+    });
+    const save = document.querySelector<HTMLElement>('.reqore-menu-item.view-save')!;
+    const deleteAll = document.querySelector<HTMLElement>('.reqore-menu-item.view-delete-all')!;
+    expect(entries.length).toBe(4);
+    expectDrawnRed(deleteAll);
+    expectNotDrawnRed(save);
+    expect(deleteAll.hasAttribute('destructive')).toBe(false);
+
+    const bin = document.querySelector<HTMLElement>('[aria-label="Delete EU payers"]')!;
+    expect(bin.hasAttribute('destructive')).toBe(false);
+    await userEvent.click(bin);
+    await waitFor(() => expect(onDeleteView).toHaveBeenCalledWith('EU payers'));
+    expect(onOpenView).not.toHaveBeenCalled();
   },
 };

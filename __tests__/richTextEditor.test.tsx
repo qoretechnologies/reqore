@@ -313,7 +313,7 @@ test('adopts nothing while read-only', () => {
 /* A chip in a text editor is reached with the caret, as any character is; the
    editor is the tab stop. A chip that was a tab stop of its own was where Tab
    from the text went next, and what was typed after that went to the chip,
-   which writes nothing (qorus#646: the text field looked focused and took no
+   which writes nothing (the text field looked focused and took no
    typing). */
 test('a chip in an editable text is not a tab stop of its own', () => {
   renderWithTag(createRef<TReqoreRichTextEditorRef>());

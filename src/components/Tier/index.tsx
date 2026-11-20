@@ -2,12 +2,12 @@ import { isNumber } from 'lodash';
 import { mix, rgba } from 'polished';
 import { memo, useMemo } from 'react';
 import styled from '../../helpers/styled';
-import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
-  changeDarkness,
-  getMainBackgroundColor,
   getOpaqueColor,
+  getPanelBackgroundColor,
   getReadableAccentColor,
   getReadableColor,
 } from '../../helpers/colors';
@@ -73,6 +73,12 @@ export interface IReqoreTierProps extends Omit<IReqorePanelProps, 'description'>
   priceDetailProps?: Partial<IReqoreParagraphProps> & TReqoreDataAttributes;
   salePrice?: string | number;
   /**
+   * The intent the sale price is drawn in. Default `'success'` (green, unchanged). `null` draws it
+   * in the tier's text colour — for an app whose green means "healthy", where a price is not a
+   * verdict; the struck-through regular price beside it still says it is a sale.
+   */
+  saleIntent?: TReqoreIntent | null;
+  /**
    * Text under the price. Text, inline content or blocks (a `ReqoreP`, a list, a
    * `ReqoreControlGroup`): it is drawn in a block container with paragraph typography, not in a
    * paragraph, which could not hold a block.
@@ -125,6 +131,7 @@ const ReqoreClassicTier = memo(
     featureList,
     highlight,
     salePrice,
+    saleIntent = 'success',
     active,
     activeActionLabel = 'Active',
     actionLabel = 'Get Started',
@@ -190,7 +197,7 @@ const ReqoreClassicTier = memo(
                   uppercase: true,
                   weight: 'thick',
                   textSize: '40px',
-                  color: 'success:lighten:15:1',
+                  color: saleIntent ? `${saleIntent}:lighten:15:1` : undefined,
                 }}
               >
                 {currency && currencyPosition === 'before' && isNumber(salePrice)
@@ -355,10 +362,11 @@ export interface IReqoreTierColors {
 
 export const getTierColors = (
   theme: IReqoreTheme,
-  accentIntent?: TReqoreIntent
+  accentIntent?: TReqoreIntent,
+  saleIntent: TReqoreIntent | null = 'success'
 ): IReqoreTierColors => {
   // What the panel paints (see StyledPanel), without its opacity.
-  const panelSurface = getOpaqueColor(changeDarkness(getMainBackgroundColor(theme), 0.03));
+  const panelSurface = getOpaqueColor(getPanelBackgroundColor(theme));
   const accentColor = accentIntent ? theme.intents[accentIntent] : undefined;
   const accent = accentColor ? getOpaqueColor(accentColor) : undefined;
   const surface = (
@@ -379,7 +387,7 @@ export const getTierColors = (
       surface
     ),
     check: getReadableAccentColor(theme.intents.success, surface, 3),
-    sale: getReadableAccentColor(theme.intents.success, surface),
+    sale: saleIntent ? getReadableAccentColor(theme.intents[saleIntent], surface) : text,
     divider: rgba(text, 0.12),
   };
 };
@@ -514,6 +522,7 @@ const ReqoreModernTier = memo(
     featureList,
     highlight,
     salePrice,
+    saleIntent = 'success',
     active,
     activeActionLabel = 'Active',
     actionLabel = 'Get Started',
@@ -533,9 +542,12 @@ const ReqoreModernTier = memo(
     // The panel's intent: the caller's, else `info` for a highlighted tier (as the classic tier).
     const intent: TReqoreIntent | undefined = rest.intent ?? (highlight ? 'info' : undefined);
     const accentIntent = highlight ? intent : undefined;
-    const colors = useMemo(() => getTierColors(theme, accentIntent), [theme, accentIntent]);
+    const colors = useMemo(
+      () => getTierColors(theme, accentIntent, saleIntent),
+      [theme, accentIntent, saleIntent]
+    );
     const gap = TIER_GAP_FROM_SIZE[size];
-    const textSize = TEXT_FROM_SIZE[size];
+    const textSize = getTextSize(theme, size);
     const lineHeight = Math.round(textSize * TIER_LINE_HEIGHT);
 
     // A highlighted tier: a faint wash of its accent, its border, and a soft shadow in the same

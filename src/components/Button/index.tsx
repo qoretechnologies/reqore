@@ -8,7 +8,6 @@ import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import { CONTROL_GROUP_CHILD_MAX_WIDTH } from '../../constants/controlGroup';
 import {
   CONTROL_HORIZONTAL_PADDING_FROM_SIZE,
-  CONTROL_TEXT_FROM_SIZE,
   CONTROL_VERTICAL_PADDING_FROM_SIZE,
   CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE,
   ICON_FROM_SIZE,
@@ -19,10 +18,14 @@ import {
   SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
+  getColorFromMaybeString,
+  getFocusRingColor,
   getGradientMix,
+  getReadableAccentColor,
   getReadableColor,
   getReadableColorFrom,
   isAchromatic,
@@ -69,6 +72,7 @@ import {
   TReqoreColor,
   TReqoreEffectColor,
   TReqoreHexColor,
+  TReqoreMultiTypeColor,
 } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
@@ -434,7 +438,11 @@ export const StyledButton = styled(StyledEffect).withConfig({
         ? CONTROL_VERTICAL_PADDING_FROM_SIZE[size]
         : CONTROL_HORIZONTAL_PADDING_FROM_SIZE[size]
     }px`};
-  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getControlTextSize(theme, size)}px;
+  /* The ring's width and place at rest, and no colour: the button's \`transition: all\` then only
+     fades the ring's colour in, where it eased from the browser's 3px outline in the text colour. */
+  outline-width: 2px;
+  outline-color: transparent;
   outline-offset: -2px;
 
   min-height: ${({ size, verticalPadding = 'normal' }) =>
@@ -452,7 +460,7 @@ export const StyledButton = styled(StyledEffect).withConfig({
       : null}
   /* A button is never wider than its container, unless it sets its own maxWidth: fixed means it does not
      stretch, not that it may run past what holds it. A fixed button saying a value and its description stayed as
-     wide as both on one line, 487-712px in a 346px card on a phone (qorus#646); capped, its label is clipped as any
+     wide as both on one line, 487-712px in a 346px card on a phone; capped, its label is clipped as any
      button's is, and its description takes as many lines as it needs. Its container's width is what percentages
      are measured against, so a wrapped stack that pulls the button over its padding adds that back: see
      CONTROL_GROUP_CHILD_MAX_WIDTH. */
@@ -616,19 +624,88 @@ export const StyledButton = styled(StyledEffect).withConfig({
         `
       : undefined}
 
-  &:focus,
-  &:active {
-    outline: 2px solid
-      ${({ theme, color, effect }) =>
-        changeLightness(getButtonMainColor(theme, color, effect), 0.1)};
-    border-color: ${({ minimal, theme, color, effect }) =>
-      minimal ? undefined : changeLightness(getButtonMainColor(theme, color, effect), 0.1)};
+  /* Where keyboard focus is, in the one ring every control draws (\`getFocusRingColor\`), and only
+     for the keyboard (\`:focus-visible\`): a ring a shade off the button's colour settled at about
+     1.4:1 on a calm surface, and \`:focus\` drew it after every mouse click too. Inside the edge:
+     a button sits flush in a clipping box often (a table cell, a field, a scrolling action group,
+     a segmented control), and one drawn outside was cut away there. */
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
+    outline-offset: -2px;
+    /* At once, not eased in over the button's 0.2s: a reader moving by keyboard sees where they
+       are on the key press, and a capture taken during the fade caught a different shade each run. */
+    transition: none;
   }
 
   .reqore-button-description {
     padding-top: ${({ size }) => PADDING_FROM_SIZE[size] / 2}px;
+    /* A one-line description (descriptionEffect.noWrap) ellipsises at the button's edge:
+       never wider than the button, and never shrunk by the button's column, which sliced a
+       line with overflow: hidden in half vertically. */
+    flex-shrink: 0;
+    max-width: 100%;
     color: ${({ theme, color, minimal, transparent }) =>
       rgba(getButtonTextColor({ minimal, transparent, color, theme }), 0.7)};
+  }
+
+  /* An intent drawn as text (\`theme.buttons.intentLook\`) on an icon-only button: the ordinary
+     button at rest, the intent's colour under the pointer and on keyboard focus. A labelled one
+     carries the colour on its own style. */
+  &&[data-intent-text='icon']:not(:disabled):hover,
+  &&[data-intent-text='icon']:focus-visible {
+    color: var(--reqore-button-intent-text);
+  }
+
+  /* An intent drawn as an outline (\`theme.buttons.intentLook\`): the intent at rest, labelled or
+     icon-only — its readable colour on the words and icons and a border in it, the fill left
+     ordinary. A flat button has no border to recolour, so it is drawn inside the edge and the
+     button keeps its size beside its siblings. Under the pointer the border is the full colour. */
+  &&[data-intent-text='outline'] {
+    color: var(--reqore-button-intent-text);
+    ${({ flat }) =>
+      flat
+        ? css`
+            box-shadow: inset 0 0 0 1px
+              color-mix(in srgb, var(--reqore-button-intent-text) 60%, transparent);
+          `
+        : css`
+            border-color: color-mix(in srgb, var(--reqore-button-intent-text) 60%, transparent);
+          `}
+  }
+  &&[data-intent-text='outline']:not(:disabled):hover,
+  &&[data-intent-text='outline']:focus-visible {
+    ${({ flat }) =>
+      flat
+        ? css`
+            box-shadow: inset 0 0 0 1px var(--reqore-button-intent-text);
+          `
+        : css`
+            border-color: var(--reqore-button-intent-text);
+          `}
+  }
+
+  /* An icon-only button whose intent is drawn as an outline: its icon in the intent's readable
+     colour, and no box in any state (no border, no fill, no hover ring). A row of bins carrying
+     \`intent='danger'\` is a row of red icons, not of red boxes; a labelled one keeps its outline.
+     A menu's entry (\`.reqore-menu-item\`) is drawn the same way, its words and icon in the
+     intent: a menu of Discard, Cancel and Delete was a column of red boxes. The keyboard's focus
+     ring is every control's, and stays. */
+  &&[data-intent-text='outline-icon'],
+  &&[data-intent-text='outline-icon']:hover,
+  &&[data-intent-text='outline-icon']:active,
+  &&.reqore-menu-item[data-intent-text='outline'],
+  &&.reqore-menu-item[data-intent-text='outline']:hover,
+  &&.reqore-menu-item[data-intent-text='outline']:active {
+    color: var(--reqore-button-intent-text);
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  &&[data-intent-text='outline-icon']:not(:disabled):not(:focus-visible):hover,
+  &&[data-intent-text='outline-icon']:not(:disabled):not(:focus-visible):active,
+  &&.reqore-menu-item[data-intent-text='outline']:not(:disabled):not(:focus-visible):hover,
+  &&.reqore-menu-item[data-intent-text='outline']:not(:disabled):not(:focus-visible):active {
+    outline: none;
   }
 `;
 
@@ -821,7 +898,16 @@ const ReqoreButton = memo(
     ) => {
       const animations = useReqoreProperty('animations');
       const shortcutHintsEnabled = useReqoreProperty('shortcutHints');
-      const theme = useReqoreTheme('main', customTheme, intent);
+      /* `theme.buttons.intentLook`: an intent the theme draws as TEXT is not a fill. The button is
+         then the ordinary button (no intent below this point) and the intent is its foreground. */
+      const baseTheme = useReqoreTheme('main', customTheme);
+      const intentLook = intent ? baseTheme.buttons?.intentLook?.[intent] : undefined;
+      const intentAsOutline = intentLook === 'outline';
+      const intentAsText = intentLook === 'text' || intentAsOutline;
+      const fillIntent = intentAsText ? undefined : intent;
+      /* An icon-only button whose intent is an outline is its icon in the intent: no surface. */
+      const intentOnIconOnly = intentAsOutline && !(label || children);
+      const theme = useReqoreTheme('main', customTheme, fillIntent);
       const fixedEffect = useReqoreEffect('buttons', theme, effect);
       const { targetRef, setRef } = useCombinedRefs(ref);
 
@@ -875,15 +961,37 @@ const ReqoreButton = memo(
         [isLink, href, type, rest.disabled]
       );
 
-      // If color or intent was specified, set the color
-      const customColor = useMemo(
-        () => (intent ? theme.main : changeLightness(theme.main, 0.07)),
-        [intent, theme.main]
+      // If color or intent was specified, set the color. Otherwise a button takes
+      // `theme.buttons.main` when the theme names one (and the button's surface is not
+      // customised — a customTheme main, given or inherited, moves `main` off
+      // `originalMain`), else `main` a step lighter.
+      const customColor = useMemo(() => {
+        if (fillIntent) {
+          return theme.main;
+        }
+
+        const themedButtons =
+          theme.buttons?.main && (!theme.originalMain || theme.main === theme.originalMain)
+            ? getColorFromMaybeString(theme, theme.buttons.main)
+            : undefined;
+
+        return themedButtons ?? changeLightness(theme.main, 0.07);
+      }, [fillIntent, theme]);
+      // The intent as words: its colour, moved until it reads on this button.
+      const intentTextColor = useMemo(
+        () =>
+          intentAsText
+            ? getReadableAccentColor(
+                getColorFromMaybeString(baseTheme, intent) as TReqoreMultiTypeColor,
+                customColor as TReqoreMultiTypeColor
+              )
+            : undefined,
+        [intentAsText, baseTheme, intent, customColor]
       );
       const _flat = minimal ? flat : flat === true;
       const _children = useMemo(() => label || children, [label, children]);
       /* An icon alone names nothing: a button with no label of its own and no `aria-label` was read as
-         "button", and a test that finds buttons by name found nothing to test (qorus#646). Its tooltip, when
+         "button", and a test that finds buttons by name found nothing to test. Its tooltip, when
          that is a string, is the words it would say, so it names it. A tooltip that is a node or an object is
          left to the caller, and a button that has a label, or is named already, is not named twice. */
       const tooltipName =
@@ -917,9 +1025,9 @@ const ReqoreButton = memo(
         () => ({
           interactive: !readOnly && !rest.disabled,
           ...fixedEffect,
-          gradient: intent ? undefined : fixedEffect?.gradient,
+          gradient: fillIntent ? undefined : fixedEffect?.gradient,
         }),
-        [fixedEffect, intent, readOnly, rest.disabled]
+        [fixedEffect, fillIntent, readOnly, rest.disabled]
       );
 
       const indicatorConfig = useMemo(() => {
@@ -944,6 +1052,25 @@ const ReqoreButton = memo(
           {...{
             ...rest,
             ...(tooltipName ? { 'aria-label': tooltipName } : {}),
+            /* An intent drawn as text: a labelled button's words and icons are in it; an icon-only
+               button is the ordinary button and takes it under the pointer (see StyledButton). A
+               caller's own `style` still wins. */
+            ...(intentTextColor
+              ? {
+                  'data-intent-text': intentAsOutline
+                    ? _children
+                      ? 'outline'
+                      : 'outline-icon'
+                    : _children
+                      ? 'label'
+                      : 'icon',
+                  style: {
+                    ...(_children && !intentAsOutline ? { color: intentTextColor } : {}),
+                    '--reqore-button-intent-text': intentTextColor,
+                    ...rest.style,
+                  },
+                }
+              : {}),
             effect: memoEffect,
             // The caller's tab stop wins — a grid or a diagram keeps one of its
             // buttons in the tab order and moves it — except that a disabled
@@ -957,9 +1084,9 @@ const ReqoreButton = memo(
             alignSelf,
             maxWidth,
             minimal,
-            transparent,
+            transparent: transparent || intentOnIconOnly,
             size,
-            intent,
+            intent: fillIntent,
             color: customColor,
             animate,
             flat: _flat,

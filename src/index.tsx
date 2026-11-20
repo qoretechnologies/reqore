@@ -1,4 +1,11 @@
 export { ReqoreAccordion } from './components/Accordion';
+export {
+  AVATAR_SIZE_FROM_SIZE,
+  DEFAULT_AVATAR_ICON,
+  getAvatarInitials,
+  ReqoreAvatar,
+} from './components/Avatar';
+export type { IReqoreAvatarProps } from './components/Avatar';
 export { default as ReqoreBreadcrumbs } from './components/Breadcrumbs';
 export { default as ReqoreBreadcrumbsItem } from './components/Breadcrumbs/item';
 export { ReqoreBubble, ReqoreBubbleGroup } from './components/Bubble';
@@ -57,6 +64,24 @@ export {
   MODAL_MIN_HEIGHT,
   MODAL_MIN_WIDTH,
 } from './components/Drawer';
+/* The window size classes (Material 3's): the numbers, the media queries and the
+   class of a width. Apps read these instead of writing a width of their own; the provider's
+   `windowSizeClass`, `isMobile` and `isTablet` answer the same queries. The container rules
+   below them are a component's own box, not the window. */
+export {
+  REQORE_BREAKPOINTS,
+  REQORE_BREAKPOINT_EDGE_PX,
+  getReqoreWindowSizeClass,
+  reqoreMedia,
+} from './constants/breakpoints';
+export type { TReqoreBreakpoint, TReqoreWindowSizeClass } from './constants/breakpoints';
+/* A media query answered live, safe to hydrate: with `reqoreMedia`, how an app asks a window
+   size class the provider's flags do not name (`useReqoreMedia(reqoreMedia.from('extraLarge'))`). */
+export { useReqoreMedia } from './hooks/useReqoreMedia';
+export {
+  NARROW_CONTAINER_BREAKPOINT_PX,
+  SEVERITY_ROW_NARROW_BREAKPOINT_PX,
+} from './hooks/useNarrowContainer';
 /* The sheet decision behind `responsiveLayout`, published so a consumer that
    lays out AROUND a drawer (a docked bar, a page offset) can ask the same
    question Reqore does instead of re-deriving the breakpoint locally. */
@@ -81,6 +106,8 @@ export { ReqoreEmptyState } from './components/EmptyState';
 export { ReqoreErrorBoundary } from './components/ErrorBoundary';
 export { ReqoreFadeScroller } from './components/FadeScroller';
 export { ReqoreFeatureCard } from './components/FeatureCard';
+export { ReqoreMarkdownBlock } from './components/MarkdownBlock';
+export type { IReqoreMarkdownBlockProps } from './components/MarkdownBlock';
 export { ReqoreModalsWrapper } from './components/GlobalModalsWrapper';
 export {
   ReqoreH1,
@@ -181,12 +208,29 @@ export { ReqoreSpan } from './components/Span';
 export { ReqoreSpinner } from './components/Spinner';
 export { default as ReqoreStackedBar } from './components/StackedBar';
 export { default as ReqoreStatistic } from './components/Statistic';
+export {
+  ReqoreStatisticGroup,
+  STATISTIC_GROUP_CUT_FADE_PX,
+  STATISTIC_GROUP_MAX,
+} from './components/StatisticGroup';
+export type {
+  IReqoreStatisticGroupItem,
+  IReqoreStatisticGroupProps,
+} from './components/StatisticGroup';
 export { default as ReqoreTable } from './components/Table';
 export type { TReqoreTableCellAction } from './components/Table';
 export { ReqoreTableBodyCell } from './components/Table/cell';
 export { ReqoreTableHeaderCell } from './components/Table/headerCell';
 export { default as ReqoreTableRow } from './components/Table/row';
 export { ReqoreTableValue } from './components/Table/value';
+// The column picker's entries, for a page that draws its own toolbar beside the table.
+export { getTableColumnsPickerItems } from './components/Table/helpers';
+// The column picker and the export, for a page that keeps them in its own toolbar's "⋯".
+export { useReqoreTableControls } from './components/Table/controls';
+export type {
+  IReqoreTableControls,
+  IUseReqoreTableControlsOptions,
+} from './components/Table/controls';
 /* The geometric guard for tables — what a consumer's own tests assert so that
    "a row's box contains its content" keeps holding in THEIR tables too — is
    NOT here. It is published as `@qoretechnologies/reqore/testing`, because
@@ -212,10 +256,25 @@ export { Colors as ReqoreColors } from './constants/colors';
 export { FONT_FAMILY_SHORTHANDS as ReqoreFonts } from './constants/fonts';
 export { ReqoreSizes } from './constants/sizes';
 export { ReqoreIntents } from './constants/theme';
+export type { IReqoreTypeScale } from './constants/theme';
+/* The px a size renders its text at, as the theme's `typeScale` decides it — for a consumer's own
+   element that has to sit at the same size as the Reqore text beside it. */
+export {
+  getControlTextSize,
+  getHeadingSize,
+  getTagTextSize,
+  getTextSize,
+} from './helpers/typeScale';
 export { ReqorePaginationContainer } from './containers/Paging';
 export { default as ReqoreNotifications, modalStore } from './containers/ReqoreProvider';
+export type {
+  IReqoreConfirmationDefaults,
+  IReqoreConfirmationModal,
+} from './containers/ReqoreProvider';
 export { default as ReqoreUIProvider } from './containers/UIProvider';
 export { default as ReqoreContext } from './context/ReqoreContext';
+export { CALM_DIALOG_WIDTHS } from './context/ReqoreContext';
+export type { IReqoreDialogWidths } from './context/ReqoreContext';
 export { default as ReqoreThemeContext } from './context/ThemeContext';
 export { useCloneThroughFragments } from './hooks/useCloneThroughFragments';
 export { default as useLatestZIndex } from './hooks/useLatestZIndex';

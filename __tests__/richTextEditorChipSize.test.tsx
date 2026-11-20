@@ -2,7 +2,7 @@
 // A chip in the rich text editor is the size it says, when it says one; otherwise a size less than its editor.
 //
 // The editor's size won over the chip's: a chip that has to be `small` for a finger to press it was `tiny` in a
-// `small` editor, its label taller than its box (reqraft's reference chips, qorus#646).
+// `small` editor, its label taller than its box (reqraft's reference chips).
 import { render } from '@testing-library/react';
 import { ReqoreContent, ReqoreLayoutContent, ReqoreRichTextEditor, ReqoreUIProvider } from '../src';
 import { IReqoreTagProps } from '../src/components/Tag';

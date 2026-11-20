@@ -1,8 +1,15 @@
 import { StoryObj } from '@storybook/react';
 import { IReqoreAccordionItem, ReqoreAccordion } from '../../components/Accordion';
 import { ReqoreButton, ReqoreControlGroup } from '../../index';
+import { expect } from 'storybook/test';
 import { StoryMeta } from '../utils';
+import {
+  expectBadgesBesideTitle,
+  expectBadgesUnderTitle,
+  expectTitleWhole,
+} from '../utils/titleBadges';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const meta = {
   title: 'Navigation/Accordion',
   component: ReqoreAccordion,
@@ -516,4 +523,91 @@ export const SettingsExample: Story = {
       ]}
     />
   ),
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an accordion on the default and on the themed surface: with `theme.panel` set the items sit on the panel surface, edged with the hairline.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreAccordion
+        items={[
+          { label: 'What does the theme change?', content: 'The surface and the hairline.', isOpen: true },
+          { label: 'Does an intent still win?', content: 'Yes.' },
+        ]}
+      />
+    </ThemedSurfaceComparison>
+  ),
+};
+
+const BADGED_ITEMS: IReqoreAccordionItem[] = [
+  {
+    label: 'Delivery retries',
+    content: 'How often a failed delivery is tried again.',
+    icon: 'RepeatLine',
+    badge: [
+      { label: '2 failing', intent: 'danger', appearance: 'soft', icon: 'AlertLine' },
+      { label: 'since Monday', appearance: 'text' },
+    ],
+  },
+  {
+    label: 'Notifications',
+    content: 'Who hears about a failure.',
+    icon: 'Notification2Line',
+    badge: { label: 'Last 30 days', appearance: 'text' },
+  },
+];
+
+export const BadgesGiveWayToTheHeading: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the same two accordion items at 220px and at 560px, each heading with badges ("⚠ 2 failing" and "since Monday", then "Last 30 days"). At 220px the badges do not fit beside the heading, so they move to a line under it, on its left edge (a text badge by its words), and the heading stays on one line. At 560px they sit beside it, on the heading\'s baseline (the one with an icon too).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      {[220, 560].map((width) => (
+        <div key={width} data-width={width} style={{ width }}>
+          <ReqoreAccordion items={BADGED_ITEMS} />
+        </div>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const headers = (width: number) =>
+      Array.from(
+        canvasElement.querySelectorAll<HTMLElement>(
+          `[data-width="${width}"] .reqore-accordion-header`
+        )
+      );
+
+    for (const header of headers(220)) {
+      await expectBadgesUnderTitle(header);
+      await expectTitleWhole(header);
+      // Whole on one line: the badges moved before the heading wrapped.
+      const range = document.createRange();
+
+      range.selectNodeContents(header.querySelector('.reqore-accordion-title') as HTMLElement);
+      expect(
+        new Set(
+          Array.from(range.getClientRects())
+            .filter((rect) => rect.width > 0)
+            .map((rect) => Math.round(rect.top))
+        ).size
+      ).toBe(1);
+    }
+
+    for (const header of headers(560)) {
+      await expectBadgesBesideTitle(header);
+    }
+  },
 };

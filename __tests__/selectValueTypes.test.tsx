@@ -166,7 +166,11 @@ test('Renders <ReqoreMultiSelect /> holding numbers, and hands numbers back', ()
   // The chip for the numeric value is found by its item, not shown as a bare number
   expect(screen.getByText('HTTP alternate')).toBeTruthy();
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
 
   vi.advanceTimersByTime(1);
 

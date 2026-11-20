@@ -3,7 +3,7 @@
 /**
  * What a story's play or a test reads off the page, found or failed for: an element that is not there, or an
  * attribute it does not have, fails with what is missing, where a non-null assertion (`!`) or a cast let the next line
- * read a property of nothing (qorus#646: DeepScan's NULL_POINTER).
+ * read a property of nothing (DeepScan's NULL_POINTER).
  */
 
 /** The element `selector` finds in `parent` (the document when not given). */

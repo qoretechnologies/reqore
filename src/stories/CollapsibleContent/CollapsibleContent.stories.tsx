@@ -4,6 +4,10 @@ import {
   IReqoreCollapsibleContentProps,
   ReqoreCollapsibleContent,
 } from '../../components/CollapsibleContent';
+import ReqoreButton from '../../components/Button';
+import ReqoreContent from '../../components/Content';
+import ReqoreLayoutContent from '../../components/Layout/content';
+import ReqoreUIProvider from '../../containers/UIProvider';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import { ReqoreP } from '../../components/Paragraph';
 import { DEFAULT_INTENTS } from '../../constants/theme';
@@ -66,6 +70,12 @@ const meta = {
       type: 'boolean',
       name: 'Button fluid',
       defaultValue: false,
+    }),
+    ...createArg('buttonPlacement', {
+      control: 'select',
+      options: ['overlay', 'below'],
+      name: 'Button placement',
+      defaultValue: 'overlay',
     }),
     ...createArg('animated', {
       type: 'boolean',
@@ -538,3 +548,178 @@ export const HoverRevealReachableWithoutHover: Story = {
     });
   },
 };
+
+/**
+ * `buttonPlacement='below'` for content whose last visible lines are interactive. The overlay
+ * would sit on top of the last row and its button; below, the button owns its own row and the
+ * clipped edge fades through a mask, so every row still in view can be clicked.
+ */
+const RowsWithActions = ({ rows = 8 }: { rows?: number }) => (
+  <ReqoreControlGroup vertical fluid>
+    {Array.from({ length: rows }).map((_, index) => (
+      <ReqoreControlGroup key={index} fluid spaceBetween>
+        <ReqoreP>{`Order-to-cash run ${index + 1}`}</ReqoreP>
+        <ReqoreButton size='small' fixed className='story-row-action'>
+          Open
+        </ReqoreButton>
+      </ReqoreControlGroup>
+    ))}
+  </ReqoreControlGroup>
+);
+
+export const ButtonBelow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent with `buttonPlacement=\'below\'`: the reveal button sits in its own row under the clipped rows instead of over the last one, the edge fades through a mask (no painted gradient), and "Show less" takes the same row once expanded.',
+      },
+    },
+  },
+  render: (args) => (
+    <ColumnWrapper>
+      <ReqoreCollapsibleContent {...args}>
+        <RowsWithActions />
+      </ReqoreCollapsibleContent>
+    </ColumnWrapper>
+  ),
+  args: {
+    buttonPlacement: 'below',
+    maxCollapsedHeight: 160,
+  },
+  play: async ({ canvasElement }) => {
+    const reveal = await waitFor(() => {
+      const el = canvasElement.querySelector<HTMLButtonElement>(
+        '.reqore-collapsible-content-reveal'
+      );
+      expect(el).toBeTruthy();
+      return el!;
+    });
+    const clip = canvasElement.querySelector<HTMLElement>('.reqore-collapsible-content-clip')!;
+
+    // The button is under the box, not over anything in it, and nothing paints a wash.
+    expect(reveal.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      clip.getBoundingClientRect().bottom - 0.5
+    );
+    expect(canvasElement.querySelector('.reqore-collapsible-content-fade')).toBeNull();
+    expect(getComputedStyle(clip).maskImage).toContain('linear-gradient');
+
+    // The last row still in view stays clickable: the topmost element at its centre is its own button.
+    const clipBottom = clip.getBoundingClientRect().bottom;
+    const lastVisible = Array.from(canvasElement.querySelectorAll<HTMLElement>('.story-row-action'))
+      .filter((button) => button.getBoundingClientRect().bottom <= clipBottom)
+      .pop()!;
+    const box = lastVisible.getBoundingClientRect();
+    expect(
+      document
+        .elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+        ?.closest('.story-row-action')
+    ).toBe(lastVisible);
+
+    await fireEvent.click(reveal);
+
+    const collapse = await waitFor(() => {
+      const el = canvasElement.querySelector<HTMLButtonElement>(
+        '.reqore-collapsible-content-collapse'
+      );
+      expect(el).toBeTruthy();
+      return el!;
+    });
+    expect(collapse.closest('.reqore-collapsible-content-actions')).toBeTruthy();
+    expect(getComputedStyle(clip).maskImage).toBe('none');
+  },
+};
+
+/** Eighteen orders, a list taller than its reveal's clip. */
+const ORDERS = Array.from({ length: 18 }, (_, index) => `Order ${1040 + index} is waiting for payment`);
+
+/** A reveal under a list, in a theme that draws its reveals quiet (`theme.revealLook: 'quiet'`). */
+const QuietRevealOfAList = () => (
+  <div className='quiet-reveal' style={{ width: 420 }}>
+    <ReqoreUIProvider theme={{ main: '#121212', revealLook: 'quiet' }}>
+      <ReqoreLayoutContent>
+        <ReqoreContent style={{ padding: 16 }}>
+          <ReqoreCollapsibleContent
+            maxCollapsedHeight={160}
+            showMoreLabel='Show all 18 orders'
+            showLessLabel='Show fewer orders'
+          >
+            {ORDERS.map((order) => (
+              <ReqoreP key={order}>{order}</ReqoreP>
+            ))}
+          </ReqoreCollapsibleContent>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  </div>
+);
+
+const quietReveal = async (canvasElement: HTMLElement) =>
+  waitFor(() => {
+    const el = canvasElement.querySelector<HTMLButtonElement>(
+      '.quiet-reveal .reqore-collapsible-content-reveal'
+    );
+    expect(el).toBeTruthy();
+    return el!;
+  });
+
+export const AQuietRevealSitsBelowWhatItClips: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a list of 18 orders clipped to 160px in a theme that draws its reveals quiet (`theme.revealLook: \'quiet\'`), with no `buttonPlacement` of its own. "Show all 18 orders" sits on its own line under the clipped list, never over its last lines in view, and the edge fades through a mask.',
+      },
+    },
+  },
+  render: () => <QuietRevealOfAList />,
+  play: async ({ canvasElement }) => {
+    const reveal = await quietReveal(canvasElement);
+    const clip = canvasElement.querySelector<HTMLElement>(
+      '.quiet-reveal .reqore-collapsible-content-clip'
+    )!;
+    await expect(reveal.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      clip.getBoundingClientRect().bottom - 0.5
+    );
+    await expect(
+      canvasElement.querySelector('.quiet-reveal .reqore-collapsible-content-fade')
+    ).toBeNull();
+  },
+};
+
+export const AQuietRevealIsTheQuietInlineAction: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same list in a theme that draws its reveals quiet: "Show all 18 orders" is the quiet inline action under the list, with no border, no fill and its words in the text\'s weight, not a bordered bold button. Opened, "Show fewer orders" is drawn the same way.',
+      },
+    },
+  },
+  render: () => <QuietRevealOfAList />,
+  play: async ({ canvasElement }) => {
+    const isQuiet = (button: HTMLElement) => {
+      const style = getComputedStyle(button);
+      return {
+        border:
+          parseFloat(style.borderTopWidth) === 0 ||
+          /,\s*0\)$|transparent/.test(style.borderTopColor),
+        fill: /rgba\([^)]*,\s*0\)$|transparent/.test(style.backgroundColor),
+        weight: Number(style.fontWeight) <= 400,
+      };
+    };
+    const reveal = await quietReveal(canvasElement);
+    await expect(isQuiet(reveal)).toEqual({ border: true, fill: true, weight: true });
+
+    await fireEvent.click(reveal);
+    const collapse = await waitFor(() => {
+      const el = canvasElement.querySelector<HTMLButtonElement>(
+        '.quiet-reveal .reqore-collapsible-content-collapse'
+      );
+      expect(el).toBeTruthy();
+      return el!;
+    });
+    await expect(isQuiet(collapse)).toEqual({ border: true, fill: true, weight: true });
+  },
+};
+

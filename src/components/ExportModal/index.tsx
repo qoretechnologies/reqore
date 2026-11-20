@@ -165,7 +165,14 @@ export const ReqoreExportModal = ({
       >
         {tabs.map((tab) => (
           <ReqoreTabsContent tabId={tab.id} key={tab.id} padded='none'>
-            <ReqoreTextarea readOnly value={dataToExport} scaleWithContent minimal />
+            <ReqoreTextarea
+              readOnly
+              value={dataToExport}
+              scaleWithContent
+              minimal
+              // The exported CSV or JSON is data, read in monospace.
+              effect={{ fontFamily: 'mono' }}
+            />
           </ReqoreTabsContent>
         ))}
       </ReqoreTabs>

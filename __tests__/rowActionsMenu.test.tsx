@@ -9,7 +9,7 @@ import ReqoreRowActionsMenu, {
 } from '../src/components/RowActionsMenu';
 
 /*
- * The menu a narrow row folds its actions into (qorus#646): each action named in words, with its icon,
+ * The menu a narrow row folds its actions into: each action named in words, with its icon,
  * and a click in it is the menu's, not the row's.
  */
 
@@ -214,7 +214,7 @@ test('A panel action drawn as its own component is named, and clicked, by its pr
 });
 
 /*
- * Folded, an action keeps its own accessible name, and the menu is named for its row (qorus#646): a list of
+ * Folded, an action keeps its own accessible name, and the menu is named for its row: a list of
  * versions in a narrow card read as many buttons called "Actions" whose items had lost the names their
  * buttons carried ("Show analytics for Short copy").
  */

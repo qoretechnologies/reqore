@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { IReqoreTreeProps } from '.';
+import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { ReqoreTextarea } from '../..';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
@@ -54,6 +55,7 @@ export const ReqoreTreeManagementDialog = ({
   keyPlaceholder = 'Key',
   valuePlaceholder = 'Value',
 }: IReqoreTreeManagementDialog) => {
+  const primaryActionIntent = useReqoreProperty('theme')?.primaryActionIntent;
   const [key, setKey] = useState(data?.key);
   const [value, setValue] = useState<any>(data?.value);
 
@@ -66,7 +68,8 @@ export const ReqoreTreeManagementDialog = ({
       panelSize='small'
       actions={[
         {
-          intent: 'success',
+          // The app's primary when the theme names one, else green as before.
+          intent: primaryActionIntent ?? 'success',
           className: 'reqore-tree-save',
           disabled: type === 'object' ? !key || !value : !value,
           label: saveLabel,
@@ -91,7 +94,7 @@ export const ReqoreTreeManagementDialog = ({
             ) : (
               <ReqoreInput
                 disabled={data && parentType === 'array'}
-                // text from the start, empty for a new item: with none, the first key made it controlled (qorus#646)
+                // text from the start, empty for a new item: with none, the first key made it controlled
                 value={key ?? ''}
                 onChange={(e) => setKey(e.target.value)}
                 placeholder={keyPlaceholder}
@@ -114,6 +117,8 @@ export const ReqoreTreeManagementDialog = ({
                 <ReqoreTextarea
                   value={value ?? ''}
                   scaleWithContent
+                  // A value in the tree is data (JSON), read in monospace.
+                  effect={{ fontFamily: 'mono' }}
                   onChange={(e: any) => setValue(e.target.value)}
                   placeholder={valuePlaceholder}
                   fluid

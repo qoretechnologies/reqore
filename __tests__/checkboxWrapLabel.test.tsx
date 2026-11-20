@@ -1,5 +1,5 @@
-// A checkbox's label that wraps (`wrapLabel`) wraps (qorus#646). It sat in two control groups that kept the width of
-// its one line, and the checkbox was one line high, so the Qorus IDE's "Skip totals rows" ran past its 38px row. The
+// A checkbox's label that wraps (`wrapLabel`) wraps. It sat in two control groups that kept the width of
+// its one line, and the checkbox was one line high, so a "Skip totals rows" label ran past its 38px row. The
 // browser stories (Checkbox · A Long Label Wraps In A Narrow Box, and those after it) measure the layout; these check
 // the rules that make it, and that a checkbox whose label does not wrap keeps its own.
 import { render } from '@testing-library/react';

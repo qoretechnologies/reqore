@@ -1,3 +1,4 @@
+import type { IReqoreEffect } from '../Effect';
 import { rgba } from 'polished';
 import { forwardRef, memo, ReactNode, useMemo } from 'react';
 import { css } from 'styled-components';
@@ -14,6 +15,7 @@ import { getOneHigherSize, getOneLessSize } from '../../helpers/utils';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 import { IReqorePanelProps, ReqorePanel } from '../Panel';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { ReqoreP } from '../Paragraph';
 
 /**
@@ -86,6 +88,12 @@ export interface IReqoreDescriptionListProps extends Omit<IReqorePanelProps, 'ch
    * Per-row `uppercaseLabel` overrides this.
    */
   uppercaseLabels?: boolean;
+  /**
+   * The effect of every row label — its colour, weight, opacity — over the label's own look;
+   * a row's `labelIntent` still colours its label. For a list whose labels must read quieter (or
+   * louder) than its values, decided once instead of per row.
+   */
+  labelEffect?: IReqoreEffect;
   /**
    * Row separator opacity (0 - 1). Defaults to `0.06`. Set to `0`
    * to hide the hairline between rows entirely.
@@ -287,7 +295,8 @@ export const ReqoreDescriptionList = memo(
       {
         items,
         labelWidth = '160px',
-        uppercaseLabels = true,
+        uppercaseLabels: uppercaseLabelsProp,
+        labelEffect,
         separatorOpacity = 0.06,
         size = 'normal',
         contentSize,
@@ -299,6 +308,9 @@ export const ReqoreDescriptionList = memo(
       },
       ref
     ) => {
+      const theme = useReqoreTheme();
+      // A caller that says wins; otherwise the theme decides (`theme.uppercaseLabels`).
+      const uppercaseLabels = uppercaseLabelsProp ?? theme.uppercaseLabels !== false;
       // Default the panel's padding one size up from the list's text
       // size — gives the rows visible breathing room from the panel
       // edge without callers having to size it manually. The caller
@@ -356,7 +368,11 @@ export const ReqoreDescriptionList = memo(
                           ) : null}
                         </StyledIconSlot>
                       ) : null}
-                      <ReqoreP size={resolvedLabelSize} intent={row.labelIntent}>
+                      <ReqoreP
+                        size={resolvedLabelSize}
+                        intent={row.labelIntent}
+                        effect={labelEffect}
+                      >
                         {row.label}
                       </ReqoreP>
                     </StyledLabel>

@@ -11,6 +11,7 @@ import {
 import type { IReqorePanelAction, IReqorePanelSubAction } from '../components/Panel';
 import {
   ACCENT_SIZE_TO_PX,
+  clearCorner,
   NUMBER_TO_SIZE,
   PADDING_FROM_SIZE,
   SIZES,
@@ -143,21 +144,26 @@ export type TReqorePadded = boolean | 'horizontal' | 'vertical';
  * The base padding for each axis is `PADDING_FROM_SIZE[paddingSize] *
  * <multiplier>`. Pass per-component multipliers (e.g. EntityRow uses `v=2,
  * h=3`; Statistic uses `v=3, h=5`).
+ *
+ * `cornerInset` is the surface's inner corner radius (0 when it draws no corner): padded sides are
+ * at least that, so what starts at the top-left starts clear of the curve (`clearCorner`).
  */
 export const resolvePadding = ({
   padded,
   paddingSize,
   verticalMultiplier,
   horizontalMultiplier,
+  cornerInset = 0,
 }: {
   padded: TReqorePadded;
   paddingSize: TSizes;
   verticalMultiplier: number;
   horizontalMultiplier: number;
+  cornerInset?: number;
 }): string => {
   if (padded === false) return '0';
   const v = PADDING_FROM_SIZE[paddingSize] * verticalMultiplier;
-  const h = PADDING_FROM_SIZE[paddingSize] * horizontalMultiplier;
+  const h = clearCorner(PADDING_FROM_SIZE[paddingSize] * horizontalMultiplier, cornerInset);
   if (padded === 'horizontal') return `0 ${h}px`;
   if (padded === 'vertical') return `${v}px 0`;
   return `${v}px ${h}px`;

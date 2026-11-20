@@ -23,6 +23,7 @@ import {
   changeLightness,
   getColorFromMaybeString,
   getNotificationIntent,
+  getReadableColor,
 } from '../../helpers/colors';
 import { getPrimaryGradient } from '../Effect';
 import ReqoreMessage from '../Message';
@@ -58,6 +59,9 @@ const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) =>
   );
 };
 
+/** The hairline round a tooltip: its body's edge, and the two outer sides of its arrow. */
+const popoverHairline = (theme: IReqoreTheme) => rgba(getReadableColor(theme), 0.1);
+
 const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   width: 10px;
   height: 10px;
@@ -71,6 +75,45 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
     height: 0;
     position: absolute;
     z-index: -1;
+  }
+`;
+
+/** The side of a tooltip's arrow, square before it is turned 45deg. Turned, it reaches
+ *  side / sqrt(2) / 2 = 8.5px past its centre, and its centre is 1px outside the body (below),
+ *  so its point ends 9.5px out: short of the 10px gap to the target. A larger square ran its
+ *  point into the target's own border, and the two edges crossing there made a bright dot. */
+const HAIRLINE_ARROW_SIDE = 12;
+
+/** The arrow box (`StyledPopoverArrow`) is 10px square and centred on the body's edge. */
+const ARROW_BOX_CENTRE = 5;
+
+/**
+ * A tooltip's arrow, for a popover with a hairline: one square turned 45deg, in the body's
+ * colour, with the hairline on its two OUTER sides only. It replaces a triangle with a
+ * second, 2px larger triangle behind it as its rim. Those were two translucent layers, so
+ * where they overlapped each other and the body's ring the hairline was drawn twice, and the
+ * arrow's three points stood out brighter than its sides. One element
+ * draws one even 1px edge. Its centre sits 1px outside the body's edge, in the direction the
+ * arrow points (`outwards`): its borderless inner half covers the body's ring across the
+ * arrow's base, and its bordered sides start where the ring ends.
+ */
+const hairlineArrow = (
+  placement: 'top' | 'bottom' | 'left' | 'right',
+  [outwardsX, outwardsY]: [number, number],
+  sides: [string, string]
+) => css`
+  &[data-popper-placement^='${placement}'] > ${StyledPopoverArrow}:before {
+    width: ${HAIRLINE_ARROW_SIDE}px;
+    height: ${HAIRLINE_ARROW_SIDE}px;
+    box-sizing: border-box;
+    border: 0 solid var(--reqore-popover-rim);
+    ${sides.map((side) => `border-${side}-width: 1px;`).join('\n    ')}
+    /* the hairline sits over what is behind the arrow, as the body's ring does */
+    background-clip: padding-box;
+    background-color: var(--reqore-popover-surface, ${(props) => getPopoverArrowColor(props)});
+    transform: rotate(45deg);
+    top: ${ARROW_BOX_CENTRE + outwardsY - HAIRLINE_ARROW_SIDE / 2}px;
+    left: ${ARROW_BOX_CENTRE + outwardsX - HAIRLINE_ARROW_SIDE / 2}px;
   }
 `;
 
@@ -140,10 +183,19 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   border: ${({ flat, noWrapper, ...rest }: any) =>
     !flat && noWrapper ? `1px solid ${getPopoverArrowColor({ ...rest, flat })}` : undefined};
 
-  ${({ transparent }) =>
+  ${({ transparent, theme, $hairline }) =>
     !transparent &&
     css`
-      box-shadow: rgba(31, 26, 34, 0.7) 0px 0px 10px;
+      /* A deep drop shadow: the soft 10px glow in a near-black tint was invisible on a dark
+         page. A popover that draws no edge of its own (a tooltip's flat body) also gets a
+         hairline in the text colour, and its arrow the same hairline as a rim. Anything that
+         has an edge already - a bordered body (flat={false}), or content that brings its own
+         surface (a dropdown's menu panel, a date picker) - keeps that edge alone: a hairline
+         round it drew a second border outside the first. The arrow's own edge is
+         hairlineArrow, after the placements. */
+      ${$hairline ? `--reqore-popover-rim: ${popoverHairline(theme)};` : ''}
+      box-shadow: ${$hairline ? `0 0 0 1px ${popoverHairline(theme)}, ` : ''}0 10px 28px
+        rgba(0, 0, 0, 0.55);
     `}
 
   &[data-popper-placement^='top'] > ${StyledPopoverArrow} {
@@ -152,7 +204,7 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     &:before {
       border-left: 10px solid transparent;
       border-right: 10px solid transparent;
-      border-top: 10px solid ${(props) => getPopoverArrowColor(props)};
+      border-top: 10px solid var(--reqore-popover-surface, ${(props) => getPopoverArrowColor(props)});
 
       top: 5px;
       left: -5px;
@@ -165,7 +217,7 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     &:before {
       border-left: 10px solid transparent;
       border-right: 10px solid transparent;
-      border-bottom: 10px solid ${(props) => getPopoverArrowColor(props)};
+      border-bottom: 10px solid var(--reqore-popover-surface, ${(props) => getPopoverArrowColor(props)});
 
       top: -5px;
       left: -5px;
@@ -178,7 +230,7 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     &:before {
       border-top: 10px solid transparent;
       border-bottom: 10px solid transparent;
-      border-left: 10px solid ${(props) => getPopoverArrowColor(props)};
+      border-left: 10px solid var(--reqore-popover-surface, ${(props) => getPopoverArrowColor(props)});
 
       top: -5px;
       left: 5px;
@@ -191,12 +243,21 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     &:before {
       border-top: 10px solid transparent;
       border-bottom: 10px solid transparent;
-      border-right: 10px solid ${(props) => getPopoverArrowColor(props)};
+      border-right: 10px solid var(--reqore-popover-surface, ${(props) => getPopoverArrowColor(props)});
 
       top: -5px;
       left: -5px;
     }
   }
+
+  ${({ $hairline }) =>
+    $hairline &&
+    css`
+      ${hairlineArrow('top', [0, 1], ['bottom', 'right'])}
+      ${hairlineArrow('bottom', [0, -1], ['top', 'left'])}
+      ${hairlineArrow('left', [1, 0], ['top', 'right'])}
+      ${hairlineArrow('right', [-1, 0], ['bottom', 'left'])}
+    `}
 
   &[data-popper-reference-hidden='true'] {
     visibility: hidden;
@@ -214,11 +275,11 @@ export const StyledPopoverContent = styled.div<{ $capped?: boolean }>`
   /* A surface with a height cap (maxHeight, or the room held below its target) keeps what it holds inside the
      cap. The cap was on the surface alone, and the content - 100% of a height the surface never sets - kept
      its own: a 382px list in a surface capped at 297px ran off the bottom of the window, past the surface's
-     edge (qorus#646). The arrow is drawn outside the surface, so the surface itself does not clip.
+     edge. The arrow is drawn outside the surface, so the surface itself does not clip.
      What can scroll its own content - a panel (its body scrolls) or a menu - is held to the cap: it shrinks
      to it and keeps its whole frame, its bottom border too, and only its own content scrolls. Scrolling the
      whole surface instead left the panel as tall as before, its bottom border scrolled out of sight under the
-     surface's edge, and its rows scrolling inside that again (Foxhoundn on qorus#646). Anything else keeps
+     surface's edge, and its rows scrolling inside that again. Anything else keeps
      its height, and the surface scrolls it, as before.
      (No backticks in here: this comment lives inside a template literal.) */
   ${({ $capped }) =>
@@ -384,7 +445,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
             /* The field never leaves view: it is scrolled up at most to the top of what shows it (its
                scroller, or the window where the scroller starts above it). Scrolled by the whole deficit, a
                list taller than a short window took the field out of sight - from y=209 to y=-59 in a 380px
-               canvas - Popper marked it hidden, and the list closed as it opened (qorus#646). What is still
+               canvas - Popper marked it hidden, and the list closed as it opened. What is still
                missing then is taken from the list's height below, or it flips. */
             const shownFrom = Math.max(scroller.getBoundingClientRect().top, visibleTop());
             const toTheTop = Math.max(targetElement.getBoundingClientRect().top - shownFrom, 0);
@@ -406,8 +467,8 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
       /* The surface is never taller than the room on the side it is drawn: its height is capped at that
          room, which caps nothing while it fits. Made once, the cap stayed what it was at the opening: a
          window made shorter, a phone turned on its side, the keyboard coming up or the page scrolled while
-         the list was open, and the list ran off the bottom of the screen (qorus#646, Foxhoundn: a popover
-         should never outgrow the viewport). So it follows the room as it changes, on the events that change
+         the list was open, and the list ran off the bottom of the screen, and a popover
+         should never outgrow the viewport. So it follows the room as it changes, on the events that change
          it: the window's and the visual viewport's size, any scroll, the target's size - at most once a
          frame. */
       const clamp = () => {
@@ -525,7 +586,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     // with `flushSync`), and a new position can change the popover's size -
     // a layout change inside the callback that the browser must leave
     // unreported for the frame, which it reports as "ResizeObserver loop
-    // completed with undelivered notifications" (qorus#646: five Dropdown
+    // completed with undelivered notifications" (in five Dropdown
     // stories, Select's and MultiSelect's). One recalculation per frame,
     // however many reports came in.
     useEffect(() => {
@@ -552,6 +613,38 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
         if (resizeObserver.current === observer) resizeObserver.current = null;
       };
     }, [forceUpdate, popperElement, targetElement]);
+
+    // The arrow is drawn in the colour the body is ACTUALLY drawn in. It had a formula of its
+    // own (the theme's main, lightened), while the body is a message whose surface is decided
+    // elsewhere, so the arrow was a lighter triangle on a darker tooltip. Read the surface the
+    // message drew and hand it to the arrow; the formula stays the fallback for a content
+    // with no message of its own.
+    //
+    // Only for the body the popover draws itself (a tooltip's message). Content that brings its
+    // own surface - a dropdown's menu panel - keeps its own edge, so it gets neither the hairline
+    // nor a measured arrow, and a message somewhere inside it is not the popover's body.
+    const ownBody = !noWrapper || isString(content);
+    const hairline = flat && ownBody && !transparent;
+    useEffect(() => {
+      if (!popperElement) return undefined;
+      const frame = requestAnimationFrame(() => {
+        const surface = popperElement.querySelector('.reqore-popover-text');
+        const style = surface ? getComputedStyle(surface) : undefined;
+        const color = style?.backgroundColor ?? '';
+        // A gradient body paints its colour as a background IMAGE, over a plain colour that is
+        // not what you see (an orange effect popover's is grey): the formula, which reads the
+        // gradient, stays the arrow's colour there.
+        const painted = !!style && style.backgroundImage !== 'none';
+        // Only a flat body: a bordered one (flat={false}) draws its edge in the arrow's
+        // formula colour, and the arrow continues that border.
+        if (hairline && !painted && color && color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)') {
+          popperElement.style.setProperty('--reqore-popover-surface', color);
+        } else {
+          popperElement.style.removeProperty('--reqore-popover-surface');
+        }
+      });
+      return () => cancelAnimationFrame(frame);
+    }, [popperElement, content, intent, hairline, minimal, transparent, effect]);
 
     // Preserve the documented explicit update contract as a fallback for
     // content changes that do not affect the content box dimensions.
@@ -698,6 +791,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           intent={intent}
           flat={flat}
           noWrapper={noWrapper}
+          $hairline={hairline}
           dim={flat && !transparent && !effect && minimal}
           className='reqore-popover-content'
           ref={handleRef}

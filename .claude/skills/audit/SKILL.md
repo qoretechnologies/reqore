@@ -270,7 +270,7 @@ Each missing item is a row pointing at the file:line.
 
 ### Step 9 — Compose the report
 
-Emit a single Markdown report with this shape. Use `[name](path#Lline)` links so the user can click into the IDE.
+Emit a single Markdown report with this shape. Use `[name](path#Lline)` links so the user can click into their editor.
 
 ```markdown
 # /audit report — <branch> @ <short-sha>

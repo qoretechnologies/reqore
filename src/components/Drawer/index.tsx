@@ -19,6 +19,7 @@ import type { IReqoreConfirmationModal } from '../../containers/ReqoreProvider';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { getSwipeStep } from '../../helpers/gestures';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useReqoreEscClose } from '../../hooks/useReqoreEscClose';
 import {
   DRAG_CONTROL_SELECTOR,
   IPointerDragDelta,
@@ -36,19 +37,19 @@ export type TPosition = 'top' | 'bottom' | 'left' | 'right';
 /**
  * The viewport width (px, inclusive) at or below which a `responsiveLayout`
  * drawer becomes a sheet when the caller names no breakpoint. 900 is the
- * number qorus-ide converged on for every one of its drawers: a 620–720px
+ * number an app built on reqore converged on for every one of its drawers: a 620–720px
  * side panel in a 900px window leaves a sliver of page that is not usable
  * anyway, so the sheet is the honest layout there. The provider's own
- * `isMobile` (≤ 480px) is too narrow for drawers that wide — at 600px such a
+ * `isMobile` (< 600px) is too narrow for drawers that wide — at 700px such a
  * panel covers the viewport with its handle off-screen — and
- * `isMobileOrTablet` (≤ 1200px) would put sheets on landscape tablets.
+ * `isMobileOrTablet` (< 1200px) would put sheets on landscape tablets.
  */
 export const DRAWER_SHEET_BREAKPOINT = 900;
 
 /**
  * Which viewport width switches a `responsiveLayout` drawer into a sheet:
- * `'mobile'` is the provider's `isMobile` (≤ 480px), `'tablet'` is its
- * `isMobileOrTablet` (≤ 1200px), and a number is a width in px, inclusive.
+ * `'mobile'` is the provider's `isMobile` (< 600px), `'tablet'` is its
+ * `isMobileOrTablet` (< 1200px), and a number is a width in px, inclusive.
  * Omitted, it is `DRAWER_SHEET_BREAKPOINT`. Reqore owns these numbers; a
  * consumer never carries a media query of its own for this.
  */
@@ -284,7 +285,7 @@ export const DRAWER_MIN_SIZE = '150px';
  * top and the rest empty.
  *
  * Width is inert in practice — the default is `80vw` and the narrowest modal in
- * reqore, reqraft and qorus-ide is 480px — so what this actually changes is the
+ * reqore, reqraft and the apps built on them is 480px — so what this actually changes is the
  * height of a modal with less than 80px of content, which in practice means one
  * with no header. Such a modal reserves room for chrome it does not have. That
  * is accepted rather than worked around: 80px is a reasonable smallest dialog,
@@ -304,9 +305,24 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
   isHidden?: boolean;
   position?: TPosition;
   hidable?: boolean;
+  /**
+   * The name of a `hidable` drawer's hide button (its tooltip and accessible name: the button is
+   * an arrow alone). Defaults to `'Hide'`.
+   */
+  hideLabel?: string;
+  /** The name of the button that shows a hidden drawer again. Defaults to `'Show'`. */
+  showLabel?: string;
   resizable?: boolean;
   onClose?: () => void;
   onHideToggle?: (isHidden: boolean) => void;
+  /**
+   * Whether the drawer (or modal) draws its title bar. Default `true`. `false` draws none — no
+   * label, icon, badge, close button or header actions — for a dialog whose content already says
+   * what it is (a search box, a command palette, whose heading would only repeat its input).
+   * Escape and a click on the backdrop still close it, and `label`, when it is a string, is the
+   * dialog's accessible name. Bottom actions are unaffected.
+   */
+  titleBar?: boolean;
   hasBackdrop?: boolean;
   size?: string | 'auto';
   panelSize?: IReqorePanelProps['size'];
@@ -369,7 +385,7 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
    * whole viewport, its resize handle sits off-screen and nothing says why
    * the page behind it stopped responding. With `responsiveLayout`, at or
    * below the breakpoint — `DRAWER_SHEET_BREAKPOINT` (900px) unless `below`
-   * says `'mobile'` (≤ 480px), `'tablet'` (≤ 1200px) or a px number — the
+   * says `'mobile'` (< 600px), `'tablet'` (< 1200px) or a px number — the
    * drawer attaches to the bottom edge (or the `position` given), takes
    * `100%` of that axis (or the `size` given) up to a `maxSize` of `90vh`
    * (or the one given; `'100%'` for edge to edge), and drops the affordances
@@ -378,7 +394,7 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
    * wide screen is shown again rather than left hidden with no control to
    * bring it back. Above the breakpoint nothing changes.
    *
-   * These defaults are qorus-ide's `useResponsiveDrawerProps` behaviour moved
+   * These defaults are a host app's `useResponsiveDrawerProps` behaviour moved
    * into the library: bottom, full width, 90% of the height, at 900px. Pass
    * `true` for them, or `{ below, position, size, maxSize }` to tune them.
    * The root carries `.reqore-drawer-sheet` while the layout is active, so a
@@ -600,6 +616,21 @@ const getSlideTransform = (slide: SpringValue<number>, position: TPosition) =>
     return `translate(${x}px, ${y}px)`;
   });
 
+/** A modal's width on a phone, and the most it may take there: the page's 16px gutter each side. */
+export const MODAL_PHONE_WIDTH = 'calc(100vw - 32px)';
+
+/** What a drawer hands its panel instead of the title bar's props when `titleBar` is `false`. */
+const NO_TITLE_BAR: Partial<IReqorePanelProps> = {
+  label: undefined,
+  icon: undefined,
+  badge: undefined,
+  breadcrumbs: undefined,
+  description: undefined,
+  collapsible: false,
+  onClose: undefined,
+  actions: [],
+};
+
 export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
   ({
     children,
@@ -615,10 +646,13 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     minWidth,
     minHeight,
     onClose,
+    titleBar = true,
     hasBackdrop = true,
     size: sizeProp,
     resizable: resizableProp = true,
     hidable: hidableProp,
+    hideLabel = 'Hide',
+    showLabel = 'Show',
     onHideToggle,
     className,
     flat,
@@ -644,6 +678,22 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     const animations = useReqoreProperty('animations');
     const confirmAction = useReqoreProperty('confirmAction');
     const customPortalId = useReqoreProperty('customPortalId');
+    // The app's dialog surface, decided once (`options.dialogOpacity` / `dialogBlur`): a call
+    // site's own `opacity` wins.
+    const dialogOpacity = useReqoreProperty('dialogOpacity');
+    const dialogBlur = useReqoreProperty('dialogBlur');
+    const panelOpacity = opacity ?? dialogOpacity;
+    // With a backdrop, `blur` is the backdrop's; the panel's own frost is `dialogBlur`, and only
+    // a see-through panel has anything to frost. (It was forced to 0, so a translucent drawer
+    // showed the page through its body, sharp.) Without a backdrop, `blur` is the panel's own,
+    // and the app's `dialogBlur` frosts it when the call site sets none: a drawer with no
+    // backdrop is no less a dialog.
+    const seeThrough = panelOpacity !== undefined && panelOpacity < 1;
+    const panelBlur = hasBackdrop
+      ? seeThrough
+        ? dialogBlur
+        : 0
+      : (blur ?? (seeThrough ? dialogBlur : undefined));
     const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
     const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
     const isMobile = useReqoreProperty('isMobile');
@@ -695,9 +745,15 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     // By default, enable focus trap for modals and drawers with backdrop
     const shouldTrapFocus = focusTrap ?? (_isModal || hasBackdrop);
 
-    // Use focus trap to keep focus within the drawer when open
+    /* Focus goes into every open drawer and back to what had it when the drawer closes. A modal one
+       (a modal, a drawer with a backdrop) also keeps Tab inside and focuses its first control; one
+       that is not modal (no backdrop, the page beside it stays usable) takes focus as a whole, its
+       box, and lets Tab leave. A drawer without a backdrop used to neither take focus nor give it
+       back, so a keyboard user opened it and stayed on the page behind it. */
     useFocusTrap(drawerRef, {
-      active: isOpen && shouldTrapFocus && !hidden,
+      active: isOpen && !hidden,
+      trap: shouldTrapFocus,
+      initialFocus: shouldTrapFocus ? 'first' : 'container',
       restoreFocus: true,
       autoFocus: true,
     });
@@ -734,6 +790,9 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
         builtActions.push({
           responsive: false,
           icon: getHideShowIcon(position, _isHidden),
+          // An arrow alone named nothing for a screen reader.
+          tooltip: _isHidden ? showLabel : hideLabel,
+          'aria-label': _isHidden ? showLabel : hideLabel,
           onClick: () => {
             setIsHidden(!_isHidden);
 
@@ -746,7 +805,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
       }
 
       return builtActions;
-    }, [hidable, position, onClose, actions, _isHidden]);
+    }, [hidable, position, onClose, actions, _isHidden, hideLabel, showLabel]);
 
     const positions = useMemo(() => {
       /* Centering the modal. */
@@ -763,6 +822,16 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
         left: position === 'left' || layout === 'horizontal' ? (floating ? '10px' : 0) : undefined,
       };
     }, [_isModal, position, layout, floating]);
+
+    // Escape closes the drawer in front, through the provider's stack: a modal, a confirmation
+    // over a drawer, nested drawers - only the top one closes.
+    useReqoreEscClose({
+      isOpen,
+      onClose,
+      disabled: rest.disabled,
+      closeOnEscPress: rest.closeOnEscPress,
+      confirmOnClose,
+    });
 
     const handleClose = onClose
       ? () => {
@@ -951,7 +1020,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
            * wrapper to `overflow: visible` so the header can escape, and
            * `overflow: hidden` on an ancestor makes that ancestor a sticky
            * containing block, so this box was in that chain. No drawer or
-           * modal story passes `stickyHeader`, while qorus-ide ships it as a
+           * modal story passes `stickyHeader`, while a host app ships it as a
            * default in panels that render inside drawers — so the geometry
            * sweep says nothing about the case that matters most.
            *
@@ -1073,8 +1142,11 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
               ref={drawerRef}
               zIndex={wrapperZIndex}
               className='reqore-drawer-wrapper'
-              role={_isModal || hasBackdrop ? 'dialog' : undefined}
+              // A dialog either way; only one with a backdrop is modal.
+              role='dialog'
               aria-modal={_isModal || hasBackdrop ? 'true' : undefined}
+              // With no title bar, the label still names the dialog for a screen reader.
+              aria-label={!titleBar && typeof rest.label === 'string' ? rest.label : undefined}
             >
               <Resizable
                 className={`${className || ''} reqore-drawer-resizable${
@@ -1095,7 +1167,12 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                     : undefined
                 }
                 maxWidth={
-                  layout === 'vertical' || layout === 'center' ? maxSize || '90vw' : undefined
+                  layout === 'vertical'
+                    ? maxSize || '90vw'
+                    : layout === 'center'
+                    ? // A phone keeps the page's 16px gutter each side, not 90vw's ~20px.
+                      maxSize || (isMobile ? MODAL_PHONE_WIDTH : '90vw')
+                    : undefined
                 }
                 minWidth={
                   layout === 'center'
@@ -1137,6 +1214,8 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                       customTheme={theme}
                       className='reqore-drawer-control reqore-drawer-hide-button'
                       icon={getHideShowIcon(position, _isHidden)}
+                      tooltip={_isHidden ? showLabel : hideLabel}
+                      aria-label={_isHidden ? showLabel : hideLabel}
                       onClick={onHideToggleClick}
                     />
                   </StyledCloseWrapper>
@@ -1144,9 +1223,10 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                 {!hidden && (
                   <ReqorePanel
                     {...rest}
+                    _dialogTitle
                     size={panelSize}
-                    opacity={opacity}
-                    blur={hasBackdrop ? 0 : blur}
+                    opacity={panelOpacity}
+                    blur={panelBlur}
                     actions={_actions}
                     customTheme={customTheme}
                     intent={intent}
@@ -1156,6 +1236,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                     closeButtonProps={closeButtonProps}
                     className={`reqore-drawer`}
                     style={panelStyle}
+                    {...(titleBar ? {} : NO_TITLE_BAR)}
                   >
                     {children}
                   </ReqorePanel>

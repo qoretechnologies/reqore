@@ -57,7 +57,11 @@ test('Renders the chip and the menu row of an unlabelled boolean item', () => {
   expect(screen.getByText('false')).toBeTruthy();
   expect(screen.queryByText('No value selected')).toBeNull();
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
 
   act(() => {
     vi.advanceTimersByTime(1);

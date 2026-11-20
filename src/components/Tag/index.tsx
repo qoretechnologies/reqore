@@ -10,7 +10,6 @@ import {
   BADGE_RADIUS_FROM_RADIUS_SIZE,
   BADGE_RADIUS_FROM_SIZE,
   BADGE_SIZE_TO_PX,
-  CONTROL_TEXT_FROM_SIZE,
   resolveRadius,
   TAG_HORIZONTAL_PADDING_FROM_SIZE,
   TAG_VERTICAL_PADDING_FROM_SIZE,
@@ -18,13 +17,14 @@ import {
   TAG_RADIUS_FROM_RADIUS_SIZE,
   TAG_RADIUS_FROM_SIZE,
   TAG_SIZE_TO_PX,
-  TAG_TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
+import { getControlTextSize, getTagTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
   getColorFromMaybeString,
+  getFocusRingColor,
   getOpaqueColor,
   getReadableAccentColor,
   getReadableColor,
@@ -375,7 +375,7 @@ export const StyledTag = styled(StyledEffect).withConfig({
     `}
   overflow: hidden;
   vertical-align: ${({ verticalAlign = 'middle' }) => verticalAlign};
-  font-size: ${({ size }) => TAG_TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getTagTextSize(theme, size)}px;
   line-height: 1.1;
 
   min-width: ${({ size, asBadge }) => (asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size])}px;
@@ -400,6 +400,10 @@ export const StyledTag = styled(StyledEffect).withConfig({
         : `${resolveRadius(size, radiusSize, TAG_RADIUS_FROM_SIZE, TAG_RADIUS_FROM_RADIUS_SIZE)}px`};
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
+  /* The focus ring's width and place at rest, so the transition fades only its colour in. */
+  outline-width: 2px;
+  outline-color: transparent;
+  outline-offset: -2px;
 
   ${({ align }) => {
     if (align === 'left') {
@@ -570,10 +574,12 @@ export const StyledTag = styled(StyledEffect).withConfig({
     }
   }
 
-  &:focus,
-  &:active {
-    outline: 2px solid ${({ theme, color }) => changeLightness(color || theme.main, 0.25)};
+  /* Inside the edge, where a clipping box around the tag (a cell, a scrolling group) cannot cut it. */
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
     outline-offset: -2px;
+    /* At once, not eased in: see the button's ring. */
+    transition: none;
   }
 `;
 
@@ -767,7 +773,7 @@ const StyledButtonWrapper = styled.span.withConfig({
   shouldForwardProp: omitStyleProps('color'),
 })<IReqoreTagStyle>`
   flex-shrink: 0;
-  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getControlTextSize(theme, size)}px;
   width: ${({ size }) => BADGE_SIZE_TO_PX[size]}px;
   display: flex;
   justify-content: center;

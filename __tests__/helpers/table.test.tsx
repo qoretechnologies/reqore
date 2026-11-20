@@ -123,7 +123,7 @@ test('calculatePinOffsets produces cumulative sticky offsets and marks edges', (
 });
 
 /*
- * A narrow table folds a row's actions into one menu button (qorus#646): which columns fold, at what
+ * A narrow table folds a row's actions into one menu button: which columns fold, at what
  * width, and how wide a folded column is.
  */
 
@@ -232,7 +232,7 @@ test('A folded column is the menu button\'s width, a finger\'s on touch, and not
   expect(narrowColumn.width).toBe(20);
 });
 
-/* A folded column is as wide as what its cells draw (qorus#646): the square for a menu or an icon, a
+/* A folded column is as wide as what its cells draw: the square for a menu or an icon, a
    row's one action with no icon its words - its short label, or its label - whole in their button. */
 
 test('A folded cell says the short label, or the label, of its one action with no icon; else nothing', () => {

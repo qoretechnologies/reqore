@@ -21,12 +21,19 @@ export interface IReqoreDropdownProps
   multiSelect?: boolean;
   buttonStyle?: React.CSSProperties;
   listStyle?: React.CSSProperties;
+  /** The list's items as rows in one card (`IReqoreDropdownListProps.asRows`). */
+  listAsRows?: boolean;
   component?: any;
   filterable?: boolean;
   onFilterChange?: (query: string) => void;
   /** See `IReqoreDropdownListProps.filterRanking`. */
   filterRanking?: TReqoreFilterRanking;
   filter?: string | number;
+  /**
+   * The name of the back button an opened level of a nested list shows (its tooltip and accessible
+   * name: the button is an arrow alone). Defaults to `'Back'`.
+   */
+  backLabel?: string;
   filterPlaceholder?: string;
   /**
    * Builder for the filter input's placeholder when `filterPlaceholder` is
@@ -55,6 +62,12 @@ export interface IReqoreDropdownProps
   scrollToSelected?: boolean;
   paging?: TReqorePaginationType<IReqoreDropdownItem>;
   customElements?: React.ReactNode[];
+  /**
+   * Where `customElements` sit: `'start'` (the default, unchanged) above the search and the items,
+   * `'end'` after the items. A row action menu whose custom elements are secondary (an
+   * enable / disable toggle) puts them last, so the actions people reach for come first.
+   */
+  customElementsPosition?: 'start' | 'end';
   listCustomTheme?: IReqoreCustomTheme;
   listIntent?: TReqoreIntent;
   showCaret?: boolean;
@@ -93,7 +106,7 @@ const ReqoreDropdownListWrapper = memo(
         intent={rest.intent}
         {...wrapperProps}
         /* Its body lays the list out as a column, so a list held to a short popover's cap gives its rows
-           the room left under its search and tags, and only the rows scroll (qorus#646). */
+           the room left under its search and tags, and only the rows scroll. */
         contentStyle={{ display: 'flex', flexDirection: 'column', ...wrapperProps?.contentStyle }}
       >
         <ReqoreDropdownList
@@ -115,6 +128,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   multiSelect,
   buttonStyle,
   listStyle,
+  listAsRows,
   handler,
   placement,
   filterable,
@@ -122,6 +136,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   onFilterChange,
   filterPlaceholder,
   filterPlaceholderBuilder,
+  backLabel,
   noItemsFoundText,
   filter,
   icon,
@@ -150,6 +165,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   show,
   onToggleChange,
   customElements,
+  customElementsPosition,
   wrapperProps,
   listCustomTheme,
   listIntent,
@@ -222,6 +238,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
       <ReqoreDropdownListWrapper
         multiSelect={multiSelect}
         listStyle={listStyle}
+        asRows={listAsRows}
         width={useTargetWidth ? '100%' : listWidth}
         height={listHeight}
         items={items || []}
@@ -234,9 +251,11 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         onFilterChange={onFilterChange}
         filterPlaceholder={filterPlaceholder}
         filterPlaceholderBuilder={filterPlaceholderBuilder}
+        backLabel={backLabel}
         noItemsFoundText={noItemsFoundText}
         filter={filter}
         customElements={customElements}
+        customElementsPosition={customElementsPosition}
         wrapperProps={wrapperProps}
         customTheme={listCustomTheme}
         intent={listIntent}
@@ -248,7 +267,15 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         onSelectedItemsChange={setSelectedItems}
       />
     ) : undefined;
-  }, [items, onItemSelect, customElements, selectedItems, handleNavigateToLevel]);
+  }, [
+    items,
+    onItemSelect,
+    customElements,
+    customElementsPosition,
+    selectedItems,
+    handleNavigateToLevel,
+    listAsRows,
+  ]);
 
   return (
     <ReqorePopover
