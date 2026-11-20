@@ -4,6 +4,7 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 import { IReqoreDropdownProps } from '.';
 import { TReqorePaginationType } from '../../constants/paging';
 import { ReqorePaginationContainer } from '../../containers/Paging';
+import { getPanelHairlineColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreComponent, IReqoreIntent, IWithReqoreCustomTheme } from '../../types/global';
 import ReqoreButton from '../Button';
@@ -71,6 +72,12 @@ export interface IReqoreDropdownListProps
   items?: TReqoreDropdownItems;
   multiSelect?: boolean;
   listStyle?: React.CSSProperties;
+  /**
+   * The items as rows in one card: each flat and on no surface of its own, a hairline between them,
+   * the list's surface their card. An item's own `flat`, `transparent` and `minimal` give way to it.
+   * Without it each item is drawn as it asks, which for a bordered item is a card per item.
+   */
+  asRows?: boolean;
   width?: string;
   height?: string;
 
@@ -200,6 +207,7 @@ const ReqoreDropdownList = memo(
     items,
     multiSelect,
     listStyle,
+    asRows,
     closePopover,
     filterable,
     filterRanking = 'none',
@@ -575,6 +583,7 @@ const ReqoreDropdownList = memo(
             items: currentSelectedItem.items,
             multiSelect,
             listStyle,
+            asRows,
             filterable,
             // an opened level is the same list: it ranks, says and is reached as the list does
             filterRanking,
@@ -705,7 +714,8 @@ const ReqoreDropdownList = memo(
 
             return (
               <ReqoreMenu
-                style={listStyle}
+                // rows in one card touch: the hairline between them is their only gap
+                style={asRows ? { gap: 0, ...listStyle } : listStyle}
                 width={width}
                 maxHeight={height || '300px'}
                 padded={false}
@@ -759,6 +769,18 @@ const ReqoreDropdownList = memo(
                         // an entry that destroys something is drawn in danger, not in the list's tint
                         intent={item.destructive ? undefined : intent}
                         {...item}
+                        {...(asRows ?
+                          {
+                            flat: true,
+                            transparent: true,
+                            minimal: true,
+                            style: {
+                              ...item.style,
+                              borderRadius: 0,
+                              ...(index > 0 ? { borderTop: `1px solid ${getPanelHairlineColor(theme)}` } : {}),
+                            },
+                          }
+                        : {})}
                         rightAction={getAction(item, 'right')}
                         leftAction={getAction(item, 'left')}
                         disabled={

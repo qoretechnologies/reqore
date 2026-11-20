@@ -143,6 +143,76 @@ const TAGS = {
 
 const listIsOpen = (doc: Document) => !!doc.querySelector('.reqore-popover-content');
 
+/** Templates as a host builds them: each group and each template asks for an edge of its own. */
+const CARD_ITEM = { flat: false, transparent: false, minimal: true } as const;
+const BORDERED_TAGS = {
+  context: {
+    label: 'Context data',
+    ...CARD_ITEM,
+    items: [
+      { label: 'Current timestamp', value: '$timestamp:now', ...CARD_ITEM },
+      { label: 'Interface name', value: '$local:name', ...CARD_ITEM },
+      { label: 'Instance', value: '$local:instance', ...CARD_ITEM },
+    ],
+  },
+  order: {
+    label: 'Receive order',
+    ...CARD_ITEM,
+    items: [{ label: 'Order ID', value: '$data:{order.id}', ...CARD_ITEM }],
+  },
+};
+
+/** Whether a row is drawn as a card of its own: an edge, or a surface of its own. */
+const isACard = (row: HTMLElement) => {
+  const style = getComputedStyle(row);
+  const edged = parseFloat(style.borderLeftWidth) > 0 && !/,\s*0\)$|transparent/.test(style.borderLeftColor);
+  return edged;
+};
+
+export const TheTemplatesAreRowsInOneCard: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A reference field whose templates are given as a host builds them, each group and each template asking for an edge of its own. The list draws them as rows in one card: no edge or surface per row, a hairline between rows, the list\'s surface the card. It used to draw each as it asked: a card per template.',
+      },
+    },
+  },
+  args: { value: [{ type: 'paragraph', children: [{ text: '' }] }], tags: BORDERED_TAGS, onChange: fn() },
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await editorIn(doc);
+    await userEvent.click(editor);
+    const rows = async (count: number) =>
+      waitFor(() => {
+        const found = Array.from(
+          doc.querySelectorAll<HTMLElement>('.reqore-popover-content .reqore-menu-item')
+        );
+        expect(found.length).toBeGreaterThanOrEqual(count);
+        return found;
+      });
+
+    const expectRowsInOneCard = async (list: HTMLElement[]) => {
+      for (const row of list) {
+        await expect(isACard(row), 'a row has no edge of its own').toBe(false);
+      }
+      await expect(getComputedStyle(list[1]).borderTopWidth, 'a hairline parts the rows').toBe('1px');
+    };
+
+    // the groups
+    const groups = await rows(2);
+    await expectRowsInOneCard(groups);
+
+    // and a group's templates
+    await userEvent.click(groups[0]);
+    await waitFor(() =>
+      expect(doc.querySelector('.reqore-popover-content')?.textContent).toContain('Current timestamp')
+    );
+    const templates = (await rows(3)).filter((row) => /Current timestamp|Interface name|Instance/.test(row.textContent ?? ''));
+    await expectRowsInOneCard(templates);
+  },
+};
+
 /** Clicking in offers the list. That is what the field is for. */
 export const ClickingInOffersTheList: Story = {
   parameters: {

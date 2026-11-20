@@ -21,6 +21,8 @@ export interface IReqoreDropdownProps
   multiSelect?: boolean;
   buttonStyle?: React.CSSProperties;
   listStyle?: React.CSSProperties;
+  /** The list's items as rows in one card (`IReqoreDropdownListProps.asRows`). */
+  listAsRows?: boolean;
   component?: any;
   filterable?: boolean;
   onFilterChange?: (query: string) => void;
@@ -126,6 +128,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   multiSelect,
   buttonStyle,
   listStyle,
+  listAsRows,
   handler,
   placement,
   filterable,
@@ -235,6 +238,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
       <ReqoreDropdownListWrapper
         multiSelect={multiSelect}
         listStyle={listStyle}
+        asRows={listAsRows}
         width={useTargetWidth ? '100%' : listWidth}
         height={listHeight}
         items={items || []}
@@ -270,6 +274,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
     customElementsPosition,
     selectedItems,
     handleNavigateToLevel,
+    listAsRows,
   ]);
 
   return (

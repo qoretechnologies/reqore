@@ -955,6 +955,10 @@ export const ReqoreRichTextEditor = forwardRef<
                     </ReqoreControlGroup>,
                   ]
                 : undefined,
+              /* The templates as rows in one card, the calm list's look: each was drawn as it asked,
+                 and an item that asks for an edge was a card per template. A host can still ask
+                 for cards (`tagsListProps.listAsRows: false`). */
+              listAsRows: true,
               ...tagsListProps,
               items,
               onBeforeOpen: handleTemplatesBeforeOpen,
