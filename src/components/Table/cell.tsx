@@ -4,7 +4,7 @@ import { css } from 'styled-components';
 import { IReqoreTableColumn } from '.';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
+import { changeLightness, getOpaqueColor, getReadableColorFrom } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { TABLE_CELL_HORIZONTAL_PADDING_PX } from './helpers';
@@ -110,9 +110,11 @@ export const StyledTableCell = styled.div.withConfig({
         : (rgba(backgroundColor, 0.3) as TReqoreHexColor);
 
     // Pinned cells need an opaque paint so non-pinned cells scrolling underneath don't show
-    // through. We layer the semi-transparent displayed color over a solid theme.main base.
+    // through. We layer the semi-transparent displayed color over a solid base: theme.main, drawn
+    // opaque even when the theme's main is translucent (a card's custom theme).
+    const pinnedBase = pin ? getOpaqueColor(theme.main) : undefined;
     const pinnedBackground = pin
-      ? `linear-gradient(${displayedBackgroundColor}, ${displayedBackgroundColor}), ${theme.main}`
+      ? `linear-gradient(${displayedBackgroundColor}, ${displayedBackgroundColor}), ${pinnedBase}`
       : undefined;
 
     return css`
@@ -178,7 +180,7 @@ export const StyledTableCell = styled.div.withConfig({
       css`
         &:hover {
           /* Pinned cells rely on the layered background shorthand for their opaque base —
-             overriding just background-color would lose theme.main and let the non-pinned
+             overriding just background-color would lose the opaque base and let the non-pinned
              cells scrolling underneath show through on hover. */
           ${pin
             ? css`
@@ -186,7 +188,7 @@ export const StyledTableCell = styled.div.withConfig({
                     ${lighten(0.1, displayedBackgroundColor)},
                     ${lighten(0.1, displayedBackgroundColor)}
                   ),
-                  ${theme.main};
+                  ${pinnedBase};
               `
             : css`
                 background-color: ${lighten(0.1, displayedBackgroundColor)};
