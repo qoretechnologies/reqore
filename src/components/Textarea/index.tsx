@@ -114,7 +114,10 @@ export const StyledTextareaWrapper = styled.div.withConfig({
   min-height: ${({ _size }) => SIZE_TO_PX[_size]}px;
   max-height: 100%;
   width: ${({ width, fluid }) => (fluid ? '100%' : width ? `${width}px` : 'auto')};
-  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
+  /* \`fluid\` is the host's whole width, never its height: 100% wide, stretched across a column, shrinking to share a
+     row, and never growing along the host's main axis. \`flex: 1\` grew a fluid textarea to a column host's full
+     height. Its height is its own (\`height\`, its rows, or what it is scaled to). */
+  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '0 1 auto' : '0 0 auto')};
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
   position: relative;
   overflow: hidden;

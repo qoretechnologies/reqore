@@ -3,6 +3,7 @@ import { expect, waitFor } from 'storybook/test';
 import { IReqoreCalloutProps, ReqoreCallout } from '../../components/Callout';
 import ReqoreButton from '../../components/Button';
 import ReqoreControlGroup from '../../components/ControlGroup';
+import ReqoreTextarea from '../../components/Textarea';
 import { TSizes } from '../../constants/sizes';
 import { DEFAULT_INTENTS } from '../../constants/theme';
 import { StoryMeta } from '../utils';
@@ -804,5 +805,67 @@ export const ContentFillsTheCallout: Story = {
     await expect(Math.round(box.getBoundingClientRect().width)).toBe(
       Math.round(content.getBoundingClientRect().width)
     );
+  },
+};
+
+/** A host laid out as a flex column, as a dialog body or a form is: taller than what it holds. */
+const COLUMN_HOST: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 12,
+  width: 480,
+  height: 520,
+  padding: 12,
+  boxSizing: 'border-box',
+  outline: '1px dashed rgba(127, 127, 127, 0.5)',
+};
+
+export const FluidFillsTheWidthNeverTheHeight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A fluid callout and a fluid textarea in a column host 520px tall (dashed): each is the host\'s full width and only as tall as what it holds, not the column\'s whole height. Below, in a row, a fluid textarea beside a button still fills the rest of the row.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <div className='column-host' style={COLUMN_HOST}>
+        <ReqoreCallout className='fluid-callout' fluid intent='info' label='Heads up'>
+          The order sync runs every five minutes.
+        </ReqoreCallout>
+        <ReqoreTextarea fluid value='A note on the order.' onChange={() => undefined} />
+      </div>
+      <div className='row-host' style={{ display: 'flex', gap: 12, width: 480 }}>
+        <ReqoreButton fixed>Attach</ReqoreButton>
+        <ReqoreTextarea fluid value='Beside a button' onChange={() => undefined} />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const host = canvasElement.querySelector('.column-host') as HTMLElement;
+    const inner = host.clientWidth - 24;
+    const callout = host.querySelector('.fluid-callout') as HTMLElement;
+    const textarea = host.querySelector('.reqore-control-wrapper') as HTMLElement;
+
+    await waitFor(() => expect(callout.getBoundingClientRect().height).toBeGreaterThan(0));
+    for (const [name, element] of [
+      ['callout', callout],
+      ['textarea', textarea],
+    ] as const) {
+      const box = element.getBoundingClientRect();
+      await expect(Math.round(box.width), `a fluid ${name} is the host's full width`).toBe(inner);
+      await expect(box.height, `a fluid ${name} is not the column's whole height`).toBeLessThan(200);
+    }
+
+    // in a row it still fills what is left beside the button
+    const row = canvasElement.querySelector('.row-host') as HTMLElement;
+    const button = row.querySelector('.reqore-button') as HTMLElement;
+    const rowTextarea = row.querySelector('.reqore-control-wrapper') as HTMLElement;
+    await expect(
+      Math.round(rowTextarea.getBoundingClientRect().width),
+      'a fluid textarea fills the rest of a row'
+    ).toBe(Math.round(row.clientWidth - button.getBoundingClientRect().width - 12));
   },
 };

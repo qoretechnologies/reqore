@@ -234,7 +234,10 @@ const StyledCallout = styled(StyledEffect).withConfig({
   border-radius: ${({ rounded, size = 'normal' as TSizes, radiusSize, theme }) =>
     rounded === false ? 0 : `${resolvePanelRadius(theme, radiusSize, size)}px`};
   overflow: hidden;
-  flex: ${({ fluid }) => (fluid ? '1 auto' : '0 0 auto')};
+  /* \`fluid\` is the host's whole width, in a row and in a column alike: its width is 100% and it may shrink to share
+     a row, but it never grows along the host's main axis. Growing (\`flex: 1\`) filled a row's width, and in a column
+     host it filled the column's whole height instead, so a fluid callout in a dialog body stood a screen tall. */
+  flex: ${({ fluid }) => (fluid ? '0 1 auto' : '0 0 auto')};
   transition:
     background-color 0.16s ease,
     transform 0.16s ease;
