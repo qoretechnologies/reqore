@@ -236,10 +236,21 @@ export const StyledTableRow = styled.div.withConfig({
   `}
 
   /* A row that opens is a tab stop; the keyboard's ring is drawn inside its edge, where the scroll
-     area clipping the rows cannot cut it off. */
+     area clipping the rows cannot cut it off. It is a layer over the row, above its pinned cells:
+     they stick over the row with a surface of their own, and an outline, drawn under them, framed
+     the row in lines that stopped short of a pinned actions column. */
+  position: relative;
   &:focus-visible {
-    outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
-    outline-offset: -2px;
+    outline: none;
+  }
+  &:focus-visible::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid ${({ theme }) => getFocusRingColor(theme)};
+    pointer-events: none;
+    /* above a pinned cell (2) */
+    z-index: 3;
   }
 `;
 

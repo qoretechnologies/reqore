@@ -418,6 +418,53 @@ export const PinnedOnThePage: Story = {
   },
 };
 
+/** An opened row with the keyboard's focus, its actions pinned: the ring frames the whole row. */
+export const AFocusedRowIsFramedPastItsPinnedActions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A list whose rows open, with its actions pinned to the right edge. A row is opened and has the keyboard\'s focus: its ring frames the whole row, over the pinned actions column too. Drawn as an outline it ran under the pinned cells, which stick over the row with a surface of their own, and its lines stopped short of them.',
+      },
+    },
+  },
+  render: () => (
+    <Template
+      minimal
+      headerEffect={{ uppercase: false, spaced: 0, weight: 'bold', color: TEXT_3 }}
+      headerDividers={false}
+      selectionStyle='checkbox'
+      expanderPosition='none'
+      columns={columns.map((column) =>
+        column.dataId === 'actions' ? { ...column, pin: 'right' } : column
+      )}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getByText('Chargeback Handler')).toBeInTheDocument());
+    const row = () => canvasElement.querySelector<HTMLElement>('.reqore-table-row')!;
+    // open the first row, then give it the keyboard's focus
+    const cells = row().querySelectorAll<HTMLElement>('.reqore-table-cell');
+    await userEvent.click(cells[2]);
+    await waitFor(() => expect(canvasElement.querySelector('.reqore-table-row-expanded')).toBeTruthy());
+    row().focus();
+    await waitFor(() => expect(row().matches(':focus-visible')).toBe(true));
+
+    const ring = getComputedStyle(row(), '::after');
+    const pinned = Array.from(row().querySelectorAll<HTMLElement>('.reqore-table-cell')).pop()!;
+    await expect(getComputedStyle(pinned).position, 'the actions are pinned').toBe('sticky');
+    await expect(ring.borderTopWidth, 'the row is framed').toBe('2px');
+    await expect(
+      Number(ring.zIndex),
+      'the frame is drawn over the pinned cells, not under them'
+    ).toBeGreaterThan(Number(getComputedStyle(pinned).zIndex));
+    // and it spans the whole row: from its left edge to its right edge
+    await expect(ring.left).toBe('0px');
+    await expect(ring.right).toBe('0px');
+  },
+};
+
 /** The actions column pinned to the right edge, as every list in a product pins it. */
 export const PinnedActions: Story = {
   parameters: {

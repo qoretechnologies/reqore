@@ -3394,12 +3394,14 @@ export const RowsOpenFromTheKeyboard: Story = {
     expect(opened()).toHaveLength(2);
     expect(rows[2].textContent).toContain(opened()[1].firstName);
 
-    // The ring sits inside the row: the scroll area around the rows would cut one drawn outside.
+    // The ring sits inside the row, a layer over it: the scroll area around the rows would cut one
+    // drawn outside, and pinned cells would cover one drawn under them.
     expect(rows[2].matches(':focus-visible')).toBe(true);
-    const ring = getComputedStyle(rows[2]);
-    expect(ring.outlineStyle).toBe('solid');
-    expect(ring.outlineWidth).toBe('2px');
-    expect(parseFloat(ring.outlineOffset)).toBe(-2);
+    const ring = getComputedStyle(rows[2], '::after');
+    expect(ring.borderTopStyle).toBe('solid');
+    expect(ring.borderTopWidth).toBe('2px');
+    expect(ring.top).toBe('0px');
+    expect(ring.left).toBe('0px');
 
     expect(canvasElement.querySelector('.reqore-table-columns-options')).toHaveAttribute(
       'aria-label',
