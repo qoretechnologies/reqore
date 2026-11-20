@@ -773,3 +773,46 @@ test('Stacked, labels an action whose label is empty with its tooltip, a menu to
     expect(more.textContent).toContain('More actions');
   });
 });
+
+const renderAvatarRow = (props: Partial<React.ComponentProps<typeof ReqoreEntityRow>>) =>
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreEntityRow label='Ada Lovelace' {...props} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+test('An avatar takes the leading slot in place of the icon tile', () => {
+  renderAvatarRow({ icon: 'UserLine', avatar: { image: 'https://example.com/ada.png' } });
+
+  const avatar = document.querySelector('.reqore-entity-row-avatar');
+  expect(avatar).toBeTruthy();
+  expect(avatar?.querySelector('.reqore-avatar-image')).toBeTruthy();
+  expect(document.querySelector('.reqore-entity-row-icon-tile')).toBeNull();
+  expect(document.querySelector('.reqore-entity-row-icon')).toBeNull();
+  cleanup();
+});
+
+test("An avatar is named by the row's label and takes the row's size unless it names its own", () => {
+  renderAvatarRow({ size: 'big', avatar: { initials: true } });
+  const avatar = document.querySelector('.reqore-entity-row-avatar') as HTMLElement;
+  expect(avatar.getAttribute('aria-label')).toBe('Ada Lovelace');
+  expect(avatar.textContent).toBe('AL');
+  expect(getComputedStyle(avatar).width).toBe('40px');
+  cleanup();
+
+  renderAvatarRow({ avatar: { label: 'Countess', size: 'small' } });
+  const own = document.querySelector('.reqore-entity-row-avatar') as HTMLElement;
+  expect(own.getAttribute('aria-label')).toBe('Countess');
+  expect(getComputedStyle(own).width).toBe('24px');
+  cleanup();
+});
+
+test('showIcon={false} hides the avatar as it hides an icon', () => {
+  renderAvatarRow({ showIcon: false, avatar: {} });
+  expect(document.querySelector('.reqore-entity-row-avatar')).toBeNull();
+  cleanup();
+});

@@ -51,6 +51,7 @@ import ReqoreRowActionsMenu, {
   TReqoreNarrowRowActions,
 } from '../RowActionsMenu';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
+import { IReqoreAvatarProps, ReqoreAvatar } from '../Avatar';
 
 export interface IReqoreEntityRowAction
   extends Omit<IReqoreButtonProps, 'children'>,
@@ -112,6 +113,12 @@ export interface IReqoreEntityRowProps
   icon?: IReqoreIconName;
   /** Image rendered inside the leading icon tile (overrides `icon` if both set). */
   iconImage?: string;
+  /**
+   * A person (or a team) in the leading slot, drawn as a `ReqoreAvatar` in place of the icon tile: their picture,
+   * or the person icon in a filled circle, or their initials. At the row's size unless it names one; named by the
+   * row's label unless it names itself. A row of members is a row of avatars, not of icon tiles.
+   */
+  avatar?: IReqoreAvatarProps;
   /** Custom color for the leading icon (defaults to intent or readable color). */
   iconColor?: TReqoreEffectColor;
   /** Additional props passed to the leading ReqoreIcon. */
@@ -398,6 +405,7 @@ const ReqoreEntityRow = memo(
         badge,
         icon,
         iconImage,
+        avatar,
         iconColor,
         iconProps,
         actions,
@@ -431,7 +439,8 @@ const ReqoreEntityRow = memo(
       const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
       const secondarySize = useMemo(() => getOneLessSize(size), [size]);
 
-      const hasIcon = (showIcon ?? (!!icon || !!iconImage)) && (!!icon || !!iconImage);
+      const hasAvatar = !!avatar && showIcon !== false;
+      const hasIcon = !hasAvatar && (showIcon ?? (!!icon || !!iconImage)) && (!!icon || !!iconImage);
       const interactive = !!(rest.onClick || rest.onDoubleClick);
       const hasBadge = badge !== undefined && badge !== null;
       // Default: tile follows opacity. Transparent rows hide the tile so the
@@ -502,13 +511,22 @@ const ReqoreEntityRow = memo(
             $raised={raised}
             $clickable={interactive}
             disabled={disabled}
-            $hasIcon={hasIcon}
-            $iconHasBackground={resolvedIconHasBackground}
+            $hasIcon={hasIcon || hasAvatar}
+            // an avatar is as wide as its own size, not the icon tile's
+            $iconHasBackground={hasAvatar ? false : resolvedIconHasBackground}
             $padded={padded}
             $paddingSize={paddingSize ?? size}
             effect={effect}
             className={`${className || ''} reqore-entity-row`}
           >
+            {hasAvatar && (
+              <ReqoreAvatar
+                size={size}
+                label={typeof label === 'string' ? label : undefined}
+                {...avatar}
+                className={`reqore-entity-row-avatar ${avatar?.className || ''}`.trim()}
+              />
+            )}
             {hasIcon &&
               (resolvedIconHasBackground ? (
                 <StyledIconTile

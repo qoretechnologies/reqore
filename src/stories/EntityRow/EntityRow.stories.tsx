@@ -1437,3 +1437,49 @@ export const ADestructiveActionKeepsItsSizeOnAPhone: Story = {
     });
   },
 };
+
+/** A drawn portrait, in the story itself so it loads without a network. */
+const MEMBER_PORTRAIT = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <rect width="64" height="64" fill="#d9a46b"/>
+    <circle cx="32" cy="26" r="12" fill="#5b3a29"/>
+    <ellipse cx="32" cy="58" rx="22" ry="16" fill="#2f5d7c"/>
+  </svg>`
+)}`;
+
+export const AMembersListWithAvatars: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A list of a team\'s members, each row led by an avatar (`avatar`) in place of the icon tile: a member with a picture shows it in a circle, one without shows the person icon in a filled circle, and one asked for initials shows them. The avatar is named by the row\'s label and takes the row\'s size. A picture used to sit in a rounded icon tile, and a member without one was a bare icon.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical style={{ width: 480 }}>
+      <ReqoreEntityRow
+        label='Ada Lovelace'
+        description='Owner'
+        avatar={{ image: MEMBER_PORTRAIT }}
+        actions={[{ icon: 'MoreLine', tooltip: 'Member actions' }]}
+      />
+      <ReqoreEntityRow label='Grace Hopper' description='Reviewer' avatar={{}} />
+      <ReqoreEntityRow label='Alan Turing' description='Invited' avatar={{ initials: true }} />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const rows = Array.from(canvasElement.querySelectorAll<HTMLElement>('.reqore-entity-row'));
+    await expect(rows.length).toBe(3);
+    for (const row of rows) {
+      const avatar = row.querySelector<HTMLElement>('.reqore-entity-row-avatar');
+      await expect(avatar, 'each row is led by an avatar').toBeTruthy();
+      await expect(row.querySelector('.reqore-entity-row-icon-tile'), 'not an icon tile').toBeNull();
+      await expect(Math.round(avatar!.getBoundingClientRect().width), "at the row's size").toBe(32);
+    }
+    await expect(rows[0].querySelector('.reqore-avatar-image')).toBeTruthy();
+    await expect(rows[1].querySelector('.reqore-avatar-icon')).toBeTruthy();
+    await expect(rows[2].querySelector('.reqore-avatar-initials')?.textContent).toBe('AT');
+    await expect(rows[2].querySelector('.reqore-entity-row-avatar')).toHaveAttribute('aria-label', 'Alan Turing');
+  },
+};
