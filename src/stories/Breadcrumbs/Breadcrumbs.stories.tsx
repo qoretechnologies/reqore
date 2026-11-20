@@ -644,6 +644,47 @@ export const FoldedCurrentPageIsNamedInFull: Story = {
   },
 };
 
+export const AFoldedCurrentPageWithNoRoomIsItsIcon: Story = {
+  parameters: {
+    qlip: { viewport: { width: 390, height: 844 } },
+    docs: {
+      description: {
+        story:
+          'The same trail on a phone (390 px) beside a long action rail, which leaves the trail about 60 px: too little to read any of the current page\'s name. The dropdown standing in for the trail is the page\'s icon alone, named in full by its accessible name and its tooltip. It used to keep its icon, a cut letter and its chevron.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 'min(390px, 100%)' }}>
+      <ReqoreBreadcrumbs
+        flat
+        padded={false}
+        items={LONG_LEAF_TRAIL}
+        rightElement={<div className='action-rail' style={{ width: 300, height: 32 }} />}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const { withViewport } = await import('../utils/viewport');
+    await withViewport(390, 844, async () => {
+      const current = await waitFor(() => {
+        const button = canvasElement.querySelector<HTMLElement>(
+          '.reqore-breadcrumbs-overflow-current'
+        );
+        expect(button).toBeTruthy();
+        return button!;
+      });
+      // the icon alone: no cut letter of its name, no badge, no chevron
+      await waitFor(() =>
+        expect((current.textContent ?? '').trim(), 'no cut letter of its name').toBe('')
+      );
+      await expect(current.querySelectorAll('.reqore-icon').length, 'its icon alone').toBe(1);
+      // named in full
+      await expect(current).toHaveAttribute('aria-label', LONG_LEAF_NAME);
+    });
+  },
+};
+
 /* A trail whose crumbs the page changes. The trail folds what does not fit before the browser
    draws it: no frame shows a crumb past the trail's end. It used to fold one crumb per step after the
    browser had drawn the last one, so a page that changed its crumbs showed them all, running past the

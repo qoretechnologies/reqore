@@ -5,7 +5,13 @@ import { css } from 'styled-components';
 import styled from '../../helpers/styled';
 import { ReqoreDropdown, ReqoreErrorBoundary } from '../..';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
-import { MARGIN_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
+import {
+  CONTROL_TEXT_FROM_SIZE,
+  ICON_FROM_SIZE,
+  MARGIN_FROM_SIZE,
+  PADDING_FROM_SIZE,
+  TSizes,
+} from '../../constants/sizes';
 import { IReqoreBreadcrumbsTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -92,6 +98,20 @@ const StyledReqoreBreadcrumbs = styled.div<IStyledBreadcrumbs>`
 // ellipsise; `overflow: hidden` is the final safety net. Its single child (the
 // folding row, or the static row) fills it, so the row's end is the end of the
 // AVAILABLE width, not of its own content.
+/** How many characters of the current page's name are worth drawing: fewer is a cut letter, not a name. */
+const READABLE_CHARACTERS = 4;
+
+/**
+ * The trail's width below which the current page's dropdown, all that is left of the trail, could say no more than
+ * a cut letter of its name: its icon, its chevron, its padding and a few characters. Below it the dropdown is its
+ * icon alone, named by its tooltip. Measured on the trail, whose width is the room the bar leaves it, not on what it
+ * draws, so the choice cannot undo the measurement it was made from.
+ */
+export const readableCurrentCrumbWidth = (size: TSizes): number =>
+  ICON_FROM_SIZE[size] * 2 +
+  PADDING_FROM_SIZE[size] * 3 +
+  Math.round(CONTROL_TEXT_FROM_SIZE[size] * 0.6 * READABLE_CHARACTERS);
+
 const StyledTrail = styled.div<{ $color: string }>`
   flex: 1 1 auto;
   min-width: 0;
@@ -344,6 +364,9 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
      `getBoundingClientRect()` gives them, as `trailOverflows` measures: the box the observer
      reports is not scaled by a transform on an ancestor, so under one every report would differ. */
   const rowRef = useRef<HTMLDivElement>(null);
+  // the trail: the room the bar leaves it (see `readableCurrentCrumbWidth`)
+  const trailRef = useRef<HTMLDivElement>(null);
+  const [trailRoom, setTrailRoom] = useState<number>();
   /* Whether the folded crumbs' menu is open: said on its button (`aria-expanded`), which a menu button
      announces, as the row actions menu does. A finger opens it with a tap (the dropdown's `opensOnTap`);
      a mouse, by hovering. */
@@ -605,6 +628,12 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
 
     // everything folded: the menu stands in for the current page
     const isFullyCollapsed = count(overflowItems) >= count(items);
+    /* No room to read the current page's name: the dropdown is its icon alone, named by its tooltip and its
+       accessible name. Its icon, a cut letter and a chevron said nothing ("N" in a phone editor). A page with no
+       icon of its own shows the chevron, the way into the trail. */
+    // a trail of no width is one not laid out (hidden, or a document with no layout), not one with no room
+    const iconOnly =
+      isFullyCollapsed && !!trailRoom && trailRoom < readableCurrentCrumbWidth(size);
 
     if (isFullyCollapsed) {
       return (
@@ -636,11 +665,12 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           flat={leafItem?.flat ?? true}
           raised={leafItem?.raised}
           showCaret={false}
-          icon={leafItem?.icon}
-          rightIcon='ArrowDownSLine'
+          icon={iconOnly ? (leafItem?.icon ?? 'ArrowDownSLine') : leafItem?.icon}
+          rightIcon={iconOnly ? undefined : 'ArrowDownSLine'}
           intent={leafItem?.intent}
-          label={leafItem?.label}
-          badge={leafItem?.badge}
+          label={iconOnly ? undefined : leafItem?.label}
+          tooltip={iconOnly ? leafItem?.menuLabel ?? leafItem?.label : undefined}
+          badge={iconOnly ? undefined : leafItem?.badge}
           // ...and is NAMED as that crumb is, in full: its label may be cut with an ellipsis to
           // fit, so a screen reader gets the whole name - the leaf's own, its label, or the label
           // its menu row has (an icon-only leaf, a Home that is just a house). No title of its
@@ -652,7 +682,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           // never just an icon — however tight the bar gets. This can't cause an
           // overlap: the trail is `min-width: 0; overflow: hidden`, so it clips
           // this button before it could ever reach the fixed right element.
-          style={{ minWidth: '5em' }}
+          style={iconOnly ? undefined : { minWidth: '5em' }}
           items={toMenuItems(overflowItems)}
         />
       );
@@ -684,6 +714,34 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
     );
   };
 
+  /* The trail's room, for the current page's dropdown to know whether its name can be read in it. Taken when the
+     trail is drawn and again on the frame after it is resized: a change made inside the resize callback would
+     change the layout it observes. */
+  useLayoutEffect(() => {
+    const trail = trailRef.current;
+    if (!responsive || !trail) {
+      return undefined;
+    }
+    const measure = () => {
+      const width = trail.getBoundingClientRect().width;
+      setTrailRoom((was) => (was !== undefined && Math.abs(was - width) < 0.5 ? was : width));
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') {
+      return undefined;
+    }
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(measure);
+    });
+    observer.observe(trail);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [responsive]);
+
   return (
     <ReqoreErrorBoundary {...errorBoundaryOptions}>
       <StyledReqoreBreadcrumbs
@@ -694,7 +752,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
         size={size}
         responsive={responsive}
       >
-        <StyledTrail className='reqore-breadcrumbs-trail' $color={itemColor}>
+        <StyledTrail ref={trailRef} className='reqore-breadcrumbs-trail' $color={itemColor}>
           {responsive ? (
             // Every crumb may fold, the current page too: when even it does not fit, the trail is the one
             // dropdown labelled with it. Keeping the current page out of the fold is what used to leave it
