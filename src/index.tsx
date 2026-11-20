@@ -1,4 +1,11 @@
 export { ReqoreAccordion } from './components/Accordion';
+export {
+  AVATAR_SIZE_FROM_SIZE,
+  DEFAULT_AVATAR_ICON,
+  getAvatarInitials,
+  ReqoreAvatar,
+} from './components/Avatar';
+export type { IReqoreAvatarProps } from './components/Avatar';
 export { default as ReqoreBreadcrumbs } from './components/Breadcrumbs';
 export { default as ReqoreBreadcrumbsItem } from './components/Breadcrumbs/item';
 export { ReqoreBubble, ReqoreBubbleGroup } from './components/Bubble';
