@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import React from 'react';
 import { ReqoreSelect, ReqoreUIProvider } from '../src';
 import { IReqoreSelectSingleProps } from '../src/components/Select';
@@ -402,4 +402,31 @@ test('A focus alone leaves the list closed; a key or a press on the box opens it
   });
   vi.advanceTimersByTime(1);
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+});
+
+test('A pick from the list gives the focus back to the box, and the list stays closed', () => {
+  let container!: HTMLElement;
+  act(() => {
+    ({ container } = render(<SelectTestComponent items={MultiSelectItems} />));
+  });
+
+  const box = container.querySelector('.reqore-input') as HTMLInputElement;
+  act(() => {
+    box.focus();
+    fireEvent.click(box);
+  });
+  vi.advanceTimersByTime(1);
+
+  const list = document.querySelector('.reqore-popover-content') as HTMLElement;
+  const choice = within(list).getAllByText('Existing item 3')[0];
+  act(() => {
+    (choice.closest('button') ?? choice).focus();
+    fireEvent.click(choice);
+  });
+  act(() => {
+    vi.advanceTimersByTime(50);
+  });
+
+  expect(document.activeElement).toBe(box);
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 });

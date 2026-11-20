@@ -306,6 +306,8 @@ export const ReqoreSelectBase = <TValue extends TReqoreSelectValue = string>({
   const [createdItems, setCreatedItems] = useState<TReqoreSelectItem<TValue>[]>([]);
   const [query, setQuery] = useState<string>('');
   const popoverData = useRef<IPopoverControls>(undefined);
+  /** The group holding the select's own box, to give the box its focus back after a pick. */
+  const boxGroupRef = useRef<HTMLDivElement>(null);
   const [focused, setFocused] = useState<boolean>(false);
   const isSelectorDisabled = Boolean(
     disabled || selectorProps?.disabled || (!size(items) && !size(createdItems) && !canCreateItems)
@@ -365,6 +367,19 @@ export const ReqoreSelectBase = <TValue extends TReqoreSelectValue = string>({
       // it, so close it here too.
       if (single) {
         popoverData.current?.close();
+
+        /* A pick made in the list took the focus into it, and the list went away with the focus:
+           it was left on the page, and a page that keeps a focused field where it is (a chat that
+           follows its newest line unless a field has the focus) scrolled the answered field away.
+           The box gets it back, as a combobox's does. A focus does not open the list, so it stays
+           closed. Not when the focus went somewhere on purpose. */
+        window.requestAnimationFrame(() => {
+          const box = boxGroupRef.current?.querySelector('input');
+          const active = document.activeElement;
+          if (box && (!active || active === document.body || !active.isConnected)) {
+            box.focus({ preventScroll: true });
+          }
+        });
       }
     },
     [createdItems, value, items, addRemoveItem, single]
@@ -525,7 +540,12 @@ export const ReqoreSelectBase = <TValue extends TReqoreSelectValue = string>({
         </ReqoreTagGroup>
       ) : null}
 
-      <ReqoreControlGroup minimal={rest.minimal} flat={rest.flat} size={rest.size}>
+      <ReqoreControlGroup
+        ref={boxGroupRef}
+        minimal={rest.minimal}
+        flat={rest.flat}
+        size={rest.size}
+      >
         <ReqoreDropdown<IReqoreInputProps>
           useTargetWidth
           handler='click'

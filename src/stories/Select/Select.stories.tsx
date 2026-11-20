@@ -489,7 +489,7 @@ export const FocusedThenTappedOnAPhoneKeepsItsChoices: Story = {
     docs: {
       description: {
         story:
-          "Renders an empty Select on a phone (390 px) whose box has the focus, as a form that focuses its first field leaves it: its list stays closed, since a focus is no request for it. A finger taps the box and the list opens, then taps it again and the list stays open, and a choice can still be seen and picked. The list opens one way only, at the tap: when a focus opened it too, the tap's click toggled shut what the focus had shown.",
+          "Renders an empty Select on a phone (390 px) whose box has the focus, as a form that focuses its first field leaves it: its list stays closed, since a focus is no request for it. A finger taps the box and the list opens, then taps it again and the list stays open, and a choice can still be seen and picked; once picked, the box has the focus back and its list stays closed. The list opens one way only, at the tap: when a focus opened it too, the tap's click toggled shut what the focus had shown.",
       },
     },
   },
@@ -514,6 +514,10 @@ export const FocusedThenTappedOnAPhoneKeepsItsChoices: Story = {
     });
     await waitFor(() => expect(choicesList()).toBeNull());
     await expect(canvasElement.querySelector('.reqore-tag')).toHaveTextContent('Existing item 3');
+    // the box has the focus back, not the page, and its list stays closed
+    await waitFor(() => expect(document.activeElement, 'the box has the focus again').toBe(input));
+    await sleep(300);
+    await expect(choicesList(), 'the focus did not open the list again').toBeNull();
   },
 };
 
