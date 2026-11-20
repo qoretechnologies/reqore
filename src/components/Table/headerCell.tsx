@@ -7,7 +7,7 @@ import styled from '../../helpers/styled';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreIcon } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
-import { getPanelBackgroundColor, getReadableColor } from '../../helpers/colors';
+import { getOpaqueColor, getPanelBackgroundColor, getReadableColor } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreDropdownProps } from '../Dropdown';
@@ -319,13 +319,14 @@ export const ReqoreTableHeaderCell = memo(
     /* A pinned header cell is drawn over the header cells that scroll under it, so it paints an
        opaque fill, as a pinned body cell does - without one the cells passing under showed through
        ("ORDER DA" under "ACTIONS"). The SAME fill as the body's pinned cells: the surface the table
-       sits on (`pinnedSurface`, else the panel's). It used to be `theme.main`, a step darker than
-       the panel, so the header above a pinned actions column read as a black box beside the rest
-       of the header. */
-    const pinnedFill = useMemo(
-      () => (pin ? (pinnedSurface ?? (theme ? getPanelBackgroundColor(theme) : undefined)) : undefined),
-      [pin, pinnedSurface, theme]
-    );
+       sits on (`pinnedSurface`, else the panel's), drawn opaque even when the theme's main is
+       translucent (a card's custom theme). It used to be `theme.main`, a step darker than the
+       panel, so the header above a pinned actions column read as a black box beside the rest of
+       the header. */
+    const pinnedFill = useMemo(() => {
+      const surface = pinnedSurface ?? (theme ? getPanelBackgroundColor(theme) : undefined);
+      return pin && surface ? getOpaqueColor(surface) : undefined;
+    }, [pin, pinnedSurface, theme]);
     const pinStyle: React.CSSProperties = pin
       ? {
           position: 'sticky',

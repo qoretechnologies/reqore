@@ -7,6 +7,7 @@ import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
 import {
   changeLightness,
+  getOpaqueColor,
   getPanelBackgroundColor,
   getReadableColorFrom,
   getThemePanelSurface,
@@ -133,11 +134,13 @@ export const StyledTableCell = styled.div.withConfig({
     // through. We layer the semi-transparent displayed color over the surface a table is
     // drawn on — a panel's — so at rest a pinned cell is indistinguishable from its neighbours.
     // The surface is the table's own when it names one (`pinnedSurface`: a table on the page),
-    // and a row at rest shows that surface alone, never the panel's under it.
-    const pinnedSurfaceColor = pinnedSurface ?? getPanelBackgroundColor(theme);
+    // and a row at rest shows that surface alone, never the panel's under it. It is drawn opaque
+    // even when the theme's main is translucent (a card's custom theme): a translucent base let
+    // the cells scrolling under it show through.
+    const pinnedSurfaceColor = getOpaqueColor(pinnedSurface ?? getPanelBackgroundColor(theme));
     const pinnedBackground = pin
       ? backgroundColor === 'transparent' && pinnedSurface
-        ? pinnedSurface
+        ? pinnedSurfaceColor
         : `linear-gradient(${displayedBackgroundColor}, ${displayedBackgroundColor}), ${pinnedSurfaceColor}`
       : undefined;
 
@@ -237,7 +240,7 @@ export const StyledTableCell = styled.div.withConfig({
       css`
         &:hover {
           /* Pinned cells rely on the layered background shorthand for their opaque base —
-             overriding just background-color would lose theme.main and let the non-pinned
+             overriding just background-color would lose the opaque base and let the non-pinned
              cells scrolling underneath show through on hover. */
           ${pin
             ? css`
@@ -245,7 +248,7 @@ export const StyledTableCell = styled.div.withConfig({
                     ${lighten(0.1, displayedBackgroundColor)},
                     ${lighten(0.1, displayedBackgroundColor)}
                   ),
-                  ${getPanelBackgroundColor(theme)};
+                  ${getOpaqueColor(getPanelBackgroundColor(theme))};
               `
             : css`
                 background-color: ${lighten(0.1, displayedBackgroundColor)};

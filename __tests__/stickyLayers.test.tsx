@@ -8,8 +8,8 @@ import { render, waitFor } from '@testing-library/react';
 import { ReqoreLayoutContent, ReqorePanel, ReqoreTable, ReqoreUIProvider } from '../src';
 import { STICKY_HEADER_TALL_SCREENS } from '../src/components/Panel';
 import { IReqoreTableColumn } from '../src/components/Table';
-import { DEFAULT_THEME } from '../src/constants/theme';
-import { getPanelBackgroundColor } from '../src/helpers/colors';
+import { DEFAULT_THEME, IReqoreTheme } from '../src/constants/theme';
+import { getOpaqueColor, getPanelBackgroundColor } from '../src/helpers/colors';
 import { requiredAttribute, requiredElement } from '../src/stories/utils/required';
 
 const markedColumn = (
@@ -35,9 +35,9 @@ const data = [
   { id: 2, firstName: 'Alan', lastName: 'Turing', address: 'Manchester' },
 ];
 
-const renderTable = (columns: IReqoreTableColumn[]) =>
+const renderTable = (columns: IReqoreTableColumn[], theme?: Partial<IReqoreTheme>) =>
   render(
-    <ReqoreUIProvider>
+    <ReqoreUIProvider theme={theme}>
       <ReqoreLayoutContent>
         <ReqoreTable columns={columns} data={data} label='Orders' stickyHeader />
       </ReqoreLayoutContent>
@@ -67,6 +67,28 @@ const headerCells = (container: HTMLElement): Record<string, HTMLElement> => {
         cell,
       ])
   );
+};
+
+/** A card's custom theme draws its main color translucent, so what is behind the card shows through it. */
+const TRANSLUCENT_MAIN = '#1f0a1f55';
+
+/** The surface a pinned cell paints under a theme (the panel's, as the table sits in one), drawn opaque. */
+const opaqueSurface = (theme: IReqoreTheme): string => getOpaqueColor(getPanelBackgroundColor(theme));
+const TRANSLUCENT_THEME = { ...DEFAULT_THEME, main: TRANSLUCENT_MAIN } as IReqoreTheme;
+
+/** Each body cell of a column, in every row. */
+const bodyCells = (container: HTMLElement, dataId: string): HTMLElement[] => {
+  const cells = Array.from(
+    container.querySelectorAll<HTMLElement>(
+      `.reqore-table-cell[data-reqore-table-column-id="${dataId}"]`
+    )
+  );
+
+  if (cells.length !== data.length) {
+    throw new Error(`expected ${data.length} body cells for ${dataId}, found ${cells.length}`);
+  }
+
+  return cells;
 };
 
 /** `#rrggbb` as the browser writes it back. */
@@ -177,12 +199,55 @@ describe("A pinned column's header cell", () => {
     }
   });
 
+  test("paints its surface opaque when the theme's main color is translucent (a card's custom theme)", () => {
+    const { container } = renderTable(pinnedColumns, { main: TRANSLUCENT_MAIN });
+    const cells = headerCells(container);
+
+    for (const pinned of [cells.id, cells.address]) {
+      expect(pinned.style.backgroundColor).toBe(rgbOf(opaqueSurface(TRANSLUCENT_THEME)));
+      // opaque: no alpha for the cells scrolling under it to show through
+      expect(pinned.style.backgroundColor).toMatch(/^rgb\(/);
+    }
+  });
+
   test('is the only header cell that paints: a table with no pinned column paints none', () => {
     const { container } = renderTable(pinnedColumns.map(({ pin: _pin, ...column }) => column));
 
     for (const cell of Object.values(headerCells(container))) {
       expect(cell.style.position).not.toBe('sticky');
       expect(cell.style.backgroundColor).toBe('');
+    }
+  });
+});
+
+// A pinned body cell paints its row's tint over an opaque base, so the cells scrolling under it are hidden. jsdom
+// reads the base layer of the `background` shorthand back as the background color.
+describe("A pinned column's body cell", () => {
+  test('paints its tint over the surface the table sits on, opaque', () => {
+    const { container } = renderTable(pinnedColumns);
+
+    for (const cell of [...bodyCells(container, 'id'), ...bodyCells(container, 'address')]) {
+      expect(getComputedStyle(cell).backgroundImage).toContain('linear-gradient');
+      expect(getComputedStyle(cell).backgroundColor).toBe(rgbOf(opaqueSurface(DEFAULT_THEME)));
+    }
+  });
+
+  test("paints an opaque base when the theme's main color is translucent (a card's custom theme)", () => {
+    const { container } = renderTable(pinnedColumns, { main: TRANSLUCENT_MAIN });
+
+    for (const cell of [...bodyCells(container, 'id'), ...bodyCells(container, 'address')]) {
+      expect(getComputedStyle(cell).backgroundImage).toContain('linear-gradient');
+      expect(getComputedStyle(cell).backgroundColor).toBe(rgbOf(opaqueSurface(TRANSLUCENT_THEME)));
+      expect(getComputedStyle(cell).backgroundColor).toMatch(/^rgb\(/);
+    }
+  });
+
+  test('and an unpinned body cell paints no opaque base of its own', () => {
+    const { container } = renderTable(pinnedColumns, { main: TRANSLUCENT_MAIN });
+
+    for (const cell of bodyCells(container, 'firstName')) {
+      expect(getComputedStyle(cell).backgroundImage).not.toContain('linear-gradient');
+      expect(getComputedStyle(cell).backgroundColor).not.toBe('rgb(31, 10, 31)');
     }
   });
 });
