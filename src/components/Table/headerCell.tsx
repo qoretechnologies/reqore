@@ -7,7 +7,7 @@ import styled from '../../helpers/styled';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreIcon } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
-import { getReadableColor } from '../../helpers/colors';
+import { getOpaqueColor, getReadableColor } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreDropdownProps } from '../Dropdown';
@@ -289,9 +289,12 @@ export const ReqoreTableHeaderCell = memo(
 
     const theme = useTheme() as IReqoreTheme | undefined;
     /* A pinned header cell is drawn over the header cells that scroll under it, so it paints the theme's
-       main color - opaque, as a pinned body cell is. Without it the cells passing under showed through
-       ("ORDER DA" under "ACTIONS"). */
-    const pinnedFill = useMemo(() => (pin && theme?.main ? theme.main : undefined), [pin, theme]);
+       main color - opaque, as a pinned body cell is, even when the theme's main is translucent (a card's
+       custom theme). Without it the cells passing under showed through ("ORDER DA" under "ACTIONS"). */
+    const pinnedFill = useMemo(
+      () => (pin && theme?.main ? getOpaqueColor(theme.main) : undefined),
+      [pin, theme]
+    );
     const pinStyle: React.CSSProperties = pin
       ? {
           position: 'sticky',
