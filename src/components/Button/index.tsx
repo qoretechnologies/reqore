@@ -687,12 +687,16 @@ export const StyledButton = styled(StyledEffect).withConfig({
   /* An icon-only button whose intent is drawn as an outline: its icon in the intent's readable
      colour, and no box in any state (no border, no fill, no hover ring). A row of bins carrying
      \`intent='danger'\` is a row of red icons, not of red boxes; a labelled one keeps its outline.
-     A menu's entry (\`.reqore-menu-item\`) is drawn the same way, its words and icon in the
-     intent: a menu of Discard, Cancel and Delete was a column of red boxes. The keyboard's focus
-     ring is every control's, and stays. */
+     A labelled button that draws no surface (\`transparent\`, \`outline-text\`) and a menu's entry
+     (\`.reqore-menu-item\`) are drawn the same way, their words and icon in the intent: a menu of
+     Discard, Cancel and Delete, Reqore's own or a host's rows of transparent buttons, was a
+     column of red boxes. The keyboard's focus ring is every control's, and stays. */
   &&[data-intent-text='outline-icon'],
   &&[data-intent-text='outline-icon']:hover,
   &&[data-intent-text='outline-icon']:active,
+  &&[data-intent-text='outline-text'],
+  &&[data-intent-text='outline-text']:hover,
+  &&[data-intent-text='outline-text']:active,
   &&.reqore-menu-item[data-intent-text='outline'],
   &&.reqore-menu-item[data-intent-text='outline']:hover,
   &&.reqore-menu-item[data-intent-text='outline']:active {
@@ -703,6 +707,8 @@ export const StyledButton = styled(StyledEffect).withConfig({
   }
   &&[data-intent-text='outline-icon']:not(:disabled):not(:focus-visible):hover,
   &&[data-intent-text='outline-icon']:not(:disabled):not(:focus-visible):active,
+  &&[data-intent-text='outline-text']:not(:disabled):not(:focus-visible):hover,
+  &&[data-intent-text='outline-text']:not(:disabled):not(:focus-visible):active,
   &&.reqore-menu-item[data-intent-text='outline']:not(:disabled):not(:focus-visible):hover,
   &&.reqore-menu-item[data-intent-text='outline']:not(:disabled):not(:focus-visible):active {
     outline: none;
@@ -1057,9 +1063,13 @@ const ReqoreButton = memo(
                caller's own `style` still wins. */
             ...(intentTextColor
               ? {
+                  /* A labelled button that draws no surface (`transparent`: a menu's row, a text
+                     action) has no box for the outline to edge: its words and icon are the intent. */
                   'data-intent-text': intentAsOutline
                     ? _children
-                      ? 'outline'
+                      ? transparent
+                        ? 'outline-text'
+                        : 'outline'
                       : 'outline-icon'
                     : _children
                       ? 'label'

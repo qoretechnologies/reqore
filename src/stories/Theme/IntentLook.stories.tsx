@@ -325,7 +325,7 @@ export const ADangerMenuEntryIsItsRedWords: Story = {
     const entry = (name: string) =>
       canvasElement.querySelector<HTMLElement>(`.menu-${name}.reqore-menu-item`)!;
     for (const name of ['discard', 'cancel', 'delete']) {
-      await expect(entry(name).getAttribute('data-intent-text')).toBe('outline');
+      await expect(entry(name).getAttribute('data-intent-text')).toBe('outline-text');
       await expect(isRed(getComputedStyle(entry(name)).color)).toBe(true);
       await expect(drawsABox(entry(name))).toBe(false);
     }
@@ -336,3 +336,67 @@ export const ADangerMenuEntryIsItsRedWords: Story = {
   },
 };
 
+export const ADangerRowOfAHostsMenuIsItsRedWords: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'With `intentLook: { danger: "outline" }`, a menu a page builds of its own buttons (a "More actions" list of transparent, full-width rows): Duplicate as it is, and Discard and Delete with `intent="danger"`. A button that draws no surface (`transparent`) has no box for the outline to edge, so each danger row is its red words and icon: no border, no fill, no ring, at rest and under the pointer. A labelled danger button with a surface keeps its red outline. A page had to colour such a row itself.',
+      },
+    },
+  },
+  render: () => (
+    <Side label='Outline' className='side-outline' theme={OUTLINE}>
+      <div style={{ width: 260 }}>
+        <ReqoreControlGroup vertical fluid gapSize='small'>
+          <ReqoreButton fluid minimal flat transparent textAlign='left' icon='FileCopyLine'>
+            Duplicate
+          </ReqoreButton>
+          <ReqoreButton
+            className='row-discard'
+            fluid
+            minimal
+            flat
+            transparent
+            textAlign='left'
+            intent='danger'
+            icon='DeleteBack2Line'
+          >
+            Discard
+          </ReqoreButton>
+          <ReqoreButton
+            className='row-delete'
+            fluid
+            minimal
+            flat
+            transparent
+            textAlign='left'
+            intent='danger'
+            icon='DeleteBinLine'
+          >
+            Delete
+          </ReqoreButton>
+        </ReqoreControlGroup>
+        <ReqoreButton className='boxed-delete' intent='danger' icon='DeleteBinLine'>
+          Delete
+        </ReqoreButton>
+      </div>
+    </Side>
+  ),
+  play: async ({ canvasElement }) => {
+    const row = (name: string) => canvasElement.querySelector<HTMLElement>(`.row-${name}`)!;
+    for (const name of ['discard', 'delete']) {
+      await expect(row(name).getAttribute('data-intent-text')).toBe('outline-text');
+      await expect(isRed(getComputedStyle(row(name)).color), 'its words are red').toBe(true);
+      await expect(drawsABox(row(name)), 'it draws no box').toBe(false);
+    }
+    // under the pointer, still no box
+    await userEvent.hover(row('delete'));
+    await expect(drawsABox(row('delete'))).toBe(false);
+    await userEvent.unhover(row('delete'));
+    // a danger button with a surface keeps its red outline
+    const boxed = canvasElement.querySelector<HTMLElement>('.boxed-delete')!;
+    await expect(boxed.getAttribute('data-intent-text')).toBe('outline');
+    await expect(drawsABox(boxed), 'a button with a surface keeps its outline').toBe(true);
+  },
+};

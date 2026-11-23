@@ -137,6 +137,23 @@ describe("theme.buttons.intentLook 'outline'", () => {
     }
   });
 
+  test('a labelled danger button that draws no surface is its red words, with no box', () => {
+    render(
+      <Wrapper theme={OUTLINE_LOOK}>
+        <ReqoreButton intent='danger' icon='DeleteBinLine' transparent minimal flat fluid>
+          Delete row
+        </ReqoreButton>
+      </Wrapper>
+    );
+    const button = screen.getByRole('button', { name: 'Delete row' });
+    expect(button.getAttribute('data-intent-text')).toBe('outline-text');
+    expect(button.style.getPropertyValue('--reqore-button-intent-text')).not.toBe('');
+    const style = getComputedStyle(button);
+    expect(isTransparent(style.backgroundColor)).toBe(true);
+    expect(isTransparent(style.borderTopColor) || parseFloat(style.borderTopWidth) === 0).toBe(true);
+    expect(style.boxShadow === '' || style.boxShadow === 'none').toBe(true);
+  });
+
   test('a labelled danger button keeps its outline', () => {
     render(
       <Wrapper theme={OUTLINE_LOOK}>
