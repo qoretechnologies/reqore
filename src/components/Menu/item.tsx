@@ -220,6 +220,8 @@ const ReqoreMenuItem = memo(
         const transparent = rest.transparent === false ? false : !rest.effect;
         // a destructive action keeps its own look (a red icon on a quiet button), not the item's tint
         const actionIntent = actionDestructive ? undefined : intent;
+        // the row's size, unless the action names its own: buttons that sit together are one size
+        const actionSize = rest.size;
 
         if (actions?.length) {
           return (
@@ -235,6 +237,7 @@ const ReqoreMenuItem = memo(
               className={className}
               intent={actionIntent}
               active={selected}
+              size={actionSize}
               // A menu row's action opens beside the row, not over the list
               // below it; consumers can override via `actionsProps`. No caret so
               // the control keeps the action's own icon (e.g. a bare `+`).
@@ -259,14 +262,27 @@ const ReqoreMenuItem = memo(
             className={className}
             intent={actionIntent}
             active={selected}
+            size={actionSize}
             {...buttonProps}
             onClick={handleActionClick}
           />
         );
       };
 
+      /* A row with a description under its name is two lines tall. Stretched to the row, its actions
+         centred their icons between the two lines, below the count on the name's line; they sit on
+         the name's line instead, at their own height. A stacked row with borders keeps them the
+         row's height, so their edges join. */
+      const actionsOnTheNamesLine = !!rest.description && (flat || !stackWithActions);
+
       return (
-        <ReqoreControlGroup stack={stackWithActions} fluid fill responsive={false}>
+        <ReqoreControlGroup
+          stack={stackWithActions}
+          fluid
+          fill={!actionsOnTheNamesLine}
+          verticalAlign={actionsOnTheNamesLine ? 'flex-start' : undefined}
+          responsive={false}
+        >
           {renderAction(leftAction, 'reqore-menu-item-left-action', handleLeftActionClick)}
           <ReqoreButton
             as={as}

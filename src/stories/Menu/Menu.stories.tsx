@@ -1,5 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent, within } from 'storybook/test';
+import { expect, fireEvent, waitFor, within } from 'storybook/test';
 import { IReqoreMenuProps } from '../../components/Menu';
 import { IReqoreMenuItemProps } from '../../components/Menu/item';
 import { ReqoreMenuSection } from '../../components/Menu/section';
@@ -611,4 +611,75 @@ export const ThemedPanelSurface: Story = {
       </ReqoreMenu>
     </ThemedSurfaceComparison>
   ),
+};
+
+/** The vertical centre of an element, in the page. */
+const middleOf = (element: Element) => {
+  const { top, height } = element.getBoundingClientRect();
+  return top + height / 2;
+};
+
+const A_ROW_S_COUNT_AND_ACTION = 'story-row-with-count-and-action';
+
+export const ARowsCountAndActionSitOnOneLine: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A navigation menu whose rows carry a name, a count and an add action, with a description under the name or without one. The name, its count and the add action sit on one line, the count before the action, also when the row is two lines tall: the action used to stretch to the whole row and centre its plus between the two lines, below the count.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreMenu width='320px' className={A_ROW_S_COUNT_AND_ACTION}>
+      {[
+        { label: 'Workflows', description: 'Run orders and every order they process', count: 7 },
+        { label: 'Services', description: 'Long-running code with an API', count: 14 },
+        { label: 'Jobs', count: 3 },
+      ].map(({ label, description, count }) => (
+        <ReqoreMenuItem
+          key={label}
+          label={label}
+          description={description}
+          icon='FlowChart'
+          size='small'
+          transparent
+          wrap={false}
+          badge={[{ label: count, align: 'right' }]}
+          rightAction={{ icon: 'AddLine', compact: true, tooltip: `New ${label.toLowerCase()}` }}
+        />
+      ))}
+    </ReqoreMenu>
+  ),
+  play: async ({ canvasElement }) => {
+    const rows = await waitFor(() => {
+      const found = canvasElement.querySelectorAll('.reqore-menu-item');
+      expect(found.length).toBe(3);
+      return [...found];
+    });
+
+    for (const row of rows) {
+      const name = row.textContent;
+      const group = row.parentElement!;
+      const badge = row.querySelector('.reqore-button-badge')!;
+      const action = group.querySelector('.reqore-menu-item-right-action')!;
+      const plus = action.querySelector('.reqore-icon')!;
+      const title = row.querySelector('.reqore-button-text-content')!;
+
+      // Within 2px, the rounding between a tag's box and an icon's: stretched to a two-line row,
+      // the plus sat half a line lower.
+      await expect(
+        Math.abs(middleOf(plus) - middleOf(badge)),
+        `${name}: the plus sits on the count's line`
+      ).toBeLessThanOrEqual(2);
+      await expect(
+        Math.abs(middleOf(badge) - middleOf(title)),
+        `${name}: the count sits on the name's line`
+      ).toBeLessThanOrEqual(2);
+      await expect(
+        action.getBoundingClientRect().left,
+        `${name}: the count comes before the action`
+      ).toBeGreaterThanOrEqual(badge.getBoundingClientRect().right);
+    }
+  },
 };
