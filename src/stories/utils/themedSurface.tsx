@@ -16,20 +16,41 @@ export const THEMED_SURFACE: Partial<IReqoreTheme> = {
   buttons: { main: '#1c1c20' },
 };
 
-const DERIVED: Partial<IReqoreTheme> = { main: '#121212' };
+/**
+ * The same calm theme on a light page: white panels edged with a light hairline on a light grey
+ * page, and buttons a step off the panels.
+ */
+export const THEMED_SURFACE_LIGHT: Partial<IReqoreTheme> = {
+  main: '#f4f4f6',
+  panel: { main: '#ffffff', border: '#e2e2e8' },
+  buttons: { main: '#efeff3' },
+};
 
-const Surface = ({
+/** The page the light comparison sits on. */
+export const LIGHT_PAGE = '#ececf0';
+
+export const DERIVED: Partial<IReqoreTheme> = { main: '#121212' };
+
+/**
+ * One theme on its own page, with a label saying which. `className` names the surface for a
+ * play to find; `page` is the colour behind it (dark unless given).
+ */
+export const Surface = ({
   label,
   theme,
+  page = PAGE,
+  className,
   children,
 }: {
   label: string;
   theme: Partial<IReqoreTheme>;
+  page?: string;
+  className?: string;
   children: ReactNode;
 }) => (
   <div
-    className='story-themed-surface'
-    style={{ background: PAGE, padding: 24, flex: '1 1 420px', minWidth: 0 }}
+    className={`story-themed-surface${className ? ` ${className}` : ''}`}
+    style={{ background: page, padding: 24, flex: '1 1 420px', minWidth: 0 }}
   >
     <ReqoreUIProvider theme={theme} layoutWrapperProps={{ transparent: true }}>
       <ReqoreLayoutContent>

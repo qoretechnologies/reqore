@@ -1,5 +1,6 @@
 import { getBadgeLength } from '../Tabs/list';
 import { isUndefined, omitBy } from 'lodash';
+import { lighten, mix } from 'polished';
 import React, {
   forwardRef,
   memo,
@@ -22,7 +23,17 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
+import {
+  changeLightness,
+  getColorFromMaybeString,
+  getOpaqueColor,
+  getPanelBackgroundColor,
+  getPanelHairlineColor,
+  getReadableAccentColor,
+  getReadableColorFrom,
+  getSecondaryTextColor,
+  getThemePanelSurface,
+} from '../../helpers/colors';
 import { getControlTextSize } from '../../helpers/typeScale';
 import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -41,7 +52,7 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreButton from '../Button';
-import { IReqoreEffect } from '../Effect';
+import { IReqoreEffect, TReqoreHexColor } from '../Effect';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem from '../Menu/item';
 import { ReqorePopover } from '../Popover';
@@ -138,6 +149,80 @@ export interface IReqoreSegmentedControlProps
   _testWidth?: number;
 }
 
+/**
+ * The colours of a control drawn on the surfaces a theme names (`theme.panel`: a calm theme).
+ *
+ * Derived from `theme.main`, the chosen segment's thumb is the page's own colour and its track a
+ * shade lighter. A panel sits a step above the page, so on a dark calm panel the thumb was darker
+ * than its track and as dark as the panel around it, the chosen words were drawn exactly as the
+ * others, and the control read as nothing chosen. On named surfaces:
+ *
+ * - the track is the button surface (`theme.buttons.main`, else a step off the panel), edged
+ *   with the panel hairline, as every control on a panel is;
+ * - the thumb is a step lighter than the track, a raised segment on a dark theme and on a light
+ *   one, and its edge stands 3:1 against the track (WCAG 1.4.11): the hairline pushed until it
+ *   reads, or the chosen segment's intent in a colour that reads (a filter that narrows),
+ *   whose words are then that intent made readable on the thumb (on a light theme they were
+ *   tinted towards white, as a transparent button's words are on a dark one);
+ * - the other segments' words are the secondary grey (`theme.text.secondary` where it reads,
+ *   else the text colour mixed 70% into the track), so the chosen one is the bright one.
+ */
+export interface IReqoreSegmentedControlSurfaces {
+  track: TReqoreHexColor;
+  trackEdge: TReqoreHexColor;
+  divider: TReqoreHexColor;
+  thumb: TReqoreHexColor;
+  thumbEdge: TReqoreHexColor;
+  /** The chosen segment's words, when it has an intent. */
+  chosenText?: TReqoreHexColor;
+  otherText: TReqoreHexColor;
+}
+
+/** The thumb's step above its track. */
+const THUMB_STEP = 0.1;
+/** What the thumb's edge stands against the track. */
+const THUMB_EDGE_CONTRAST = 3;
+/** What the chosen segment's words in its intent stand against the thumb. */
+const CHOSEN_TEXT_CONTRAST = 4.5;
+
+/**
+ * `IReqoreSegmentedControlSurfaces` for a control on `theme`, or `undefined` when the theme names
+ * no panel surface or the control's surface is its own (a `customTheme` main or an `intent`, given
+ * or inherited): such a control keeps the look derived from `main`.
+ */
+export const getSegmentedControlSurfaces = (
+  theme: IReqoreTheme,
+  chosenIntent?: TReqoreIntent
+): IReqoreSegmentedControlSurfaces | undefined => {
+  if (!getThemePanelSurface(theme)?.main) {
+    return undefined;
+  }
+
+  const buttons = theme.buttons?.main
+    ? getColorFromMaybeString(theme, theme.buttons.main)
+    : undefined;
+  const track = getOpaqueColor(
+    buttons ?? changeLightness(getPanelBackgroundColor(theme), 0.03)
+  );
+  const hairline = getPanelHairlineColor(theme);
+  const intentColor = chosenIntent ? theme.intents?.[chosenIntent] : undefined;
+  const thumb = lighten(THUMB_STEP, track) as TReqoreHexColor;
+
+  return {
+    track,
+    trackEdge: hairline,
+    divider: hairline,
+    thumb,
+    thumbEdge: getReadableAccentColor(intentColor ?? hairline, track, THUMB_EDGE_CONTRAST),
+    chosenText: intentColor
+      ? getReadableAccentColor(intentColor, thumb, CHOSEN_TEXT_CONTRAST)
+      : undefined,
+    otherText:
+      getSecondaryTextColor({ text: theme.text, main: track }) ??
+      (mix(0.7, getReadableColorFrom(track), track) as TReqoreHexColor),
+  };
+};
+
 interface IStyledSegmentedControlProps {
   theme: IReqoreTheme;
   size: TSizes;
@@ -146,6 +231,7 @@ interface IStyledSegmentedControlProps {
   fluid?: boolean;
   foldToFit?: boolean;
   disabled?: boolean;
+  surfaces?: IReqoreSegmentedControlSurfaces;
 }
 
 interface IStyledIndicatorProps {
@@ -153,6 +239,7 @@ interface IStyledIndicatorProps {
   size: TSizes;
   pill?: boolean;
   animate?: boolean;
+  surfaces?: IReqoreSegmentedControlSurfaces;
 }
 
 const CONTAINER_PADDING = 3;
@@ -163,9 +250,10 @@ const StyledSegmentedControl = styled.div<IStyledSegmentedControlProps>`
   position: relative;
   box-sizing: border-box;
   padding: ${CONTAINER_PADDING}px;
-  background-color: ${({ theme }) => changeLightness(theme.main, 0.03)};
-  border: ${({ theme, flat }) =>
-    !flat ? `1px solid ${changeLightness(theme.main, 0.07)}` : 'none'};
+  background-color: ${({ theme, surfaces }) =>
+    surfaces?.track ?? changeLightness(theme.main, 0.03)};
+  border: ${({ theme, flat, surfaces }) =>
+    !flat ? `1px solid ${surfaces?.trackEdge ?? changeLightness(theme.main, 0.07)}` : 'none'};
   border-radius: ${({ size, pill }) =>
     `${RADIUS_FROM_SIZE[size] * (pill ? PILL_RADIUS_MODIFIER : 1) + 1}px`};
   width: ${({ fluid }) => (fluid ? '100%' : undefined)};
@@ -203,7 +291,9 @@ const StyledSegmentedControlIndicator = styled.div<IStyledIndicatorProps>`
   top: ${CONTAINER_PADDING}px;
   bottom: ${CONTAINER_PADDING}px;
   left: 0;
-  background-color: ${({ theme }) => theme.main};
+  box-sizing: border-box;
+  background-color: ${({ theme, surfaces }) => surfaces?.thumb ?? theme.main};
+  border: ${({ surfaces }) => (surfaces ? `1px solid ${surfaces.thumbEdge}` : undefined)};
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
   border-radius: ${({ size, pill }) =>
     `${RADIUS_FROM_SIZE[size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px`};
@@ -224,6 +314,7 @@ const StyledItemWrapper = styled.div<{
   isLast?: boolean;
   theme: IReqoreTheme;
   fluid?: boolean;
+  surfaces?: IReqoreSegmentedControlSurfaces;
 }>`
   position: relative;
   z-index: 1;
@@ -237,11 +328,36 @@ const StyledItemWrapper = styled.div<{
     top: 20%;
     height: 60%;
     width: 1px;
-    background-color: ${({ theme }) => changeLightness(theme.main, 0.1)};
+    background-color: ${({ theme, surfaces }) =>
+      surfaces?.divider ?? changeLightness(theme.main, 0.1)};
     transition: opacity 0.15s ease-out;
     opacity: ${({ isSelected, isBeforeSelected, isLast }) =>
       isSelected || isBeforeSelected || isLast ? 0 : 1};
   }
+
+  /* On named surfaces the segments not chosen say their words in the secondary grey (their
+     icons follow, they inherit the colour), so the chosen one is the bright one. Under the
+     pointer a segment takes the button's own hover colour. */
+  ${({ surfaces, isSelected }) =>
+    surfaces &&
+    !isSelected &&
+    css`
+      .reqore-segmented-control-item:not(:hover) {
+        color: ${surfaces.otherText};
+      }
+    `}
+
+  /* ...and a chosen segment with an intent says it in a colour that reads on the thumb, under
+     the pointer too. */
+  ${({ surfaces, isSelected }) =>
+    surfaces?.chosenText &&
+    isSelected &&
+    css`
+      && .reqore-segmented-control-item,
+      && .reqore-segmented-control-item:hover {
+        color: ${surfaces.chosenText};
+      }
+    `}
 `;
 
 /**
@@ -498,6 +614,14 @@ const ReqoreSegmentedControl = memo(
       const hiddenSelectedIntent = hiddenSelectedItem
         ? hiddenSelectedItem.activeIntent || activeIntent
         : undefined;
+      // The chosen segment's intent, wherever it is drawn, for the thumb's edge.
+      const chosenIntent = isSelectedHidden
+        ? hiddenSelectedIntent
+        : items.find((item) => item.value === _value)?.activeIntent || activeIntent;
+      const surfaces = useMemo(
+        () => getSegmentedControlSurfaces(theme, chosenIntent),
+        [theme, chosenIntent]
+      );
 
       // Get the label for the "More" button
       const moreLabel = hiddenSelectedItem?.label ?? overflowLabel;
@@ -644,6 +768,7 @@ const ReqoreSegmentedControl = memo(
           {...rest}
           ref={setContainerRef}
           theme={theme}
+          surfaces={surfaces}
           size={size}
           flat={flat}
           pill={pill}
@@ -658,6 +783,7 @@ const ReqoreSegmentedControl = memo(
             <StyledSegmentedControlIndicator
               className='reqore-segmented-control-indicator'
               theme={theme}
+              surfaces={surfaces}
               size={size}
               pill={pill}
               animate={animations.buttons !== false}
@@ -686,6 +812,7 @@ const ReqoreSegmentedControl = memo(
                 isBeforeSelected={isBeforeSelected}
                 isLast={isLastVisible}
                 theme={theme}
+                surfaces={surfaces}
                 fluid={stretch}
               >
                 <ReqoreButton
@@ -750,6 +877,7 @@ const ReqoreSegmentedControl = memo(
               isBeforeSelected={false}
               isLast
               theme={theme}
+              surfaces={surfaces}
               fluid={stretch}
             >
               <ReqorePopover

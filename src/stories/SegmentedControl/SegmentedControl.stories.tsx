@@ -1,4 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
+import { getContrast, getLuminance, parseToRgb } from 'polished';
 import { useState } from 'react';
 import { expect, fireEvent, waitFor } from 'storybook/test';
 import ReqoreSegmentedControl, {
@@ -6,6 +7,13 @@ import ReqoreSegmentedControl, {
 } from '../../components/SegmentedControl';
 import { ReqoreControlGroup, ReqoreModal, ReqorePanel } from '../../index';
 import { StoryMeta } from '../utils';
+import {
+  DERIVED,
+  LIGHT_PAGE,
+  Surface,
+  THEMED_SURFACE,
+  THEMED_SURFACE_LIGHT,
+} from '../utils/themedSurface';
 
 const meta = {
   title: 'Form/SegmentedControl',
@@ -741,5 +749,177 @@ export const InsideModal: Story = {
       { timeout: 3000 }
     );
     await expectHighlightUnderActiveItem();
+  },
+};
+
+/** The same controls on a panel, in each theme the chosen segment has to read in. */
+const PANEL_SURFACES = [
+  { className: 'story-default', label: 'Derived from main (default)', theme: DERIVED },
+  { className: 'story-calm', label: 'Calm theme, dark', theme: THEMED_SURFACE },
+  {
+    className: 'story-calm-light',
+    label: 'Calm theme, light',
+    theme: THEMED_SURFACE_LIGHT,
+    page: LIGHT_PAGE,
+  },
+] as const;
+
+const ControlsOnAPanel = () => {
+  const [period, setPeriod] = useState<string | undefined>('week');
+  const [match, setMatch] = useState<string | undefined>('all');
+  const [status, setStatus] = useState<string | undefined>('failing');
+
+  return (
+    <ReqorePanel
+      label='Report period'
+      contentStyle={{ display: 'flex', flexFlow: 'column', alignItems: 'flex-start', gap: 12 }}
+    >
+      <ReqoreSegmentedControl
+        className='story-period'
+        items={defaultItems}
+        value={period}
+        onChange={setPeriod}
+      />
+      <ReqoreSegmentedControl
+        className='story-match'
+        fitSize
+        items={[
+          { value: 'any', label: 'Any condition' },
+          { value: 'all', label: 'All conditions' },
+        ]}
+        value={match}
+        onChange={setMatch}
+      />
+      <ReqoreSegmentedControl
+        className='story-status'
+        fitSize
+        activeIntent='info'
+        items={[
+          { value: 'all', label: 'All' },
+          { value: 'failing', label: 'Failing', icon: 'ErrorWarningLine' },
+          { value: 'healthy', label: 'Healthy', icon: 'CheckLine' },
+        ]}
+        value={status}
+        onChange={setStatus}
+      />
+    </ReqorePanel>
+  );
+};
+
+const CONTROLS = ['story-period', 'story-match', 'story-status'] as const;
+
+/** `#1c1c20` as the browser reports it: `rgb(28, 28, 32)`. */
+const rgbString = (color: string) => {
+  const { red, green, blue } = parseToRgb(color);
+  return `rgb(${red}, ${green}, ${blue})`;
+};
+
+const measureChosenSegment = (surface: Element, control: string) => {
+  const root = surface.querySelector(`.${control}`)!;
+  const thumb = root.querySelector('.reqore-segmented-control-indicator')!;
+  const chosen = root.querySelector('button[aria-checked="true"]')!;
+  const other = root.querySelector('button[aria-checked="false"]')!;
+  const style = (element: Element) => getComputedStyle(element);
+
+  return {
+    track: style(root).backgroundColor,
+    trackEdge: style(root).borderTopColor,
+    thumb: style(thumb).backgroundColor,
+    thumbEdge: style(thumb).borderTopColor,
+    thumbEdgeWidth: style(thumb).borderTopWidth,
+    chosenText: style(chosen).color,
+    otherText: style(other).color,
+    otherIcon: other.querySelector('.reqore-icon')
+      ? style(other.querySelector('.reqore-icon')!).color
+      : undefined,
+  };
+};
+
+export const TheChosenSegmentReadsOnAPanel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Segmented controls on a panel, in the default theme and in a calm theme that names its panel and button surfaces (dark and light); the last one narrows a list, so its chosen segment has an intent. In the calm theme each control sits on the button surface, edged with the panel hairline. The chosen segment is a step lighter than the control, edged in a line that stands 3:1 against it (in the intent where it has one), and the other segments say their words in a quieter grey. The default theme draws them as before.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+      {PANEL_SURFACES.map((surface) => (
+        <Surface key={surface.className} {...surface}>
+          <ControlsOnAPanel />
+        </Surface>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelectorAll('.reqore-segmented-control-indicator').length
+      ).toBe(PANEL_SURFACES.length * CONTROLS.length)
+    );
+
+    for (const { className, theme } of PANEL_SURFACES) {
+      const surface = canvasElement.querySelector(`.${className}`)!;
+
+      for (const control of CONTROLS) {
+        const seen = measureChosenSegment(surface, control);
+        const where = `${control} in ${className}`;
+
+        if (!theme.panel) {
+          // The default theme keeps the look derived from main: the thumb is main, unedged.
+          await expect(seen.thumb, `${where}: thumb`).toBe('rgb(18, 18, 18)');
+          await expect(seen.thumbEdgeWidth, `${where}: thumb edge`).toBe('0px');
+          continue;
+        }
+
+        await expect(seen.track, `${where}: the track is the button surface`).toBe(
+          rgbString(theme.buttons!.main!)
+        );
+        await expect(seen.trackEdge, `${where}: edged with the panel hairline`).toBe(
+          rgbString(theme.panel.border!)
+        );
+        await expect(
+          getLuminance(seen.thumb),
+          `${where}: the thumb is a step lighter than its track`
+        ).toBeGreaterThan(getLuminance(seen.track));
+        await expect(seen.thumbEdgeWidth, `${where}: the thumb is edged`).toBe('1px');
+        await expect(
+          getContrast(seen.thumbEdge, seen.track),
+          `${where}: the thumb's edge stands 3:1 against the track`
+        ).toBeGreaterThanOrEqual(3);
+        if (control === 'story-status') {
+          // Words in an intent read on the thumb, on a light theme as on a dark one.
+          await expect(
+            getContrast(seen.chosenText, seen.thumb),
+            `${where}: the chosen words in their intent read on the thumb`
+          ).toBeGreaterThanOrEqual(4.5);
+        } else {
+          await expect(
+            getContrast(seen.chosenText, seen.thumb),
+            `${where}: the chosen words are the bright ones`
+          ).toBeGreaterThan(getContrast(seen.otherText, seen.track));
+        }
+        if (seen.otherIcon) {
+          await expect(seen.otherIcon, `${where}: an icon follows its words`).toBe(
+            seen.otherText
+          );
+        }
+      }
+
+      if (theme.panel) {
+        // A narrowing filter's chosen segment is edged and worded in its intent, not in grey.
+        const { thumbEdge, chosenText } = measureChosenSegment(surface, 'story-status');
+        for (const [part, color] of [
+          ['edge', thumbEdge],
+          ['words', chosenText],
+        ]) {
+          const { red, green, blue } = parseToRgb(color);
+          await expect(blue - red, `the info ${part} in ${className} is blue`).toBeGreaterThan(40);
+          await expect(blue - green, `the info ${part} in ${className} is blue`).toBeGreaterThan(20);
+        }
+      }
+    }
   },
 };

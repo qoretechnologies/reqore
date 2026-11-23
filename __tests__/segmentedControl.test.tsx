@@ -1,5 +1,9 @@
 import { fireEvent, render } from '@testing-library/react';
+import { getContrast, getLuminance, parseToRgb } from 'polished';
 import { vi } from 'vitest';
+import { getSegmentedControlSurfaces } from '../src/components/SegmentedControl';
+import { DEFAULT_THEME, IReqoreTheme } from '../src/constants/theme';
+import { getReadableColorFrom } from '../src/helpers/colors';
 import {
   ReqoreContent,
   ReqoreIcon,
@@ -604,4 +608,98 @@ test('fitSize makes the whole control the size of a button beside it', () => {
   const item = document.querySelector('.reqore-segmented-control-item') as HTMLElement;
   // small = 32: the frame's 3px padding and 1px border, top and bottom, come out of the item.
   expect(item.style.height).toBe('24px');
+});
+
+describe('getSegmentedControlSurfaces: the chosen segment on the surfaces a theme names', () => {
+  const CALM_DARK = {
+    ...DEFAULT_THEME,
+    main: '#121212',
+    panel: { main: '#141417', border: '#2d2d33' },
+    buttons: { main: '#1c1c20' },
+  } as IReqoreTheme;
+  const CALM_LIGHT = {
+    ...DEFAULT_THEME,
+    main: '#f4f4f6',
+    panel: { main: '#ffffff', border: '#e2e2e8' },
+    buttons: { main: '#efeff3' },
+  } as IReqoreTheme;
+
+  test('a theme that names no panel surface keeps the look derived from main', () => {
+    expect(getSegmentedControlSurfaces({ ...DEFAULT_THEME, main: '#121212' })).toBeUndefined();
+  });
+
+  test('a control with a surface of its own (a customTheme or an intent) keeps it', () => {
+    expect(
+      getSegmentedControlSurfaces({ ...CALM_DARK, main: '#2a1a40', originalMain: '#121212' })
+    ).toBeUndefined();
+  });
+
+  test.each([
+    ['dark', CALM_DARK],
+    ['light', CALM_LIGHT],
+  ])('on a %s calm theme the chosen segment stands off its track', (_name, theme) => {
+    const surfaces = getSegmentedControlSurfaces(theme)!;
+
+    // The track is the button surface, edged with the panel hairline.
+    expect(surfaces.track).toBe(theme.buttons!.main);
+    expect(surfaces.trackEdge).toBe(theme.panel!.border);
+    // The thumb is a step lighter than the track (it was darker on a dark theme)...
+    expect(getLuminance(surfaces.thumb)).toBeGreaterThan(getLuminance(surfaces.track));
+    // ...edged in a line that stands 3:1 against the track (WCAG 1.4.11)...
+    expect(getContrast(surfaces.thumbEdge, surfaces.track)).toBeGreaterThanOrEqual(3);
+    // ...and the other segments' words are quieter than the chosen one's, and still read.
+    const text = getReadableColorFrom(surfaces.track);
+    expect(getContrast(surfaces.otherText, surfaces.track)).toBeLessThan(
+      getContrast(text, surfaces.track)
+    );
+    expect(getContrast(surfaces.otherText, surfaces.track)).toBeGreaterThanOrEqual(4.5);
+    expect(surfaces.chosenText).toBeUndefined();
+  });
+
+  test.each([
+    ['dark', CALM_DARK],
+    ['light', CALM_LIGHT],
+  ])('on a %s calm theme a chosen intent edges and words the segment so it reads', (_name, theme) => {
+    const surfaces = getSegmentedControlSurfaces(theme, 'info')!;
+
+    expect(getContrast(surfaces.thumbEdge, surfaces.track)).toBeGreaterThanOrEqual(3);
+    expect(getContrast(surfaces.chosenText!, surfaces.thumb)).toBeGreaterThanOrEqual(4.5);
+    // In the intent's hue, not grey.
+    for (const color of [surfaces.thumbEdge, surfaces.chosenText!]) {
+      const { red, blue } = parseToRgb(color);
+      expect(blue - red).toBeGreaterThan(40);
+    }
+  });
+
+  test("the theme's secondary grey says the other segments' words where it reads", () => {
+    expect(
+      getSegmentedControlSurfaces({ ...CALM_DARK, text: { secondary: '#a6a6af' } })!.otherText
+    ).toBe('#a6a6af');
+  });
+
+  test('a calm theme draws the thumb with its edge; the default draws it unedged', () => {
+    const renderOn = (theme: Partial<IReqoreTheme>) =>
+      render(
+        <ReqoreUIProvider theme={theme}>
+          <ReqoreLayoutContent>
+            <ReqoreContent>
+              <ReqoreSegmentedControl items={defaultItems} value='week' />
+            </ReqoreContent>
+          </ReqoreLayoutContent>
+        </ReqoreUIProvider>
+      );
+    const thumbStyle = () =>
+      getComputedStyle(document.querySelector('.reqore-segmented-control-indicator')!);
+
+    const calm = renderOn({
+      main: '#121212',
+      panel: { main: '#141417', border: '#2d2d33' },
+      buttons: { main: '#1c1c20' },
+    });
+    expect(thumbStyle().borderTopStyle).toBe('solid');
+    calm.unmount();
+
+    renderOn({ main: '#121212' });
+    expect(thumbStyle().borderTopStyle).not.toBe('solid');
+  });
 });
