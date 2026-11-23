@@ -1,0 +1,275 @@
+# Everything that publishes @qoretechnologies/reqore to npm.
+#
+# Both publishes live in this ONE file on purpose. npm's trusted publishing trusts a single workflow *file* per
+# package, so a second publishing workflow would have no way to authenticate: this is why the former
+# `beta_release.yml` and `pr_prerelease.yml` are merged here. Renaming this file stops publishing until the trusted
+# publisher registered for the package on npmjs.com names the new file.
+#
+# There is no npm credential. Each run asks GitHub for a short-lived OIDC token (`id-token: write`) and npm trades it
+# for a publish token that lasts the one publish, so nothing can expire or leak between runs. npm also signs a
+# provenance statement for each version.
+#
+#   push to develop  -> the version in package.json, `beta` dist-tag, tagged and released
+#   pull request     -> `<version>-pr.<PR#>.g<sha>`, `pr` dist-tag only
+#
+# The `pr` tag lets a consumer install a real build of an unmerged PR without `latest` or `beta` ever moving.
+
+name: Publish
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  Publish-and-release:
+    # Only the branch push publishes a real version; a PR takes the job below.
+    if: github.event_name == 'push'
+    # a fixed image, not ubuntu-latest: ubuntu-latest moved to 26.04, which the pinned Playwright cannot install browsers on;
+    # move to a newer image together with a Playwright upgrade
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # create-release writes the tag and the release
+      id-token: write # trusted publishing: the job asks for its publish token
+
+    steps:
+      - name: Get current time
+        uses: josStorer/get-current-time@v2.0.2
+        id: current_time
+        with:
+          format: YYYYMMDD-HH
+          utcOffset: "+01:00"
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Print head git commit message
+        id: get_head_commit_message
+        run: |
+          # The subject, JSON-escaped (backslashes first, then double quotes), so a message with quotes cannot break
+          # the DISCORD_EMBEDS payload that interpolates it below.
+          msg=$(git show -s --format=%s)
+          msg=${msg//\\/\\\\}
+          msg=${msg//\"/\\\"}
+          echo "HEAD_COMMIT_MESSAGE=$msg" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm 11.5.1 or newer; the npm bundled with this Node is older and would look for a
+      # token instead. Pinned to the 11 line, because npm 12 needs a newer Node than this workflow builds with.
+      - name: Use an npm that can publish with OIDC
+        run: npm install -g npm@^11.5.1
+
+      - name: Save release version to outputs
+        id: save_release_version
+        run: echo "version=$(node -pe "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Installing modules
+        id: install_modules
+        run: |
+          yarn cache clean
+          rm -rf node_modules
+          yarn install
+
+      - name: Running tests
+        id: tests
+        run: yarn test:ci
+
+      - name: Build
+        id: build
+        run: yarn build
+
+      # npm's own client, so it can authenticate with the OIDC token; the action this replaces predates trusted
+      # publishing and could only send a stored token.
+      - name: Publish to NPM
+        id: npm_publish
+        run: npm publish --tag beta --access public
+
+      - name: Create a release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.save_release_version.outputs.version }}
+          release_name: v${{ steps.save_release_version.outputs.version }}
+          body: v${{ steps.save_release_version.outputs.version }}
+          draft: false
+          prerelease: false
+
+      # Tell the consumers. Each answers with a `deps/reqore` PR that takes this version, runs its own CI and visual
+      # review, and merges itself when nothing changed visually (its library-release.yml). A failure here is a
+      # warning, not a failed release: the package is already on npm, and a consumer's workflow can be run by hand
+      # (Actions -> Library release -> Run workflow).
+      - name: Mint a token for the consumers
+        id: bot
+        continue-on-error: true
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.QORUS_BOT_APP_ID }}
+          private-key: ${{ secrets.QORUS_BOT_APP_PRIVATE_KEY }}
+          owner: qoretechnologies
+          repositories: qorus-ide,toolkit-react
+      - name: Tell the consumers a release exists
+        if: steps.bot.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ steps.bot.outputs.token }}
+          VERSION: ${{ steps.save_release_version.outputs.version }}
+        run: |
+          for consumer in qorus-ide toolkit-react; do
+            jq -cn --arg version "$VERSION" --arg sha "$GITHUB_SHA" --arg repository "$GITHUB_REPOSITORY" \
+              '{event_type: "library-release", client_payload: {package: "@qoretechnologies/reqore", version: $version, repository: $repository, sha: $sha}}' \
+            | gh api "repos/qoretechnologies/$consumer/dispatches" --input - \
+              && echo "told $consumer about reqore $VERSION" \
+              || echo "::warning::could not tell $consumer about reqore $VERSION; run its Library release workflow by hand"
+          done
+      # Notify discord if success
+      - name: Discord notification
+        env:
+          DISCORD_WEBHOOK: ${{secrets.DISCORD_WEBHOOK}}
+          DISCORD_EMBEDS: '[{"author": {"icon_url": "https://avatars.githubusercontent.com/${{ github.actor }}", "name": "${{ github.actor }}", "url": "https://github.com/${{github.actor}}"}, "url": "https://github.com/${{github.repository}}/commit/${{github.sha}}", "fields": [{ "name": "Commit Message", "value": "${{ steps.get_head_commit_message.outputs.HEAD_COMMIT_MESSAGE }}"},{"name": "Repository","value": "[${{github.event.repository.name}}](${{github.event.repository.clone_url}})","inline": true},{"name": "Branch","value": "[${{github.ref_name}}](https://github.com/${{github.repository}}/pull/${{github.ref_name}})","inline": true},{ "name": "Event", "value": "${{github.event_name}}", "inline": true },{"name": "Author","value": "[${{github.actor}}](https://github.com/${{github.actor}})","inline": true},{ "name": "Job", "value": "${{github.job}}", "inline": true },{ "name": "Version", "value": "v${{ steps.save_release_version.outputs.version }}", "inline": true},{"name": "","value": "🤖 [Github Action](https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id}})"}],"color": 65280,"footer": { "text": "Published at ${{steps.current_time.outputs.readableTime}}" }}]'
+          DISCORD_AVATAR: "https://github.com/qoretechnologies/reqore/blob/ae8ce24b7f0984340bf4e6835025d203d1741b3a/public/q-symbol-small.png?raw=true"
+        uses: Ilshidur/action-discord@0.3.2
+        with:
+          args: ":white_check_mark: ReQore beta v${{ steps.save_release_version.outputs.version }} successfuly released & published."
+        if: success()
+      # Notify discord if failure
+      - name: Discord notification
+        env:
+          DISCORD_WEBHOOK: ${{secrets.DISCORD_WEBHOOK}}
+          DISCORD_EMBEDS: '[{"author": {"icon_url": "https://avatars.githubusercontent.com/${{ github.actor }}", "name": "${{ github.actor }}", "url": "https://github.com/${{github.actor}}"}, "url": "https://github.com/${{github.repository}}/commit/${{github.sha}}", "fields": [{ "name": "Commit Message", "value": "${{ steps.get_head_commit_message.outputs.HEAD_COMMIT_MESSAGE }}"},{"name": "Repository","value": "[${{github.event.repository.name}}](${{github.event.repository.clone_url}})","inline": true},{"name": "Branch","value": "[${{github.ref_name}}](https://github.com/${{github.repository}}/pull/${{github.ref_name}})","inline": true},{ "name": "Event", "value": "${{github.event_name}}", "inline": true },{"name": "Author","value": "[${{github.actor}}](https://github.com/${{github.actor}})","inline": true},{ "name": "Job", "value": "${{github.job}}", "inline": true },{ "name": "Version", "value": "v${{ steps.save_release_version.outputs.version }}", "inline": true},{"name": "","value": "🤖 [Github Action](https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id}})"}],"color": 16711680,"footer": { "text": "Triggered at ${{steps.current_time.outputs.readableTime}}" }}]'
+          DISCORD_AVATAR: "https://github.com/qoretechnologies/reqore/blob/ae8ce24b7f0984340bf4e6835025d203d1741b3a/public/q-symbol-small.png?raw=true"
+        uses: Ilshidur/action-discord@0.3.2
+        with:
+          args: ":exclamation: ReQore beta v${{ steps.save_release_version.outputs.version }} release failed! Click the GitHub Action link below to find out why."
+        if: failure()
+
+  Prerelease:
+    # A PR's job. Never for a PR opened from a fork: GitHub gives a fork's run no OIDC token, and its code must not
+    # publish this package.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    # a fixed image, not ubuntu-latest: ubuntu-latest moved to 26.04, which the pinned Playwright cannot install browsers on;
+    # move to a newer image together with a Playwright upgrade
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write # the job comments the install command on the PR
+      id-token: write # trusted publishing: the job asks for its publish token
+    # Supersede in-flight runs when the PR gets a newer commit.
+    concurrency:
+      group: pr-prerelease-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+
+    steps:
+      # Check out the PR head exactly, so the build matches the stamped sha.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm 11.5.1 or newer (see the release job).
+      - name: Use an npm that can publish with OIDC
+        run: npm install -g npm@^11.5.1
+
+      # --frozen-lockfile so the published artifact is built from the exact dependency tree the PR committed, not
+      # whatever the range happens to resolve to today.
+      - name: Install modules
+        run: yarn install --frozen-lockfile
+
+      # Gate the publish on the same checks the PR itself must pass. Without this a red PR still ships an installable
+      # package, and a consumer pinning it inherits the breakage with nothing on the tin to warn them. The release job
+      # gates on `yarn test:ci` for the same reason.
+      - name: Lint
+        run: yarn lint
+
+      - name: Test
+        run: yarn test
+
+      - name: Build
+        run: yarn build
+
+      # Stamp a prerelease OF THE VERSION THIS PR IS RELEASING: the one already in package.json, which every PR is
+      # required to bump. Semver puts a prerelease below its release and above the previous one:
+      #
+      #   0.73.0  <  0.73.1-pr.42.gabc123  <  0.73.1
+      #
+      # The sha identifier is prefixed with `g` (git-describe style) so an all-digit short sha can never become an
+      # invalid leading-zero numeric identifier.
+      - name: Stamp prerelease version
+        id: version
+        run: |
+          BASE=$(node -p "require('./package.json').version.split('-')[0]")
+          SHA=$(printf '%s' "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
+          VER="${BASE}-pr.${{ github.event.pull_request.number }}.g${SHA}"
+
+          # Publish only when package.json names a version that is not on npm yet. If it is, this PR has not bumped
+          # (a CI-, docs- or test-only change, or a forgotten bump), and a prerelease of a released version would
+          # sort BELOW it. Skipped, not failed: a forgotten bump is still caught at merge, where the release job
+          # cannot publish over an existing version.
+          if npm view "$(node -p "require('./package.json').name")@${BASE}" version >/dev/null 2>&1; then
+            echo "::notice::package.json is at ${BASE}, which is already published; no prerelease cut. Bump the version if this PR is meant to ship one."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          npm pkg set version="$VER"
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "publish=true" >> "$GITHUB_OUTPUT"
+          echo "Publishing $VER"
+
+      - name: Publish prerelease to npm (pr tag)
+        if: steps.version.outputs.publish == 'true'
+        run: npm publish --tag pr --access public
+
+      - name: Comment install command on the PR
+        if: steps.version.outputs.publish == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = ${{ toJSON(steps.version.outputs.version) }};
+            const marker = '<!-- reqore-pr-prerelease -->';
+            const body = [
+              marker,
+              '📦 **Prerelease published** for this PR:',
+              '',
+              '```',
+              `@qoretechnologies/reqore@${version}`,
+              '```',
+              '',
+              'Install it in a consumer (updates `package.json` + lockfile):',
+              '',
+              '```bash',
+              `yarn add @qoretechnologies/reqore@${version}`,
+              '```',
+              '',
+              '_Published under the `pr` dist-tag — `latest`/`beta` are untouched. '
+                + 'Repoint consumers to the released version once this PR merges._',
+            ].join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
