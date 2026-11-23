@@ -18,7 +18,13 @@ import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { ActiveIconScale, DisabledElement, InactiveIconScale, ReadOnlyElement } from '../../styles';
+import {
+  ActiveIconScale,
+  controlHeight,
+  DisabledElement,
+  InactiveIconScale,
+  ReadOnlyElement,
+} from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
@@ -122,7 +128,8 @@ export interface IReqoreInputStyle extends IReqoreInputProps {
 export const StyledInputWrapper = styled.div.withConfig({
   shouldForwardProp: omitStyleProps('width'),
 })<IReqoreInputStyle>`
-  height: ${({ _size }) => SIZE_TO_PX[_size]}px;
+  /* Never shorter than its size in a column host, where it may shrink (\`flex: 0 1 auto\`). */
+  ${({ _size }) => controlHeight(SIZE_TO_PX[_size])}
   width: ${({ width }) => (width ? `${width}px` : 'auto')};
   max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   min-width: 60px;

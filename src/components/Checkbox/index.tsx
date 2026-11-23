@@ -16,7 +16,7 @@ import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { DisabledElement, ReadOnlyElement } from '../../styles';
+import { controlHeight, DisabledElement, ReadOnlyElement } from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
@@ -286,9 +286,8 @@ const StyledCheckbox = styled.div.withConfig({
           min-height: ${SIZE_TO_PX[size]}px;
           min-width: 0;
         `
-      : css`
-          height: ${SIZE_TO_PX[size]}px;
-        `}
+      : // Never shorter than its size in a column host, where a `fixed` one may shrink.
+        controlHeight(SIZE_TO_PX[size])}
   font-size: ${({ size, theme }) => getControlTextSize(theme, size)}px;
 
   max-width: ${({ fluid, fixed, $wrapLabel }) =>

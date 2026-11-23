@@ -122,6 +122,17 @@ export const ScaleIconOnHover = css`
   }
 `;
 
+/**
+ * A control's box is its size's height, whatever the flex host around it does. A `height` alone is
+ * only a flex item's starting size: in a column host a control that may shrink (an input, or a
+ * `fixed` checkbox, both `flex: 0 1 auto`) was drawn shorter than its size, so a search box above a
+ * long list stood at half its height with the list over its lower half. Its height is its floor too.
+ */
+export const controlHeight = (px: number) => css`
+  height: ${px}px;
+  min-height: ${px}px;
+`;
+
 export const DisabledElement = css`
   pointer-events: none;
   opacity: 0.4;
