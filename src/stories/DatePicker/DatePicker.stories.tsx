@@ -246,6 +246,75 @@ export const WithoutDefaultValue: Story = {
   },
 };
 
+/** The field that takes typing, and whether it draws its placeholder in place of its segments. */
+const placeholderOf = (canvasElement: HTMLElement) => {
+  const field = requiredElement<HTMLElement>(
+    '[data-placeholder-text]',
+    'the field that takes typing',
+    canvasElement
+  );
+  const content = getComputedStyle(field, '::before').content;
+
+  return { field, shown: content !== 'none' && content !== 'normal' };
+};
+
+/** A segment drawn in no colour: there, for a click or a tab, but not seen. */
+const isUnseen = (element: HTMLElement) => getComputedStyle(element).color === 'rgba(0, 0, 0, 0)';
+
+export const AnEmptyTypedPickerSaysItsPlaceholder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an empty date picker that takes typing, with the placeholder Pick a day. Until it is focused it says Pick a day in the placeholder colour; its segments (mm/dd/yyyy) are there for a click or a tab, but not seen.',
+      },
+    },
+  },
+  args: {
+    value: null,
+    popoverProps: {},
+    granularity: 'day',
+    placeholder: 'Pick a day',
+  },
+  async play({ canvasElement }) {
+    const year = await within(canvasElement).findByLabelText('year, Datepicker');
+    await waitFor(() => expect(placeholderOf(canvasElement).shown).toBe(true));
+    await expect(isUnseen(year)).toBe(true);
+  },
+};
+
+export const AnEmptyTypedPickerShowsItsSegmentsWhenFocused: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same empty picker, focused: its segments appear for typing and the placeholder goes. A year typed in keeps the segments shown after the field loses the focus, so nothing typed is hidden.',
+      },
+    },
+  },
+  args: {
+    value: null,
+    popoverProps: {},
+    granularity: 'day',
+    placeholder: 'Pick a day',
+  },
+  async play({ canvasElement }) {
+    const year = await within(canvasElement).findByLabelText('year, Datepicker');
+    await waitFor(() => expect(placeholderOf(canvasElement).shown).toBe(true));
+
+    year.focus();
+    await waitFor(() => expect(placeholderOf(canvasElement).shown).toBe(false));
+    await expect(isUnseen(year)).toBe(false);
+
+    await userEvent.keyboard('2026');
+    year.blur();
+    await waitFor(() => expect(document.activeElement).not.toBe(year));
+    await expect(placeholderOf(canvasElement).shown).toBe(false);
+    await expect(year).toHaveTextContent('2026');
+    await expect(isUnseen(year)).toBe(false);
+  },
+};
+
 export const WithoutTimePicker: Story = {
   parameters: {
     docs: {

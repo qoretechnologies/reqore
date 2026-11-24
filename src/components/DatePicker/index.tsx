@@ -7,6 +7,7 @@ import {
   toZoned,
   ZonedDateTime,
 } from '@internationalized/date';
+import { rgba } from 'polished';
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -21,7 +22,7 @@ import {
   TimeField,
 } from 'react-aria-components';
 import { ReqoreErrorBoundary, ReqorePanel, ReqorePopover } from '../..';
-import { changeLightness } from '../../helpers/colors';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
 import {
   formatDateToType,
   isUnreadableDate,
@@ -102,8 +103,8 @@ export interface IDatePickerProps<T extends TDateValue>
   /** When true, renders a button trigger instead of a text input.
    *  The date can only be selected via the calendar popover — no manual typing. */
   selectOnly?: boolean;
-  /** Placeholder text shown on the button trigger when there is no value.
-   *  Only used when `selectOnly` is true. */
+  /** What an empty picker says ("Pick a day"): on the button trigger (`selectOnly`), and in a field that takes typing,
+   *  in the placeholder colour, until it is focused, when its segments ("yyyy - mm - dd") appear for typing. */
   placeholder?: string;
   /** Props for the button trigger. Only used when `selectOnly` is true. */
   buttonProps?: IReqoreButtonProps;
@@ -170,6 +171,36 @@ const StyledDateInput: typeof DateInput = styled(DateInput).withConfig({
 })`
   display: inline-flex;
   align-items: center;
+
+  /* An empty field that takes typing says its placeholder (\`data-placeholder-text\`) until it is focused: its segments'
+     template ("yyyy - mm - dd") read as a date already given. The segments stay where they are, unseen, so a click
+     or a tab still lands in one; a segment typed into keeps them all shown. */
+  &[data-placeholder-text]:not(:focus-within):not(
+      :has([data-type]:not([data-type='literal']):not([data-placeholder]))
+    ) {
+    position: relative;
+
+    & > [data-type] {
+      color: transparent;
+    }
+
+    &::before {
+      content: attr(data-placeholder-text);
+      position: absolute;
+      inset: 0;
+      box-sizing: border-box;
+      padding: inherit;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      white-space: nowrap;
+      pointer-events: none;
+      color: ${({ theme }) =>
+        theme?.main
+          ? rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.3)
+          : undefined};
+    }
+  }
 `;
 const StyledCalendarGrid = styled(CalendarGrid)`
   width: 100%;
@@ -751,6 +782,7 @@ export const DatePicker = <T extends TDateValue>({
               flat,
               customTheme: theme,
               icon: 'CalendarLine',
+              'data-placeholder-text': placeholder || undefined,
               ...inputProps,
             }}
             closeOnOutsideClick={!isMonthDropdownOpen && !isYearDropdownOpen}
