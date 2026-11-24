@@ -137,8 +137,8 @@ fix-or-waive" flow is the frontend baseline — this is what reqore's audit adds
 ### Version bumps (required on every PR)
 
 Every PR to `develop` MUST bump `package.json`'s `version` field before it merges. This is
-load-bearing: `.github/workflows/beta_release.yml` runs on every push to `develop` and
-publishes to NPM using whatever version is in `package.json` at push time. If two PRs merge
+load-bearing: the release job of `.github/workflows/publish.yml` runs on every push to `develop`
+and publishes to NPM using whatever version is in `package.json` at push time. If two PRs merge
 back-to-back without bumps, the second silently no-ops or fails (NPM refuses to re-publish
 an existing version).
 
@@ -162,7 +162,7 @@ an existing version).
 **Where to look if unsure:** `git log --oneline -20 -- package.json`.
 
 **Once per PR, not per commit.** The rule is about the version at MERGE TIME, not per push
-to the PR branch. `beta_release.yml` fires on push to `develop`, so intermediate versions
+to the PR branch. `publish.yml`'s release job fires on push to `develop`, so intermediate versions
 on a feature branch never publish. Bump ONCE — at the first commit of the PR or when
 opening it — and then LEAVE `package.json` alone through follow-up commits (visual-review
 feedback fixes, review responses, iteration on the same branch). Re-bump ONLY when both of these
@@ -180,7 +180,14 @@ every follow-up commit inflates the version history (a single iterative PR endin
 intermediate `0.72.1-0.72.4` was only ever a git tag on a feature branch, never a
 release on npm.
 
-**What happens after the publish.** `beta_release.yml` ends by telling the projects that
+**How it publishes.** One workflow, `.github/workflows/publish.yml`, does both publishes: the release on a push to
+`develop` (`beta` dist-tag) and a PR's prerelease (`pr` dist-tag). It holds no npm token: npm's trusted publishing
+trades the run's GitHub OIDC token for a one-publish token, and npm trusts one workflow file per package, so both
+publishes stay in that one file and it keeps its name (renaming it stops publishing until the package's trusted
+publisher on npmjs.com names the new file). What the package ships is `package.json`'s `files` allowlist (`dist`,
+the `testing` stub, README, LICENSE): nothing else in the checkout reaches npm.
+
+**What happens after the publish.** `publish.yml`'s release job ends by telling the projects that
 consume reqore about the new version with a `library-release` dispatch, and each takes it in
 a PR of its own. When the dispatch fails the release is still fine.
 
