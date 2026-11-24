@@ -800,6 +800,15 @@ const ReqoreSegmentedControl = memo(
         ]
       );
 
+      // One handler for every folded segment: the menu item hands back its `itemId`, the segment's value.
+      const handleOverflowItemClick = useCallback(
+        (_event: unknown, itemId?: string, closePopover?: () => void) => {
+          if (itemId !== undefined) handleSelect(itemId);
+          closePopover?.();
+        },
+        [handleSelect]
+      );
+
       const moreMenu = useMemo(
         () => (
           <ReqoreMenu customTheme={customTheme}>
@@ -823,17 +832,15 @@ const ReqoreSegmentedControl = memo(
                     ? overflowItem.activeIntent || activeIntent
                     : undefined
                 }
-                onClick={(_event, _itemId, closePopover) => {
-                  handleSelect(overflowItem.value);
-                  closePopover?.();
-                }}
+                itemId={overflowItem.value}
+                onClick={handleOverflowItemClick}
               >
                 {overflowItem.label}
               </ReqoreMenuItem>
             ))}
           </ReqoreMenu>
         ),
-        [customTheme, hiddenItems, _value, activeIntent, handleSelect]
+        [customTheme, hiddenItems, _value, activeIntent, handleOverflowItemClick]
       );
 
       if (!items || items.length === 0) {
