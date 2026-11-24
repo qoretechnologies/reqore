@@ -763,6 +763,36 @@ const PanelTitleActions = ({
     <>{children}</>
   );
 
+/** The most actions a bottom bar stacks, full-width, where they do not fit: a dialog's Cancel, its other way, its primary. */
+export const STACKED_BOTTOM_ACTIONS_MAX = 3;
+
+/**
+ * Whether the actions in a bottom bar do not fit on its one line at their words' width: a box among them cut
+ * (scrolled, or with words cut short), a group that folded something into its "⋯", or buttons on more than
+ * one line.
+ */
+const bottomActionsDoNotFit = (bar: HTMLElement): boolean => {
+  if (bar.querySelector('.reqore-control-group-overflow')) {
+    return true;
+  }
+
+  const boxes = bar.querySelectorAll<HTMLElement>(
+    '.reqore-control-group, .reqore-button, .reqore-button-text-content'
+  );
+
+  if (Array.from(boxes).some((box) => box.scrollWidth > box.clientWidth + 1)) {
+    return true;
+  }
+
+  const lines = new Set(
+    Array.from(bar.querySelectorAll<HTMLElement>('.reqore-button')).map((button) =>
+      Math.round(button.getBoundingClientRect().top)
+    )
+  );
+
+  return lines.size > 1;
+};
+
 /**
  * How much wider `element` is than the least it can be: its width less its min-content width, read
  * with its flex and width set aside for the measurement and put back before anything is drawn.
@@ -2362,6 +2392,93 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       [leftBottomActions, rightBottomActions]
     );
 
+    /**
+     * A bottom bar of a few actions that do not fit on its line stacks them, each as wide as the bar, the
+     * primary on top, as a phone's sheet does: on a phone a long "Say what went wrong to send it" beside a
+     * Cancel cut the Cancel to "Can…". The page's last action is drawn first.
+     */
+    const stackedBottomActions = useMemo(
+      () => [...leftBottomActions, ...rightBottomActions].filter(isActionShown).reverse(),
+      [leftBottomActions, rightBottomActions]
+    );
+    const canStackBottomActions =
+      stackedBottomActions.length > 0 &&
+      stackedBottomActions.length <= STACKED_BOTTOM_ACTIONS_MAX &&
+      !_isCollapsed;
+    /** What the bar holds, as one comparable value: a host hands a new array at every render. */
+    const bottomActionsSignature = stackedBottomActions
+      .map(({ label, icon }) => `${String(label ?? '')}:${String(icon ?? '')}`)
+      .join('|');
+    const bottomBarRef = useRef<HTMLDivElement>(null);
+    /** The bar's width when its actions were stacked; undefined while they are on one line. */
+    const [stackedBottomAt, setStackedBottomAt] = useState<number | undefined>(undefined);
+    const stackedBottomSignature = useRef<string | undefined>(undefined);
+
+    /*
+     * Stacked, the actions fit whatever their words, so the stack cannot be asked whether the line would: it
+     * stays until the bar is wider than when it stacked (or holds other actions), then the line is tried again.
+     * At one width the bar is a line or a stack, and goes from one to the other at most once.
+     */
+    useLayoutEffect(() => {
+      if (!canStackBottomActions) {
+        if (stackedBottomAt !== undefined) {
+          setStackedBottomAt(undefined);
+        }
+        return undefined;
+      }
+
+      if (stackedBottomAt !== undefined && stackedBottomSignature.current !== bottomActionsSignature) {
+        setStackedBottomAt(undefined);
+        return undefined;
+      }
+
+      const bar = bottomBarRef.current;
+
+      if (!bar) {
+        return undefined;
+      }
+
+      let frame = 0;
+      const check = () => {
+        frame = 0;
+        const width = bar.clientWidth;
+
+        if (!width) {
+          return;
+        }
+
+        if (stackedBottomAt !== undefined) {
+          if (width > stackedBottomAt) {
+            setStackedBottomAt(undefined);
+          }
+          return;
+        }
+
+        if (bottomActionsDoNotFit(bar)) {
+          stackedBottomSignature.current = bottomActionsSignature;
+          setStackedBottomAt(width);
+        }
+      };
+
+      check();
+
+      const observer =
+        typeof ResizeObserver !== 'undefined'
+          ? new ResizeObserver(() => {
+              // the next frame: a change made in the observer's callback is a ResizeObserver loop
+              if (!frame) frame = requestAnimationFrame(check);
+            })
+          : undefined;
+
+      observer?.observe(bar);
+
+      return () => {
+        observer?.disconnect();
+        if (frame) cancelAnimationFrame(frame);
+      };
+    }, [canStackBottomActions, bottomActionsSignature, stackedBottomAt]);
+    const stackBottomActions = canStackBottomActions && stackedBottomAt !== undefined;
+
     const renderResponsiveActions = useCallback(
       (align: 'flex-start' | 'center' | 'flex-end' = 'flex-end') =>
         (action: IReqorePanelAction, index: number) => {
@@ -3784,9 +3901,38 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               noHorizontalPadding={noHorizontalPadding}
               $cornerInset={cornerInset}
               $wrapKept={wrapKeptBottomActions}
+              ref={bottomBarRef}
+              data-stacked={stackBottomActions || undefined}
             >
+              {stackBottomActions ? (
+                <ReqoreControlGroup
+                  {...PANEL_ACTIONS_MARK}
+                  className='reqore-panel-bottom-actions-stacked'
+                  vertical
+                  fluid
+                  size={panelSize}
+                >
+                  {stackedBottomActions.map((action, index) =>
+                    // its words whatever `responsive` says, in the middle of a button as wide as the bar
+                    renderActions(
+                      {
+                        textAlign: 'center',
+                        iconsAlign: 'center',
+                        ...action,
+                        responsive: false,
+                        fluid: true,
+                        fixed: false,
+                      },
+                      index,
+                      false,
+                      'center',
+                      true
+                    )
+                  )}
+                </ReqoreControlGroup>
+              ) : null}
               {/* In the page's order, whichever may fold (`splitAtFirstFolding`). */}
-              {hasNonResponsiveActions(leadingLeftBottomActions) ? (
+              {!stackBottomActions && hasNonResponsiveActions(leadingLeftBottomActions) ? (
                 <ReqoreControlGroup
                   {...PANEL_ACTIONS_MARK}
                   size={panelSize}
@@ -3796,7 +3942,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   {leadingLeftBottomActions.map(renderNonResponsiveActions('flex-start'))}
                 </ReqoreControlGroup>
               ) : null}
-              {hasResponsiveActions(leftBottomActions) && (
+              {!stackBottomActions && hasResponsiveActions(leftBottomActions) && (
                 <ReqoreControlGroup
                   {...PANEL_ACTIONS_MARK}
                   fluid={responsiveActions}
@@ -3808,7 +3954,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   {leftBottomActions.map(renderResponsiveActions('flex-start'))}
                 </ReqoreControlGroup>
               )}
-              {hasNonResponsiveActions(trailingLeftBottomActions) ? (
+              {!stackBottomActions && hasNonResponsiveActions(trailingLeftBottomActions) ? (
                 <ReqoreControlGroup
                   {...PANEL_ACTIONS_MARK}
                   size={panelSize}
@@ -3818,7 +3964,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   {trailingLeftBottomActions.map(renderNonResponsiveActions('flex-start'))}
                 </ReqoreControlGroup>
               ) : null}
-              {hasNonResponsiveActions(leadingRightBottomActions) ? (
+              {!stackBottomActions && hasNonResponsiveActions(leadingRightBottomActions) ? (
                 <ReqoreControlGroup
                   {...PANEL_ACTIONS_MARK}
                   horizontalAlign='flex-end'
@@ -3829,7 +3975,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   {leadingRightBottomActions.map(renderNonResponsiveActions())}
                 </ReqoreControlGroup>
               ) : null}
-              {hasResponsiveActions(rightBottomActions) && (
+              {!stackBottomActions && hasResponsiveActions(rightBottomActions) && (
                 <ReqoreControlGroup
                   {...PANEL_ACTIONS_MARK}
                   fluid={responsiveActions}
@@ -3846,7 +3992,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   {rightBottomActions.map(renderResponsiveActions())}
                 </ReqoreControlGroup>
               )}
-              {hasNonResponsiveActions(trailingRightBottomActions) ? (
+              {!stackBottomActions && hasNonResponsiveActions(trailingRightBottomActions) ? (
                 <ReqoreControlGroup
                   {...PANEL_ACTIONS_MARK}
                   horizontalAlign='flex-end'

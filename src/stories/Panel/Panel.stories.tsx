@@ -4412,12 +4412,12 @@ const keptBottomActionsOf = (name: string) => {
   return { panel: panel.getBoundingClientRect(), buttons };
 };
 
-export const KeptBottomActionsWrapInANarrowPanel: Story = {
+export const KeptBottomActionsStackInANarrowPanel: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'Renders a 320px panel and a 720px one, each with three bottom actions that do not fold (Cancel, Save as a draft, Publish to production). In the narrow one they go to the next line, inside the panel, and the right-hand two keep the right edge; in the wide one they share one line. A third 720px panel, with a Cancel that folds beside a kept Publish to production, keeps its bar on one line.',
+          'Renders a 320px panel and a 720px one, each with three bottom actions that do not fold (Cancel, Save as a draft, Publish to production). In the narrow one they do not fit on one line, so they stack inside the panel, each as wide as the bar, Publish to production on top and Cancel at the bottom; in the wide one they share one line. A third 720px panel, with a Cancel that folds beside a kept Publish to production, keeps its bar on one line.',
       },
     },
   },
@@ -4443,16 +4443,28 @@ export const KeptBottomActionsWrapInANarrowPanel: Story = {
       expect(document.querySelectorAll('.reqore-panel-bottom-actions .reqore-button')).toHaveLength(8)
     );
 
+    await waitFor(() =>
+      expect(
+        document.querySelector<HTMLElement>('.kept-bottom-narrow .reqore-panel-bottom-actions')?.dataset
+          .stacked
+      ).toBe('true')
+    );
     const narrow = keptBottomActionsOf('narrow');
     for (const button of narrow.buttons) {
       await expect(button.right).toBeLessThanOrEqual(narrow.panel.right + 0.5);
       await expect(button.left).toBeGreaterThanOrEqual(narrow.panel.left - 0.5);
     }
-    // on more than one line
-    await expect(new Set(narrow.buttons.map((button) => Math.round(button.top))).size).toBeGreaterThan(1);
-    // the right-hand actions (Save as a draft, Publish to production) keep the right edge on each of their lines
-    const [, save, publish] = narrow.buttons;
-    await expect(Math.abs(save.right - publish.right)).toBeLessThanOrEqual(0.5);
+    // one to a line, each as wide as the others, the page's last action (Publish to production) on top
+    await expect(new Set(narrow.buttons.map((button) => Math.round(button.top))).size).toBe(3);
+    const [publish, save, cancel] = narrow.buttons;
+    await expect(publish.top).toBeLessThan(save.top);
+    await expect(save.top).toBeLessThan(cancel.top);
+    for (const button of [save, cancel]) {
+      await expect(Math.abs(button.width - publish.width)).toBeLessThanOrEqual(0.5);
+    }
+    await expect(
+      document.querySelector('.kept-bottom-narrow .reqore-panel-bottom-actions .reqore-button')?.textContent
+    ).toBe('Publish to production');
 
     const wide = keptBottomActionsOf('wide');
     await expect(new Set(wide.buttons.map((button) => Math.round(button.top))).size).toBe(1);

@@ -697,6 +697,7 @@ const ReqoreControlGroup = memo(
               foldable.slice(overflowingChildren),
               <ReqoreButton
                 key='control-group-menu'
+                className='reqore-control-group-overflow'
                 icon='MenuLine'
                 customTheme={customTheme}
                 tooltip={{

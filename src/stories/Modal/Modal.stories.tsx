@@ -635,6 +635,94 @@ export const OnAPhone: Story = {
   },
 };
 
+const REPORT_ACTIONS: IReqoreModalProps['bottomActions'] = [
+  { label: 'Cancel', position: 'left', minimal: true, flat: true, className: 'story-cancel' },
+  {
+    label: 'Say what went wrong to send it',
+    position: 'right',
+    icon: 'SendPlaneLine',
+    intent: 'info',
+    responsive: false,
+    className: 'story-send',
+  },
+];
+
+/** A report dialog whose Send says what is missing: a long primary beside a Cancel. */
+const ReportDialog = () => (
+  <ReqoreModal isOpen label='Report a problem' width='520px' bottomActions={REPORT_ACTIONS}>
+    <ReqoreP>What went wrong?</ReqoreP>
+  </ReqoreModal>
+);
+
+const cancelAndSend = () => ({
+  bar: document.querySelector<HTMLElement>('.reqore-modal .reqore-panel-bottom-actions')!,
+  cancel: document.querySelector<HTMLElement>('.reqore-modal .story-cancel')!,
+  send: document.querySelector<HTMLElement>('.reqore-modal .story-send')!,
+});
+
+/** Every word of a button is drawn: none of its boxes is cut short. */
+const expectWholeWords = (button: HTMLElement) => {
+  for (const box of [button, ...Array.from(button.querySelectorAll<HTMLElement>('*'))]) {
+    expect(box.scrollWidth, `${box.className} keeps its words`).toBeLessThanOrEqual(box.clientWidth + 1);
+  }
+};
+
+export const ALongActionStacksTheActionsOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'A dialog on a phone (390 px) whose primary action says what is missing ("Say what went wrong to send it") beside a Cancel. The two do not fit on one line, so they stack, each as wide as the bar, the primary on top, and Cancel keeps its word: on one line it was cut to "Can…".',
+      },
+    },
+  },
+  render: () => <ReportDialog />,
+  play: async () => {
+    await _testsWaitForText('What went wrong?');
+    await waitFor(() => expect(cancelAndSend().bar.dataset.stacked).toBe('true'));
+    const { bar, cancel, send } = cancelAndSend();
+    await expect(send.getBoundingClientRect().bottom).toBeLessThanOrEqual(cancel.getBoundingClientRect().top);
+    const barWidth = bar.getBoundingClientRect().width;
+    for (const button of [cancel, send]) {
+      await expect(button.getBoundingClientRect().width).toBeGreaterThan(barWidth * 0.8);
+      expectWholeWords(button);
+    }
+    await expect(cancel.textContent).toBe('Cancel');
+    // a sheet's words sit in the middle of its buttons
+    const words = cancel.querySelector<HTMLElement>('.reqore-button-text-content')!.getBoundingClientRect();
+    const box = cancel.getBoundingClientRect();
+    await expect(Math.abs(words.left - box.left - (box.right - words.right))).toBeLessThanOrEqual(2);
+  },
+};
+
+export const ALongActionStaysBesideCancelWhereItFits: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same dialog on a desktop: the long primary and the Cancel fit on one line, so they stay on it, Cancel at the start and the primary at the end.',
+      },
+    },
+  },
+  render: () => <ReportDialog />,
+  play: async () => {
+    await _testsWaitForText('What went wrong?');
+    // the bar has had its frame to measure itself
+    await sleep(300);
+    const { bar, cancel, send } = cancelAndSend();
+    await expect(bar.dataset.stacked).toBeUndefined();
+    await expect(Math.round(send.getBoundingClientRect().top)).toBe(
+      Math.round(cancel.getBoundingClientRect().top)
+    );
+    await expect(cancel.getBoundingClientRect().right).toBeLessThan(send.getBoundingClientRect().left);
+    expectWholeWords(cancel);
+    expectWholeWords(send);
+  },
+};
+
 export const BasicWithConfirmationOnClose: Story = {
   parameters: {
     docs: {
