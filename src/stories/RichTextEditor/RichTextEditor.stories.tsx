@@ -172,6 +172,66 @@ export const ClickingATagPlacesTheCursor: Story = {
   },
 };
 
+/** A computed color's channels. */
+const channelsOf = (color: string) => (color.match(/[\d.]+/g) || []).map(Number);
+
+/** Whether a color is a grey: its channels within a few steps of each other. */
+const isGrey = (color: string) => {
+  const [r, g, b] = channelsOf(color);
+  return Math.max(r, g, b) - Math.min(r, g, b) <= 12;
+};
+
+export const ASelectedChipKeepsItsLook: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Selects the whole text, a chip with it. The chip in the selection keeps its own look, the plain chip, with a ring in the text colour around it: it was painted blue, and blue says only that a filter is on.',
+      },
+    },
+  },
+  args: {
+    value: [
+      {
+        type: 'paragraph',
+        children: [
+          { text: 'Order ' },
+          { type: 'tag', value: '$.order.id', label: 'id', children: [{ text: '' }] },
+          { text: ' was received' },
+        ],
+      },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await waitFor(() => {
+      const el = doc.querySelector<HTMLElement>('[contenteditable="true"]');
+      expect(el).toBeTruthy();
+      return el!;
+    });
+    const chip = () => {
+      // Slate's void attributes are spread onto the tag itself
+      const tag = doc.querySelector<HTMLElement>(
+        '.reqore-tag[data-slate-void="true"], [data-slate-void="true"] .reqore-tag'
+      );
+      expect(tag, 'the chip').toBeTruthy();
+      return tag!;
+    };
+    const unselected = getComputedStyle(await waitFor(chip)).backgroundColor;
+
+    await userEvent.click(editor);
+    await userEvent.keyboard('{Control>}a{/Control}');
+    await waitFor(() => expect(chip().classList.contains('reqore-tag-selected')).toBe(true));
+
+    const { backgroundColor, boxShadow } = getComputedStyle(await waitFor(chip));
+    await expect(backgroundColor, 'the chip keeps its own surface').toBe(unselected);
+    await expect(isGrey(backgroundColor), `the chip is not blue: ${backgroundColor}`).toBe(true);
+    // the ring that says it is chosen, in the text colour
+    await expect(boxShadow).not.toBe('none');
+    await expect(isGrey(boxShadow), `the ring is not blue: ${boxShadow}`).toBe(true);
+  },
+};
+
 export const WithCustomStyle: Story = {
   parameters: {
     docs: {

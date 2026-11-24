@@ -26,8 +26,11 @@ import {
   RenderElementProps,
   RenderLeafProps,
 } from 'slate-react/dist/components/editable';
+import { rgba } from 'polished';
 import { ReqoreButton, ReqoreControlGroup, ReqorePanel, ReqoreTextarea } from '../..';
+import { getReadableColor } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItemProps } from '../Dropdown/item';
 import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
@@ -117,6 +120,19 @@ const EMPTY_TAGS_LIST_PROPS: IReqoreRichTextEditorProps['tagsListProps'] = {};
 export const TemplateElement = memo((props: RenderElementProps & { tagProps: IReqoreTagProps }) => {
   const selected = useSelected();
   const editor = useSlateStatic();
+  const theme = useReqoreTheme();
+  /* A chip in the selection is a chosen value, and keeps its own colour (its source's, or the plain chip) with a
+     ring in the text's colour around it: it was painted blue, which says only that a filter is on. */
+  const tagStyle = useMemo(
+    () =>
+      selected
+        ? {
+            ...props.tagProps?.style,
+            boxShadow: `0 0 0 2px ${rgba(getReadableColor(theme, undefined, undefined, true), 0.6)}`,
+          }
+        : props.tagProps?.style,
+    [selected, props.tagProps?.style, theme]
+  );
   /* Slate's own answer, which is the editor's `readOnly` — it reaches `Editable`
      as a DOM-valid prop and Slate reads it back. It is NOT the whole answer: the
      editor's `disabled` never reaches Slate, so `composeTagProps` marks the chip
@@ -219,7 +235,12 @@ export const TemplateElement = memo((props: RenderElementProps & { tagProps: IRe
            the text field looked focused and took no typing. */
         tabIndex={-1}
         contentEditable={false}
-        intent={selected ? 'info' : props.tagProps?.intent}
+        style={tagStyle}
+        className={
+          selected
+            ? `${props.tagProps?.className ?? ''} reqore-tag-selected`.trim()
+            : props.tagProps?.className
+        }
       />
       {props.children}
     </>
