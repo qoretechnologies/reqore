@@ -383,6 +383,10 @@ export const ReqoreCallout = memo(
       const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
       const isInteractive = interactive || !!onClick;
       const descriptionSize = useMemo(() => getOneLessSize(size), [size]);
+      const descriptionTextEffect = useMemo(
+        (): IReqoreEffect => ({ ...getSecondaryTextEffect(theme, 0.78), ...descriptionEffect }),
+        [theme, descriptionEffect]
+      );
       // Resolved ONCE, here — the styles do arithmetic with the value (padding
       // reservation), so they must only ever see a number. Shared with ReqorePanel.
       const accentSizePx = useMemo(() => resolveAccentSize(accentSize), [accentSize]);
@@ -462,7 +466,7 @@ export const ReqoreCallout = memo(
                 <ReqoreP
                   as={getReqoreTextElement(description)}
                   size={descriptionSize}
-                  effect={{ ...getSecondaryTextEffect(theme, 0.78), ...descriptionEffect }}
+                  effect={descriptionTextEffect}
                   className='reqore-callout-description'
                 >
                   {description}

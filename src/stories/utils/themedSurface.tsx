@@ -6,6 +6,9 @@ import { ReqoreContent, ReqoreLayoutContent, ReqoreP } from '../../index';
 /** The page the comparison sits on — a step darker than either theme's surfaces. */
 const PAGE = '#0c0c0e';
 
+/** The layout draws no page of its own: the comparison's page shows through. */
+export const TRANSPARENT_LAYOUT = { transparent: true };
+
 /**
  * A calm theme: panels one step above the page on one surface, edged with one neutral hairline,
  * and buttons a step above the panels. What `theme.panel` and `theme.buttons.main` are for.
@@ -52,7 +55,7 @@ export const Surface = ({
     className={`story-themed-surface${className ? ` ${className}` : ''}`}
     style={{ background: page, padding: 24, flex: '1 1 420px', minWidth: 0 }}
   >
-    <ReqoreUIProvider theme={theme} layoutWrapperProps={{ transparent: true }}>
+    <ReqoreUIProvider theme={theme} layoutWrapperProps={TRANSPARENT_LAYOUT}>
       <ReqoreLayoutContent>
         <ReqoreContent style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <ReqoreP size='small'>{label}</ReqoreP>

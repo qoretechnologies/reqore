@@ -468,6 +468,19 @@ const ReqoreStatistic = memo(
       const { display, final, counting } = useCountUp(value, countUp, valueRowRef);
 
       const secondarySize = useMemo(() => getOneLessSize(size), [size]);
+      const labelTextEffect = useMemo(
+        (): IReqoreEffect => ({
+          ...getSecondaryTextEffect(theme, 0.7),
+          uppercase: theme.uppercaseLabels !== false,
+          spaced: theme.uppercaseLabels !== false ? 1 : 0,
+          ...labelEffect,
+        }),
+        [theme, labelEffect]
+      );
+      const descriptionTextEffect = useMemo(
+        (): IReqoreEffect => ({ ...getSecondaryTextEffect(theme, 0.6), ...descriptionEffect }),
+        [theme, descriptionEffect]
+      );
       const valueSize = useMemo(() => getOneHigherSize(size), [size]);
       const flexAlign = useMemo(() => alignToFlexAlign(align), [align]);
 
@@ -510,12 +523,7 @@ const ReqoreStatistic = memo(
         <ReqoreSpan
           size={secondarySize}
           className='reqore-statistic-label'
-          effect={{
-            ...getSecondaryTextEffect(theme, 0.7),
-            uppercase: theme.uppercaseLabels !== false,
-            spaced: theme.uppercaseLabels !== false ? 1 : 0,
-            ...labelEffect,
-          }}
+          effect={labelTextEffect}
         >
           {label}
         </ReqoreSpan>
@@ -639,7 +647,7 @@ const ReqoreStatistic = memo(
               <ReqoreSpan
                 size={secondarySize}
                 className='reqore-statistic-description'
-                effect={{ ...getSecondaryTextEffect(theme, 0.6), ...descriptionEffect }}
+                effect={descriptionTextEffect}
               >
                 {description}
               </ReqoreSpan>

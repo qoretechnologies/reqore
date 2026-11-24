@@ -123,7 +123,7 @@ export const DrawnForTheKeyboardOnly: Story = {
     // against its surface.
     const tab = () => (browser ? browser.userEvent.tab() : userEvent.tab());
     first.blur();
-    const seen: string[] = [];
+    let reached = 0;
     for (let index = 0; index < 5; index += 1) {
       await tab();
       const focused = document.activeElement!;
@@ -138,9 +138,9 @@ export const DrawnForTheKeyboardOnly: Story = {
           `${focused.className}'s ring stands out`
         ).toBeGreaterThanOrEqual(3)
       );
-      seen.push(focused.tagName);
+      reached += 1;
     }
-    expect(seen.length).toBe(5);
+    expect(reached).toBe(5);
 
     // End on the first control focused while the keyboard is in use, for the capture: the last
     // input was a key, so its focus is drawn as the keyboard's.

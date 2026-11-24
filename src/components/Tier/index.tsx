@@ -144,6 +144,16 @@ const ReqoreClassicTier = memo(
       };
     }, [rest.style]);
 
+    const salePriceEffect = useMemo(
+      (): IReqoreEffect => ({
+        uppercase: true,
+        weight: 'thick',
+        textSize: '40px',
+        color: saleIntent ? `${saleIntent}:lighten:15:1` : undefined,
+      }),
+      [saleIntent]
+    );
+
     const contentEffect = useMemo(
       (): IReqorePanelProps['contentEffect'] => ({
         gradient: {
@@ -192,14 +202,7 @@ const ReqoreClassicTier = memo(
           </ReqoreControlGroup>
           <ReqoreControlGroup vertical horizontalAlign='center' gapSize='tiny'>
             {salePrice && (
-              <ReqoreP
-                effect={{
-                  uppercase: true,
-                  weight: 'thick',
-                  textSize: '40px',
-                  color: saleIntent ? `${saleIntent}:lighten:15:1` : undefined,
-                }}
-              >
+              <ReqoreP effect={salePriceEffect}>
                 {currency && currencyPosition === 'before' && isNumber(salePrice)
                   ? currency
                   : undefined}

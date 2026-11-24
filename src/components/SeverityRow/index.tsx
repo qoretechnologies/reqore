@@ -436,6 +436,10 @@ const ReqoreSeverityRow = memo(
     ) => {
       const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
       const secondarySize = useMemo(() => getOneLessSize(size), [size]);
+      const descriptionTextEffect = useMemo(
+        (): IReqoreEffect => ({ ...getSecondaryTextEffect(theme, 0.6), ...descriptionEffect }),
+        [theme, descriptionEffect]
+      );
 
       const interactive = !!(rest.onClick || rest.onDoubleClick);
 
@@ -581,7 +585,7 @@ const ReqoreSeverityRow = memo(
                   <ReqoreP
                     as={getReqoreTextElement(description)}
                     size={secondarySize}
-                    effect={{ ...getSecondaryTextEffect(theme, 0.6), ...descriptionEffect }}
+                    effect={descriptionTextEffect}
                     className='reqore-severity-row-description'
                   >
                     {description}

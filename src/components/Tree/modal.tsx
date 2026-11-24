@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { IReqoreTreeProps } from '.';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { ReqoreTextarea } from '../..';
@@ -59,6 +59,28 @@ export const ReqoreTreeManagementDialog = ({
   const [key, setKey] = useState(data?.key);
   const [value, setValue] = useState<any>(data?.value);
 
+  const actions = useMemo(
+    (): IReqoreModalProps['actions'] => [
+      {
+        // The app's primary when the theme names one, else green as before.
+        intent: primaryActionIntent ?? 'success',
+        className: 'reqore-tree-save',
+        disabled: type === 'object' ? !key || !value : !value,
+        label: saveLabel,
+        icon: 'CheckLine',
+        onClick: () => {
+          onSave({
+            key,
+            value,
+            originalData: data,
+          });
+          onClose();
+        },
+      },
+    ],
+    [primaryActionIntent, type, key, value, saveLabel, onSave, data, onClose]
+  );
+
   return (
     <ReqoreModal
       isOpen
@@ -66,24 +88,7 @@ export const ReqoreTreeManagementDialog = ({
       onClose={onClose}
       minimal
       panelSize='small'
-      actions={[
-        {
-          // The app's primary when the theme names one, else green as before.
-          intent: primaryActionIntent ?? 'success',
-          className: 'reqore-tree-save',
-          disabled: type === 'object' ? !key || !value : !value,
-          label: saveLabel,
-          icon: 'CheckLine',
-          onClick: () => {
-            onSave({
-              key,
-              value,
-              originalData: data,
-            });
-            onClose();
-          },
-        },
-      ]}
+      actions={actions}
     >
       <ReqoreControlGroup vertical>
         {type === 'object' || (data?.key && parentType !== 'array') ? (

@@ -2,7 +2,7 @@ import { StoryFn, StoryObj } from '@storybook/react';
 import { expect, waitFor } from 'storybook/test';
 import ReqoreContent from '../../components/Content';
 import ReqoreLayoutContent from '../../components/Layout/content';
-import { TReqoreIntent } from '../../constants/theme';
+import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreUIProvider from '../../containers/UIProvider';
 import { noop } from 'lodash';
 import ReqoreMessage, { IReqoreMessageProps } from '../../components/Message';
@@ -307,8 +307,10 @@ export const Raised: Story = {
  * Messages of one intent on the panel surface (`theme.messageSurface: 'panel'`): a small one in a 300px card, as a
  * line of a list item is, and a large one beside it.
  */
+const PANEL_SURFACE_THEME: Partial<IReqoreTheme> = { main: '#121212', messageSurface: 'panel' };
+
 const OnThePanelSurface = ({ intents }: { intents: TReqoreIntent[] }) => (
-  <ReqoreUIProvider theme={{ main: '#121212', messageSurface: 'panel' }}>
+  <ReqoreUIProvider theme={PANEL_SURFACE_THEME}>
     <ReqoreLayoutContent>
       <ReqoreContent style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
         {intents.map((intent) => (

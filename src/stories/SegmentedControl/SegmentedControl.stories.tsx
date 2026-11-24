@@ -3,6 +3,7 @@ import { getContrast, getLuminance, parseToRgb } from 'polished';
 import { useState } from 'react';
 import { expect, fireEvent, waitFor } from 'storybook/test';
 import ReqoreSegmentedControl, {
+  IReqoreSegmentedControlItem,
   IReqoreSegmentedControlProps,
 } from '../../components/SegmentedControl';
 import { ReqoreControlGroup, ReqoreModal, ReqorePanel } from '../../index';
@@ -764,6 +765,17 @@ const PANEL_SURFACES = [
   },
 ] as const;
 
+const MATCH_ITEMS: IReqoreSegmentedControlItem[] = [
+  { value: 'any', label: 'Any condition' },
+  { value: 'all', label: 'All conditions' },
+];
+
+const STATUS_ITEMS: IReqoreSegmentedControlItem[] = [
+  { value: 'all', label: 'All' },
+  { value: 'failing', label: 'Failing', icon: 'ErrorWarningLine' },
+  { value: 'healthy', label: 'Healthy', icon: 'CheckLine' },
+];
+
 const ControlsOnAPanel = () => {
   const [period, setPeriod] = useState<string | undefined>('week');
   const [match, setMatch] = useState<string | undefined>('all');
@@ -783,10 +795,7 @@ const ControlsOnAPanel = () => {
       <ReqoreSegmentedControl
         className='story-match'
         fitSize
-        items={[
-          { value: 'any', label: 'Any condition' },
-          { value: 'all', label: 'All conditions' },
-        ]}
+        items={MATCH_ITEMS}
         value={match}
         onChange={setMatch}
       />
@@ -794,11 +803,7 @@ const ControlsOnAPanel = () => {
         className='story-status'
         fitSize
         activeIntent='info'
-        items={[
-          { value: 'all', label: 'All' },
-          { value: 'failing', label: 'Failing', icon: 'ErrorWarningLine' },
-          { value: 'healthy', label: 'Healthy', icon: 'CheckLine' },
-        ]}
+        items={STATUS_ITEMS}
         value={status}
         onChange={setStatus}
       />

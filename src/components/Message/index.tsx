@@ -17,7 +17,7 @@ import {
   IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { TReqoreEffectColor } from '../Effect';
+import { IReqoreEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import {
@@ -70,6 +70,9 @@ export interface IReqoreNotificationStyle extends IReqoreMessageProps {
   clickable?: boolean;
   timeout?: number;
 }
+
+/** A panel-surface message's title: a callout's label, bold at the message's own size. */
+const BOLD_TITLE_EFFECT: IReqoreEffect = { weight: 'bold' };
 
 const ReqoreMessage = memo(
   forwardRef<HTMLDivElement, IReqoreMessageProps>(
@@ -194,7 +197,7 @@ const ReqoreMessage = memo(
                 {title && isPanelSurfaceMessage(theme, true) ? (
                   // On the panel surface a message is a callout, and its title is drawn as a
                   // callout's label: bold, at the message's own size — not a heading.
-                  <ReqoreSpan size={size} effect={{ weight: 'bold' }} className='reqore-message-title'>
+                  <ReqoreSpan size={size} effect={BOLD_TITLE_EFFECT} className='reqore-message-title'>
                     {title}
                   </ReqoreSpan>
                 ) : title && (

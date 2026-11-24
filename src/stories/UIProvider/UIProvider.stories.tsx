@@ -2,6 +2,7 @@ import { StoryObj } from '@storybook/react';
 import { expect } from 'storybook/test';
 import { TReqoreHexColor } from '../../components/Effect';
 import { MONO_FONT } from '../../constants/fonts';
+import { IReqoreTheme } from '../../constants/theme';
 import ReqoreUIProvider from '../../containers/UIProvider';
 import {
   ReqoreButton,
@@ -19,6 +20,7 @@ import {
   ReqoreTextarea,
 } from '../../index';
 import { StoryMeta } from '../utils';
+import { TRANSPARENT_LAYOUT } from '../utils/themedSurface';
 
 const meta = {
   title: 'Utilities/UI Provider',
@@ -225,9 +227,15 @@ export const TransparentLayout: Story = {
  * theme.panel — one surface and one hairline for every panel-like container
  * ---------------------------------------------------------------------------------------------- */
 
-const SurfaceSample = ({ label, panel }: { label: string; panel?: { main: TReqoreHexColor; border: TReqoreHexColor } }) => (
+const DERIVED_SURFACE_THEME: Partial<IReqoreTheme> = { main: '#121212' };
+const PANEL_SURFACE_THEME: Partial<IReqoreTheme> = {
+  main: '#121212',
+  panel: { main: '#141417', border: '#2d2d33' },
+};
+
+const SurfaceSample = ({ label, theme }: { label: string; theme: Partial<IReqoreTheme> }) => (
   <div style={{ background: '#0c0c0e', padding: 24, flex: '1 1 0', minWidth: 0 }}>
-    <ReqoreUIProvider theme={{ main: '#121212', panel }} layoutWrapperProps={{ transparent: true }}>
+    <ReqoreUIProvider theme={theme} layoutWrapperProps={TRANSPARENT_LAYOUT}>
       <ReqoreLayoutContent>
         <ReqoreContent style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <ReqoreP>{label}</ReqoreP>
@@ -277,8 +285,8 @@ export const ThemedPanelSurface: Story = {
   },
   render: () => (
     <div style={{ display: 'flex', gap: 0 }}>
-      <SurfaceSample label='Derived from main (default)' />
-      <SurfaceSample label='theme.panel = { main: #141417, border: #2d2d33 }' panel={{ main: '#141417', border: '#2d2d33' }} />
+      <SurfaceSample label='Derived from main (default)' theme={DERIVED_SURFACE_THEME} />
+      <SurfaceSample label='theme.panel = { main: #141417, border: #2d2d33 }' theme={PANEL_SURFACE_THEME} />
     </div>
   ),
   play: async ({ canvasElement }) => {

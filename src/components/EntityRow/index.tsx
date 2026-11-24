@@ -438,6 +438,10 @@ const ReqoreEntityRow = memo(
     ) => {
       const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
       const secondarySize = useMemo(() => getOneLessSize(size), [size]);
+      const descriptionTextEffect = useMemo(
+        (): IReqoreEffect => ({ ...getSecondaryTextEffect(theme, 0.7), ...descriptionEffect }),
+        [theme, descriptionEffect]
+      );
 
       const hasAvatar = !!avatar && showIcon !== false;
       const hasIcon = !hasAvatar && (showIcon ?? (!!icon || !!iconImage)) && (!!icon || !!iconImage);
@@ -567,7 +571,7 @@ const ReqoreEntityRow = memo(
                   <ReqoreP
                     as={getReqoreTextElement(description)}
                     size={secondarySize}
-                    effect={{ ...getSecondaryTextEffect(theme, 0.7), ...descriptionEffect }}
+                    effect={descriptionTextEffect}
                     className='reqore-entity-row-description'
                   >
                     {description}

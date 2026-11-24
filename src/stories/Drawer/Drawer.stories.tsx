@@ -1,7 +1,7 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { expect, fireEvent, userEvent, waitFor } from 'storybook/test';
 import { noop } from 'lodash';
-import { useLayoutEffect, useState } from 'react';
+import { useCallback, useLayoutEffect, useState } from 'react';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreDrawerProps, ReqoreDrawer, TPosition } from '../../components/Drawer';
 import { IReqoreInputProps } from '../../components/Input';
@@ -125,7 +125,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const Template: StoryFn<typeof ReqoreDrawer> = (args) => {
+const Template = (args: IReqoreDrawerProps) => {
   const confirmAction = useReqoreProperty('confirmAction');
 
   return (
@@ -372,7 +372,7 @@ export const FrostedByAppDefaults: Story = {
   },
   // The meta's own opacity and blur would win over the app's defaults, and Storybook drops an
   // `undefined` arg rather than letting it override, so they are taken out here.
-  render: (args, context) => Template({ ...args, opacity: undefined, blur: undefined }, context),
+  render: (args) => Template({ ...args, opacity: undefined, blur: undefined }),
   args: {
     options: { dialogOpacity: 0.72, dialogBlur: 22, backdropBlur: 5 },
   },
@@ -1117,6 +1117,7 @@ export const CalmTitleSizes: Story = {
 /** A page whose button opens a drawer with no backdrop, as a details panel beside a list. */
 const DetailsBesideThePage = () => {
   const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
 
   return (
     <>
@@ -1129,7 +1130,7 @@ const DetailsBesideThePage = () => {
           hasBackdrop={false}
           size='400px'
           label='Order details'
-          onClose={() => setOpen(false)}
+          onClose={close}
         >
           <ReqoreP>Order 1042, shipped yesterday.</ReqoreP>
           <ReqoreButton>Track it</ReqoreButton>

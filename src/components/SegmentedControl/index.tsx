@@ -510,11 +510,14 @@ const ReqoreSegmentedControl = memo(
       // fitSize: the frame (its padding and its 1px border, top and bottom) comes out of
       // the items, so the control as a whole is the size's height.
       const fittedItemHeight = SIZE_TO_PX[size] - 2 * (CONTAINER_PADDING + (flat ? 0 : 1));
-      const fittedItemStyle = {
-        height: fittedItemHeight,
-        minHeight: fittedItemHeight,
-        maxHeight: fittedItemHeight,
-      };
+      const fittedItemStyle = useMemo(
+        () => ({
+          height: fittedItemHeight,
+          minHeight: fittedItemHeight,
+          maxHeight: fittedItemHeight,
+        }),
+        [fittedItemHeight]
+      );
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
 
       const [_value, _setValue] = useState<string | undefined>(
@@ -759,6 +762,80 @@ const ReqoreSegmentedControl = memo(
         [visibleItems, _value]
       );
 
+      // The "More" button and its list, kept from one render to the next: the popover is a memo
+      // component, and a new object each render would draw it again for nothing.
+      const moreButtonProps = useMemo(
+        () => ({
+          icon: 'ArrowDownSLine' as IReqoreIconName,
+          flat: true,
+          transparent: true,
+          size,
+          pill,
+          fluid: stretch,
+          // Exactly what a visible selected segment gets: it is the same state. An
+          // `active` (filled) "More" drew one selection two ways.
+          intent: hiddenSelectedIntent,
+          // ...and its count: a folded "Drafts 1" still says how many
+          badge: hiddenSelectedItem?.badge,
+          customTheme:
+            isSelectedHidden && !hiddenSelectedIntent
+              ? { main: getReadableColorFrom(theme.main) }
+              : customTheme,
+          className: 'reqore-segmented-control-item reqore-segmented-control-more',
+          label: moreLabel,
+          style: fitSize ? fittedItemStyle : undefined,
+        }),
+        [
+          size,
+          pill,
+          stretch,
+          hiddenSelectedIntent,
+          hiddenSelectedItem?.badge,
+          isSelectedHidden,
+          theme.main,
+          customTheme,
+          moreLabel,
+          fitSize,
+          fittedItemStyle,
+        ]
+      );
+
+      const moreMenu = useMemo(
+        () => (
+          <ReqoreMenu customTheme={customTheme}>
+            {hiddenItems.map((overflowItem) => (
+              <ReqoreMenuItem
+                {...overflowItem.props}
+                key={overflowItem.value}
+                {...omitBy(
+                  {
+                    icon: overflowItem.icon,
+                    rightIcon: overflowItem.rightIcon,
+                    // a folded "Healthy 3" keeps its count
+                    badge: overflowItem.badge,
+                  },
+                  isUndefined
+                )}
+                disabled={overflowItem.disabled}
+                selected={overflowItem.value === _value}
+                intent={
+                  overflowItem.value === _value
+                    ? overflowItem.activeIntent || activeIntent
+                    : undefined
+                }
+                onClick={(_event, _itemId, closePopover) => {
+                  handleSelect(overflowItem.value);
+                  closePopover?.();
+                }}
+              >
+                {overflowItem.label}
+              </ReqoreMenuItem>
+            ))}
+          </ReqoreMenu>
+        ),
+        [customTheme, hiddenItems, _value, activeIntent, handleSelect]
+      );
+
       if (!items || items.length === 0) {
         return null;
       }
@@ -882,65 +959,14 @@ const ReqoreSegmentedControl = memo(
             >
               <ReqorePopover
                 component={ReqoreButton}
-                componentProps={{
-                  icon: 'ArrowDownSLine' as IReqoreIconName,
-                  flat: true,
-                  transparent: true,
-                  size,
-                  pill,
-                  fluid: stretch,
-                  // Exactly what a visible selected segment gets: it is the same state. An
-                  // `active` (filled) "More" drew one selection two ways.
-                  intent: hiddenSelectedIntent,
-                  // ...and its count: a folded "Drafts 1" still says how many
-                  badge: hiddenSelectedItem?.badge,
-                  customTheme:
-                    isSelectedHidden && !hiddenSelectedIntent
-                      ? { main: getReadableColorFrom(theme.main) }
-                      : customTheme,
-                  className:
-                    'reqore-segmented-control-item reqore-segmented-control-more',
-                  label: moreLabel,
-                  style: fitSize ? fittedItemStyle : undefined,
-                }}
+                componentProps={moreButtonProps}
                 closeOnOutsideClick
                 isReqoreComponent
                 noWrapper
                 handler='hoverStay'
                 // the hidden segments' only way in: a tap opens it too
                 opensOnTap
-                content={
-                  <ReqoreMenu customTheme={customTheme}>
-                    {hiddenItems.map((overflowItem) => (
-                      <ReqoreMenuItem
-                        {...overflowItem.props}
-                        key={overflowItem.value}
-                        {...omitBy(
-                          {
-                            icon: overflowItem.icon,
-                            rightIcon: overflowItem.rightIcon,
-                            // a folded "Healthy 3" keeps its count
-                            badge: overflowItem.badge,
-                          },
-                          isUndefined
-                        )}
-                        disabled={overflowItem.disabled}
-                        selected={overflowItem.value === _value}
-                        intent={
-                          overflowItem.value === _value
-                            ? overflowItem.activeIntent || activeIntent
-                            : undefined
-                        }
-                        onClick={(_event, _itemId, closePopover) => {
-                          handleSelect(overflowItem.value);
-                          closePopover?.();
-                        }}
-                      >
-                        {overflowItem.label}
-                      </ReqoreMenuItem>
-                    ))}
-                  </ReqoreMenu>
-                }
+                content={moreMenu}
               />
             </StyledItemWrapper>
           )}

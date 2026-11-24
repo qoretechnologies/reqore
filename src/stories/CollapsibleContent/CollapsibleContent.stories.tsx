@@ -10,7 +10,7 @@ import ReqoreLayoutContent from '../../components/Layout/content';
 import ReqoreUIProvider from '../../containers/UIProvider';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import { ReqoreP } from '../../components/Paragraph';
-import { DEFAULT_INTENTS } from '../../constants/theme';
+import { DEFAULT_INTENTS, IReqoreTheme } from '../../constants/theme';
 import { StoryMeta } from '../utils';
 import { IntentArg, SizeArg, argManager } from '../utils/args';
 
@@ -633,10 +633,12 @@ export const ButtonBelow: Story = {
 /** Eighteen orders, a list taller than its reveal's clip. */
 const ORDERS = Array.from({ length: 18 }, (_, index) => `Order ${1040 + index} is waiting for payment`);
 
+const QUIET_REVEAL_THEME: Partial<IReqoreTheme> = { main: '#121212', revealLook: 'quiet' };
+
 /** A reveal under a list, in a theme that draws its reveals quiet (`theme.revealLook: 'quiet'`). */
 const QuietRevealOfAList = () => (
   <div className='quiet-reveal' style={{ width: 420 }}>
-    <ReqoreUIProvider theme={{ main: '#121212', revealLook: 'quiet' }}>
+    <ReqoreUIProvider theme={QUIET_REVEAL_THEME}>
       <ReqoreLayoutContent>
         <ReqoreContent style={{ padding: 16 }}>
           <ReqoreCollapsibleContent
