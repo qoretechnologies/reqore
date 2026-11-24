@@ -1223,7 +1223,7 @@ const ReqoreTable = ({
     }
 
     return foldActionsColumns(
-      prepareColumns(fullColumns, columnModifiers, zoomSize),
+      prepareColumns(fullColumns, columnModifiers, zoomSize, { headerEffect, sortIndicator, theme }),
       actionsMenuColumnIds,
       zoomSize,
       touch,
@@ -1250,6 +1250,9 @@ const ReqoreTable = ({
     getExpandId,
     expandRowTooltip,
     collapseRowTooltip,
+    headerEffect,
+    sortIndicator,
+    theme,
   ]);
 
   useUpdateEffect(() => {

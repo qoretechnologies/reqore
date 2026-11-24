@@ -9,14 +9,23 @@ import {
   IReqoreTableSort,
   TReqoreTableCellAction,
 } from '.';
+import { getFontFamily } from '../../constants/fonts';
 import {
+  CONTROL_VERTICAL_PADDING_FROM_SIZE,
   ICON_FROM_SIZE,
+  PADDING_FROM_SIZE,
   SIZES,
   SIZE_TO_MODIFIER,
   SIZE_TO_PX,
+  TEXT_FROM_SIZE,
   TOUCH_TARGET_PX,
   TSizes,
+  WEIGHT_TO_NUMBER,
 } from '../../constants/sizes';
+import { IReqoreTheme } from '../../constants/theme';
+import { getTextSize } from '../../helpers/typeScale';
+import { getOneLessSize, isStringSize } from '../../helpers/utils';
+import { IReqoreEffect } from '../Effect';
 import { NARROW_CONTAINER_BREAKPOINT_PX } from '../../hooks/useNarrowContainer';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqorePanelSubAction } from '../Panel';
@@ -680,10 +689,101 @@ export const getOnlyShownColumns = (
   }, []);
 };
 
+/** How a table draws its headers, for measuring them (`getColumnHeaderWidth`). */
+export interface IReqoreTableHeaderLook {
+  /** The table's `headerEffect`: a header's words are drawn in the header's type with it. */
+  headerEffect?: IReqoreEffect;
+  /** The table's `sortIndicator`: with `'arrow'` a sorted header draws an arrow beside its words. */
+  sortIndicator?: 'wash' | 'arrow';
+  /** The theme, for its text sizes and its font. */
+  theme?: IReqoreTheme;
+}
+
+/** One canvas for every table header measured; none where there is no canvas (a test's DOM), and words are guessed. */
+let headerMeasureContext: CanvasRenderingContext2D | null | undefined;
+const getHeaderMeasureContext = (): CanvasRenderingContext2D | null => {
+  if (headerMeasureContext === undefined) {
+    try {
+      headerMeasureContext =
+        typeof document === 'undefined' ||
+        (typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent))
+          ? null
+          : document.createElement('canvas').getContext('2d');
+    } catch {
+      headerMeasureContext = null;
+    }
+  }
+
+  return headerMeasureContext;
+};
+
+/**
+ * The width a column's header takes as it is drawn: its words in the header's type (uppercase, thick and spaced by
+ * default, as `headerEffect` and the column's own `header.effect` say), its icon, the arrow it may show when sorted,
+ * and its button's padding and edge. 0 for a header that is not words (an element), which cannot be measured here.
+ */
+export const getColumnHeaderWidth = (
+  column: IReqoreTableColumn,
+  tableSize: TSizes = 'normal',
+  { headerEffect, sortIndicator, theme }: IReqoreTableHeaderLook = {}
+): number => {
+  const words = column.header?.label ?? column.header?.children;
+
+  if (typeof words !== 'string' && typeof words !== 'number') {
+    return 0;
+  }
+
+  const effect: IReqoreEffect = {
+    uppercase: true,
+    weight: 'thick',
+    textSize: getOneLessSize(tableSize),
+    spaced: 1,
+    ...headerEffect,
+    ...column.header?.effect,
+  };
+  const text = effect.uppercase ? String(words).toUpperCase() : String(words);
+  const textSize = effect.textSize ?? tableSize;
+  const fontSize = isStringSize(textSize)
+    ? theme
+      ? getTextSize(theme, textSize as TSizes)
+      : TEXT_FROM_SIZE[textSize as TSizes]
+    : parseFloat(String(textSize)) || TEXT_FROM_SIZE[tableSize];
+  const weight =
+    typeof effect.weight === 'number' ? effect.weight : WEIGHT_TO_NUMBER[effect.weight ?? 'normal'];
+  const family = theme?.fontFamily
+    ? getFontFamily(theme.fontFamily)
+    : typeof document !== 'undefined' && document.body
+      ? getComputedStyle(document.body).fontFamily
+      : 'sans-serif';
+  const context = getHeaderMeasureContext();
+  let textWidth = text.length * fontSize * 0.62;
+
+  if (context) {
+    context.font = `${weight} ${fontSize}px ${family}`;
+    textWidth = context.measureText(text).width;
+  }
+
+  const spacing = (effect.spaced ?? 0) * text.length;
+  const iconWidth = ICON_FROM_SIZE[tableSize] + PADDING_FROM_SIZE[tableSize] / 2;
+  const icon = column.header?.icon ? iconWidth : 0;
+  const sortArrow = column.sortable && sortIndicator === 'arrow' ? iconWidth : 0;
+  // the compact button's padding on both sides and its 1px edge, and a pixel each side for rounding
+  const chrome = 2 * CONTROL_VERTICAL_PADDING_FROM_SIZE[tableSize] + 2 + 2;
+
+  return Math.ceil(textWidth + spacing + icon + sortArrow + chrome);
+};
+
+/**
+ * The columns as a table draws them: each one's width at the table's size, and a floor of its header as drawn
+ * (`getColumnHeaderWidth`), so no column is narrower than its header and no header is cut. A column declared
+ * narrower (a 60px "Slowest 5%") is as wide as its header; one that cannot fit is dropped or scrolled to, as any
+ * column too wide for its table is. The floor is the column's `minWidth`, so `getColumnRenderedWidth` reports it.
+ */
 export const prepareColumns = (
   columns: IReqoreTableColumn[],
   columnModifiers: { [key: string]: { [key: string]: any } },
-  size: TSizes = 'normal'
+  size: TSizes = 'normal',
+  headerLook: IReqoreTableHeaderLook = {}
 ): IReqoreTableColumn[] => {
   // We need to set the width of each column
   return columns.map((column) => {
@@ -692,17 +792,26 @@ export const prepareColumns = (
         ...column,
         header: {
           ...column.header,
-          columns: prepareColumns(column.header.columns, columnModifiers, size),
+          columns: prepareColumns(column.header.columns, columnModifiers, size, headerLook),
         },
       };
     }
 
     const newWidth = calculateMinimumCellWidth(column.width || 20, size, column.header?.icon);
+    const headerWidth = getColumnHeaderWidth(column, size, headerLook);
+    // a cap below the header gives way to it: the header is never cut
+    const floor = headerWidth
+      ? {
+          minWidth: Math.max(column.minWidth ?? 0, headerWidth),
+          ...(column.maxWidth !== undefined ? { maxWidth: Math.max(column.maxWidth, headerWidth) } : {}),
+        }
+      : {};
 
     return {
       ...column,
       width: newWidth * SIZE_TO_MODIFIER[size],
       grow: column.grow || (column.width ? undefined : 1),
+      ...floor,
       ...(columnModifiers?.[column.dataId] || {}),
     };
   });

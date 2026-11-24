@@ -3559,3 +3559,77 @@ export const ANumberCellIsUpright: Story = {
   },
 };
 
+
+/** An endpoints list whose number column is declared narrower than its header, as a host declares one. */
+const NARROW_HEADER_COLUMNS: IReqoreTableColumn[] = [
+  { dataId: 'endpoint', header: { label: 'Endpoint' }, grow: 2 },
+  { dataId: 'calls', header: { label: 'Calls' }, width: 70, align: 'right' },
+  { dataId: 'slowest', header: { label: 'Slowest 5%' }, width: 60, align: 'right', sortable: true },
+];
+
+const NARROW_HEADER_DATA = [
+  { _selectId: 'orders', endpoint: '/orders', calls: 12040, slowest: '820 ms' },
+  { _selectId: 'invoices', endpoint: '/invoices', calls: 3112, slowest: '1.4 s' },
+  { _selectId: 'customers', endpoint: '/customers', calls: 845, slowest: '310 ms' },
+];
+
+/** Every header's words are whole: none of the boxes they are drawn in is cut short. */
+const expectHeadersWhole = (canvasElement: HTMLElement) => {
+  const cells = canvasElement.querySelectorAll<HTMLElement>('.reqore-table-header-cell');
+  expect(cells.length).toBeGreaterThan(0);
+  for (const cell of cells) {
+    for (const box of [cell, ...Array.from(cell.querySelectorAll<HTMLElement>('*'))]) {
+      expect(box.scrollWidth, `"${cell.textContent}" is whole`).toBeLessThanOrEqual(box.clientWidth + 1);
+    }
+  }
+};
+
+export const ANarrowColumnKeepsItsHeader: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'An endpoints list whose last column is declared 60px wide under the header Slowest 5%, sorted by it with an arrow. The column is as wide as its header as drawn (its words, the arrow and the padding), so no header is cut; it read "Slowest …" on a 2,560px desktop.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreTable
+      label='Endpoints'
+      columns={NARROW_HEADER_COLUMNS}
+      data={NARROW_HEADER_DATA}
+      sort={{ by: 'slowest', direction: 'desc' }}
+      sortIndicator='arrow'
+      height={300}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByText('/orders');
+    await waitFor(() => expectHeadersWhole(canvasElement));
+  },
+};
+
+export const ANarrowColumnKeepsItsHeaderOnAPhone: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'The same endpoints list on a phone (390 px): the Slowest 5% column is as wide as its header there too, and every header is whole.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreTable
+      label='Endpoints'
+      columns={NARROW_HEADER_COLUMNS}
+      data={NARROW_HEADER_DATA}
+      height={300}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByText('/orders');
+    await waitFor(() => expectHeadersWhole(canvasElement));
+  },
+};
