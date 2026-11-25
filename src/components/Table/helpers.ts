@@ -30,6 +30,7 @@ import { NARROW_CONTAINER_BREAKPOINT_PX } from '../../hooks/useNarrowContainer';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqorePanelSubAction } from '../Panel';
 import { hasRowActionLabel } from '../RowActionsMenu/hasRowActionLabel';
+import { sidewaysFadeMask } from '../../helpers/sidewaysFade';
 
 /** A padded cell's space on each side of what it holds (`cell.padded` 'both' or 'horizontal'). */
 export const TABLE_CELL_HORIZONTAL_PADDING_PX = 10;
@@ -44,6 +45,44 @@ export const flipSortDirection = (direction: 'asc' | 'desc'): 'asc' | 'desc' =>
  * nothing scrolling under it looks exactly like an unpinned one.
  */
 export const TABLE_OVERFLOW_ATTRIBUTE = 'data-reqore-table-overflow';
+
+/**
+ * Set by the body on itself and on the header while unpinned columns are hidden
+ * past an edge that no column is pinned to: `left`, `right` or `left right`,
+ * absent otherwise. That edge fades out (`tableEdgeFade`), so a table that
+ * scrolls sideways says so where no scrollbar does (a phone draws none). An
+ * edge with a pinned column already says it with the pinned column's shadow,
+ * and fading it would fade the pinned column itself.
+ */
+export const TABLE_FADE_ATTRIBUTE = 'data-reqore-table-fade';
+
+/** How far a table's faded edge fades out, in px. */
+export const TABLE_EDGE_FADE_PX = 32;
+
+/** Which edges of a sideways-scrolling box have more past them, as `TABLE_FADE_ATTRIBUTE` holds them. */
+export const tableFadeSides = (
+  element: { scrollLeft: number; clientWidth: number; scrollWidth: number },
+  pinned: { left: boolean; right: boolean }
+): string =>
+  [
+    !pinned.left && element.scrollLeft > 1 ? 'left' : undefined,
+    !pinned.right && element.scrollLeft + element.clientWidth < element.scrollWidth - 1
+      ? 'right'
+      : undefined,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+/**
+ * The faded edges of a table's scroll container (its body and its header), read
+ * from `TABLE_FADE_ATTRIBUTE`: a mask, so whatever the table sits on shows
+ * through, and the content reads as going on past the edge.
+ */
+export const tableEdgeFade = `
+  &[${TABLE_FADE_ATTRIBUTE}='left'] { ${sidewaysFadeMask(true, false, TABLE_EDGE_FADE_PX)} }
+  &[${TABLE_FADE_ATTRIBUTE}='right'] { ${sidewaysFadeMask(false, true, TABLE_EDGE_FADE_PX)} }
+  &[${TABLE_FADE_ATTRIBUTE}='left right'] { ${sidewaysFadeMask(true, true, TABLE_EDGE_FADE_PX)} }
+`;
 
 /** Carried by every pinned body and header cell: which edge it is pinned to. */
 export const TABLE_PIN_ATTRIBUTE = 'data-reqore-table-pin';

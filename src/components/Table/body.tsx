@@ -14,7 +14,15 @@ import { css } from 'styled-components';
 import styled from '../../helpers/styled';
 import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import { TABLE_OVERFLOW_ATTRIBUTE, getRowExpandId, getTotalColumnsWidth } from './helpers';
+import {
+  TABLE_FADE_ATTRIBUTE,
+  TABLE_OVERFLOW_ATTRIBUTE,
+  calculatePinOffsets,
+  getRowExpandId,
+  getTotalColumnsWidth,
+  tableEdgeFade,
+  tableFadeSides,
+} from './helpers';
 import ReqoreTableRow, { IReqoreTableRowOptions } from './row';
 import { ReqoreTableScrollbar } from './scrollbar';
 
@@ -69,6 +77,7 @@ const hideNativeScrollbar = css`
 const StyledFixedList = styled(FixedSizeList)`
   box-sizing: border-box;
   ${hideNativeScrollbar}
+  ${tableEdgeFade}
 `;
 
 /* Used only when rows can expand. A panel's height is not knowable up front and
@@ -77,6 +86,7 @@ const StyledFixedList = styled(FixedSizeList)`
 const StyledVariableList = styled(VariableSizeList)`
   box-sizing: border-box;
   ${hideNativeScrollbar}
+  ${tableEdgeFade}
 `;
 
 const StyledNonVirtualizedBody = styled.div<{ maxHeight?: number; minWidth: number }>`
@@ -84,6 +94,7 @@ const StyledNonVirtualizedBody = styled.div<{ maxHeight?: number; minWidth: numb
     box-sizing: border-box;
     overflow: auto;
     ${hideNativeScrollbar}
+    ${tableEdgeFade}
     ${maxHeight || maxHeight === 0
       ? css`
           max-height: ${maxHeight}px;
@@ -125,6 +136,16 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       () => getTotalColumnsWidth(rest.columns, rest.tableWidth),
       [rest.columns, rest.tableWidth]
     );
+
+    /* The edges a column is pinned to: such an edge says it has more under it with the pinned
+       column's shadow, and is never faded (a fade there would fade the pinned column). */
+    const pinnedEdges = useMemo(() => {
+      const pins = Object.values(calculatePinOffsets(rest.columns, rest.tableWidth));
+      return {
+        left: pins.some(({ pin }) => pin === 'left'),
+        right: pins.some(({ pin }) => pin === 'right'),
+      };
+    }, [rest.columns, rest.tableWidth]);
 
     const expandable = !!rest.renderExpandedRow;
 
@@ -211,10 +232,16 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
         ]
           .filter(Boolean)
           .join(' ');
+        // An edge with more past it and no pinned column fades instead (TABLE_FADE_ATTRIBUTE):
+        // a phone draws no scrollbar, so without it a table that scrolls sideways hides
+        // columns without saying so.
+        const fade = tableFadeSides(el, pinnedEdges);
         for (const target of [el, headerRef.current]) {
           if (!target) continue;
           if (sides) target.setAttribute(TABLE_OVERFLOW_ATTRIBUTE, sides);
           else target.removeAttribute(TABLE_OVERFLOW_ATTRIBUTE);
+          if (fade) target.setAttribute(TABLE_FADE_ATTRIBUTE, fade);
+          else target.removeAttribute(TABLE_FADE_ATTRIBUTE);
         }
       };
 
@@ -237,7 +264,7 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
         observer?.disconnect();
       };
       // `totalColumnsWidth`: the columns changing width changes what is hidden too.
-    }, [headerRef, onScrollChange, targetRef, totalColumnsWidth]);
+    }, [headerRef, onScrollChange, targetRef, totalColumnsWidth, pinnedEdges]);
 
     /**
      * Measured heights of open detail panels, keyed by expansion id.

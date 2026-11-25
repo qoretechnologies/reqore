@@ -471,7 +471,7 @@ export const PinnedActions: Story = {
     docs: {
       description: {
         story:
-          'Pinning is a behaviour, not a look. At rest a pinned column paints the same surface as its neighbours — no darker base, no filled header cell, no shadow at its edge. The edge shadow is drawn only while a column really is hidden under it, which the body says through the `data-reqore-table-overflow` attribute on its scroll containers; the play narrows the host to make that happen.',
+          'Pinning is a behaviour, not a look. At rest a pinned column paints the same surface as its neighbours — no darker base, no filled header cell, no shadow at its edge. The edge shadow is drawn only while a column really is hidden under it, which the body says through the `data-reqore-table-overflow` attribute on its scroll containers; the play narrows the host to make that happen. A pinned edge is never faded: its shadow says there is more.',
       },
     },
   },
@@ -533,9 +533,15 @@ export const PinnedActions: Story = {
     await waitFor(() => expect(body.getAttribute('data-reqore-table-overflow')).toBe('right'));
     expect(header.getAttribute('data-reqore-table-overflow')).toBe('right');
     await waitFor(() => expect(getComputedStyle(pinned, '::after').opacity).toBe('1'));
+    // The pinned column's shadow says it; the edge itself is not faded, which would fade the
+    // pinned column with it.
+    expect(body.getAttribute('data-reqore-table-fade')).toBeNull();
+    expect(getComputedStyle(body).maskImage).toBe('none');
     body.scrollLeft = body.scrollWidth;
     await waitFor(() => expect(body.getAttribute('data-reqore-table-overflow')).toBe('left'));
     await waitFor(() => expect(getComputedStyle(pinned, '::after').opacity).toBe('0'));
+    // The selection column is pinned to the left edge, so that edge is not faded either.
+    expect(body.getAttribute('data-reqore-table-fade')).toBeNull();
     host.style.width = '100%';
     await waitFor(() => expect(body.getAttribute('data-reqore-table-overflow')).toBeNull());
   },

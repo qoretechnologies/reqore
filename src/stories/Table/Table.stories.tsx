@@ -3633,3 +3633,82 @@ export const ANarrowColumnKeepsItsHeaderOnAPhone: Story = {
     await waitFor(() => expectHeadersWhole(canvasElement));
   },
 };
+
+/** A table of six columns, far wider together than a phone, with nothing pinned. */
+const WIDE_COLUMNS: IReqoreTableColumn[] = [
+  { dataId: 'order', header: { label: 'Order' }, width: 120 },
+  { dataId: 'customer', header: { label: 'Customer' }, width: 160 },
+  { dataId: 'status', header: { label: 'Status' }, width: 120 },
+  { dataId: 'amount', header: { label: 'Amount' }, width: 120, align: 'right' },
+  { dataId: 'region', header: { label: 'Region' }, width: 140 },
+  { dataId: 'updated', header: { label: 'Updated' }, width: 140 },
+];
+
+const WIDE_DATA = [
+  { order: 'ORD-1001', customer: 'Northwind', status: 'Shipped', amount: '$1,240', region: 'Europe', updated: '2 min ago' },
+  { order: 'ORD-1002', customer: 'Contoso', status: 'Waiting', amount: '$310', region: 'Americas', updated: '8 min ago' },
+  { order: 'ORD-1003', customer: 'Fabrikam', status: 'Shipped', amount: '$5,020', region: 'Asia', updated: '1 h ago' },
+  { order: 'ORD-1004', customer: 'Adventure Works', status: 'Failed', amount: '$76', region: 'Europe', updated: '3 h ago' },
+];
+
+/** The mask a table's scroll box draws, as the browser computes it. */
+const maskOf = (element: Element) => {
+  const style = getComputedStyle(element);
+  return style.maskImage || style.getPropertyValue('-webkit-mask-image');
+};
+
+const renderWideTable = () => (
+  <ReqoreTable label='Orders' columns={WIDE_COLUMNS} data={WIDE_DATA} height={260} />
+);
+
+export const ScrollsSidewaysWithAFadeOnAPhone: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story: `Renders a table of six columns on a phone (390 px), far wider than the screen, with nothing pinned. A phone draws no scrollbar, so the right edge of the rows and the header fades out to say there are more columns; the left edge, with nothing before it, does not.`,
+      },
+    },
+  },
+  render: renderWideTable,
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByText('ORD-1001');
+    const body = requiredElement<HTMLElement>('.reqore-table-body', 'the body', canvasElement);
+    const header = requiredElement<HTMLElement>('.reqore-table-header-wrapper', 'the header', canvasElement);
+    await waitFor(() => expect(body.getAttribute('data-reqore-table-fade')).toBe('right'));
+    expect(header.getAttribute('data-reqore-table-fade')).toBe('right');
+    for (const box of [body, header]) {
+      expect(maskOf(box), 'the edge with more fades').toContain('linear-gradient');
+    }
+  },
+};
+
+export const ScrollsSidewaysWithAFadeOnAPhoneAtTheEnd: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story: `The same wide table on a phone, scrolled sideways as far as it goes: the left edge fades, since columns are now hidden before it, and the right edge, with nothing past it, is drawn whole. Scrolled to the middle, both edges fade.`,
+      },
+    },
+  },
+  render: renderWideTable,
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByText('ORD-1001');
+    const body = requiredElement<HTMLElement>('.reqore-table-body', 'the body', canvasElement);
+    const header = requiredElement<HTMLElement>('.reqore-table-header-wrapper', 'the header', canvasElement);
+    await waitFor(() => expect(body.getAttribute('data-reqore-table-fade')).toBe('right'));
+
+    body.scrollLeft = 120;
+    await waitFor(() => expect(body.getAttribute('data-reqore-table-fade')).toBe('left right'));
+
+    body.scrollLeft = body.scrollWidth;
+    await waitFor(() => expect(body.getAttribute('data-reqore-table-fade')).toBe('left'));
+    expect(header.getAttribute('data-reqore-table-fade')).toBe('left');
+    // the header follows the body to its end, and fades on the same edge
+    await waitFor(() => expect(header.scrollLeft).toBe(body.scrollLeft));
+    expect(maskOf(body)).toContain('linear-gradient');
+  },
+};

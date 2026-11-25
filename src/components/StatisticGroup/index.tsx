@@ -13,6 +13,7 @@ import { PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { getPanelHairlineColor } from '../../helpers/colors';
+import { sidewaysFadeMask } from '../../helpers/sidewaysFade';
 import styled from '../../helpers/styled';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { NARROW_CONTAINER_BREAKPOINT_PX, useNarrowContainer } from '../../hooks/useNarrowContainer';
@@ -102,19 +103,8 @@ export const STATISTIC_GROUP_CUT_FADE_PX = 32;
  * edge reads as one the strip scrolls to, not as the last. The fade at an end goes once the strip is
  * scrolled to it.
  */
-const cutEdgeMask = ({ start, end }: ICutEdges) => {
-  if (!start && !end) return undefined;
-  const fade = `${STATISTIC_GROUP_CUT_FADE_PX}px`;
-  const stops = [
-    start ? `transparent 0, #000 ${fade}` : '#000 0',
-    end ? `#000 calc(100% - ${fade}), transparent 100%` : '#000 100%',
-  ];
-  const gradient = `linear-gradient(to right, ${stops.join(', ')})`;
-  return css`
-    -webkit-mask-image: ${gradient};
-    mask-image: ${gradient};
-  `;
-};
+const cutEdgeMask = ({ start, end }: ICutEdges) =>
+  sidewaysFadeMask(start, end, STATISTIC_GROUP_CUT_FADE_PX);
 
 /**
  * Which edges of a strip that scrolls sideways cut a figure, measured when it scrolls and when it resizes,

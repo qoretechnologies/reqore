@@ -20,6 +20,7 @@ import {
   getOnlyShownColumns,
   getTotalColumnsWidth,
   partitionPinnedColumns,
+  tableEdgeFade,
 } from './helpers';
 
 export type TColumnsUpdater = <T extends keyof IReqoreTableColumn>(
@@ -117,6 +118,8 @@ const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
     /* A sideways swipe is the table's to handle (it scrolls the body, which this
        header follows); the page still pans up and down under a finger. */
     touch-action: pan-y;
+    /* Fades with the body it follows, on the same edges (the body sets the attribute on both). */
+    ${tableEdgeFade}
 
     flex-shrink: 0;
     flex-flow: column;
