@@ -726,6 +726,63 @@ export const OverflowNamesWhatItHolds: Story = {
   },
 };
 
+export const PhoneStripFoldsOnDrawnWidths: Story = {
+  tags: ['touch'],
+  parameters: {
+    docs: {
+      description: {
+        story: `Renders a section's tabs in a 320px card on a phone (380px), their labels drawn in spaced-out
+          capitals, a long one carrying a count ("Business documents 7"). The strip folds on the width each tab
+          is drawn at, not on an estimate of its label, so a tab that does not fit goes into "More" and nothing runs
+          past the card's edge.`,
+      },
+    },
+    qlip: { viewport: { width: 380, height: 700 } },
+  },
+  render: (args) => {
+    // Labels drawn in capitals and spaced out (`labelEffect`), a page's own tab look: an
+    // estimate made from the label's letters comes out short of the drawn width.
+    const labelEffect = { uppercase: true, spaced: 1, weight: 'bold' } as const;
+    const tabs = [
+      { id: 'overview', label: 'Overview', labelEffect },
+      { id: 'crawls', label: 'Crawls', badge: 12, labelEffect },
+      { id: 'documents', label: 'Business documents', badge: 7, labelEffect },
+      { id: 'settings', label: 'Settings', badge: 3, labelEffect },
+    ] satisfies IReqoreTabsProps['tabs'];
+
+    return (
+      <div className='story-tabs-card' style={{ width: 320, maxWidth: '100%', boxSizing: 'border-box' }}>
+        <ReqoreTabs {...args} tabs={tabs} activeTab='overview' activeTabMarker='line' flat padded={false}>
+          {tabs.map((tab) => (
+            <ReqoreTabsContent tabId={tab.id} key={tab.id}>
+              <ReqoreH3>{tab.label}</ReqoreH3>
+            </ReqoreTabsContent>
+          ))}
+        </ReqoreTabs>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      const card = canvasElement.querySelector<HTMLElement>('.story-tabs-card')!;
+      const list = card.querySelector<HTMLElement>('.reqore-tabs-list')!;
+      const right = card.getBoundingClientRect().right;
+      const drawn = Array.from(list.children) as HTMLElement[];
+      expect(drawn.length).toBeGreaterThan(1);
+      // every tab, the fold included, ends inside the card
+      for (const tab of drawn) {
+        expect(tab.getBoundingClientRect().right).toBeLessThanOrEqual(right + 0.5);
+      }
+      // and the strip folded, but only what does not fit: the room left beside the last tab
+      // is less than the narrowest folded tab would need
+      const more = list.querySelector<HTMLElement>('.reqore-tabs-list-item-menu');
+      expect(more).toBeTruthy();
+      const used = drawn.reduce((sum, tab) => sum + tab.getBoundingClientRect().width, 0);
+      expect(list.getBoundingClientRect().width - used).toBeLessThan(160);
+    });
+  },
+};
+
 export const OverflowMenuCustomHeight: Story = {
   parameters: {
     docs: {

@@ -1,5 +1,5 @@
 import { isArray, isObject } from 'lodash';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useMeasure } from 'react-use';
 import { css } from 'styled-components';
 import { IReqoreTabsListItem, IReqoreTabsProps } from '.';
@@ -227,19 +227,40 @@ export const getLabelLength = (
  * @param tabsSize the size of the tabs
  * @returns the total width or height of the tabs
  */
+/** A tab's width as it was last drawn, by `measuredTabKey`. */
+export type TReqoreTabsMeasuredWidths = Record<string, number>;
+
+/** The key a drawn width is kept under: a tab by its id, the fold by the label it shows. */
+export const measuredTabKey = (
+  item: IReqoreTabsListItem | IReqoreTabsListItem[],
+  activeTab?: string | number,
+  overflowLabel?: TReqoreTabsOverflowLabel
+): string =>
+  isArray(item)
+    ? `__more__:${getMoreLabel(item, activeTab, overflowLabel)}`
+    : `tab:${String(item.id)}`;
+
 export const getTabsLength = (
   items: (IReqoreTabsListItem | IReqoreTabsListItem[])[],
   type: 'width' | 'height' = 'width',
   activeTab?: string | number,
   tabsSize?: TSizes,
   theme?: IReqoreTheme,
-  overflowLabel?: TReqoreTabsOverflowLabel
+  overflowLabel?: TReqoreTabsOverflowLabel,
+  /** Each tab's width as it was last drawn (`measuredTabKey`), used in place of the estimate. */
+  measured?: TReqoreTabsMeasuredWidths
 ): number =>
-  items.reduce((len, item) => {
+  items.reduce((len, item, index) => {
     if (type === 'height') {
       const rows = getLabelLength(item, activeTab, tabsSize, theme, overflowLabel) / 4 || 1;
 
       return len + rows * 15 + 10;
+    }
+
+    // A drawn tab is its own width and the gap before it: the strip's gap sits only between tabs.
+    const drawn = measured?.[measuredTabKey(item, activeTab, overflowLabel)];
+    if (drawn) {
+      return len + drawn + (index ? GAP_FROM_SIZE[tabsSize] : 0);
     }
 
     const labelLength: number =
@@ -257,7 +278,8 @@ const getTransformedItems = (
   activeTab?: string | number,
   tabsSize?: TSizes,
   theme?: IReqoreTheme,
-  overflowLabel?: TReqoreTabsOverflowLabel
+  overflowLabel?: TReqoreTabsOverflowLabel,
+  measured?: TReqoreTabsMeasuredWidths
 ): (IReqoreTabsListItem | IReqoreTabsListItem[])[] => {
   if (!size) {
     return items;
@@ -265,7 +287,7 @@ const getTransformedItems = (
   let newItems = [...items];
 
   while (
-    getTabsLength(newItems, type, activeTab, tabsSize, theme, overflowLabel) > size &&
+    getTabsLength(newItems, type, activeTab, tabsSize, theme, overflowLabel, measured) > size &&
     newItems.length > 1
   ) {
     if (isArray(newItems[newItems.length - 1])) {
@@ -375,7 +397,22 @@ const ReqoreTabsList = ({
   overflowLabel,
   ...rest
 }: IReqoreTabsListProps) => {
-  const [ref, { width }] = useMeasure();
+  const [measureRef, { width }] = useMeasure<HTMLDivElement>();
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const setListRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      listRef.current = node;
+      measureRef(node as HTMLDivElement);
+    },
+    [measureRef]
+  );
+  /* Each tab's width as drawn: the strip folds on these rather than on an estimate of the
+     label, which can be a few pixels short (a count badge, a font) and let the last tab
+     run past the strip. Tabs that stretch (`fill`) or wrap their names are not drawn at
+     their own width, so they keep the estimate. */
+  const foldsOnDrawnWidths = !vertical && !fill && !wrapTabNames && !_testWidth;
+  const measuredWidths = useRef<TReqoreTabsMeasuredWidths>({});
+  const [measuredVersion, setMeasuredVersion] = useState(0);
   const theme = useReqoreTheme('main', customTheme, intent);
   const activeTabData = tabs.find((tab) => tab.id === activeTab);
   const currentTabColor: TReqoreHexColor =
@@ -396,10 +433,42 @@ const ReqoreTabsList = ({
             activeTab,
             size,
             theme,
-            overflowLabel
+            overflowLabel,
+            foldsOnDrawnWidths ? measuredWidths.current : undefined
           ),
-    [filteredItems, _testWidth, width, vertical, activeTab, size, theme, overflowLabel]
+    // `measuredVersion` stands for `measuredWidths`, a ref: a tab drawn at a new width.
+    [
+      filteredItems,
+      _testWidth,
+      width,
+      vertical,
+      activeTab,
+      size,
+      theme,
+      overflowLabel,
+      foldsOnDrawnWidths,
+      measuredVersion,
+    ]
   );
+
+  // Remember each drawn tab's width (and the fold's), and fold again when one changed.
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!foldsOnDrawnWidths || !list) return;
+    const drawn = Array.from(list.children) as HTMLElement[];
+    // one drawn element per item, in order; anything else and the widths can't be matched
+    if (drawn.length !== transformedItems.length) return;
+    let changed = false;
+    transformedItems.forEach((item, index) => {
+      const drawnWidth = drawn[index].getBoundingClientRect().width;
+      const key = measuredTabKey(item, activeTab, overflowLabel);
+      if (drawnWidth && Math.abs((measuredWidths.current[key] ?? 0) - drawnWidth) > 0.5) {
+        measuredWidths.current[key] = drawnWidth;
+        changed = true;
+      }
+    });
+    if (changed) setMeasuredVersion((version) => version + 1);
+  });
 
   return (
     <ReqoreThemeProvider theme={theme} customTheme={customTheme}>
@@ -409,7 +478,7 @@ const ReqoreTabsList = ({
         fill={fill}
         vertical={vertical}
         className={`${rest.className || ''} reqore-tabs-list`}
-        ref={ref}
+        ref={setListRef}
         flat={flat}
         activeTabMarker={activeTabMarker}
         theme={theme}
