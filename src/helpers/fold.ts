@@ -41,3 +41,32 @@ export const foldToFit = <T>(
 
   return arranged();
 };
+
+/**
+ * `foldToFit` for a row whose fold is labelled by what it holds (a function `overflowLabel`):
+ * folds with the label in full and with it in its short form ("+3"), which `tooWide` is told
+ * about, and keeps the full label unless the short one keeps more of the items that fold last
+ * on screen (or the row only fits with it). `short` says which one the row is drawn with. A fixed label has no short
+ * form: pass `shortens` false.
+ */
+export const foldToFitWithLabel = <T>(
+  items: T[],
+  tooWide: (arranged: (T | T[])[], short: boolean) => boolean,
+  foldsLast: (item: T) => boolean = () => false,
+  shortens = true
+): { arranged: (T | T[])[]; short: boolean } => {
+  const full = foldToFit(items, (arranged) => tooWide(arranged, false), foldsLast);
+  if (!shortens) {
+    return { arranged: full, short: false };
+  }
+  const short = foldToFit(items, (arranged) => tooWide(arranged, true), foldsLast);
+  // what must stay on screen (`foldsLast`) decides: the short label only where it keeps more of it
+  const kept = (arranged: (T | T[])[]) =>
+    arranged.filter((item) => !Array.isArray(item) && foldsLast(item as T)).length;
+  const useShort =
+    kept(short) > kept(full) || (tooWide(full, false) && !tooWide(short, true));
+  return useShort ? { arranged: short, short: true } : { arranged: full, short: false };
+};
+
+/** A fold's label in its short form: how many it holds ("+3"). */
+export const shortFoldLabel = (folded: unknown[]): string => `+${folded.length}`;

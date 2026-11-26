@@ -1,4 +1,4 @@
-import { badgeNeedsAttention, foldToFit } from '../src/helpers/fold';
+import { badgeNeedsAttention, foldToFit, foldToFitWithLabel, shortFoldLabel } from '../src/helpers/fold';
 
 type TItem = { id: string; width: number; badge?: unknown };
 
@@ -46,4 +46,41 @@ test('a badge needs attention only in red or amber', () => {
   expect(badgeNeedsAttention({ label: 3, intent: 'info' })).toBe(false);
   expect(badgeNeedsAttention(3)).toBe(false);
   expect(badgeNeedsAttention(undefined)).toBe(false);
+});
+
+describe('foldToFitWithLabel', () => {
+  // the fold is 160 wide with its label in full, 40 in its short form
+  const tooWideAt = (room: number) => (arranged: (TItem | TItem[])[], short: boolean) =>
+    arranged.reduce(
+      (sum, item) => sum + (Array.isArray(item) ? (short ? 40 : 160) : item.width),
+      0
+    ) > room;
+  const keepsA = (item: TItem) => item.id === 'a';
+
+  test('keeps the full label when what must stay fits beside it', () => {
+    const { arranged, short } = foldToFitWithLabel(row(['a', 'b', 'c', 'd']), tooWideAt(360), keepsA);
+    expect(ids(arranged)).toEqual(['a', 'b', '[c,d]']);
+    expect(short).toBe(false);
+  });
+
+  test('shortens the label when only the short form keeps what must stay on screen', () => {
+    // in full, "a" (100) and the fold (160) are 260: it folds too; short, "a" stays beside "+3"
+    const { arranged, short } = foldToFitWithLabel(row(['a', 'b', 'c', 'd']), tooWideAt(200), keepsA);
+    expect(ids(arranged)).toEqual(['a', '[b,c,d]']);
+    expect(short).toBe(true);
+  });
+
+  test('a row with nothing that must stay keeps the full label', () => {
+    const { short } = foldToFitWithLabel(row(['a', 'b', 'c', 'd']), tooWideAt(200));
+    expect(short).toBe(false);
+  });
+
+  test('a fixed label never shortens', () => {
+    const { short } = foldToFitWithLabel(row(['a', 'b', 'c', 'd']), tooWideAt(200), keepsA, false);
+    expect(short).toBe(false);
+  });
+
+  test('the short form says how many it holds', () => {
+    expect(shortFoldLabel([1, 2, 3])).toBe('+3');
+  });
 });

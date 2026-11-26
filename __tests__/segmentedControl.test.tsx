@@ -237,21 +237,45 @@ test('Shows "More" dropdown when items overflow container width', () => {
   expect(visibleItems.length).toBeLessThan(4);
 });
 
-test('Shows selected item label in "More" button when active item is hidden', () => {
+test('Keeps the chosen segment on screen while a plain one can fold in its place', () => {
+  const items = [
+    { value: 'day', label: 'Day' },
+    { value: 'week', label: 'Week' },
+    { value: 'month', label: 'Month' },
+    { value: 'year', label: 'Year' },
+  ];
+  const shown = () =>
+    Array.from(document.querySelectorAll('.reqore-segmented-control-item')).filter(
+      (item) => !item.classList.contains('reqore-segmented-control-more')
+    );
+  // the widest row that folds something, and still has a segment beside the fold
+  for (let width = 400; width >= 100; width -= 10) {
+    const { unmount } = renderControl({ _testWidth: width, items, value: 'year' });
+    if (document.querySelector('.reqore-segmented-control-more') && shown().length) break;
+    unmount();
+  }
+
+  const more = document.querySelector('.reqore-segmented-control-more')!;
+  // the chosen "Year", last in the row, is drawn as a segment; the fold holds plain ones
+  expect(shown().some((item) => item.textContent?.includes('Year'))).toBe(true);
+  expect(more.textContent).not.toContain('Year');
+});
+
+test('Shows the chosen item\'s label on "More" only when nothing else can fold', () => {
   renderControl({
-    _testWidth: 150,
+    _testWidth: 60,
     items: [
       { value: 'day', label: 'Day' },
       { value: 'week', label: 'Week' },
       { value: 'month', label: 'Month' },
       { value: 'year', label: 'Year' },
     ],
-    value: 'year', // This item will be hidden in the "More" group
+    value: 'year',
   });
 
   const moreButton = document.querySelector('.reqore-segmented-control-more');
   expect(moreButton).toBeTruthy();
-  // The "More" button should display the hidden selected item's label
+  // no room even for the chosen segment beside the fold: it folds and lends its label
   expect(moreButton!.textContent).toContain('Year');
   // ...and is marked the way a visible selected segment is: by the highlight, not a fill
   expect(document.querySelector('.reqore-segmented-control-indicator')).toBeTruthy();
@@ -545,10 +569,9 @@ test('A segment folded to fit keeps its count in the More menu', () => {
   expect(yearItem?.textContent).toContain('42');
 });
 
-test('foldToFit folds on the widths segments are drawn at, and "More" by the label it shows', () => {
-  // jsdom lays nothing out, so the drawn widths are given: a segment is 100px, "More" 60px,
-  // and "More" carrying a folded segment's label (once that one is picked) 40px — narrower
-  // than an estimate from that label, which is what folded a segment that had room.
+test('foldToFit folds on the widths segments are drawn at, and a picked folded segment comes back', () => {
+  // jsdom lays nothing out, so the drawn widths are given: a segment is 100px, "More" 60px
+  // (40px if it ever carried a folded segment's label).
   const original = Element.prototype.getBoundingClientRect;
   Element.prototype.getBoundingClientRect = function (this: HTMLElement) {
     let width = 0;
@@ -577,12 +600,12 @@ test('foldToFit folds on the widths segments are drawn at, and "More" by the lab
     ) as HTMLElement;
     fireEvent.click(year);
 
-    // "More" now reads "Year" and is drawn 40px: Day, Week and it (240) still fit, so Week
-    // stays — measured, not estimated from the label.
-    expect(document.querySelector('.reqore-segmented-control-more')?.textContent).toContain(
+    // the chosen "Year" comes back on screen and a plain segment folds in its place: Day, Year
+    // and "More" (260) fit on the drawn widths
+    expect(shown()).toEqual(['Day', 'Year']);
+    expect(document.querySelector('.reqore-segmented-control-more')?.textContent).not.toContain(
       'Year'
     );
-    expect(shown()).toEqual(['Day', 'Week']);
   } finally {
     Element.prototype.getBoundingClientRect = original;
   }
@@ -740,12 +763,26 @@ describe('an overflow label worded from the folded items', () => {
     );
   });
 
-  test('gives way to the chosen segment when that one is folded', () => {
+  test('keeps the chosen segment on screen and names the others', () => {
     renderPartlyFolded({ value: 'year', overflowLabel: nameTheFolded });
 
+    expect(shownItems().some((item) => item.textContent?.includes('Year'))).toBe(true);
     const more = document.querySelector('.reqore-segmented-control-more')!;
-    expect(more.textContent).toContain('Year');
-    expect(more.textContent).not.toContain('+');
+    expect(more.textContent).not.toContain('Year');
+  });
+
+  test('shortens the label to how many it holds when it does not fit in full', () => {
+    // a label far too long for any row: the fold falls back to its count
+    renderPartlyFolded({
+      value: 'day',
+      overflowLabel: (folded: { label?: string | number }[]) =>
+        `${folded.map((item) => item.label).join(' and ')} ${'and more '.repeat(20)}`,
+    });
+
+    const more = document.querySelector('.reqore-segmented-control-more')!;
+    const folded = defaultItems.length - shownItems().length;
+    // the button draws its label more than once (for its bold width)
+    expect(more.textContent).toMatch(new RegExp(`^(\\+${folded})+$`));
   });
 
   test('keeps the string form', () => {

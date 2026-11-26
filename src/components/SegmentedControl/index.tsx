@@ -34,7 +34,7 @@ import {
   getSecondaryTextColor,
   getThemePanelSurface,
 } from '../../helpers/colors';
-import { badgeNeedsAttention, foldToFit } from '../../helpers/fold';
+import { badgeNeedsAttention, foldToFitWithLabel, shortFoldLabel } from '../../helpers/fold';
 import { getControlTextSize } from '../../helpers/typeScale';
 import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -415,11 +415,18 @@ export type TReqoreSegmentedControlOverflowLabel =
   | string
   | ((folded: IReqoreSegmentedControlItem[]) => string);
 
-/** The overflow button's label for the items folded into it (`overflowLabel`). */
+/** The overflow button's label for the items folded into it (`overflowLabel`): a function's in
+ *  its short form ("+3") when the row does not fit with it in full. */
 export const getOverflowLabel = (
   overflowLabel: TReqoreSegmentedControlOverflowLabel = 'More',
-  folded: IReqoreSegmentedControlItem[]
-): string => (typeof overflowLabel === 'function' ? overflowLabel(folded) : overflowLabel);
+  folded: IReqoreSegmentedControlItem[],
+  short = false
+): string =>
+  typeof overflowLabel === 'function'
+    ? short
+      ? shortFoldLabel(folded)
+      : overflowLabel(folded)
+    : overflowLabel;
 const moreKey = (label: string | number) => `${MORE_KEY}:${label}`;
 
 const getItemsLength = (
@@ -428,13 +435,14 @@ const getItemsLength = (
   selectedValue?: string,
   overflowLabel: TReqoreSegmentedControlOverflowLabel = 'More',
   theme?: IReqoreTheme,
-  measured?: TMeasuredWidths
+  measured?: TMeasuredWidths,
+  shortOverflow = false
 ): number =>
   items.reduce((len, item) => {
     if (Array.isArray(item)) {
       // "More" group — its width as drawn with this label, else an estimate
       const isSelectedHidden = item.some((i) => i.value === selectedValue);
-      const foldedLabel = getOverflowLabel(overflowLabel, item);
+      const foldedLabel = getOverflowLabel(overflowLabel, item, shortOverflow);
       const moreLabel = isSelectedHidden
         ? item.find((i) => i.value === selectedValue)?.label ?? foldedLabel
         : foldedLabel;
@@ -455,7 +463,11 @@ const getItemsLength = (
 
 /**
  * Move items from the end into a "More" group until the row fits the available space
- * (`foldToFit`, shared with Tabs); a segment whose count needs attention folds last.
+ * (`foldToFitWithLabel`, shared with Tabs). The chosen segment and one whose count needs
+ * attention fold last, so where the reader is and what needs them stay on screen; the plain
+ * ones fold behind a function `overflowLabel` ("Never run +2"), in its short form ("+3") when
+ * that does not fit. A chosen segment folds, and lends its label to "More", only when nothing
+ * else can.
  */
 const getTransformedItems = (
   items: (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[],
@@ -465,18 +477,18 @@ const getTransformedItems = (
   overflowLabel: TReqoreSegmentedControlOverflowLabel = 'More',
   theme?: IReqoreTheme,
   measured?: TMeasuredWidths
-): (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[] => {
+): { arranged: (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[]; short: boolean } => {
   if (!availableWidth) {
-    return items;
+    return { arranged: items, short: false };
   }
 
-  // a segment whose count needs attention folds last
-  return foldToFit(
+  return foldToFitWithLabel(
     items as IReqoreSegmentedControlItem[],
-    (arranged) =>
-      getItemsLength(arranged, itemSize, selectedValue, overflowLabel, theme, measured) >
+    (arranged, short) =>
+      getItemsLength(arranged, itemSize, selectedValue, overflowLabel, theme, measured, short) >
       availableWidth,
-    (item) => badgeNeedsAttention(item.badge)
+    (item) => item.value === selectedValue || badgeNeedsAttention(item.badge),
+    typeof overflowLabel === 'function'
   );
 };
 
@@ -576,7 +588,7 @@ const ReqoreSegmentedControl = memo(
       }, [value]);
 
       // Transform items using the Tabs-style width estimation approach
-      const transformedItems = useMemo(
+      const { arranged: transformedItems, short: shortOverflow } = useMemo(
         () =>
           getTransformedItems(
             items,
@@ -631,7 +643,8 @@ const ReqoreSegmentedControl = memo(
       );
 
       // Get the label for the "More" button
-      const moreLabel = hiddenSelectedItem?.label ?? getOverflowLabel(overflowLabel, hiddenItems);
+      const moreLabel =
+        hiddenSelectedItem?.label ?? getOverflowLabel(overflowLabel, hiddenItems, shortOverflow);
 
       // Calculate indicator position. A selected segment folded into "More" is marked where it
       // is drawn — on "More", which carries its label — the same way a visible one is marked.
