@@ -692,6 +692,17 @@ const KEPT_BOTTOM_GROUP_STYLE = {
 } satisfies Record<string, React.CSSProperties>;
 
 /**
+ * The groups of a bar that stacks its actions where they do not fit (`STACKED_BOTTOM_ACTIONS_MAX`): kept on its
+ * one line, a group gives way down to its controls, so text in it that can wrap (why the action beside it cannot
+ * be used) wraps beside them. On a wrapping line the group went whole to the next line, its buttons read as on two
+ * lines, and the bar stacked, every button as wide as the bar, though everything fit.
+ */
+const KEPT_BOTTOM_LINE_GROUP_STYLE = {
+  left: { ...KEPT_BOTTOM_GROUP_STYLE.left, flex: '0 1 auto', minWidth: 'min-content' },
+  right: { ...KEPT_BOTTOM_GROUP_STYLE.right, flex: '0 1 auto', minWidth: 'min-content' },
+} satisfies Record<string, React.CSSProperties>;
+
+/**
  * A group of actions that keep their words, in that box: at its own width where the line has room, and down
  * to what its controls cannot do without where it does not, so a control that folds to its room (a
  * `foldToFit` segmented control) folds into the line under the title. At its own width always, the group
@@ -767,12 +778,81 @@ const PanelTitleActions = ({
 export const STACKED_BOTTOM_ACTIONS_MAX = 3;
 
 /**
- * Whether the actions in a bottom bar do not fit on its one line at their words' width: a box among them cut
- * (scrolled, or with words cut short), a group that folded something into its "⋯", or buttons on more than
- * one line.
+ * The least width text in a bottom bar keeps on its line (or the whole of it, when shorter): text that can wrap
+ * gives way to the actions beside it, but squeezed to a word a line it is no longer read. Below this the bar
+ * stacks.
  */
-const bottomActionsDoNotFit = (bar: HTMLElement): boolean => {
+export const BOTTOM_ACTIONS_TEXT_LEAST_WIDTH = 200;
+
+/** The px of a box's flex gap between `count` children. */
+const gapsOf = (box: HTMLElement, count: number): number =>
+  count > 1 ? (parseFloat(getComputedStyle(box).columnGap) || 0) * (count - 1) : 0;
+
+/**
+ * The width of `element` at its whole content (its max-content, within its own max-width), read with its flex
+ * and width set aside for the measurement and put back before anything is drawn.
+ */
+const getWholeWidth = (element: HTMLElement): number => {
+  const { flex, width } = element.style;
+
+  element.style.flex = '0 0 auto';
+  element.style.width = 'max-content';
+  const whole = element.getBoundingClientRect().width;
+  element.style.flex = flex;
+  element.style.width = width;
+
+  return whole;
+};
+
+/** Whether a child of a bar's group is a control (a button, a group of them) rather than text. */
+const isBottomActionControl = (element: HTMLElement): boolean =>
+  element.matches('.reqore-control, .reqore-control-group, .reqore-button');
+
+/**
+ * The least width a bottom bar's groups take on its one line: each control at its own width, and text that can
+ * wrap at `BOTTOM_ACTIONS_TEXT_LEAST_WIDTH` (or its whole width, when shorter), with the gaps between them.
+ */
+export const getBottomActionsLeastWidth = (bar: HTMLElement): number => {
+  const groups = Array.from(bar.children) as HTMLElement[];
+
+  return groups.reduce((total, group) => {
+    const children = Array.from(group.children) as HTMLElement[];
+    const least = children.reduce(
+      (sum, child) =>
+        sum +
+        (isBottomActionControl(child)
+          ? child.getBoundingClientRect().width
+          : Math.min(getWholeWidth(child), BOTTOM_ACTIONS_TEXT_LEAST_WIDTH)),
+      0
+    );
+
+    return total + least + gapsOf(group, children.length);
+  }, gapsOf(bar, groups.length));
+};
+
+/** The px inside a bar's padding. */
+const getContentWidth = (bar: HTMLElement): number => {
+  const { paddingLeft, paddingRight } = getComputedStyle(bar);
+
+  return bar.clientWidth - (parseFloat(paddingLeft) || 0) - (parseFloat(paddingRight) || 0);
+};
+
+/**
+ * Whether the actions in a bottom bar do not fit on its one line at their words' width: a box among them cut
+ * (scrolled, or with words cut short), a group that folded something into its "⋯", the bar's content past its
+ * edge, its controls and a readable width of its text wider than the bar, or buttons on more than one line.
+ * Text that can wrap is counted at `BOTTOM_ACTIONS_TEXT_LEAST_WIDTH`, never at its whole sentence.
+ */
+export const bottomActionsDoNotFit = (bar: HTMLElement): boolean => {
   if (bar.querySelector('.reqore-control-group-overflow')) {
+    return true;
+  }
+
+  if (bar.scrollWidth > bar.clientWidth + 1) {
+    return true;
+  }
+
+  if (getBottomActionsLeastWidth(bar) > getContentWidth(bar) + 1) {
     return true;
   }
 
@@ -2517,6 +2597,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       () => !hasResponsiveActions(leftBottomActions) && !hasResponsiveActions(rightBottomActions),
       [hasResponsiveActions, leftBottomActions, rightBottomActions]
     );
+    /**
+     * A bar of kept actions that stacks where they do not fit keeps them on one line until then, each group giving
+     * way down to its controls (`KEPT_BOTTOM_LINE_GROUP_STYLE`); a bar that cannot stack wraps them.
+     */
+    const keepBottomLine = wrapKeptBottomActions && canStackBottomActions;
+    const keptBottomGroupStyle = keepBottomLine ? KEPT_BOTTOM_LINE_GROUP_STYLE : KEPT_BOTTOM_GROUP_STYLE;
 
     const renderNonResponsiveActions = useCallback(
       (align: 'flex-start' | 'center' | 'flex-end' = 'flex-end') =>
@@ -3900,7 +3986,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               size={contentSize || panelSize}
               noHorizontalPadding={noHorizontalPadding}
               $cornerInset={cornerInset}
-              $wrapKept={wrapKeptBottomActions}
+              $wrapKept={wrapKeptBottomActions && !keepBottomLine}
               ref={bottomBarRef}
               data-stacked={stackBottomActions || undefined}
             >
@@ -3936,8 +4022,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 <ReqoreControlGroup
                   {...PANEL_ACTIONS_MARK}
                   size={panelSize}
-                  wrap
-                  style={KEPT_BOTTOM_GROUP_STYLE.left}
+                  wrap={!keepBottomLine}
+                  style={keptBottomGroupStyle.left}
                 >
                   {leadingLeftBottomActions.map(renderNonResponsiveActions('flex-start'))}
                 </ReqoreControlGroup>
@@ -3958,8 +4044,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 <ReqoreControlGroup
                   {...PANEL_ACTIONS_MARK}
                   size={panelSize}
-                  wrap
-                  style={KEPT_BOTTOM_GROUP_STYLE.left}
+                  wrap={!keepBottomLine}
+                  style={keptBottomGroupStyle.left}
                 >
                   {trailingLeftBottomActions.map(renderNonResponsiveActions('flex-start'))}
                 </ReqoreControlGroup>
@@ -3969,8 +4055,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   {...PANEL_ACTIONS_MARK}
                   horizontalAlign='flex-end'
                   size={panelSize}
-                  wrap
-                  style={KEPT_BOTTOM_GROUP_STYLE.right}
+                  wrap={!keepBottomLine}
+                  style={keptBottomGroupStyle.right}
                 >
                   {leadingRightBottomActions.map(renderNonResponsiveActions())}
                 </ReqoreControlGroup>
@@ -3997,8 +4083,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   {...PANEL_ACTIONS_MARK}
                   horizontalAlign='flex-end'
                   size={panelSize}
-                  wrap
-                  style={KEPT_BOTTOM_GROUP_STYLE.right}
+                  wrap={!keepBottomLine}
+                  style={keptBottomGroupStyle.right}
                 >
                   {trailingRightBottomActions.map(renderNonResponsiveActions())}
                 </ReqoreControlGroup>

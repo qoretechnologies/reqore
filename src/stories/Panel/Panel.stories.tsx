@@ -4473,3 +4473,117 @@ export const KeptBottomActionsStackInANarrowPanel: Story = {
     await expect(new Set(mixed.buttons.map((button) => Math.round(button.top))).size).toBe(1);
   },
 };
+
+/**
+ * Why the action beside it cannot be used, as text that gives way to the actions and wraps inside the bar (a
+ * reason line a host draws through `as`). Its box shrinks (`flex: 0 1 auto`, `min-width: 0`), and so does the
+ * group holding it.
+ */
+const ReasonBesideAction = ({ reason }: { reason: string }) => (
+  <span
+    className='story-unavailable-reason'
+    style={{
+      display: 'inline-flex',
+      alignSelf: 'center',
+      flex: '0 1 auto',
+      minWidth: 0,
+      maxWidth: 420,
+      paddingRight: 10,
+      fontSize: 12,
+      lineHeight: 1.4,
+      whiteSpace: 'normal',
+      overflowWrap: 'anywhere',
+    }}
+  >
+    {reason}
+  </span>
+);
+
+/** A run drawer's bar: Close, the disabled Run, and why Run cannot be used, beside it. */
+const REASON_BOTTOM_ACTIONS: IReqorePanelProps['bottomActions'] = [
+  { label: 'Close', icon: 'CloseLine', responsive: false, position: 'left' },
+  {
+    label: 'Run',
+    icon: 'PlayLine',
+    responsive: false,
+    position: 'right',
+    disabled: true,
+  },
+  {
+    as: ReasonBesideAction,
+    props: {
+      reason:
+        'This instance is already running 3 of the 3 test runs its plan allows at once. Run this one when one of them ends.',
+    },
+    position: 'right',
+    responsive: false,
+  },
+];
+
+/** The bar of the panel in the box `name`, its buttons and its reason line. */
+const reasonBarOf = (name: string) => {
+  const bar = document.querySelector<HTMLElement>(`.reason-bar-${name} .reqore-panel-bottom-actions`)!;
+  const buttons = [...bar.querySelectorAll<HTMLElement>('.reqore-button')];
+  const reason = bar.querySelector<HTMLElement>('.story-unavailable-reason');
+
+  return { bar, buttons, reason };
+};
+
+const renderReasonBar = (name: string, width: number | string) => (
+  <div className={`reason-bar-${name}`} style={{ width, maxWidth: '100%' }}>
+    <ReqorePanel label='Run the test' bottomActions={REASON_BOTTOM_ACTIONS}>
+      <ReqoreP>The test runs against this instance with the case's own data.</ReqoreP>
+    </ReqorePanel>
+  </div>
+);
+
+export const BottomBarKeepsItsLineBesideAWrappingReason: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: `Renders a 583px panel whose bottom bar holds Close, a disabled Run and a long sentence saying why Run cannot be used. The sentence is text that can wrap, so it does not count as not fitting: the bar keeps one line, the buttons keep their own width and the sentence wraps beside Run.`,
+      },
+    },
+  },
+  render: () => renderReasonBar('desktop', 583),
+  play: async () => {
+    await waitFor(() => expect(reasonBarOf('desktop').buttons).toHaveLength(2));
+    // the bar has had its frame to decide
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    const { bar, buttons, reason } = reasonBarOf('desktop');
+    await expect(bar.dataset.stacked).toBeUndefined();
+    const [close, run] = buttons.map((button) => button.getBoundingClientRect());
+    const barBox = bar.getBoundingClientRect();
+    // each button at its words' width, not as wide as the bar
+    await expect(close.width).toBeLessThan(barBox.width / 2);
+    await expect(run.width).toBeLessThan(barBox.width / 2);
+    // on one line
+    await expect(Math.abs(close.top - run.top)).toBeLessThanOrEqual(1);
+    // the sentence wraps inside the bar
+    const reasonBox = reason!.getBoundingClientRect();
+    await expect(reasonBox.height).toBeGreaterThan(20);
+    await expect(reasonBox.right).toBeLessThanOrEqual(barBox.right + 0.5);
+  },
+};
+
+export const BottomBarWithAWrappingReasonStacksOnAPhone: Story = {
+  ...PHONE_STORY,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story: `Renders the same bar (Close, a disabled Run and why it cannot be used) on a phone. Close and Run do not fit beside the sentence at their own width, so the bar stacks them, each as wide as the bar.`,
+      },
+    },
+  },
+  render: () => renderReasonBar('phone', '100%'),
+  play: async () => {
+    await waitFor(() => expect(reasonBarOf('phone').bar.dataset.stacked).toBe('true'));
+    const { bar, buttons } = reasonBarOf('phone');
+    const barBox = bar.getBoundingClientRect();
+    for (const button of buttons) {
+      await expect(button.getBoundingClientRect().width).toBeGreaterThan(barBox.width * 0.8);
+    }
+  },
+};
