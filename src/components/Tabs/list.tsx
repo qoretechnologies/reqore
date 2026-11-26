@@ -19,6 +19,7 @@ import {
   getNthGradientColor,
 } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
+import { badgeNeedsAttention, foldToFit } from '../../helpers/fold';
 import { getControlTextSize } from '../../helpers/typeScale';
 import { calculateStringSizeInPixels, getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -284,28 +285,14 @@ const getTransformedItems = (
   if (!size) {
     return items;
   }
-  let newItems = [...items];
 
-  while (
-    getTabsLength(newItems, type, activeTab, tabsSize, theme, overflowLabel, measured) > size &&
-    newItems.length > 1
-  ) {
-    if (isArray(newItems[newItems.length - 1])) {
-      (newItems[newItems.length - 1] as IReqoreTabsListItem[]).unshift(
-        newItems[newItems.length - 2] as IReqoreTabsListItem
-      );
-      newItems[newItems.length - 2] = undefined!;
-    } else {
-      const lastItem = newItems[newItems.length - 1];
-      (newItems[newItems.length - 1] as IReqoreTabsListItem[]) = [
-        lastItem,
-      ] as IReqoreTabsListItem[];
-    }
-
-    newItems = newItems.filter((i) => i);
-  }
-
-  return newItems.filter((i) => i);
+  // a tab whose count needs attention folds last
+  return foldToFit(
+    items as IReqoreTabsListItem[],
+    (arranged) =>
+      getTabsLength(arranged, type, activeTab, tabsSize, theme, overflowLabel, measured) > size,
+    (tab) => badgeNeedsAttention(tab.badge)
+  );
 };
 
 type TReqoreTabListItemRendererProps = Pick<

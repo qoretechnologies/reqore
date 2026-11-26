@@ -34,6 +34,7 @@ import {
   getSecondaryTextColor,
   getThemePanelSurface,
 } from '../../helpers/colors';
+import { badgeNeedsAttention, foldToFit } from '../../helpers/fold';
 import { getControlTextSize } from '../../helpers/typeScale';
 import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -453,9 +454,8 @@ const getItemsLength = (
   }, 0);
 
 /**
- * Progressively move items from the end into a "More" group array until
- * the total estimated width fits within the available space.
- * Same algorithm as Tabs `getTransformedItems`.
+ * Move items from the end into a "More" group until the row fits the available space
+ * (`foldToFit`, shared with Tabs); a segment whose count needs attention folds last.
  */
 const getTransformedItems = (
   items: (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[],
@@ -470,28 +470,14 @@ const getTransformedItems = (
     return items;
   }
 
-  let newItems = [...items];
-
-  while (
-    getItemsLength(newItems, itemSize, selectedValue, overflowLabel, theme, measured) >
-      availableWidth &&
-    newItems.length > 1
-  ) {
-    const last = newItems[newItems.length - 1];
-    if (Array.isArray(last)) {
-      // Already have a More group — prepend the second-to-last item into it
-      last.unshift(
-        newItems[newItems.length - 2] as IReqoreSegmentedControlItem
-      );
-      newItems[newItems.length - 2] = undefined!;
-    } else {
-      // Convert last item into a More group
-      newItems[newItems.length - 1] = [last] as IReqoreSegmentedControlItem[];
-    }
-    newItems = newItems.filter((i) => i);
-  }
-
-  return newItems.filter((i) => i);
+  // a segment whose count needs attention folds last
+  return foldToFit(
+    items as IReqoreSegmentedControlItem[],
+    (arranged) =>
+      getItemsLength(arranged, itemSize, selectedValue, overflowLabel, theme, measured) >
+      availableWidth,
+    (item) => badgeNeedsAttention(item.badge)
+  );
 };
 
 const ReqoreSegmentedControl = memo(

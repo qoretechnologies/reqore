@@ -727,6 +727,74 @@ export const FoldNamesWhatItHolds: Story = {
   },
 };
 
+const ATTENTION_FILTERS = (
+  [
+    ['all', 'All', 48],
+    ['running', 'Running', 21],
+    ['failing', 'Failing', 16],
+    ['never-run', 'Never run', 7],
+    ['disabled', 'Disabled', 3],
+    ['archived', 'Archived', 1],
+  ] as const
+).map(([value, label, count]) => ({
+  value,
+  label,
+  // the count that needs a person is red; the rest are plain figures
+  badge:
+    value === 'failing'
+      ? { label: count, appearance: 'text' as const, intent: 'danger' as const }
+      : { label: count, appearance: 'text' as const },
+  props: { 'data-value': value },
+}));
+
+export const FoldKeepsTheCountThatNeedsAttention: Story = {
+  tags: ['touch'],
+  parameters: {
+    docs: {
+      description: {
+        story: `Renders a six-segment filter on a phone (390px) in a 360px slot, its "Failing 16" count in red. The
+          segments that do not fit fold behind "More", but the one whose count needs attention folds last:
+          "Failing 16" stays on screen beside "All", and the plain segments after and between them fold first.`,
+      },
+    },
+    qlip: { viewport: { width: 390, height: 844 } },
+  },
+  render: (args) => {
+    const [value, setValue] = useState('all');
+
+    return (
+      <div style={{ display: 'flex', boxSizing: 'border-box', width: 360, maxWidth: '100%' }}>
+        <div style={{ flex: '1 1 0', minWidth: 0 }}>
+          <ReqoreSegmentedControl
+            {...args}
+            items={ATTENTION_FILTERS}
+            value={value}
+            onChange={setValue}
+            foldToFit
+            overflowLabel={nameTheFolded}
+          />
+        </div>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      const control = canvasElement.querySelector<HTMLElement>('.reqore-segmented-control')!;
+      expect(control.querySelector('.reqore-segmented-control-more')).toBeTruthy();
+      const shown = Array.from(
+        control.querySelectorAll<HTMLElement>('.reqore-segmented-control-item[data-value]')
+      ).map((item) => item.dataset.value);
+      // the red count and the chosen segment stay on screen; a plain one between them folded
+      expect(shown).toContain('failing');
+      expect(shown).toContain('all');
+      expect(shown).not.toContain('running');
+      expect(control.getBoundingClientRect().right).toBeLessThanOrEqual(
+        control.parentElement!.getBoundingClientRect().right + 0.5
+      );
+    });
+  },
+};
+
 /* ------------------------------------------------------------------------------------------------
  * Per-item props
  * ---------------------------------------------------------------------------------------------- */
