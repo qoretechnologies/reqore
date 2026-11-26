@@ -703,3 +703,54 @@ describe('getSegmentedControlSurfaces: the chosen segment on the surfaces a them
     expect(thumbStyle().borderTopStyle).not.toBe('solid');
   });
 });
+
+describe('an overflow label worded from the folded items', () => {
+  const nameTheFolded = (folded: { value?: string; label?: string | number }[]) =>
+    folded.length > 1 ? `${folded[0].label} +${folded.length - 1}` : String(folded[0]?.label ?? '');
+
+  const shownItems = () =>
+    Array.from(document.querySelectorAll('.reqore-segmented-control-item')).filter(
+      (item) => !item.classList.contains('reqore-segmented-control-more')
+    );
+
+  /** Draws the control at the widest width that folds part of it (some segments shown, some folded). */
+  const renderPartlyFolded = (props: Record<string, unknown>) => {
+    for (let width = 400; width >= 100; width -= 10) {
+      const { unmount } = renderControl({ ...props, _testWidth: width });
+      if (document.querySelector('.reqore-segmented-control-more') && shownItems().length) {
+        return;
+      }
+      unmount();
+    }
+    throw new Error('no width folds part of the control');
+  };
+
+  test('names the segments folded into it, never a bare "More"', () => {
+    const overflowLabel = vi.fn(nameTheFolded);
+    renderPartlyFolded({ value: 'day', overflowLabel });
+
+    const more = document.querySelector('.reqore-segmented-control-more')!;
+    const folded = defaultItems.slice(shownItems().length);
+    expect(more.textContent).toContain(nameTheFolded(folded));
+    expect(more.textContent).not.toContain('More');
+    // given the folded items themselves
+    const lastFolded = overflowLabel.mock.calls.at(-1)![0];
+    expect(lastFolded.map((item) => item.value)).toEqual(
+      folded.map((item) => item.value)
+    );
+  });
+
+  test('gives way to the chosen segment when that one is folded', () => {
+    renderPartlyFolded({ value: 'year', overflowLabel: nameTheFolded });
+
+    const more = document.querySelector('.reqore-segmented-control-more')!;
+    expect(more.textContent).toContain('Year');
+    expect(more.textContent).not.toContain('+');
+  });
+
+  test('keeps the string form', () => {
+    renderPartlyFolded({ value: 'day', overflowLabel: 'Plus' });
+
+    expect(document.querySelector('.reqore-segmented-control-more')!.textContent).toContain('Plus');
+  });
+});

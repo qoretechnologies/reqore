@@ -485,3 +485,27 @@ test('hideTabsList suppresses the strip while still rendering the active tab con
   // `.reqore-tabs` still apply.
   expect(document.querySelectorAll('.reqore-tabs').length).toBe(1);
 });
+
+test('an overflow label worded from the folded tabs says how many it holds', () => {
+  const overflowLabel = (folded: { id?: string | number }[]) => `${folded.length} more`;
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTabs _testWidth={300} tabs={overflowingTabs as any} overflowLabel={overflowLabel}>
+            <ReqoreTabsContent tabId='tab1'>Tab 1 content</ReqoreTabsContent>
+          </ReqoreTabs>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+
+  const menu = document.querySelector('.reqore-tabs-list-item-menu')!;
+  const shown = Array.from(document.querySelectorAll('.reqore-tabs-list-item')).filter(
+    (item) => !menu.contains(item) && !item.contains(menu)
+  );
+  const folded = overflowingTabs.length - shown.length;
+  expect(folded).toBeGreaterThan(0);
+  expect(menu.textContent).toContain(`${folded} more`);
+  expect(menu.textContent).not.toContain('More');
+});

@@ -118,16 +118,19 @@ export const DEFAULT_TABS_OVERFLOW_MENU_MAX_HEIGHT = `min(${TABS_OVERFLOW_MENU_M
 const isTabHidden = (items: IReqoreTabsListItem[], activeTab?: string | number) =>
   items.find((item) => item?.id === activeTab);
 
+/** The "More" tab's label: fixed, or worded from the tabs folded into it. */
+export type TReqoreTabsOverflowLabel = string | number | ((folded: IReqoreTabsListItem[]) => string);
+
 const getMoreLabel = (
   items: IReqoreTabsListItem[],
   activeTab?: string | number,
-  overflowLabel: string | number = 'More'
+  overflowLabel: TReqoreTabsOverflowLabel = 'More'
 ) => {
   if (isTabHidden(items, activeTab)) {
     return isTabHidden(items, activeTab)?.label;
   }
 
-  return overflowLabel;
+  return typeof overflowLabel === 'function' ? overflowLabel(items) : overflowLabel;
 };
 
 /** A badge's width as a tab (or a segment) draws it: its text one size down, and its padding. */
@@ -164,13 +167,17 @@ export const getLabelLength = (
   activeTab?: string | number,
   tabsSize: TSizes = 'normal',
   /** The theme whose `typeScale` the labels render at; Reqore's own scale without one. */
-  theme?: IReqoreTheme
+  theme?: IReqoreTheme,
+  /** The "More" tab's label (`overflowLabel`), so a folded group is reckoned at the width it is drawn. */
+  overflowLabel?: TReqoreTabsOverflowLabel
 ) => {
   if (!item) {
     return 0;
   }
 
-  const label: string | number = isArray(item) ? getMoreLabel(item, activeTab) : item.label;
+  const label: string | number = isArray(item)
+    ? getMoreLabel(item, activeTab, overflowLabel)
+    : item.label;
   const icon: number =
     isArray(item) || item.icon ? ICON_FROM_SIZE[tabsSize] + PADDING_FROM_SIZE[tabsSize] : 0;
   const rightIcon = (item as IReqoreTagProps).rightIcon
@@ -225,11 +232,12 @@ export const getTabsLength = (
   type: 'width' | 'height' = 'width',
   activeTab?: string | number,
   tabsSize?: TSizes,
-  theme?: IReqoreTheme
+  theme?: IReqoreTheme,
+  overflowLabel?: TReqoreTabsOverflowLabel
 ): number =>
   items.reduce((len, item) => {
     if (type === 'height') {
-      const rows = getLabelLength(item, activeTab, tabsSize, theme) / 4 || 1;
+      const rows = getLabelLength(item, activeTab, tabsSize, theme, overflowLabel) / 4 || 1;
 
       return len + rows * 15 + 10;
     }
@@ -237,7 +245,7 @@ export const getTabsLength = (
     const labelLength: number =
       PADDING_FROM_SIZE[tabsSize] +
       GAP_FROM_SIZE[tabsSize] +
-      getLabelLength(item, activeTab, tabsSize, theme);
+      getLabelLength(item, activeTab, tabsSize, theme, overflowLabel);
 
     return len + labelLength;
   }, 0);
@@ -248,7 +256,8 @@ const getTransformedItems = (
   type: 'width' | 'height' = 'width',
   activeTab?: string | number,
   tabsSize?: TSizes,
-  theme?: IReqoreTheme
+  theme?: IReqoreTheme,
+  overflowLabel?: TReqoreTabsOverflowLabel
 ): (IReqoreTabsListItem | IReqoreTabsListItem[])[] => {
   if (!size) {
     return items;
@@ -256,7 +265,7 @@ const getTransformedItems = (
   let newItems = [...items];
 
   while (
-    getTabsLength(newItems, type, activeTab, tabsSize, theme) > size &&
+    getTabsLength(newItems, type, activeTab, tabsSize, theme, overflowLabel) > size &&
     newItems.length > 1
   ) {
     if (isArray(newItems[newItems.length - 1])) {
@@ -386,9 +395,10 @@ const ReqoreTabsList = ({
             'width',
             activeTab,
             size,
-            theme
+            theme,
+            overflowLabel
           ),
-    [filteredItems, _testWidth, width, vertical, activeTab, size, theme]
+    [filteredItems, _testWidth, width, vertical, activeTab, size, theme, overflowLabel]
   );
 
   return (

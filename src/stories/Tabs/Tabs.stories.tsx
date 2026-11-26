@@ -682,6 +682,50 @@ export const OverflowMenuSizing: Story = {
   },
 };
 
+const shortTabs = Array.from({ length: 12 }, (_, index) => ({
+  id: `short${index + 1}`,
+  label: `Tab ${index + 1}`,
+})) satisfies IReqoreTabsProps['tabs'];
+
+export const OverflowNamesWhatItHolds: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: `Renders a 360px strip of 12 short tabs whose overflow label is a function of the tabs folded into it,
+          worded as their count: the fold reads "12 more" (say), never a bare "More", and that number is every tab not
+          shown in the strip.`,
+      },
+    },
+  },
+  render: (args) => (
+    <div style={{ width: '360px' }}>
+      <ReqoreTabs
+        {...args}
+        _testWidth={360}
+        tabs={shortTabs}
+        overflowLabel={(folded) => `${folded.length} more`}
+      >
+        {shortTabs.map((tab) => (
+          <ReqoreTabsContent tabId={tab.id} key={tab.id}>
+            <ReqoreH3>{tab.label}</ReqoreH3>
+          </ReqoreTabsContent>
+        ))}
+      </ReqoreTabs>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      const menu = canvasElement.querySelector<HTMLElement>('.reqore-tabs-list-item-menu')!;
+      expect(menu).toBeTruthy();
+      const shown = Array.from(
+        canvasElement.querySelectorAll<HTMLElement>('.reqore-tabs-list-item')
+      ).filter((item) => !menu.contains(item) && !item.contains(menu));
+      expect(menu.textContent).toContain(`${shortTabs.length - shown.length} more`);
+      expect(menu.textContent).not.toContain('More');
+    });
+  },
+};
+
 export const OverflowMenuCustomHeight: Story = {
   parameters: {
     docs: {

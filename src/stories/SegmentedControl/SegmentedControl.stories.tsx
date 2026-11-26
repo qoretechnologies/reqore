@@ -658,6 +658,75 @@ export const FoldToFitBesideATitle: Story = {
   },
 };
 
+const QOG_FILTERS = (
+  [
+    ['all', 'All'],
+    ['running', 'Running'],
+    ['failing', 'Failing'],
+    ['never-run', 'Never run'],
+    ['disabled', 'Disabled'],
+  ] as const
+).map(([value, label]) => ({ value, label }));
+
+/**
+ * Names the folded segments, as `overflowLabel` worded from them: the first one and how many more. A label listing
+ * every folded segment would be as wide as they are, so folding would never make room; this one stays about one
+ * segment wide.
+ */
+const nameTheFolded = (folded: { label?: string | number }[]) =>
+  folded.length > 1 ? `${folded[0].label} +${folded.length - 1}` : String(folded[0]?.label ?? '');
+
+export const FoldNamesWhatItHolds: Story = {
+  tags: ['touch'],
+  parameters: {
+    docs: {
+      description: {
+        story: `Renders a five-segment filter on a phone (390px) whose overflow label is worded from the segments
+          folded into it: the first one and how many more ("Never run +1"). The segments that do not fit fold behind
+          a button that says what it holds, never a bare "More", and the control still fits its row.`,
+      },
+    },
+    qlip: { viewport: { width: 390, height: 844 } },
+  },
+  render: (args) => {
+    const [value, setValue] = useState('all');
+
+    return (
+      <div style={{ display: 'flex', boxSizing: 'border-box', width: 340, maxWidth: '100%' }}>
+        <div style={{ flex: '1 1 0', minWidth: 0 }}>
+          <ReqoreSegmentedControl
+            {...args}
+            items={QOG_FILTERS}
+            value={value}
+            onChange={setValue}
+            foldToFit
+            overflowLabel={nameTheFolded}
+          />
+        </div>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      const control = canvasElement.querySelector<HTMLElement>('.reqore-segmented-control')!;
+      const more = control.querySelector<HTMLElement>('.reqore-segmented-control-more');
+      expect(more).toBeTruthy();
+      const shown = Array.from(
+        control.querySelectorAll<HTMLElement>('.reqore-segmented-control-item')
+      ).filter((item) => !item.classList.contains('reqore-segmented-control-more'));
+      const folded = QOG_FILTERS.slice(shown.length);
+      expect(folded.length).toBeGreaterThan(0);
+      // the button names what it holds, not "More"
+      expect(more!.textContent).toContain(nameTheFolded(folded));
+      expect(more!.textContent).not.toContain('More');
+      // and the control still fits its row
+      expect(control.getBoundingClientRect().right).toBeLessThanOrEqual(
+        control.parentElement!.getBoundingClientRect().right + 0.5
+      );
+    });
+  },
+};
+
 /* ------------------------------------------------------------------------------------------------
  * Per-item props
  * ---------------------------------------------------------------------------------------------- */

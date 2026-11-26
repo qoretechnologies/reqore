@@ -134,8 +134,14 @@ export interface IReqoreSegmentedControlProps
    * to `'More'` — override to translate. When a hidden item is currently
    * selected, its own label wins over this default so the selection stays
    * visible.
+   *
+   * A function is given the items folded into the menu and names them, so the button
+   * says what it holds rather than a bare "More": `(items) => `${items[0].label} +${items.length - 1}``.
+   * The control folds against the width of the label it returns, so keep it about one
+   * segment wide: a label listing every folded item is as wide as they are, and folding
+   * them then makes no room (everything ends up folded).
    */
-  overflowLabel?: string;
+  overflowLabel?: TReqoreSegmentedControlOverflowLabel;
   /**
    * Keep every segment at its own width and fold the ones that do not fit into "More".
    * The control takes the room its parent gives it (a toolbar slot that is
@@ -402,13 +408,24 @@ export const estimateItemWidth = (
  *  showed (`moreKey`) — the label of the selected segment when that one is folded. */
 type TMeasuredWidths = Record<string, number>;
 const MORE_KEY = '__more__';
+
+/** The overflow button's label: fixed, or worded from the items folded into it. */
+export type TReqoreSegmentedControlOverflowLabel =
+  | string
+  | ((folded: IReqoreSegmentedControlItem[]) => string);
+
+/** The overflow button's label for the items folded into it (`overflowLabel`). */
+export const getOverflowLabel = (
+  overflowLabel: TReqoreSegmentedControlOverflowLabel = 'More',
+  folded: IReqoreSegmentedControlItem[]
+): string => (typeof overflowLabel === 'function' ? overflowLabel(folded) : overflowLabel);
 const moreKey = (label: string | number) => `${MORE_KEY}:${label}`;
 
 const getItemsLength = (
   items: (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[],
   itemSize: TSizes = 'normal',
   selectedValue?: string,
-  overflowLabel: string = 'More',
+  overflowLabel: TReqoreSegmentedControlOverflowLabel = 'More',
   theme?: IReqoreTheme,
   measured?: TMeasuredWidths
 ): number =>
@@ -416,9 +433,10 @@ const getItemsLength = (
     if (Array.isArray(item)) {
       // "More" group — its width as drawn with this label, else an estimate
       const isSelectedHidden = item.some((i) => i.value === selectedValue);
+      const foldedLabel = getOverflowLabel(overflowLabel, item);
       const moreLabel = isSelectedHidden
-        ? item.find((i) => i.value === selectedValue)?.label ?? overflowLabel
-        : overflowLabel;
+        ? item.find((i) => i.value === selectedValue)?.label ?? foldedLabel
+        : foldedLabel;
       if (measured?.[moreKey(moreLabel)]) {
         return len + measured[moreKey(moreLabel)];
       }
@@ -444,7 +462,7 @@ const getTransformedItems = (
   availableWidth: number,
   itemSize: TSizes = 'normal',
   selectedValue?: string,
-  overflowLabel: string = 'More',
+  overflowLabel: TReqoreSegmentedControlOverflowLabel = 'More',
   theme?: IReqoreTheme,
   measured?: TMeasuredWidths
 ): (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[] => {
@@ -627,7 +645,7 @@ const ReqoreSegmentedControl = memo(
       );
 
       // Get the label for the "More" button
-      const moreLabel = hiddenSelectedItem?.label ?? overflowLabel;
+      const moreLabel = hiddenSelectedItem?.label ?? getOverflowLabel(overflowLabel, hiddenItems);
 
       // Calculate indicator position. A selected segment folded into "More" is marked where it
       // is drawn — on "More", which carries its label — the same way a visible one is marked.
