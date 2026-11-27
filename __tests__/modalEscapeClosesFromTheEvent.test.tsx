@@ -46,9 +46,14 @@ const Host = ({ confirmOnClose }: { confirmOnClose?: boolean }) => {
 };
 
 /** The provider's Escape stack, as text. */
-const Stack = () => (
-  <span data-testid='stack'>{(useReqoreProperty('escClosableModals') ?? []).length}</span>
-);
+/* The Escape stack is one array kept current in place (a dialog opening re-renders nothing), so it is read when
+   asked, not drawn. */
+let escStack: string[] = [];
+const Stack = () => {
+  escStack = useReqoreProperty('escClosableModals') ?? [];
+  return null;
+};
+const stackSize = () => escStack.length;
 
 test('Escape closes a modal from the key, not while the provider renders', async () => {
   const errors = await collectingErrors(async () => {
@@ -123,7 +128,7 @@ test('a modal that goes while another is above it leaves the Escape stack', asyn
       <Two />
     </ReqoreUIProvider>
   );
-  await waitFor(() => expect(screen.getByTestId('stack').textContent).toBe('2'));
+  await waitFor(() => expect(stackSize()).toBe(2));
   fireEvent.click(screen.getByText('close lower'));
-  await waitFor(() => expect(screen.getByTestId('stack').textContent).toBe('1'));
+  await waitFor(() => expect(stackSize()).toBe(1));
 });

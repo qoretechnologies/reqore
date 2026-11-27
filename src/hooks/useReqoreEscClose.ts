@@ -29,7 +29,6 @@ export const useReqoreEscClose = ({
   confirmOnClose,
 }: IUseReqoreEscCloseOptions): void => {
   const id = useMemo(() => nanoid(), []);
-  const escClosableModals = useReqoreProperty('escClosableModals');
   const closeModalsOnEscPress = useReqoreProperty('closeModalsOnEscPress');
   const add = useReqoreProperty('addEscClosableModal');
   const remove = useReqoreProperty('removeEscClosableModal');
@@ -54,7 +53,7 @@ export const useReqoreEscClose = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [escClosableModals, isEscClosable, handleKeyDown]);
+  }, [isEscClosable, handleKeyDown]);
 
   useEffect(() => {
     if (isOpen) {

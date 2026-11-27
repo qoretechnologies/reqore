@@ -157,10 +157,19 @@ export const modalStore = create<{
 /** Marks the element a dialog's focus trap gives focus to when it opens (see useFocusTrap). */
 const INITIAL_FOCUS: Record<string, unknown> = { 'data-reqore-initial-focus': true };
 
-const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options = {} }) => {
+/* One object, so a provider given no options does not rebuild its context on each of its own renders. */
+const NO_OPTIONS: IReqoreNotifications['options'] = {};
+
+const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options = NO_OPTIONS }) => {
   const [notifications, setNotifications] = useState<IReqoreNotificationData[] | null>([]);
   const { addModal, removeModal } = modalStore();
-  const [escClosableModals, setEscClosableModals] = useState<string[]>([]);
+  /* The Escape stack: one array for the provider's life, changed in place. It is not state, so a dialog opening or
+     closing re-renders nothing but itself; as state it gave the context a new value, and every component that reads
+     the context ran again on every open and close. */
+  const escClosableModals = useRef<string[]>([]).current;
+  /* The toasts on screen, mirrored into one array for the context the same way: the provider draws them from its
+     state, and a toast coming or going re-renders nothing that reads the context. */
+  const notificationsNow = useRef<IReqoreNotificationData[]>([]).current;
   const [confirmationModal, setConfirmationModal] = useState<IReqoreConfirmationModal>({});
   const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
   const latestZIndex = useRef<number>(9000);
@@ -218,24 +227,19 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
     confirmationModal?.onCancel?.();
   }, [closeConfirmationModal, confirmationModal]);
 
-  const addEscClosableModal = useCallback((id: string): void => {
-    setEscClosableModals((cur) => [...cur, id]);
-  }, []);
-
-  /* The Escape stack as it was last committed: every modal that hears one Escape asks it, so they agree on which
-     is on top, and only that one closes - taking itself off first would make the one under it the top for the
-     next listener. */
-  const committedEscClosableModals = useRef<string[]>([]);
-  useLayoutEffect(() => {
-    committedEscClosableModals.current = escClosableModals;
-  }, [escClosableModals]);
+  const addEscClosableModal = useCallback(
+    (id: string): void => {
+      if (!escClosableModals.includes(id)) escClosableModals.push(id);
+    },
+    [escClosableModals]
+  );
 
   /**
    * Takes a modal off the Escape stack. With `onRemove` it is Escape asking the modal to close: only the top-most
-   * one answers, and it is closed - after the confirmation, when it asks for one - by calling `onRemove` from the
-   * key or the confirmation, never from a state updater. An updater runs while React renders this provider, so
-   * the host's own state was set during another component's render (React warned). Without it the modal
-   * is going: it leaves the stack wherever it is in it, where only the top-most used to.
+   * one answers, and it is closed - after the confirmation, when it asks for one - by calling `onRemove`. It stays
+   * on the stack until it is gone (its own cleanup takes it off), so every dialog that hears the same Escape agrees
+   * on which one is on top, and the one under it does not close too. Without `onRemove` the modal is going: it
+   * leaves the stack wherever it is in it.
    */
   const removeEscClosableModal = useCallback(
     (
@@ -243,20 +247,18 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
       onRemove?: () => void,
       confirmOnClose?: boolean | IReqoreConfirmationModal
     ): void => {
-      const takeOff = () => setEscClosableModals((cur) => cur.filter((modalId) => modalId !== id));
-
       if (!onRemove) {
-        takeOff();
+        const index = escClosableModals.indexOf(id);
+        if (index >= 0) escClosableModals.splice(index, 1);
 
         return;
       }
 
-      if (last(committedEscClosableModals.current) !== id) {
+      if (last(escClosableModals) !== id) {
         return;
       }
 
       const close = () => {
-        takeOff();
         onRemove();
       };
 
@@ -271,7 +273,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
 
       close();
     },
-    [confirmAction]
+    [confirmAction, escClosableModals]
   );
 
   /* The app's confirmation defaults (`options.confirmations`) under each call's own data. */
@@ -316,11 +318,15 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
     [notificationDefaults]
   );
 
-  const removeNotification = (id: string | number) => {
+  const removeNotification = useCallback((id: string | number) => {
     setNotifications((cur) => {
       return [...cur].filter((notification) => notification.id !== id);
     });
-  };
+  }, []);
+
+  useLayoutEffect(() => {
+    notificationsNow.splice(0, notificationsNow.length, ...(notifications ?? []));
+  }, [notifications, notificationsNow]);
 
   const getNotificationsByPosition = useCallback(
     (position: IReqoreNotificationsPosition) => {
@@ -379,7 +385,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
   const contextValue: IReqoreContext = useMemo(
     () =>
       ({
-        notifications,
+        notifications: notificationsNow,
         theme,
         addNotification,
         removeNotification,
@@ -413,7 +419,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
         schedule: resolvedOptions.schedule,
       } satisfies IReqoreContext),
     [
-      notifications,
+      notificationsNow,
       theme,
       addNotification,
       removeNotification,

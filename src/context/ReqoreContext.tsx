@@ -25,6 +25,10 @@ export const CALM_DIALOG_WIDTHS: Required<IReqoreDialogWidths> = { form: '720px'
 
 export interface IReqoreContext {
   readonly confirmAction: (data: IReqoreConfirmationModal) => void;
+  /**
+   * The toasts on screen now. One array for the provider's life, kept current in place: a toast coming or going
+   * does not give the context a new value, so it re-renders nothing that reads the context.
+   */
   readonly notifications?: IReqoreNotificationData[] | null;
   readonly addNotification?: (data: IReqoreNotificationData) => any;
   readonly addModal?: (
@@ -129,6 +133,10 @@ export interface IReqoreContext {
   readonly customPortalId?: string;
   readonly closePopoversOnEscPress?: boolean;
   readonly closeModalsOnEscPress?: boolean;
+  /**
+   * The dialogs Escape can close, the top-most last. One array kept current in place, like `notifications`:
+   * opening or closing a dialog does not give the context a new value.
+   */
   readonly escClosableModals?: string[];
   readonly addEscClosableModal?: (id: string) => void;
   readonly removeEscClosableModal?: (
