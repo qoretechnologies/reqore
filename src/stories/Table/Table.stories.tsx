@@ -1264,6 +1264,34 @@ export const Exportable: Story = {
   },
 };
 
+export const SelectAllSelectsThePage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A selectable table paged ten rows at a time: the header's select-all selects the ten rows on screen, not every row on every page, so an action on the selection only reaches rows the user could see. Rows selected on other pages stay selected; with every row of the page selected, the header deselects just those.",
+      },
+    },
+  },
+  args: {
+    selectable: true,
+    paging: { itemsPerPage: 10, showPagesAs: 'buttons' },
+    onSelectedChange: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelectorAll('.reqore-table-row').length).toBe(10)
+    );
+    const header = canvasElement.querySelectorAll('.reqore-table-header-cell')[0]!;
+    await userEvent.click(header);
+    // the ten rows of the page, and no more
+    await waitFor(() => {
+      const calls = (args.onSelectedChange as ReturnType<typeof fn>).mock.calls;
+      expect(calls[calls.length - 1][0]).toHaveLength(10);
+    });
+  },
+};
+
 export const FillParent: Story = {
   parameters: {
     docs: {
