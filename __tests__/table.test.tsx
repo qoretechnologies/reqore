@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent, render, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 import { act } from 'react-dom/test-utils';
 import { ReqoreLayoutContent, ReqoreTable, ReqoreUIProvider } from '../src';
@@ -1677,4 +1677,58 @@ test('<Table /> keeps a sort in charge without the opt-in', () => {
   settleFilter();
 
   expect(renderedNames()[0]).toBe('Untelegrammed');
+});
+
+/* With paging, the header's select-all toggles the rows of the page on screen only: it took every filtered row on
+   every page, so a bulk action could reach rows the user never saw (a Qorus list of 881 Qogs, 200 to a page). */
+describe('<Table /> select-all with paging', () => {
+  const renderPaged = (selected: number[] | undefined, fn: (ids: unknown[]) => void) =>
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTable
+            columns={selectionColumns}
+            data={selectionRows(6)}
+            selectable
+            selected={selected}
+            onSelectedChange={fn}
+            paging={{ itemsPerPage: 2, showPagesAs: 'buttons' }}
+          />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  const headerToggle = () => document.querySelectorAll('.reqore-table-header-cell')[0]!;
+
+  test('selects the rows of the page on screen, not every page', async () => {
+    const fn = vi.fn();
+    renderPaged(undefined, fn);
+    // the page is known once it has been drawn
+    await waitFor(() => expect(document.querySelectorAll('.reqore-table-row').length).toBe(2));
+    fireEvent.click(headerToggle());
+    await waitFor(() => expect(fn).toHaveBeenLastCalledWith([1, 2]));
+  });
+
+  test("keeps what is selected on other pages, and deselects only the page's rows", async () => {
+    const fn = vi.fn();
+    const { unmount } = renderPaged([5], fn);
+    await waitFor(() => expect(document.querySelectorAll('.reqore-table-row').length).toBe(2));
+    fireEvent.click(headerToggle());
+    await waitFor(() => expect(fn).toHaveBeenLastCalledWith([5, 1, 2]));
+    unmount();
+
+    // the page's rows all selected: the header deselects them, and only them
+    fn.mockClear();
+    renderPaged([5, 1, 2], fn);
+    await waitFor(() => expect(document.querySelectorAll('.reqore-table-row').length).toBe(2));
+    fireEvent.click(headerToggle());
+    await waitFor(() => expect(fn).toHaveBeenLastCalledWith([5]));
+  });
+
+  test('reverses the selection of the page only, with the meta key held', async () => {
+    const fn = vi.fn();
+    renderPaged([1, 6], fn);
+    await waitFor(() => expect(document.querySelectorAll('.reqore-table-row').length).toBe(2));
+    fireEvent.click(headerToggle(), { metaKey: true });
+    await waitFor(() => expect(fn).toHaveBeenLastCalledWith([6, 2]));
+  });
 });

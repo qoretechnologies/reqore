@@ -541,6 +541,24 @@ const ReqoreTableExportModal = ({ data, onClose, exportMapper }) => {
   return <ReqoreExportModal data={fixedData} onClose={onClose} />;
 };
 
+/** Tells the table which selectable rows the page on screen holds, when they change. */
+const ReportPageRows = ({
+  rows,
+  onChange,
+}: {
+  rows: IReqoreTableRowData[];
+  onChange: (selectIds: (string | number)[]) => void;
+}) => {
+  const ids = rows
+    .map((row) => row._selectId)
+    .filter((selectId): selectId is string | number => selectId !== undefined && selectId !== null);
+  const key = JSON.stringify(ids);
+  useEffect(() => {
+    onChange(JSON.parse(key));
+  }, [key, onChange]);
+  return null;
+};
+
 const ReqoreTable = ({
   className,
   height,
@@ -852,13 +870,39 @@ const ReqoreTable = ({
   );
 
   const activeSelected = selected ?? _selected;
+  /* The selectable rows of the page on screen, as the pagination container reports them (`ReportPageRows`). With
+     paging, the header's select-all toggles these rows only: selecting "all" took every filtered row, on every
+     page, so a bulk action could reach rows the user never saw (a Qorus list of 881 Qogs shown 200 at a time).
+     Without paging, or before the page is known, the page is every filtered row, as before. */
+  const [pageSelectIds, setPageSelectIds] = useState<(string | number)[] | undefined>();
+  const pageSelectSet = useMemo(
+    () => (paging && pageSelectIds ? new Set(pageSelectIds) : undefined),
+    [paging, pageSelectIds]
+  );
+  const visibleSelectableData = useMemo(
+    () =>
+      pageSelectSet
+        ? selectableData.filter((datum) => pageSelectSet.has(datum._selectId!))
+        : selectableData,
+    [pageSelectSet, selectableData]
+  );
   const selectedQuant = useMemo<'all' | 'none' | 'some'>(() => {
+    if (pageSelectSet) {
+      const activeSet = new Set(activeSelected);
+      const selectedOnPage = visibleSelectableData.filter((datum) =>
+        activeSet.has(datum._selectId!)
+      ).length;
+      if (!selectedOnPage) {
+        return 'none';
+      }
+      return selectedOnPage === count(visibleSelectableData) ? 'all' : 'some';
+    }
     if (!activeSelected.length) {
       return 'none';
     }
 
     return activeSelected.length === count(selectableData) ? 'all' : 'some';
-  }, [activeSelected, selectableData]);
+  }, [activeSelected, pageSelectSet, selectableData, visibleSelectableData]);
   const selectedIcon = useMemo(() => {
     switch (selectedQuant) {
       case 'all':
@@ -923,6 +967,23 @@ const ReqoreTable = ({
 
   const handleToggleSelectClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (pageSelectSet) {
+        // the page's rows only: what is selected on other pages stays selected
+        const activeSet = new Set(activeSelected);
+        const elsewhere = activeSelected.filter((selectId) => !pageSelectSet.has(selectId));
+        if (selectedQuant === 'all') {
+          updateSelected(elsewhere);
+          return;
+        }
+        updateSelected([
+          ...elsewhere,
+          ...visibleSelectableData
+            // with the meta key held, the page's selection is reversed
+            .filter((datum) => !(e.metaKey && activeSet.has(datum._selectId!)))
+            .map((datum) => datum._selectId!),
+        ]);
+        return;
+      }
       switch (selectedQuant) {
         case 'none':
         case 'some': {
@@ -953,7 +1014,14 @@ const ReqoreTable = ({
         }
       }
     },
-    [activeSelected, selectableData, selectedQuant, updateSelected]
+    [
+      activeSelected,
+      pageSelectSet,
+      selectableData,
+      selectedQuant,
+      updateSelected,
+      visibleSelectableData,
+    ]
   );
 
   /* A narrow table folds each row's actions into one menu button (see
@@ -1608,6 +1676,9 @@ const ReqoreTable = ({
           >
             {(_pagedData) => (
               <>
+                {paginationType ? (
+                  <ReportPageRows rows={_pagedData} onChange={setPageSelectIds} />
+                ) : null}
                 {showExportModal && (
                   <ReqoreTableExportModal
                     data={
