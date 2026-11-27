@@ -156,6 +156,11 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     animate &&
     css`
       animation: 0.2s ${fadeIn} ease-out;
+
+      /* not where motion is unwelcome: there it is on screen at once */
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+      }
     `}
 
   /* Never wider than the viewport, whatever the caller asks for.

@@ -142,8 +142,13 @@ export const StyledReqoreNotification = styled(StyledEffect).withConfig({
     if (asMessage) {
       return undefined;
     }
+    // not where motion is unwelcome: there it is on screen at once
     return css`
       animation: 0.2s ${fadeIn} ease-in;
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+      }
     `;
   }}
 

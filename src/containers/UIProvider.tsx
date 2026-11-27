@@ -65,7 +65,41 @@ export interface IReqoreUIProviderProps {
  */
 export const WRAPPED_CONTROL_GROUP_CHILD_SELECTOR = ':where(.reqore-control-group-wrapped) > *';
 
-const GlobalStyle = createGlobalStyle`
+/**
+ * What reduced motion stills: Reqore's own elements, each named by a class that starts with
+ * `reqore-`, and what they draw before and after them, in the layout and in the portal its dialogs,
+ * popovers and notifications open in: Reqore's own, and the one the app names (`customPortalId`,
+ * where drawers, modals and popovers then open). Not every element in there: the app's own elements
+ * inside the layout keep the transitions the app gave them.
+ */
+export const getReducedMotionSelectors = (customPortalId?: string): string[] => [
+  '.reqore-layout-wrapper',
+  ...['.reqore-layout-wrapper', '#reqore-portal', ...(customPortalId ? [customPortalId] : [])].flatMap(
+    (scope) =>
+      ['', '::before', '::after'].flatMap((part) =>
+        ["[class^='reqore-']", "[class*=' reqore-']"].map((own) => `${scope} ${own}${part}`)
+      )
+  ),
+];
+
+/** What reduced motion stills where the app names no portal of its own (`getReducedMotionSelectors`). */
+export const REDUCED_MOTION_SELECTORS: string[] = getReducedMotionSelectors();
+
+/**
+ * The provider's reduced-motion rule (WCAG 2.3.3): what Reqore draws changes at once, its own
+ * elements only (`getReducedMotionSelectors`), and only for a user who asked for reduced motion.
+ * A hair of a duration, not none: a transition of no time sends no `transitionend`, which some
+ * components wait for. Reqore's springs settle at once in their own components (immediate under
+ * `usePrefersReducedMotion`).
+ */
+export const getReducedMotionCss = (customPortalId?: string): string => `@media (prefers-reduced-motion: reduce) {
+  ${getReducedMotionSelectors(customPortalId).join(', ')} {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+}`;
+
+const GlobalStyle = createGlobalStyle<{ $customPortalId?: string }>`
   /* It does not inherit: it says what one child's own margin takes, not what is inside that child. */
   @property ${CONTROL_GROUP_COLLAPSE_VARIABLE} {
     syntax: '<length>';
@@ -97,6 +131,9 @@ const GlobalStyle = createGlobalStyle`
     max-width: ${CONTROL_GROUP_CHILD_MAX_WIDTH};
     min-width: 0;
   }
+
+  /* Reduced motion: see getReducedMotionCss. Nothing changes for anyone who has not asked for it. */
+  ${({ $customPortalId }) => getReducedMotionCss($customPortalId)}
 `;
 
 const StyledPortal = styled.div`
@@ -151,7 +188,7 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = memo(
       <>
         <ThemeContext.Provider value={{ ...rebuiltTheme }}>
           <ReqoreThemeProvider>
-            <GlobalStyle />
+            <GlobalStyle $customPortalId={options?.customPortalId} />
           </ReqoreThemeProvider>
           <ReqoreLayoutWrapper {...layoutWrapperProps} withSidebar={options?.withSidebar}>
             {modalPortal ? <ReqoreProvider options={options}>{children}</ReqoreProvider> : null}

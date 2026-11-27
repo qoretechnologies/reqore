@@ -61,6 +61,7 @@ import {
 } from './helpers';
 import { IReqoreTableRowOptions } from './row';
 import { useFoldedActionWidths } from './useFoldedActionWidths';
+import { smoothScrollBehavior } from '../../hooks/usePrefersReducedMotion';
 
 export type TReqoreTableColumnContent =
   | ((data: IReqoreTableRowData) => any)
@@ -1368,7 +1369,7 @@ const ReqoreTable = ({
   const handleScrollToTop = useCallback(() => {
     mainTableRef.current?.scrollTo({
       top: 0,
-      behavior: 'smooth',
+      behavior: smoothScrollBehavior(),
     });
 
     setIsScrolled(false);
