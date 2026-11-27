@@ -1601,3 +1601,53 @@ export const AListThePageFilteredSaysSo: Story = {
     }
   },
 };
+
+/** A tile as an app catalogue draws one: a logo larger than its title, and a description or none. */
+const logoTile = (label: string, content?: string) => ({
+  label,
+  content,
+  iconImage: '/q-symbol.png',
+  size: 'small' as const,
+  minimal: true,
+  iconProps: { size: 'huge' as const, effect: { opacity: 1 } },
+});
+
+export const TitlesCentreOnTheirLogos: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: `Renders three tiles, each with a logo larger than its title: one with a description and two without. Every title is centred on its logo, so a tile with nothing under its title does not leave the name at the logo's top edge.`,
+      },
+    },
+  },
+  render: () => (
+    <div className='logo-tiles' style={{ width: 760 }}>
+      <ReqoreCollection
+        sortable={false}
+        filterable={false}
+        minColumnWidth='220px'
+        items={[
+          logoTile('Shopify', 'Sync orders between your shop and your ERP.'),
+          logoTile('Salesforce'),
+          logoTile('SAP'),
+        ]}
+      />
+    </div>
+  ),
+  play: async () => {
+    const tiles = await waitFor(() => {
+      const found = [...document.querySelectorAll<HTMLElement>('.logo-tiles .reqore-collection-item')];
+      expect(found).toHaveLength(3);
+      return found;
+    });
+    for (const tile of tiles) {
+      const logo = tile.querySelector<HTMLElement>('.reqore-panel-title-icon')!.getBoundingClientRect();
+      const title = tile.querySelector<HTMLElement>('.reqore-panel-title-label-box')!.getBoundingClientRect();
+      await expect(logo.height).toBeGreaterThan(title.height);
+      await expect(
+        Math.abs(title.top + title.height / 2 - (logo.top + logo.height / 2)),
+        tile.textContent ?? ''
+      ).toBeLessThanOrEqual(1.5);
+    }
+  },
+};

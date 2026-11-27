@@ -4587,3 +4587,55 @@ export const BottomBarWithAWrappingReasonStacksOnAPhone: Story = {
     }
   },
 };
+
+/** A step's bar: Back on the left and Skip on the right, both folding, beside a primary Done that keeps its words. */
+const STEP_BOTTOM_ACTIONS: IReqorePanelProps['bottomActions'] = [
+  { label: 'Back', icon: 'ArrowLeftLine', compact: true, position: 'left', flat: true, transparent: true },
+  { label: 'Skip', compact: true, position: 'right', flat: true, transparent: true },
+  { label: 'Done', icon: 'CheckLine', compact: true, position: 'right', intent: 'info', responsive: false },
+];
+
+/**
+ * The kept group is squeezed while the bar first measures: a group whose style changes as the actions change
+ * (one step's actions replaced by the next's) transitions its `flex-shrink` from 1, and for that moment its
+ * button is cut. Drawn here as a short animation, so it happens on every run.
+ */
+const SQUEEZED_WHILE_IT_SETTLES = `
+  @keyframes story-kept-group-settles { from { max-width: 20px; } to { max-width: 100%; } }
+  .kept-beside-folding .reqore-panel-bottom-actions > .reqore-control-group-wrapped {
+    animation: story-kept-group-settles 300ms linear;
+  }
+`;
+
+export const KeptActionBesideFoldingActionsStaysOnTheLine: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: `Renders a 718px panel whose bottom bar holds Back on the left, Skip on the right (both may fold) and a Done that keeps its words, its group squeezed for a moment as the bar first lays out. The bar decides once that has settled: the three fit, so they share one line at their full width and the bar does not stack.`,
+      },
+    },
+  },
+  render: () => (
+    <div className='kept-beside-folding' style={{ width: 718 }}>
+      <style>{SQUEEZED_WHILE_IT_SETTLES}</style>
+      <ReqorePanel label='Which apps do you use?' bottomActions={STEP_BOTTOM_ACTIONS}>
+        <ReqoreP>Pick the apps you work with.</ReqoreP>
+      </ReqorePanel>
+    </div>
+  ),
+  play: async () => {
+    const bar = await waitFor(() =>
+      requiredElement<HTMLElement>('.kept-beside-folding .reqore-panel-bottom-actions', 'the bottom bar')
+    );
+    await waitFor(() => expect(bar.querySelectorAll('.reqore-button')).toHaveLength(3));
+    // past the squeeze, and a frame for the check that follows it
+    await waitFor(() => expect(bar.getAnimations({ subtree: true })).toHaveLength(0));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await expect(bar.dataset.stacked).toBeUndefined();
+    const buttons = [...bar.querySelectorAll<HTMLElement>('.reqore-button')];
+    await expect(new Set(buttons.map((button) => Math.round(button.getBoundingClientRect().top))).size).toBe(1);
+    for (const box of bar.querySelectorAll<HTMLElement>('.reqore-button, .reqore-button-text-content')) {
+      await expect(box.scrollWidth, box.textContent ?? '').toBeLessThanOrEqual(box.clientWidth + 1);
+    }
+  },
+};

@@ -1025,12 +1025,12 @@ export const StyledPanelTitleHeaderLabelAndBadge = styled.div`
   align-items: center;
   max-width: 100%;
 
-  /* A title and its count read as one line: the count sits on the title's baseline. Centred in
-     the row instead, a count smaller than its title floated above it, like a superscript,
-     because the title's text sits low in the taller heading box it is set in. The icon stays
-     centred. */
+  /* The title, with its count, centres on the icon beside it, as the header's two-row grid centres it. Its
+     count sits on the title's baseline inside that block (\`ReqoreTitleAndBadges\`). The block was once set on the
+     baseline here too, and alone in the row that put it at the row's top: beside an icon taller than the
+     title (a logo on a collection tile), the title sat at the logo's top edge. */
   & > .${TITLE_AND_BADGES_CLASS} {
-    align-self: baseline;
+    align-self: center;
   }
 `;
 
@@ -2519,6 +2519,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       }
 
       let frame = 0;
+      let cancelled = false;
       const check = () => {
         frame = 0;
         const width = bar.clientWidth;
@@ -2531,6 +2532,25 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           if (width > stackedBottomAt) {
             setStackedBottomAt(undefined);
           }
+          return;
+        }
+
+        /*
+         * Not while something in the bar is still moving: a group whose style changed as the actions did (one
+         * step's actions replaced by the next's) transitions into it, and for that moment a button can be cut
+         * though it fits once it settles. Stacked then, the bar stayed stacked, as a stack is retried only at a
+         * wider bar. Endless animations (a spinner in a button) never settle and are not waited for.
+         */
+        const settling = (bar.getAnimations?.({ subtree: true }) ?? []).filter(
+          (animation) =>
+            animation.playState === 'running' &&
+            Number.isFinite(Number(animation.effect?.getComputedTiming().endTime))
+        );
+
+        if (settling.length) {
+          Promise.allSettled(settling.map((animation) => animation.finished)).then(() => {
+            if (!cancelled && !frame) frame = requestAnimationFrame(check);
+          });
           return;
         }
 
@@ -2553,6 +2573,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       observer?.observe(bar);
 
       return () => {
+        cancelled = true;
         observer?.disconnect();
         if (frame) cancelAnimationFrame(frame);
       };
