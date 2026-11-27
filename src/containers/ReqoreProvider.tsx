@@ -21,6 +21,7 @@ import { scheduleOnTimer } from '../helpers/schedule';
 import ThemeContext from '../context/ThemeContext';
 import { IReqoreIconName } from '../types/icons';
 import { IReqoreOptions } from './UIProvider';
+import { BACKDROP_BLUR_DEFAULT } from '../components/Drawer/backdrop';
 
 export interface IReqoreNotificationData extends IReqoreNotificationProps {
   duration?: number;
@@ -91,7 +92,7 @@ export interface IReqoreConfirmationDefaults
   /** The dialog's own opacity: below 1 the page shows through it. Default `0.9`; `1` for a
    *  solid dialog. */
   surfaceOpacity?: number;
-  /** The blur of the backdrop behind the dialog, in pixels. Default `2`; `0` for none. */
+  /** The blur of the page behind every dialog, in pixels. Default `BACKDROP_BLUR_DEFAULT` (5); `0` for none. */
   backdropBlur?: number;
   /**
    * How the dialog shows a call's `intent`. `'wash'` (the default, unchanged) draws the dialog in
@@ -480,7 +481,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
             isOpen
             flat
             opacity={confirmationDefaults?.surfaceOpacity ?? 0.9}
-            blur={confirmationDefaults?.backdropBlur ?? 2}
+            blur={confirmationDefaults?.backdropBlur ?? resolvedOptions.backdropBlur ?? BACKDROP_BLUR_DEFAULT}
             width='500px'
             intent={confirmationIntentOnIcon ? undefined : confirmationIntent}
             iconColor={confirmationIntentOnIcon ? confirmationIntent : undefined}

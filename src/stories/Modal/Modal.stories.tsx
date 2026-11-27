@@ -304,6 +304,55 @@ export const Basic: Story = {
   render: Template,
 };
 
+export const SetsThePageBehindItBack: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: `Renders a dialog over a busy page with the default backdrop: the page behind it is blurred a little and covered by a scrim darker than the page, so the dialog stands in front of the panels around it rather than blending with them. Drawers and sheets use the same backdrop.`,
+      },
+    },
+  },
+  args: { width: '480px', height: undefined },
+  render: (args) => (
+    <>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+        {Array.from({ length: 6 }, (_, index) => (
+          <ReqorePanel key={index} label={`Panel ${index + 1}`} padded>
+            <ReqoreP>Text on the page behind the dialog, which should not compete with it.</ReqoreP>
+          </ReqorePanel>
+        ))}
+      </div>
+      <ReqoreModal {...args} blur={undefined} label='Welcome' onClose={noop}>
+        <ReqoreP>The dialog in front of the page.</ReqoreP>
+      </ReqoreModal>
+    </>
+  ),
+  play: async () => {
+    await _testsWaitForText('The dialog in front of the page.');
+    /* The screenshot tool turns every backdrop-filter off for its capture (headless Chromium draws one
+       black) and leaves that sheet on the page, so a story played after a captured one reads none.
+       This story measures the dialog's own CSS: it takes the sheet out for the check and puts it back
+       for the capture. */
+    const captureOverrides = document.getElementById('__qlip-capture-style-overrides');
+    const captureOverridesHost = captureOverrides?.parentNode;
+    captureOverrides?.remove();
+    try {
+      // one an earlier story left open may sit beside it; this dialog's is the blurred one
+      await waitFor(
+        () =>
+          expect(
+            Array.from(document.querySelectorAll<HTMLElement>('.reqore-drawer-backdrop')).map(
+              (el) => getComputedStyle(el).backdropFilter
+            )
+          ).toContain('blur(5px)'),
+        { timeout: 5000 }
+      );
+    } finally {
+      if (captureOverrides && captureOverridesHost) captureOverridesHost.appendChild(captureOverrides);
+    }
+  },
+};
+
 export const ConfirmationModal: Story = {
   parameters: {
     docs: {
