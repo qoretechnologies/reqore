@@ -4,7 +4,13 @@ import { css } from 'styled-components';
 import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TOUCH_TARGET_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getMainBackgroundColor,
+  getPanelHairlineColor,
+  getReadableColor,
+  getSecondaryTextEffect,
+} from '../../helpers/colors';
 import {
   getOneLessSize,
   resolvePadding,
@@ -35,6 +41,9 @@ import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import ReqoreRowActionsMenu, {
   getCompactRowAction,
+  IReqoreRowActionDestructive,
+  isDestructiveRowAction,
+  ownLineRowActionProps,
   getRowActionLabel,
   hasRowActionLabel,
   IReqoreRowActionShortLabel,
@@ -42,9 +51,12 @@ import ReqoreRowActionsMenu, {
   TReqoreNarrowRowActions,
 } from '../RowActionsMenu';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
+import { IReqoreAvatarProps, ReqoreAvatar } from '../Avatar';
 
 export interface IReqoreEntityRowAction
-  extends Omit<IReqoreButtonProps, 'children'>, IReqoreRowActionShortLabel {
+  extends Omit<IReqoreButtonProps, 'children'>,
+    IReqoreRowActionShortLabel,
+    IReqoreRowActionDestructive {
   /** Visible button label. */
   label?: string;
   /**
@@ -83,7 +95,7 @@ export interface IReqoreEntityRowProps
     IWithReqoreFluid,
     IWithReqoreSize,
     IWithReqoreTooltip {
-  /** Primary text — e.g. the Qog name. */
+  /** Primary text — e.g. the entity's name. */
   label: React.ReactNode;
   /**
    * Secondary text — typically a one-line description.
@@ -101,6 +113,12 @@ export interface IReqoreEntityRowProps
   icon?: IReqoreIconName;
   /** Image rendered inside the leading icon tile (overrides `icon` if both set). */
   iconImage?: string;
+  /**
+   * A person (or a team) in the leading slot, drawn as a `ReqoreAvatar` in place of the icon tile: their picture,
+   * or the person icon in a filled circle, or their initials. At the row's size unless it names one; named by the
+   * row's label unless it names itself. A row of members is a row of avatars, not of icon tiles.
+   */
+  avatar?: IReqoreAvatarProps;
   /** Custom color for the leading icon (defaults to intent or readable color). */
   iconColor?: TReqoreEffectColor;
   /** Additional props passed to the leading ReqoreIcon. */
@@ -270,7 +288,7 @@ const StyledRow = styled(StyledEffect).withConfig({
 
   /* Narrow, the actions are under the label: a row of buttons that goes onto another line where it does not
      fit, or with narrowActions='stack' one to a line (each the row's width in a phone-width container), as
-     ReqoreSeverityRow's (qorus#646): on one line that does not wrap, labelled actions reached past the row on
+     ReqoreSeverityRow's: on one line that does not wrap, labelled actions reached past the row on
      a phone. A finger gets a target it can hit. */
   @media (pointer: coarse) {
     &[data-narrow='true'] > .reqore-entity-row-actions > .reqore-button {
@@ -278,10 +296,10 @@ const StyledRow = styled(StyledEffect).withConfig({
     }
   }
 
-  /* Narrow, two or more actions are one menu button at the end of the label's line (qorus#646), not
+  /* Narrow, two or more actions are one menu button at the end of the label's line, not
      a line each under it: the label keeps its width, and a list of rows does not grow by a line per
      action. A row of that mode with one action keeps it there too, as a button of its own ('end'): under the
-     label it was a line of its own for one button, where a row with more had none (David, qorus#646). The
+     label it was a line of its own for one button, where a row with more had none. The
      columns are the wide row's. */
   &[data-narrow='true'][data-actions='menu'],
   &[data-narrow='true'][data-actions='end'] {
@@ -308,8 +326,8 @@ const StyledRow = styled(StyledEffect).withConfig({
           $intent
             ? rgba(theme.intents[$intent], $transparent ? 0.04 : 0.1)
             : $transparent
-              ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
-              : rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 1)
+              ? rgba(getPanelHairlineColor(theme), 0.08)
+              : rgba(getPanelHairlineColor(theme), 1)
         };
       }
     `}
@@ -387,6 +405,7 @@ const ReqoreEntityRow = memo(
         badge,
         icon,
         iconImage,
+        avatar,
         iconColor,
         iconProps,
         actions,
@@ -419,8 +438,13 @@ const ReqoreEntityRow = memo(
     ) => {
       const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
       const secondarySize = useMemo(() => getOneLessSize(size), [size]);
+      const descriptionTextEffect = useMemo(
+        (): IReqoreEffect => ({ ...getSecondaryTextEffect(theme, 0.7), ...descriptionEffect }),
+        [theme, descriptionEffect]
+      );
 
-      const hasIcon = (showIcon ?? (!!icon || !!iconImage)) && (!!icon || !!iconImage);
+      const hasAvatar = !!avatar && showIcon !== false;
+      const hasIcon = !hasAvatar && (showIcon ?? (!!icon || !!iconImage)) && (!!icon || !!iconImage);
       const interactive = !!(rest.onClick || rest.onDoubleClick);
       const hasBadge = badge !== undefined && badge !== null;
       // Default: tile follows opacity. Transparent rows hide the tile so the
@@ -438,16 +462,23 @@ const ReqoreEntityRow = memo(
       const actionsAsMenu = isNarrow && narrowActions === 'menu' && (actions?.length ?? 0) > 1;
       /* Narrow, a row that folds two or more into a menu keeps its one action where the menu would be - only
          while its container is wider than a phone. As narrow as a phone, the action goes under the label and
-         spans the row like any lone action there (David and Foxhoundn, qorus#646). */
+         spans the row like any lone action there. */
+      /* A lone destructive action stays at the end of the label's line on a phone too, its icon alone where
+         it has one: spanning the row it was a red bar a third of the row's height, under every row
+         (`isDestructiveRowAction`). */
+      const loneDestructive = loneAction && isDestructiveRowAction(actions?.[0]);
       const loneActionAtLineEnd =
-        isNarrow && !isPhoneWidth && narrowActions === 'menu' && loneAction;
+        isNarrow &&
+        loneAction &&
+        ((!isPhoneWidth && narrowActions === 'menu') || (isPhoneWidth && loneDestructive));
       // Narrow and stacked: one to a line. Otherwise narrow, they are a row of buttons under the label.
       const actionsStacked = isNarrow && narrowActions === 'stack';
       /* Under the label, stacked actions and a lone action are the row's width where the row's container is a
          phone's width or narrower - on a phone, or in as narrow a container on any screen - where a full-width
          row is the easiest target there is (Fitts's law). In a container wider than a phone, each is as wide as
-         its label (David's width rule, qorus#646). The container is measured, not the screen. */
-      const actionsSpanRow = isNarrow && isPhoneWidth && (actionsStacked || loneAction);
+         its label. The container is measured, not the screen. */
+      const actionsSpanRow =
+        isNarrow && isPhoneWidth && (actionsStacked || loneAction) && !loneActionAtLineEnd;
       // an action on a line of its own: it is written out (an icon-only one says its tooltip), and may span it
       const actionsOnTheirOwnLine = actionsStacked || actionsSpanRow;
 
@@ -484,13 +515,22 @@ const ReqoreEntityRow = memo(
             $raised={raised}
             $clickable={interactive}
             disabled={disabled}
-            $hasIcon={hasIcon}
-            $iconHasBackground={resolvedIconHasBackground}
+            $hasIcon={hasIcon || hasAvatar}
+            // an avatar is as wide as its own size, not the icon tile's
+            $iconHasBackground={hasAvatar ? false : resolvedIconHasBackground}
             $padded={padded}
             $paddingSize={paddingSize ?? size}
             effect={effect}
             className={`${className || ''} reqore-entity-row`}
           >
+            {hasAvatar && (
+              <ReqoreAvatar
+                size={size}
+                label={typeof label === 'string' ? label : undefined}
+                {...avatar}
+                className={`reqore-entity-row-avatar ${avatar?.className || ''}`.trim()}
+              />
+            )}
             {hasIcon &&
               (resolvedIconHasBackground ? (
                 <StyledIconTile
@@ -531,7 +571,7 @@ const ReqoreEntityRow = memo(
                   <ReqoreP
                     as={getReqoreTextElement(description)}
                     size={secondarySize}
-                    effect={{ opacity: 0.7, ...descriptionEffect }}
+                    effect={descriptionTextEffect}
                     className='reqore-entity-row-description'
                   >
                     {description}
@@ -572,10 +612,10 @@ const ReqoreEntityRow = memo(
                 wrap={isNarrow && !actionsStacked && !loneActionAtLineEnd}
               >
                 {actions.map(
-                  ({ actions: subActions, actionsProps, shortLabel, ...action }, idx) => {
+                  ({ actions: subActions, actionsProps, shortLabel, destructive, ...action }, idx) => {
                     /* At the end of a narrow row's label line, an action says its short label, or is its icon
-                     alone where it has a tooltip (`getCompactRowAction`): a long label took the line's room
-                     (David, qorus#646). On a line of its own, and wide, it says its label. */
+                     alone where it has a tooltip (`getCompactRowAction`): a long label took the line's room.
+                     On a line of its own, and wide, it says its label. */
                     const compact = loneActionAtLineEnd
                       ? getCompactRowAction({ ...action, shortLabel })
                       : undefined;
@@ -597,8 +637,9 @@ const ReqoreEntityRow = memo(
                          to read. */
                         {...(actionsOnTheirOwnLine
                           ? {
-                              fluid: actionsSpanRow,
-                              fixed: !actionsSpanRow,
+                              ...ownLineRowActionProps({ ...action, destructive }, actionsSpanRow),
+                              fixed: !ownLineRowActionProps({ ...action, destructive }, actionsSpanRow)
+                                .fluid,
                               label: hasRowActionLabel(action.label)
                                 ? action.label
                                 : getRowActionLabel({ tooltip: action.tooltip }),
@@ -614,7 +655,9 @@ const ReqoreEntityRow = memo(
                         size={size}
                         intent={action.intent ?? intent}
                         {...action}
-                        {...(actionsOnTheirOwnLine ? { fluid: actionsSpanRow, wrap: true } : {})}
+                        {...(actionsOnTheirOwnLine
+                          ? ownLineRowActionProps({ ...action, destructive }, actionsSpanRow)
+                          : {})}
                         {...compact}
                         // After the spread, so it wraps the consumer's handler rather
                         // than being replaced by it. Applied even to an action with no

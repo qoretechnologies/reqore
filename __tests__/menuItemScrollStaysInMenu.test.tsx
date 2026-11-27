@@ -1,6 +1,6 @@
 // Copyright 2026 Qore Technologies, s.r.o.
 // A menu item brought into view by the keyboard is scrolled to inside its own menu, and nothing else moves
-// (qorus#646, David: arrow keys in an editor's completion list scrolled the page past its content - the
+// (arrow keys in an editor's completion list scrolled the page past its content - the
 // item's `scrollIntoView` scrolled every scrollable ancestor, the page's own scroll container and the
 // document included, to centre the item in the viewport).
 import { render } from '@testing-library/react';

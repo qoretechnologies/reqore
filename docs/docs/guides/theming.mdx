@@ -74,6 +74,21 @@ const theme = {
 };
 ```
 
+### Type Scale
+
+`typeScale` sets the app's text sizes and line height once, in the theme, instead of on every component. `text` is the px per size for running text (paragraphs, spans, links, table cells, panel and callout text, and `effect.textSize` given as a size name — which is how table headers are sized, one size below the table's), `control` is for buttons, inputs, tabs, checkboxes and the like, and `tag` is for tags, badges and keyboard keys. Each table names only the sizes it changes; the rest keep Reqore's own scale. `lineHeight` is a unitless line height for running text, set on the layout wrapper and the portal that popovers, modals and drawers render into. Without `typeScale`, nothing changes. Buttons, inputs, tags and table rows keep their heights and centre their text at any scale. `getTextSize(theme, size)`, `getControlTextSize(theme, size)` and `getTagTextSize(theme, size)` return what a size resolves to, for an element of your own that sits beside Reqore text.
+
+```tsx
+const theme = {
+  typeScale: {
+    text: { tiny: 12, small: 13, normal: 14 },
+    control: { small: 12, normal: 13 },
+    tag: { tiny: 11, small: 12 },
+    lineHeight: 1.45,
+  },
+};
+```
+
 ## Using Intents
 
 Most components support the `intent` prop for semantic coloring:

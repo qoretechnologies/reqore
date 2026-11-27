@@ -1,4 +1,4 @@
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
 import { Fragment, useState } from 'react';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
@@ -243,6 +243,75 @@ export const WithoutDefaultValue: Story = {
     const { hourTimeField, minuteTimeField } = await getPopoverElements(canvasElement);
     await expect(hourTimeField).toHaveTextContent('––');
     await expect(minuteTimeField).toHaveTextContent('––');
+  },
+};
+
+/** The field that takes typing, and whether it draws its placeholder in place of its segments. */
+const placeholderOf = (canvasElement: HTMLElement) => {
+  const field = requiredElement<HTMLElement>(
+    '[data-placeholder-text]',
+    'the field that takes typing',
+    canvasElement
+  );
+  const content = getComputedStyle(field, '::before').content;
+
+  return { field, shown: content !== 'none' && content !== 'normal' };
+};
+
+/** A segment drawn in no colour: there, for a click or a tab, but not seen. */
+const isUnseen = (element: HTMLElement) => getComputedStyle(element).color === 'rgba(0, 0, 0, 0)';
+
+export const AnEmptyTypedPickerSaysItsPlaceholder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an empty date picker that takes typing, with the placeholder Pick a day. Until it is focused it says Pick a day in the placeholder colour; its segments (mm/dd/yyyy) are there for a click or a tab, but not seen.',
+      },
+    },
+  },
+  args: {
+    value: null,
+    popoverProps: {},
+    granularity: 'day',
+    placeholder: 'Pick a day',
+  },
+  async play({ canvasElement }) {
+    const year = await within(canvasElement).findByLabelText('year, Datepicker');
+    await waitFor(() => expect(placeholderOf(canvasElement).shown).toBe(true));
+    await expect(isUnseen(year)).toBe(true);
+  },
+};
+
+export const AnEmptyTypedPickerShowsItsSegmentsWhenFocused: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same empty picker, focused: its segments appear for typing and the placeholder goes. A year typed in keeps the segments shown after the field loses the focus, so nothing typed is hidden.',
+      },
+    },
+  },
+  args: {
+    value: null,
+    popoverProps: {},
+    granularity: 'day',
+    placeholder: 'Pick a day',
+  },
+  async play({ canvasElement }) {
+    const year = await within(canvasElement).findByLabelText('year, Datepicker');
+    await waitFor(() => expect(placeholderOf(canvasElement).shown).toBe(true));
+
+    year.focus();
+    await waitFor(() => expect(placeholderOf(canvasElement).shown).toBe(false));
+    await expect(isUnseen(year)).toBe(false);
+
+    await userEvent.keyboard('2026');
+    year.blur();
+    await waitFor(() => expect(document.activeElement).not.toBe(year));
+    await expect(placeholderOf(canvasElement).shown).toBe(false);
+    await expect(year).toHaveTextContent('2026');
+    await expect(isUnseen(year)).toBe(false);
   },
 };
 
@@ -740,5 +809,46 @@ export const SelectOnlyClearable: Story = {
     isClearable: true,
     placeholder: 'Select date',
     popoverProps: {},
+  },
+};
+
+export const APlainDateKeepsItsDay: Story = {
+  // run again in a browser east of UTC, where a day sent through UTC is the day before
+  tags: ['east-of-utc'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a plain-date picker holding 17 Oct 2026, with no time. Picking the 20th gives back "2026-10-20", a day with no time and no zone, in any zone the browser is in (it runs again in Auckland, east of UTC).',
+      },
+    },
+  },
+  args: {
+    plainDate: true,
+    value: '2026-10-17',
+    popoverProps: {},
+    onChange: fn(),
+  },
+  async play({ canvasElement, args }) {
+    const canvas = within(canvasElement);
+
+    // the day it holds, read in this zone, and no time
+    await expect(await canvas.findByLabelText('day, Datepicker')).toHaveTextContent('17');
+    await expect(await canvas.findByLabelText('month, Datepicker')).toHaveTextContent('10');
+    await expect(canvas.queryByLabelText('hour, Datepicker')).toBeNull();
+
+    await userEvent.click(canvasElement.querySelector('input') as HTMLElement);
+    // the calendar, with no time field under it
+    const popover = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>('.reqore-popover-content');
+      expect(found).toBeTruthy();
+      return found as HTMLElement;
+    });
+    await expect(within(popover).queryByLabelText('hour, Time')).toBeNull();
+    await userEvent.click(within(popover).getByText('20'));
+
+    // the day picked, as a plain date
+    await waitFor(() => expect(args.onChange).toHaveBeenLastCalledWith('2026-10-20'));
+    await expect(await canvas.findByLabelText('day, Datepicker')).toHaveTextContent('20');
   },
 };

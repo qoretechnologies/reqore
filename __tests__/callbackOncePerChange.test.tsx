@@ -10,7 +10,7 @@ import {
 } from '../src';
 
 /**
- * qorus#646 (found while fixing the modal's Escape, which called `onClose` inside a state updater): a data view's
+ * Found while fixing the modal's Escape, which called `onClose` inside a state updater: a data view's
  * section and a timeline's collapsible item called the host's `onToggle` / `onCollapseChange` inside the state
  * updater that flipped them. An updater is React's to run: in StrictMode React runs it twice, so the host heard
  * of one click twice, and an updater run while React renders sets the host's state during that render. The new

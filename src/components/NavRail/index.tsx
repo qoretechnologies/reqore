@@ -19,7 +19,12 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeLightness, getColorFromMaybeString, getMainBackgroundColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getColorFromMaybeString,
+  getMainBackgroundColor,
+  getThemePanelSurface,
+} from '../../helpers/colors';
 import { createHoverGate, watchHoverGate } from '../../helpers/hoveringPointer';
 import { scheduleOnTimer } from '../../helpers/schedule';
 import styled, { omitStyleProps } from '../../helpers/styled';
@@ -48,6 +53,7 @@ import ReqoreMenuItem, { TReqoreMenuItemEventHandler } from '../Menu/item';
 import { ReqorePopover } from '../Popover';
 import { ReqoreVerticalSpacer } from '../Spacer';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { smoothScrollBehavior } from '../../hooks/usePrefersReducedMotion';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -317,14 +323,23 @@ const NavRailSurface = styled(StyledEffect)<ISurfaceStyle>`
   interpolate-size: allow-keywords;
   transition: width 0.2s ease-out;
 
+  /* With theme.panel named, the rail is one more panel-like surface: the panel surface and
+     its hairline. Otherwise it is derived from main as before. */
   background-color: ${({ theme, $transparent, $opacity, $bgLightness }) =>
     $transparent
       ? 'transparent'
-      : rgba(changeLightness(getMainBackgroundColor(theme), $bgLightness), $opacity)};
+      : rgba(
+          getThemePanelSurface(theme)?.main ??
+            changeLightness(getMainBackgroundColor(theme), $bgLightness),
+          $opacity
+        )};
   border: ${({ $flat, theme, $borderLightness }) =>
     $flat
       ? 'none'
-      : `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), $borderLightness), 0.7)}`};
+      : `1px solid ${
+          getThemePanelSurface(theme)?.border ??
+          rgba(changeLightness(getMainBackgroundColor(theme), $borderLightness), 0.7)
+        }`};
   ${({ $blur, $opacity }) =>
     $blur && $opacity < 1 &&
     css`
@@ -1068,7 +1083,7 @@ export const ReqoreNavRail = memo(
         if (sub.scrollTargetId) {
           document
             .getElementById(sub.scrollTargetId)
-            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            ?.scrollIntoView({ behavior: smoothScrollBehavior(), block: 'start' });
         }
         if (activeSubId === undefined) setInternalSubId(sub.id);
         sub.onClick?.();

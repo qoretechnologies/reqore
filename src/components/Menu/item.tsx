@@ -3,7 +3,7 @@ import { ReqoreButton, ReqoreControlGroup, ReqoreDropdown } from '../..';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
-import { IReqoreComponent } from '../../types/global';
+import { IReqoreComponent, IWithReqoreDestructive } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
 // Type-only imports — erased at build time, so the Menu ↔ Dropdown reference
 // (Dropdown already imports Menu types) stays a type-level cycle, never a
@@ -28,7 +28,10 @@ export type TReqoreMenuItemActionEventHandler<
 ) => void;
 
 export type TReqoreMenuItemAction<Metadata extends Record<string, any> = Record<string, any>> =
-  Omit<IReqoreButtonProps, 'onClick'> & {
+  Omit<IReqoreButtonProps, 'onClick'> &
+  /* A destructive one (a saved view's Delete) keeps its own look rather than taking the item's
+     intent, and its entries, where it opens a menu, say for themselves. */
+  IWithReqoreDestructive & {
     onClick?: TReqoreMenuItemActionEventHandler<Metadata>;
     /**
      * Turns the action into a dropdown: clicking it opens a popover menu of
@@ -45,7 +48,7 @@ export type TReqoreMenuItemAction<Metadata extends Record<string, any> = Record<
   };
 
 export interface IReqoreMenuItemProps<Metadata extends Record<string, any> = Record<string, any>>
-  extends IReqoreComponent, IReqoreButtonProps {
+  extends IReqoreComponent, IReqoreButtonProps, IWithReqoreDestructive {
   label?: string | number;
   selected?: boolean;
   itemId?: string;
@@ -104,7 +107,8 @@ const ReqoreMenuItem = memo(
         disabled,
         itemId,
         tooltip,
-        intent,
+        intent: ownIntent,
+        destructive,
         flat = true,
         stackWithActions = true,
         scrollIntoView,
@@ -114,6 +118,10 @@ const ReqoreMenuItem = memo(
       ref
     ) => {
       const { setRef } = useCombinedRefs<HTMLButtonElement>(ref);
+      /* An entry that destroys something is drawn in danger where it gives no intent of its own: in a
+         menu its words are its look, so the marker is what says it (a panel action's own menu, a row's
+         "⋯"). */
+      const intent: TReqoreIntent | undefined = ownIntent ?? (destructive ? 'danger' : undefined);
       const [itemRef, setItemRef] = useState<HTMLButtonElement | null>(null);
       // one callback for the item's life: a new one each render detached and attached the element each time
       const handleItemRef = useCallback(
@@ -171,7 +179,7 @@ const ReqoreMenuItem = memo(
           /* Inside a menu, the item is scrolled to inside that menu and nothing else moves. Its own
              `scrollIntoView` scrolled every scrollable ancestor to centre it in the viewport - the page's
              scroll container and the document too - so arrow keys in an editor's completion list moved
-             the page and, in a short view, left it blank (qorus#646). */
+             the page and, in a short view, left it blank. */
           const menu = itemRef.closest('.reqore-menu');
           if (menu) {
             scrollWithinMenu(itemRef, menu, scrollBehavior);
@@ -202,8 +210,18 @@ const ReqoreMenuItem = memo(
       ) => {
         if (!action) return null;
 
-        const { actions, actionsProps, onClick: _onClick, ...buttonProps } = action;
+        const {
+          actions,
+          actionsProps,
+          onClick: _onClick,
+          destructive: actionDestructive,
+          ...buttonProps
+        } = action;
         const transparent = rest.transparent === false ? false : !rest.effect;
+        // a destructive action keeps its own look (a red icon on a quiet button), not the item's tint
+        const actionIntent = actionDestructive ? undefined : intent;
+        // the row's size, unless the action names its own: buttons that sit together are one size
+        const actionSize = rest.size;
 
         if (actions?.length) {
           return (
@@ -217,8 +235,9 @@ const ReqoreMenuItem = memo(
               minimal={rest.minimal}
               customTheme={rest.customTheme}
               className={className}
-              intent={intent}
+              intent={actionIntent}
               active={selected}
+              size={actionSize}
               // A menu row's action opens beside the row, not over the list
               // below it; consumers can override via `actionsProps`. No caret so
               // the control keeps the action's own icon (e.g. a bare `+`).
@@ -241,16 +260,29 @@ const ReqoreMenuItem = memo(
             minimal={rest.minimal}
             customTheme={rest.customTheme}
             className={className}
-            intent={intent}
+            intent={actionIntent}
             active={selected}
+            size={actionSize}
             {...buttonProps}
             onClick={handleActionClick}
           />
         );
       };
 
+      /* A row with a description under its name is two lines tall. Stretched to the row, its actions
+         centred their icons between the two lines, below the count on the name's line; they sit on
+         the name's line instead, at their own height. A stacked row with borders keeps them the
+         row's height, so their edges join. */
+      const actionsOnTheNamesLine = !!rest.description && (flat || !stackWithActions);
+
       return (
-        <ReqoreControlGroup stack={stackWithActions} fluid fill responsive={false}>
+        <ReqoreControlGroup
+          stack={stackWithActions}
+          fluid
+          fill={!actionsOnTheNamesLine}
+          verticalAlign={actionsOnTheNamesLine ? 'flex-start' : undefined}
+          responsive={false}
+        >
           {renderAction(leftAction, 'reqore-menu-item-left-action', handleLeftActionClick)}
           <ReqoreButton
             as={as}

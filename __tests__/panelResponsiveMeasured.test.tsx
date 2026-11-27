@@ -61,7 +61,7 @@ describe('a panel header at different measured widths', () => {
   /**
    * The regression that matters: an UNMEASURED panel must render the same as a
    * wide one. Before the fix it rendered like the 320px case, then snapped —
-   * which is the layout shift the Qorus IDE saw as a 51px jump.
+   * which is the layout shift a host app saw as a 51px jump.
    */
   it('renders unmeasured exactly as it renders wide', () => {
     const wide = renderPanel(1198).container.innerHTML;

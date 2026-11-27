@@ -12,6 +12,7 @@ import {
 import { ReqoreButton, ReqoreControlGroup, ReqoreIcon } from '../..';
 import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
+import { getFocusRingColor } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -78,6 +79,8 @@ export interface IReqoreTableRowOptions {
   selected: (string | number)[];
   onRowClick?: IReqoreTableRowClick;
   striped?: boolean;
+  /** See `IReqoreTableProps.pinnedSurface`. */
+  pinnedSurface?: TReqoreHexColor;
   selectedRowIntent?: TReqoreIntent;
   size?: TSizes;
   flat?: boolean;
@@ -150,6 +153,9 @@ export interface IReqoreTableRowStyle {
  * `clip` is not a scroll container, so they stick to the body, which is what
  * scrolls.
  */
+/** A number cell's figure: upright, and in tabular figures where the font has them (`content: 'number'`). */
+const NUMBER_CELL_STYLE: React.CSSProperties = { fontStyle: 'normal', fontVariantNumeric: 'tabular-nums' };
+
 const StyledTableRowGroup = styled.div`
   display: flex;
   flex-flow: column;
@@ -228,6 +234,24 @@ export const StyledTableRow = styled.div.withConfig({
         `
       : ''}
   `}
+
+  /* A row that opens is a tab stop; the keyboard's ring is drawn inside its edge, where the scroll
+     area clipping the rows cannot cut it off. It is a layer over the row, above its pinned cells:
+     they stick over the row with a surface of their own, and an outline, drawn under them, framed
+     the row in lines that stopped short of a pinned actions column. */
+  position: relative;
+  &:focus-visible {
+    outline: none;
+  }
+  &:focus-visible::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid ${({ theme }) => getFocusRingColor(theme)};
+    pointer-events: none;
+    /* above a pinned cell (2) */
+    z-index: 3;
+  }
 `;
 
 export interface IReqoreTableCellStyle {
@@ -246,6 +270,7 @@ export interface IReqoreTableCellStyle {
   selectedIntent?: TReqoreIntent;
   even?: boolean;
   striped?: boolean;
+  pinnedSurface?: TReqoreHexColor;
   padded?: IReqoreTableColumn['cell']['padded'];
   wrap?: boolean;
   pin?: 'left' | 'right';
@@ -289,6 +314,7 @@ const ReqoreTableRow = memo(
       selected,
       onRowClick,
       striped,
+      pinnedSurface,
       size,
       selectedRowIntent,
       flat,
@@ -328,8 +354,14 @@ const ReqoreTableRow = memo(
     const CellComponent = cellComponent || ReqoreTableBodyCell;
     const RowComponent = rowComponent || StyledTableRow;
 
-    const pinOffsets = useMemo(() => calculatePinOffsets(columns), [columns]);
-    const totalColumnsWidth = useMemo(() => getTotalColumnsWidth(columns), [columns]);
+    const pinOffsets = useMemo(
+      () => calculatePinOffsets(columns, tableWidth),
+      [columns, tableWidth]
+    );
+    const totalColumnsWidth = useMemo(
+      () => getTotalColumnsWidth(columns, tableWidth),
+      [columns, tableWidth]
+    );
     const rowWrap = useMemo(() => {
       if (wrap) {
         return true;
@@ -362,15 +394,17 @@ const ReqoreTableRow = memo(
               fluid
               style={{ height: '100%' }}
               rounded={false}
+              className='reqore-table-cell-actions'
             >
-              {(actions ?? cell.actions(data)).map(({ label, shortLabel, ...action }, index) => {
+              {(actions ?? cell.actions(data)).map(
+                ({ label, shortLabel, destructive: _destructive, ...action }, index) => {
                 /* An action's label is drawn in its button, as a button's is. Only where the
                    column is folded (a narrow table, a row with one action) does an action with an
                    icon show the icon alone, in the menu button's square: its label is then its
                    tooltip, unless it has one. A button that draws no label is named by its label
                    or tooltip text, which a screen reader would not read from the icon. Folded, an
                    action with no icon says its short label where it has one, its label then its
-                   tooltip and its name (`getCompactRowAction`, qorus#646), and the column is as
+                   tooltip and its name (`getCompactRowAction`), and the column is as
                    wide as those words (`getFoldedActionText`, `useFoldedActionWidths`). */
                 const drawLabel = hasRowActionLabel(label) && !(folded && action.icon);
                 const compact =
@@ -465,12 +499,14 @@ const ReqoreTableRow = memo(
                 </ReqoreP>
               );
             case 'number':
+              /* A figure is upright, its digits each as wide as the next (tabular figures, where the font has
+                 them), so a column of numbers lines up where its column aligns it. It was drawn in italics. */
               return (
                 <ReqoreP
-                  className='reqore-table-text'
+                  className='reqore-table-text reqore-table-number'
                   intent={intent as TReqoreIntent}
                   size={size}
-                  effect={{ italic: true }}
+                  style={NUMBER_CELL_STYLE}
                 >
                   {datum}
                 </ReqoreP>
@@ -596,6 +632,7 @@ const ReqoreTableRow = memo(
                   align,
                   size,
                   striped,
+                  pinnedSurface,
                   tooltip,
                   padded: cell?.padded ?? (cell?.actions ? 'none' : undefined),
                   disabled: data[index]._disabled,
@@ -610,7 +647,7 @@ const ReqoreTableRow = memo(
                   pinEdge: pinInfo?.isEdge,
                   even: index % 2 === 0 ? true : false,
                   intent: cell?.intent || data[index]._intent || intent,
-                  interactive: (!!cell?.onClick || !!onRowClick) && !isStatic,
+                  interactive: (!!cell?.onClick || !!onRowClick || canExpand) && !isStatic,
                   interactiveCell: !!cell?.onClick && !isStatic,
                   onClick: (e: React.MouseEvent<HTMLDivElement>) => {
                     if (isStatic) {
@@ -657,6 +694,7 @@ const ReqoreTableRow = memo(
         expandHeightButtonProps,
         size,
         striped,
+        pinnedSurface,
         selectedRowIntent,
         flat,
         CellComponent,
@@ -682,8 +720,30 @@ const ReqoreTableRow = memo(
       ...consumerAttrs
     } = consumerRowProps ?? {};
 
+    /* A row that opens or expands on a click opens on Enter or Space too, and is a tab stop: no list
+       row could be opened from the keyboard, and only the scroll area took focus. Keys pressed in a
+       cell's own controls (its buttons, a checkbox) stay theirs. A caller's own `tabIndex` or
+       `onKeyDown` (`getRowProps`) wins. */
+    const rowActivates = (!!onRowClick || canExpand) && !data[index]._disabled && !isStatic;
+    const handleRowKeyDown = useCallback(
+      (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) {
+          return;
+        }
+        event.preventDefault();
+        if (canExpand) {
+          onExpandClick?.(expandId);
+        } else {
+          onRowClick?.(data[index]);
+        }
+      },
+      [canExpand, onExpandClick, expandId, onRowClick, data, index]
+    );
+
     const row = (
       <RowComponent
+        tabIndex={rowActivates ? 0 : undefined}
+        onKeyDown={rowActivates ? handleRowKeyDown : undefined}
         {...consumerAttrs}
         style={renderExpandedRow ? undefined : mergedStyle}
         className={mergedClassName}

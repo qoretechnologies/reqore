@@ -70,6 +70,32 @@ export const Basic: Story = {
     },
   },};
 
+export const NeutralColours: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree under a theme with `colorDataByType: false`: keys are quiet labels (the text colour at 0.65 opacity, as a plain data view draws them) and every value is plain text — no blue keys, no green or red booleans, no blue numbers. For an app whose colours each mean something, where a value painted green reads as a verdict.',
+      },
+    },
+  },
+  args: {
+    expanded: true,
+    otherThemeOptions: { colorDataByType: false },
+  },
+  play: async () => {
+    await waitFor(() =>
+      expect(document.querySelectorAll('.reqore-tree-label').length).toBeGreaterThan(0)
+    );
+    const colours = new Set(
+      Array.from(document.querySelectorAll('.reqore-tree-label')).map(
+        (label) => getComputedStyle(label).color
+      )
+    );
+    await expect(colours.size).toBe(1);
+  },
+};
+
 export const TextView: Story = {
   parameters: {
     docs: {
@@ -578,5 +604,46 @@ export const CopiedWithoutClipboardApi: Story = {
     await _testsClickButton({ selector: '.reqore-tree-copy' });
     await _testsWaitForText('Successfully copied to clipboard');
     await expect(screen.queryByText('Could not copy')).toBeNull();
+  },
+};
+
+export const ButtonsSayWhatTheyDo: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an editable tree with copy buttons. Each row\'s icon buttons say what they do, as a tooltip and to a screen reader: "Edit", "Delete", "Copy the value", and "Add an item" on an object and on the tree; `editLabel`, `deleteLabel`, `copyLabel` and `addLabel` translate them. No button in the tree is left without a name.',
+      },
+    },
+  },
+  args: {
+    data: { name: 'Order sync', retries: 3, tags: { region: 'eu' } },
+    expanded: true,
+    editable: true,
+    withLabelCopy: true,
+  },
+  play: async ({ canvasElement }) => {
+    const names = (selector: string) =>
+      Array.from(canvasElement.querySelectorAll(selector)).map((button) =>
+        button.getAttribute('aria-label')
+      );
+
+    await waitFor(() => expect(names('.reqore-tree-edit').length).toBeGreaterThan(0));
+    for (const [selector, name] of [
+      ['.reqore-tree-edit', 'Edit'],
+      ['.reqore-tree-delete', 'Delete'],
+      ['.reqore-tree-copy', 'Copy the value'],
+      ['.reqore-tree-add', 'Add an item'],
+    ]) {
+      await expect(names(selector).length, selector).toBeGreaterThan(0);
+      names(selector).forEach((label) => expect(label).toBe(name));
+    }
+    const unnamed = Array.from(canvasElement.querySelectorAll('button')).filter(
+      (button) =>
+        !button.getAttribute('aria-label') &&
+        !button.getAttribute('title') &&
+        !button.textContent?.trim()
+    );
+    await expect(unnamed.map((button) => button.className)).toEqual([]);
   },
 };

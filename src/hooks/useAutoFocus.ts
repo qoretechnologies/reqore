@@ -69,8 +69,8 @@ export const useAutoFocus = (
     // Only when a genuinely new element appears — the field opening, or a different element taking its
     // place. Not every time the element reference changes: a controlled input hands React a new ref callback
     // on each render, so the SAME node arrives under a changing identity on every keystroke. Re-running this
-    // re-applied focus and moved the selection to the end mid-edit, which dropped a character being typed
-    // (qorus#646). React reconciles the same node, so once settled its identity here is stable across those
+    // re-applied focus and moved the selection to the end mid-edit, which dropped a character being typed.
+    // React reconciles the same node, so once settled its identity here is stable across those
     // re-renders.
     if (element && rules && settledElement.current !== element) {
       settledElement.current = element;

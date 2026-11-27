@@ -3,11 +3,13 @@ import { expect, waitFor } from 'storybook/test';
 import { IReqoreCalloutProps, ReqoreCallout } from '../../components/Callout';
 import ReqoreButton from '../../components/Button';
 import ReqoreControlGroup from '../../components/ControlGroup';
+import ReqoreTextarea from '../../components/Textarea';
 import { TSizes } from '../../constants/sizes';
 import { DEFAULT_INTENTS } from '../../constants/theme';
 import { StoryMeta } from '../utils';
 import { ALL_SIZES, FlatArg, IntentArg, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreCalloutProps>();
 
 const meta = {
@@ -241,7 +243,7 @@ export const WithLabel: Story = {
   args: {
     label: 'Configuration required',
     description:
-      'Set up your AI provider before publishing this Qog. The build will succeed but runs will fail at execution time.',
+      'Set up your AI provider before publishing this flow. The build will succeed but runs will fail at execution time.',
     intent: 'warning',
   },
 };
@@ -260,16 +262,16 @@ export const WithLabelAndRichBody: Story = {
   },
   render: Template,
   args: {
-    label: 'Build with Qonsole',
+    label: 'Build with the assistant',
     icon: 'Robot2Line',
     intent: 'info',
     children: (
       <>
-        Prefer natural language? Open Qonsole and describe what you need — it can build and
+        Prefer natural language? Open the assistant and describe what you need — it can build and
         edit this service for you, step by step.
         <ReqoreControlGroup style={{ marginTop: '10px' }}>
           <ReqoreButton icon='Robot2Line' intent='info' fixed>
-            Create with Qonsole
+            Create with the assistant
           </ReqoreButton>
           <ReqoreButton icon='BookOpenLine' fixed>
             Read the guide
@@ -751,5 +753,119 @@ export const LabelOnly: Story = {
         expect(Math.abs(iconMid - textMid)).toBeLessThanOrEqual(1);
       });
     });
+  },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a neutral and a warning callout on the default and on the themed surface: the neutral one takes the panel surface and hairline, the warning one keeps its intent.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreCallout label='Neutral callout' description='Sits on the panel surface.' />
+      <ReqoreCallout intent='warning' label='Warning callout' description='Keeps its intent.' />
+    </ThemedSurfaceComparison>
+  ),
+};
+
+export const ContentFillsTheCallout: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a callout whose only content is a short sentence above a full-width box. The content fills the callout, so the box spans it rather than stopping at the width of the sentence.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreCallout intent='danger'>
+      <div>A short sentence.</div>
+      <div
+        data-testid='full-width-box'
+        style={{ width: '100%', padding: 8, border: '1px solid currentColor', boxSizing: 'border-box' }}
+      >
+        Full width
+      </div>
+    </ReqoreCallout>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('[data-testid="full-width-box"]') as HTMLElement;
+    const content = canvasElement.querySelector('.reqore-callout-content') as HTMLElement;
+    const callout = canvasElement.querySelector('.reqore-callout') as HTMLElement;
+    await waitFor(() => expect(box).toBeTruthy());
+    // the content is as wide as the callout leaves it (the icon aside), and the box fills it
+    await expect(content.getBoundingClientRect().width).toBeGreaterThan(
+      callout.getBoundingClientRect().width * 0.8
+    );
+    await expect(Math.round(box.getBoundingClientRect().width)).toBe(
+      Math.round(content.getBoundingClientRect().width)
+    );
+  },
+};
+
+/** A host laid out as a flex column, as a dialog body or a form is: taller than what it holds. */
+const COLUMN_HOST: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 12,
+  width: 480,
+  height: 520,
+  padding: 12,
+  boxSizing: 'border-box',
+  outline: '1px dashed rgba(127, 127, 127, 0.5)',
+};
+
+export const FluidFillsTheWidthNeverTheHeight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A fluid callout and a fluid textarea in a column host 520px tall (dashed): each is the host\'s full width and only as tall as what it holds, not the column\'s whole height. Below, in a row, a fluid textarea beside a button still fills the rest of the row.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <div className='column-host' style={COLUMN_HOST}>
+        <ReqoreCallout className='fluid-callout' fluid intent='info' label='Heads up'>
+          The order sync runs every five minutes.
+        </ReqoreCallout>
+        <ReqoreTextarea fluid value='A note on the order.' onChange={() => undefined} />
+      </div>
+      <div className='row-host' style={{ display: 'flex', gap: 12, width: 480 }}>
+        <ReqoreButton fixed>Attach</ReqoreButton>
+        <ReqoreTextarea fluid value='Beside a button' onChange={() => undefined} />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const host = canvasElement.querySelector('.column-host') as HTMLElement;
+    const inner = host.clientWidth - 24;
+    const callout = host.querySelector('.fluid-callout') as HTMLElement;
+    const textarea = host.querySelector('.reqore-control-wrapper') as HTMLElement;
+
+    await waitFor(() => expect(callout.getBoundingClientRect().height).toBeGreaterThan(0));
+    for (const [name, element] of [
+      ['callout', callout],
+      ['textarea', textarea],
+    ] as const) {
+      const box = element.getBoundingClientRect();
+      await expect(Math.round(box.width), `a fluid ${name} is the host's full width`).toBe(inner);
+      await expect(box.height, `a fluid ${name} is not the column's whole height`).toBeLessThan(200);
+    }
+
+    // in a row it still fills what is left beside the button
+    const row = canvasElement.querySelector('.row-host') as HTMLElement;
+    const button = row.querySelector('.reqore-button') as HTMLElement;
+    const rowTextarea = row.querySelector('.reqore-control-wrapper') as HTMLElement;
+    await expect(
+      Math.round(rowTextarea.getBoundingClientRect().width),
+      'a fluid textarea fills the rest of a row'
+    ).toBe(Math.round(row.clientWidth - button.getBoundingClientRect().width - 12));
   },
 };

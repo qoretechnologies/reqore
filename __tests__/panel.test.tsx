@@ -640,6 +640,57 @@ test('Panel accent strip rounds itself only when a sticky header stops the wrapp
   expect(declaration(getRuleFor(plain, '::before'), 'border-top-left-radius')).toBeUndefined();
 });
 
+test('Panel rounds a collapsed title\'s bottom corners, so the card keeps its shape', () => {
+  // A collapsed panel is its title alone. With the title's bottom corners square, its surface
+  // painted over the panel's rounded bottom edge — the panel does not clip while its header is
+  // sticky — and the card looked cut off along the bottom.
+  render(
+    <div style={{ width: '600px' }}>
+      <ReqoreUIProvider theme={{ panel: { radius: 14 } }}>
+        <ReqoreLayoutContent>
+          <ReqorePanel label='Collapsed' collapsible isCollapsed stickyHeader>
+            Body
+          </ReqorePanel>
+          <ReqorePanel label='Open' collapsible stickyHeader>
+            Body
+          </ReqorePanel>
+          <ReqorePanel label='Square' collapsible isCollapsed stickyHeader rounded={false}>
+            Body
+          </ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    </div>
+  );
+
+  const [collapsed, open, square] = Array.from(
+    document.querySelectorAll('.reqore-panel-title')
+  ) as HTMLElement[];
+  // jsdom computes no radius from a stylesheet, so the declarations are read from the rules
+  // generated for the title's own classes.
+  const corner = (el: HTMLElement, prop: string) => {
+    const classes = Array.from(el.classList);
+    for (const style of Array.from(document.querySelectorAll('style'))) {
+      for (const rule of Array.from((style.sheet as CSSStyleSheet).cssRules)) {
+        const { selectorText, cssText } = rule as CSSStyleRule;
+        if (!classes.some((c) => selectorText === `.${c}`)) continue;
+        const value = declaration(cssText, prop);
+        if (value) return value;
+      }
+    }
+    return undefined;
+  };
+  const corners = (el: HTMLElement) => [
+    corner(el, 'border-top-left-radius'),
+    corner(el, 'border-bottom-left-radius'),
+    corner(el, 'border-bottom-right-radius'),
+  ];
+
+  // inside the 1px border, like the top corners
+  expect(corners(collapsed)).toEqual(['13px', '13px', '13px']);
+  expect(corners(open)).toEqual(['13px', undefined, undefined]);
+  expect(corners(square)).toEqual([undefined, undefined, undefined]);
+});
+
 test('Does not forward the Panel accentPosition prop to the DOM', () => {
   // A resizable panel renders as a COMPONENT target, where styled-components forwards every
   // prop — re-resizable then spreads the leftovers onto its wrapper div.
@@ -797,5 +848,147 @@ describe('narrow action labels', () => {
     // The action keeps its icon and loses its words — the label moves to the tooltip.
     expect(bar.textContent).not.toContain('Preview');
     mockedPanelWidth = 0;
+  });
+
+  test("Keeps a split button's words in a narrow bottom bar when they ask to", () => {
+    // A split button: its words (`responsive: false`) and a caret with a menu (a
+    // review drawer on a phone). The words were not drawn at all, at any width.
+    mockedPanelWidth = 360;
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqorePanel
+            label='Review'
+            bottomActions={[
+              {
+                responsive: false,
+                group: [
+                  { label: 'Reject', icon: 'CloseLine', responsive: false, className: 'reject' },
+                  {
+                    icon: 'ArrowDownSLine',
+                    className: 'more',
+                    actions: [{ label: 'Reject and comment' }],
+                  },
+                ],
+              },
+            ]}
+          >
+            Body
+          </ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    expect(document.querySelector('.reject')?.textContent).toContain('Reject');
+    expect(document.querySelector('.more')).not.toBeNull();
+    mockedPanelWidth = 0;
+  });
+
+  test("Folds a group child's words in a narrow bar when it does not ask to keep them", () => {
+    mockedPanelWidth = 360;
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqorePanel
+            label='Review'
+            bottomActions={[
+              {
+                responsive: false,
+                group: [{ label: 'Reject', icon: 'CloseLine', className: 'reject' }],
+              },
+            ]}
+          >
+            Body
+          </ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    expect(document.querySelector('.reject')).not.toBeNull();
+    expect(document.querySelector('.reject')?.textContent).not.toContain('Reject');
+    mockedPanelWidth = 0;
+  });
+});
+
+describe('a title and its badges', () => {
+  const renderTitle = (ui: React.ReactNode) =>
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>{ui}</ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+  test('Share one wrapping line, the title first: the badges move under it before it is cut', () => {
+    renderTitle(
+      <ReqorePanel label='Deliveries by channel' badge='Last 30 days' icon='MailLine'>
+        Body
+      </ReqorePanel>
+    );
+
+    const line = document.querySelector('.reqore-panel-title-label-and-badges') as HTMLElement;
+    const style = getComputedStyle(line);
+
+    expect(style.flexWrap).toBe('wrap');
+    // The room the badges keep from the title is a gap, drawn only between items on one line,
+    // so badges on a line of their own start on the title's edge.
+    expect(style.columnGap).toBe('11px');
+    expect(line.firstElementChild!.classList.contains('reqore-panel-title-label-box')).toBe(true);
+    expect(line.firstElementChild!.textContent).toBe('Deliveries by channel');
+    expect(line.lastElementChild!.classList.contains('reqore-tag-group')).toBe(true);
+    expect(line.lastElementChild!.textContent).toBe('Last 30 days');
+    expect(line.children).toHaveLength(2);
+    // The icon is outside the line: badges below the title line up with the title, not the icon.
+    expect(line.querySelector('.reqore-panel-title-icon')).toBeNull();
+    expect(line.parentElement!.querySelector(':scope > .reqore-panel-title-icon')).not.toBeNull();
+  });
+
+  test('Take a title the caller draws itself the same way', () => {
+    renderTitle(
+      <ReqorePanel
+        label={<h4 className='my-title'>Deliveries</h4>}
+        badge={['Last 30 days', 'Soon']}
+        actions={[{ icon: 'QuestionLine' }]}
+      >
+        Body
+      </ReqorePanel>
+    );
+
+    const line = document.querySelector('.reqore-panel-title-label-and-badges') as HTMLElement;
+
+    expect(line.firstElementChild!.classList.contains('my-title')).toBe(true);
+    expect(line.lastElementChild!.textContent).toBe('Last 30 daysSoon');
+    // A group of badges folds onto further lines rather than running past the bar.
+    expect(getComputedStyle(line.lastElementChild as HTMLElement).flexWrap).toBe('wrap');
+  });
+
+  test("Pull a text badge back by its padding, so its words start on the title's edge", () => {
+    renderTitle(
+      <>
+        <ReqorePanel
+          className='text-badge'
+          label='Deliveries'
+          badge={{ label: 'Last 30 days', appearance: 'text' }}
+        >
+          Body
+        </ReqorePanel>
+        <ReqorePanel className='chip-badge' label='Deliveries' badge='Last 30 days'>
+          Body
+        </ReqorePanel>
+      </>
+    );
+
+    const line = (panel: string) =>
+      document.querySelector(`.${panel} .reqore-panel-title-label-and-badges`) as HTMLElement;
+    const badges = (panel: string) => line(panel).querySelector('.reqore-tag-group') as HTMLElement;
+
+    // A normal panel's text badge is a `normal` tag, 6px in from its edge: pulled back by 6px,
+    // with the gap widened by as much, so beside the title the room is what it was.
+    expect(getComputedStyle(badges('text-badge')).marginLeft).toBe('-6px');
+    expect(getComputedStyle(line('text-badge')).columnGap).toBe('17px');
+    // A chip's edge is its box: nothing moves.
+    expect(getComputedStyle(badges('chip-badge')).marginLeft).not.toBe('-6px');
+    expect(getComputedStyle(line('chip-badge')).columnGap).toBe('11px');
   });
 });

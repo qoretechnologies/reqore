@@ -27,7 +27,7 @@ export const SAMPLES: TSample[] = [
     key: 'warning',
     intent: 'warning',
     title: 'Quota at 90%',
-    content: 'Qog executions pause at the limit. Raise it, or trim the schedule.',
+    content: 'Flow executions pause at the limit. Raise it, or trim the schedule.',
     short: 'Quota at 90%',
     actions: [{ label: 'Raise limit', icon: 'ArrowUpLine' }],
   },

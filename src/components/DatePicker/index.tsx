@@ -7,6 +7,7 @@ import {
   toZoned,
   ZonedDateTime,
 } from '@internationalized/date';
+import { rgba } from 'polished';
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -21,8 +22,14 @@ import {
   TimeField,
 } from 'react-aria-components';
 import { ReqoreErrorBoundary, ReqorePanel, ReqorePopover } from '../..';
-import { changeLightness } from '../../helpers/colors';
-import { formatDateToType, isUnreadableDate, TDateFormat, toDate } from '../../helpers/dates';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
+import {
+  formatDateToType,
+  isUnreadableDate,
+  TDateFormat,
+  toDate,
+  toPlainDate,
+} from '../../helpers/dates';
 import { resolveLocale } from '../../helpers/locale';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
@@ -96,8 +103,8 @@ export interface IDatePickerProps<T extends TDateValue>
   /** When true, renders a button trigger instead of a text input.
    *  The date can only be selected via the calendar popover — no manual typing. */
   selectOnly?: boolean;
-  /** Placeholder text shown on the button trigger when there is no value.
-   *  Only used when `selectOnly` is true. */
+  /** What an empty picker says ("Pick a day"): on the button trigger (`selectOnly`), and in a field that takes typing,
+   *  in the placeholder colour, until it is focused, when its segments ("yyyy - mm - dd") appear for typing. */
   placeholder?: string;
   /** Props for the button trigger. Only used when `selectOnly` is true. */
   buttonProps?: IReqoreButtonProps;
@@ -126,6 +133,19 @@ export interface IDatePickerProps<T extends TDateValue>
    * Defaults to `'Month'`. Override to translate.
    */
   monthLabel?: string;
+  /**
+   * The name of the clear button an `isClearable` picker with a value shows (its tooltip and
+   * accessible name: the button is an icon alone). Defaults to `'Clear'`.
+   */
+  clearLabel?: string;
+  /**
+   * A plain date: a day, with no time and no time zone, read and written as `YYYY-MM-DD` (a test's rows, a
+   * birthday, a due day). The picker shows the day and no time, and gives back the day picked, whatever zone the
+   * browser is in. Without it a value is an instant, written as ISO in UTC, so a day picked east of UTC came back as
+   * the day before (`2026-10-17` picked in Auckland was `2026-10-16T11:00:00.000Z`). A value given as an instant is
+   * read as the day it falls on in the browser's zone.
+   */
+  plainDate?: boolean;
 }
 
 const StyledRADatePicker: typeof RADatePicker = styled(RADatePicker)`
@@ -151,6 +171,36 @@ const StyledDateInput: typeof DateInput = styled(DateInput).withConfig({
 })`
   display: inline-flex;
   align-items: center;
+
+  /* An empty field that takes typing says its placeholder (\`data-placeholder-text\`) until it is focused: its segments'
+     template ("yyyy - mm - dd") read as a date already given. The segments stay where they are, unseen, so a click
+     or a tab still lands in one; a segment typed into keeps them all shown. */
+  &[data-placeholder-text]:not(:focus-within):not(
+      :has([data-type]:not([data-type='literal']):not([data-placeholder]))
+    ) {
+    position: relative;
+
+    & > [data-type] {
+      color: transparent;
+    }
+
+    &::before {
+      content: attr(data-placeholder-text);
+      position: absolute;
+      inset: 0;
+      box-sizing: border-box;
+      padding: inherit;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      white-space: nowrap;
+      pointer-events: none;
+      color: ${({ theme }) =>
+        theme?.main
+          ? rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.3)
+          : undefined};
+    }
+  }
 `;
 const StyledCalendarGrid = styled(CalendarGrid)`
   width: 100%;
@@ -313,7 +363,7 @@ export const DatePicker = <T extends TDateValue>({
   intent,
   customTheme,
   inheritCustomTheme,
-  granularity = 'minute',
+  granularity: granularityProp = 'minute',
   hourCycle = 24,
   hideTimeZone = true,
   shouldForceLeadingZeros = true,
@@ -343,8 +393,12 @@ export const DatePicker = <T extends TDateValue>({
   timeAriaLabel = 'Time',
   monthNames,
   monthLabel = 'Month',
+  clearLabel = 'Clear',
+  plainDate,
   ...props
 }: IDatePickerProps<T>) => {
+  // a plain date is a day: no time to pick
+  const granularity = plainDate ? 'day' : granularityProp;
   /* What the field shows: the date as `readDate` reads it - with no zone, as local time - or nothing for a value it
      cannot read, which never throws from the render. Such a value is said the way the field says one out of its
      bounds: it is invalid (and drawn in the danger intent). */
@@ -412,6 +466,18 @@ export const DatePicker = <T extends TDateValue>({
   const showTime = granularity === 'minute' || granularity === 'second' || granularity === 'hour';
 
   const handleDateChange = (value: ZonedDateTime, close = true) => {
+    // a plain date gives back the day picked, as it is, never through UTC
+    if (plainDate) {
+      onChange?.((value ? toPlainDate(value) : null) as T);
+      setFocusedValue(value);
+
+      if (closeOnSelect && close) {
+        popoverData.current?.close();
+      }
+
+      return;
+    }
+
     let date: Date;
     // if previous value is null apply saved time state
     if (!_value && time) {
@@ -458,7 +524,9 @@ export const DatePicker = <T extends TDateValue>({
   };
 
   const handleCalendarDateChange = (date: ZonedDateTime) => {
-    handleDateChange(value ? toZoned(toCalendarDateTime(date, time), getLocalTimeZone()) : date);
+    handleDateChange(
+      value && !plainDate ? toZoned(toCalendarDateTime(date, time), getLocalTimeZone()) : date
+    );
   };
 
   const { Component, props: finalProps } = useComponentTooltip<any>(
@@ -672,6 +740,10 @@ export const DatePicker = <T extends TDateValue>({
                 <ReqoreButton
                   fixed
                   icon='CloseLine'
+                  // An icon alone named nothing for a screen reader.
+                  tooltip={clearLabel}
+                  aria-label={clearLabel}
+                  className='reqore-datepicker-clear'
                   size={size}
                   intent={intent}
                   flat={flat}
@@ -710,6 +782,7 @@ export const DatePicker = <T extends TDateValue>({
               flat,
               customTheme: theme,
               icon: 'CalendarLine',
+              'data-placeholder-text': placeholder || undefined,
               ...inputProps,
             }}
             closeOnOutsideClick={!isMonthDropdownOpen && !isYearDropdownOpen}

@@ -1,11 +1,10 @@
 import { isArray, isObject } from 'lodash';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useMeasure } from 'react-use';
 import { css } from 'styled-components';
 import { IReqoreTabsListItem, IReqoreTabsProps } from '.';
 import { ReqorePopover } from '../..';
 import {
-  CONTROL_TEXT_FROM_SIZE,
   GAP_FROM_SIZE,
   ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
@@ -20,6 +19,8 @@ import {
   getNthGradientColor,
 } from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
+import { badgeNeedsAttention, foldToFitWithLabel, shortFoldLabel } from '../../helpers/fold';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { calculateStringSizeInPixels, getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreBreadcrumbItem } from '../Breadcrumbs';
@@ -118,35 +119,51 @@ export const DEFAULT_TABS_OVERFLOW_MENU_MAX_HEIGHT = `min(${TABS_OVERFLOW_MENU_M
 const isTabHidden = (items: IReqoreTabsListItem[], activeTab?: string | number) =>
   items.find((item) => item?.id === activeTab);
 
+/** The "More" tab's label: fixed, or worded from the tabs folded into it. */
+export type TReqoreTabsOverflowLabel = string | number | ((folded: IReqoreTabsListItem[]) => string);
+
 const getMoreLabel = (
   items: IReqoreTabsListItem[],
   activeTab?: string | number,
-  overflowLabel: string | number = 'More'
+  overflowLabel: TReqoreTabsOverflowLabel = 'More',
+  /** A function's label in its short form ("+3"), when the strip does not fit with it in full. */
+  short = false
 ) => {
   if (isTabHidden(items, activeTab)) {
     return isTabHidden(items, activeTab)?.label;
   }
 
+  if (typeof overflowLabel === 'function') {
+    return short ? shortFoldLabel(items) : overflowLabel(items);
+  }
   return overflowLabel;
 };
 
-const getBadgeLength = (badge: IReqoreButtonProps['badge'], tabsSize: TSizes = 'normal') => {
+/** A badge's width as a tab (or a segment) draws it: its text one size down, and its padding. */
+export const getBadgeLength = (
+  badge: IReqoreButtonProps['badge'],
+  tabsSize: TSizes = 'normal',
+  theme?: IReqoreTheme
+) => {
   if (!badge) {
     return 0;
   }
 
   if (isArray(badge)) {
-    return badge.reduce((len, b) => len + getBadgeLength(b), 0);
+    return badge.reduce((len, b) => len + getBadgeLength(b, undefined, theme), 0);
   }
 
   if (isObject(badge)) {
-    return getLabelLength(badge, undefined, getOneLessSize(tabsSize)) + PADDING_FROM_SIZE[tabsSize];
+    return (
+      getLabelLength(badge, undefined, getOneLessSize(tabsSize), theme) +
+      PADDING_FROM_SIZE[tabsSize]
+    );
   }
 
   return (
     calculateStringSizeInPixels(
       badge.toString(),
-      CONTROL_TEXT_FROM_SIZE[getOneLessSize(tabsSize)]
+      getControlTextSize(theme, getOneLessSize(tabsSize))
     ) + PADDING_FROM_SIZE[tabsSize]
   );
 };
@@ -154,13 +171,20 @@ const getBadgeLength = (badge: IReqoreButtonProps['badge'], tabsSize: TSizes = '
 export const getLabelLength = (
   item: IReqoreBreadcrumbItem | IReqoreTabsListItem | IReqoreTabsListItem[] | IReqoreTagProps,
   activeTab?: string | number,
-  tabsSize: TSizes = 'normal'
+  tabsSize: TSizes = 'normal',
+  /** The theme whose `typeScale` the labels render at; Reqore's own scale without one. */
+  theme?: IReqoreTheme,
+  /** The "More" tab's label (`overflowLabel`), so a folded group is reckoned at the width it is drawn. */
+  overflowLabel?: TReqoreTabsOverflowLabel,
+  shortOverflow = false
 ) => {
   if (!item) {
     return 0;
   }
 
-  const label: string | number = isArray(item) ? getMoreLabel(item, activeTab) : item.label;
+  const label: string | number = isArray(item)
+    ? getMoreLabel(item, activeTab, overflowLabel, shortOverflow)
+    : item.label;
   const icon: number =
     isArray(item) || item.icon ? ICON_FROM_SIZE[tabsSize] + PADDING_FROM_SIZE[tabsSize] : 0;
   const rightIcon = (item as IReqoreTagProps).rightIcon
@@ -174,18 +198,18 @@ export const getLabelLength = (
       : ICON_FROM_SIZE[tabsSize] * 2;
   const badgeLength = isArray(item)
     ? 0
-    : getBadgeLength((item as IReqoreTabsListItem).badge, tabsSize);
+    : getBadgeLength((item as IReqoreTabsListItem).badge, tabsSize, theme);
   const descriptionLength = isArray(item)
     ? 0
     : calculateStringSizeInPixels(
         (item as IReqoreBreadcrumbItem | IReqoreTabsListItem)?.description?.toString(),
-        CONTROL_TEXT_FROM_SIZE[getOneLessSize(tabsSize)]
+        getControlTextSize(theme, getOneLessSize(tabsSize))
       );
 
   const topLabelLength =
     calculateStringSizeInPixels(
       label?.toString(),
-      CONTROL_TEXT_FROM_SIZE[tabsSize],
+      getControlTextSize(theme, tabsSize),
       (item as IReqoreBreadcrumbItem).effect?.spaced
     ) +
     icon +
@@ -210,23 +234,49 @@ export const getLabelLength = (
  * @param tabsSize the size of the tabs
  * @returns the total width or height of the tabs
  */
+/** A tab's width as it was last drawn, by `measuredTabKey`. */
+export type TReqoreTabsMeasuredWidths = Record<string, number>;
+
+/** The key a drawn width is kept under: a tab by its id, the fold by the label it shows. */
+export const measuredTabKey = (
+  item: IReqoreTabsListItem | IReqoreTabsListItem[],
+  activeTab?: string | number,
+  overflowLabel?: TReqoreTabsOverflowLabel,
+  shortOverflow = false
+): string =>
+  isArray(item)
+    ? `__more__:${getMoreLabel(item, activeTab, overflowLabel, shortOverflow)}`
+    : `tab:${String(item.id)}`;
+
 export const getTabsLength = (
   items: (IReqoreTabsListItem | IReqoreTabsListItem[])[],
   type: 'width' | 'height' = 'width',
   activeTab?: string | number,
-  tabsSize?: TSizes
+  tabsSize?: TSizes,
+  theme?: IReqoreTheme,
+  overflowLabel?: TReqoreTabsOverflowLabel,
+  /** Each tab's width as it was last drawn (`measuredTabKey`), used in place of the estimate. */
+  measured?: TReqoreTabsMeasuredWidths,
+  shortOverflow = false
 ): number =>
-  items.reduce((len, item) => {
+  items.reduce((len, item, index) => {
     if (type === 'height') {
-      const rows = getLabelLength(item, activeTab, tabsSize) / 4 || 1;
+      const rows =
+        getLabelLength(item, activeTab, tabsSize, theme, overflowLabel, shortOverflow) / 4 || 1;
 
       return len + rows * 15 + 10;
+    }
+
+    // A drawn tab is its own width and the gap before it: the strip's gap sits only between tabs.
+    const drawn = measured?.[measuredTabKey(item, activeTab, overflowLabel, shortOverflow)];
+    if (drawn) {
+      return len + drawn + (index ? GAP_FROM_SIZE[tabsSize] : 0);
     }
 
     const labelLength: number =
       PADDING_FROM_SIZE[tabsSize] +
       GAP_FROM_SIZE[tabsSize] +
-      getLabelLength(item, activeTab, tabsSize);
+      getLabelLength(item, activeTab, tabsSize, theme, overflowLabel, shortOverflow);
 
     return len + labelLength;
   }, 0);
@@ -236,30 +286,24 @@ const getTransformedItems = (
   size: number,
   type: 'width' | 'height' = 'width',
   activeTab?: string | number,
-  tabsSize?: TSizes
-): (IReqoreTabsListItem | IReqoreTabsListItem[])[] => {
+  tabsSize?: TSizes,
+  theme?: IReqoreTheme,
+  overflowLabel?: TReqoreTabsOverflowLabel,
+  measured?: TReqoreTabsMeasuredWidths
+): { arranged: (IReqoreTabsListItem | IReqoreTabsListItem[])[]; short: boolean } => {
   if (!size) {
-    return items;
-  }
-  let newItems = [...items];
-
-  while (getTabsLength(newItems, type, activeTab, tabsSize) > size && newItems.length > 1) {
-    if (isArray(newItems[newItems.length - 1])) {
-      (newItems[newItems.length - 1] as IReqoreTabsListItem[]).unshift(
-        newItems[newItems.length - 2] as IReqoreTabsListItem
-      );
-      newItems[newItems.length - 2] = undefined!;
-    } else {
-      const lastItem = newItems[newItems.length - 1];
-      (newItems[newItems.length - 1] as IReqoreTabsListItem[]) = [
-        lastItem,
-      ] as IReqoreTabsListItem[];
-    }
-
-    newItems = newItems.filter((i) => i);
+    return { arranged: items, short: false };
   }
 
-  return newItems.filter((i) => i);
+  // the open tab and one whose count needs attention fold last; a function label shortens
+  return foldToFitWithLabel(
+    items as IReqoreTabsListItem[],
+    (arranged, short) =>
+      getTabsLength(arranged, type, activeTab, tabsSize, theme, overflowLabel, measured, short) >
+      size,
+    (tab) => tab.id === activeTab || badgeNeedsAttention(tab.badge),
+    typeof overflowLabel === 'function'
+  );
 };
 
 type TReqoreTabListItemRendererProps = Pick<
@@ -351,7 +395,22 @@ const ReqoreTabsList = ({
   overflowLabel,
   ...rest
 }: IReqoreTabsListProps) => {
-  const [ref, { width }] = useMeasure();
+  const [measureRef, { width }] = useMeasure<HTMLDivElement>();
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const setListRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      listRef.current = node;
+      measureRef(node as HTMLDivElement);
+    },
+    [measureRef]
+  );
+  /* Each tab's width as drawn: the strip folds on these rather than on an estimate of the
+     label, which can be a few pixels short (a count badge, a font) and let the last tab
+     run past the strip. Tabs that stretch (`fill`) or wrap their names are not drawn at
+     their own width, so they keep the estimate. */
+  const foldsOnDrawnWidths = !vertical && !fill && !wrapTabNames && !_testWidth;
+  const measuredWidths = useRef<TReqoreTabsMeasuredWidths>({});
+  const [measuredVersion, setMeasuredVersion] = useState(0);
   const theme = useReqoreTheme('main', customTheme, intent);
   const activeTabData = tabs.find((tab) => tab.id === activeTab);
   const currentTabColor: TReqoreHexColor =
@@ -361,13 +420,53 @@ const ReqoreTabsList = ({
         getColorFromMaybeString(theme, activeTabData?.customTheme?.main || theme.main);
 
   const filteredItems = tabs.filter((item) => item.show !== false);
-  const transformedItems = useMemo(
+  const { arranged: transformedItems, short: shortOverflow } = useMemo(
     () =>
       vertical
-        ? filteredItems
-        : getTransformedItems(filteredItems, _testWidth || width, 'width', activeTab, size),
-    [filteredItems, _testWidth, width, vertical, activeTab, size]
+        ? { arranged: filteredItems, short: false }
+        : getTransformedItems(
+            filteredItems,
+            _testWidth || width,
+            'width',
+            activeTab,
+            size,
+            theme,
+            overflowLabel,
+            foldsOnDrawnWidths ? measuredWidths.current : undefined
+          ),
+    // `measuredVersion` stands for `measuredWidths`, a ref: a tab drawn at a new width.
+    [
+      filteredItems,
+      _testWidth,
+      width,
+      vertical,
+      activeTab,
+      size,
+      theme,
+      overflowLabel,
+      foldsOnDrawnWidths,
+      measuredVersion,
+    ]
   );
+
+  // Remember each drawn tab's width (and the fold's), and fold again when one changed.
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!foldsOnDrawnWidths || !list) return;
+    const drawn = Array.from(list.children) as HTMLElement[];
+    // one drawn element per item, in order; anything else and the widths can't be matched
+    if (drawn.length !== transformedItems.length) return;
+    let changed = false;
+    transformedItems.forEach((item, index) => {
+      const drawnWidth = drawn[index].getBoundingClientRect().width;
+      const key = measuredTabKey(item, activeTab, overflowLabel, shortOverflow);
+      if (drawnWidth && Math.abs((measuredWidths.current[key] ?? 0) - drawnWidth) > 0.5) {
+        measuredWidths.current[key] = drawnWidth;
+        changed = true;
+      }
+    });
+    if (changed) setMeasuredVersion((version) => version + 1);
+  });
 
   return (
     <ReqoreThemeProvider theme={theme} customTheme={customTheme}>
@@ -377,7 +476,7 @@ const ReqoreTabsList = ({
         fill={fill}
         vertical={vertical}
         className={`${rest.className || ''} reqore-tabs-list`}
-        ref={ref}
+        ref={setListRef}
         flat={flat}
         activeTabMarker={activeTabMarker}
         theme={theme}
@@ -393,7 +492,7 @@ const ReqoreTabsList = ({
                   {
                     icon: 'ArrowDownSLine',
                     id: 'showMore',
-                    label: getMoreLabel(item, activeTab, overflowLabel),
+                    label: getMoreLabel(item, activeTab, overflowLabel, shortOverflow),
                     active: !!isTabHidden(item, activeTab),
                     activeIntent: activeTabIntent,
                     intent: !!isTabHidden(item, activeTab) ? activeTabData?.intent : undefined,
@@ -405,6 +504,11 @@ const ReqoreTabsList = ({
                     flat,
                     size,
                     padded,
+                    // The fold carries the active tab when that tab is hidden, so it is
+                    // marked the way every tab is. Without these it fell back to the
+                    // button's filled active state: a grey box among underlined tabs.
+                    activeTabMarker,
+                    activeTabMarkerColor,
                     className: 'reqore-tabs-list-item-menu',
                   } as IReqoreTabListItemProps
                 }

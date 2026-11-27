@@ -4,14 +4,14 @@ import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'rea
 import { css } from 'styled-components';
 import { ReqoreDropdown, useReqoreTheme } from '../..';
 import {
-  CONTROL_TEXT_FROM_SIZE,
   resolveRadius,
   SIZE_TO_PX,
   TEXTAREA_PADDING_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { changeLightness, getFocusRingColor, getReadableColor } from '../../helpers/colors';
 import styled, {
   listReqoreStyleProps,
   omitStyleProps,
@@ -114,7 +114,10 @@ export const StyledTextareaWrapper = styled.div.withConfig({
   min-height: ${({ _size }) => SIZE_TO_PX[_size]}px;
   max-height: 100%;
   width: ${({ width, fluid }) => (fluid ? '100%' : width ? `${width}px` : 'auto')};
-  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
+  /* \`fluid\` is the host's whole width, never its height: 100% wide, stretched across a column, shrinking to share a
+     row, and never growing along the host's main axis. \`flex: 1\` grew a fluid textarea to a column host's full
+     height. Its height is its own (\`height\`, its rows, or what it is scaled to). */
+  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '0 1 auto' : '0 0 auto')};
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
   position: relative;
   overflow: hidden;
@@ -126,7 +129,7 @@ export const StyledTextareaWrapper = styled.div.withConfig({
       display: flex;
     }
 
-    outline: 2px solid ${({ theme }) => changeLightness(theme.main, 0.25)};
+    outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
     outline-offset: -2px;
   }
 `;
@@ -179,13 +182,19 @@ export const StyledTextarea = styled(StyledEffect).withConfig({
   width: 100%;
   max-width: 100%;
   max-height: 100%;
-  font-size: ${({ _size = 'normal' }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
+  /* The page's font (or the theme's), not the browser's monospace: a textarea is prose unless it
+     says otherwise. One that holds code or data asks for monospace (\`effect={{ fontFamily:
+     'mono' }}\`), as the export dialog and the tree's value editor do (per use,
+     not monospace everywhere because there may be code). */
+  font-family: inherit;
+  font-size: ${({ _size = 'normal', theme }) => getControlTextSize(theme, _size as TSizes)}px;
   margin: 0;
   padding: ${({ _size = 'normal' }) => TEXTAREA_PADDING_FROM_SIZE[_size]}px;
   padding-right: ${({ hasClearButton, _size = 'normal' }) =>
     hasClearButton ? `${SIZE_TO_PX[_size]}px` : undefined};
   min-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size]}px;
-  line-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size] - CONTROL_TEXT_FROM_SIZE[_size]}px;
+  line-height: ${({ _size = 'normal', theme }) =>
+    SIZE_TO_PX[_size] - getControlTextSize(theme, _size as TSizes)}px;
   vertical-align: middle;
   /* Height only. The textarea fills its wrapper, so the browser's default
      \`resize: both\` let a drag narrow the textarea while the wrapper — border,
@@ -345,8 +354,8 @@ function Textarea<T>(
     setPopoverData(data);
   }, []);
 
-  /* The author comes into the field from the keyboard: the templates are listed, as a click lists them
-     (qorus#646). Focus brought by a pointer is the click's to answer - opening for it too would close the
+  /* The author comes into the field from the keyboard: the templates are listed, as a click lists them.
+     Focus brought by a pointer is the click's to answer - opening for it too would close the
      list again on the click - and focus that comes back from the list (a template picked) or from nowhere
      opens nothing. Nor does focus that moves within the field: a click on a chip in a rich-text field
      moves the focus from the editor to the chip, and the editor is not outside the field. Taken for
@@ -418,7 +427,7 @@ function Textarea<T>(
   /* Typing is declining the offer.
 
      The template list is anchored to the field, and a long enough list covers
-     the very text being typed. Reported on the Qorus IDE's assertion `Value`
+     the very text being typed. Reported on an app's assertion `Value`
      field: clicking in to place a cursor opened a 29-item list whose entries
      each carry a paragraph of prose, and it then sat on top of the editor
      while the author typed — the warning under it updated as they went, and
@@ -447,9 +456,9 @@ function Textarea<T>(
          `RichTextEditor` renders its styling / undo / redo buttons as
          `customElements` of the SAME popover as the template list, so there is
          no way to dismiss one without the other. Exempting surfaces that carry
-         controls was tried and is worse: every Qorus IDE rich-text field passes
-         `actions={{redo, undo}}`, so the exemption held the list open on every
-         field it was written for — it disabled the fix exactly where it was
+         controls was tried and is worse: every rich-text field of the app this
+         was written for passes `actions={{redo, undo}}`, so the exemption held
+         the list open on every field it was written for — it disabled the fix exactly where it was
          needed. Dismissing on a keystroke is the behaviour asked for; the
          controls come back with the surface on the next click. */
 
@@ -470,7 +479,7 @@ function Textarea<T>(
   /* Text written without a key goes the same way. An on-screen keyboard (a phone, a tablet) sends
      no keydown for a character - only the input it makes - so on a touch device the list stayed
      open over what was being written, and over the completion list a typed `@` or `$` opens beside
-     it (qorus#646). Heard natively: React's `onBeforeInput` is a composite of its own, not this
+     it. Heard natively: React's `onBeforeInput` is a composite of its own, not this
      event.
 
      Composition text counts when it has text in it. An Android keyboard (Gboard) writes ordinary
@@ -531,7 +540,9 @@ function Textarea<T>(
           onFocusCapture={handleFocusCapture}
           className={`${className || ''} reqore-control reqore-textarea`}
           _size={size}
-          ref={(ref) => setInputRef(ref)}
+          // The setter itself, which keeps its identity: an arrow made here was a new ref on every render, so React
+          // called it with null and then the element each time, two updates for nothing.
+          ref={setInputRef}
           theme={theme}
           rounded={rounded}
           rows={rows}

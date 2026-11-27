@@ -143,7 +143,7 @@ test('a finger keeps scrolling when the cell it landed on loses its own capture'
 });
 
 /**
- * A press on a column's resize handle resizes the column and leaves the table where it is (Foxhoundn, #708).
+ * A press on a column's resize handle resizes the column and leaves the table where it is (reqore#708).
  * The header's gesture started on the handle too, so the table scrolled under the column edge being dragged:
  * on every table with a finger, and with the mouse when `dragToScroll` is on.
  */

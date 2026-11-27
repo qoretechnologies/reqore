@@ -49,7 +49,7 @@ export const useNarrowContainer = <T extends HTMLElement = HTMLDivElement>(
   const [isNarrow, setIsNarrow] = useState(false);
   /* Whether the container is a phone's width or narrower (NARROW_CONTAINER_BREAKPOINT_PX, Reqore's phone
      breakpoint), whatever `breakpoint` is: where a lone or stacked control spans its row, on a phone or in a
-     container as narrow as one on any screen (qorus#646, David and Foxhoundn: Fitts's law). */
+     container as narrow as one on any screen (Fitts's law). */
   const [isPhoneWidth, setIsPhoneWidth] = useState(false);
   const read = (width: number) => {
     setIsNarrow(width > 0 && width <= breakpoint);

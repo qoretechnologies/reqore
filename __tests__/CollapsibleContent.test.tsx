@@ -302,3 +302,53 @@ test('Falls back to the theme background when no `customTheme.main` is given', a
     expect(getComputedStyle(fade!).backgroundImage).toContain('linear-gradient');
   });
 });
+
+test("buttonPlacement='below' puts the reveal under the clipped box, never over it", async () => {
+  mockScrollHeight(1000);
+
+  renderContent(
+    <ReqoreCollapsibleContent maxCollapsedHeight={300} buttonPlacement='below'>
+      <span>Tall body</span>
+    </ReqoreCollapsibleContent>
+  );
+
+  const reveal = await waitFor(() => {
+    const el = document.querySelector('.reqore-collapsible-content-reveal');
+    expect(el).not.toBeNull();
+    return el!;
+  });
+  const clip = document.querySelector('.reqore-collapsible-content-clip')!;
+
+  // No overlay at all: the button is in its own row after the clip, not inside it.
+  expect(document.querySelector('.reqore-collapsible-content-fade')).toBeNull();
+  expect(clip.contains(reveal)).toBe(false);
+  expect(reveal.closest('.reqore-collapsible-content-actions')).not.toBeNull();
+  expect(clip.compareDocumentPosition(reveal) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+  fireEvent.click(reveal);
+
+  // "Show less" takes the same row.
+  const collapse = await waitFor(() => {
+    const el = document.querySelector('.reqore-collapsible-content-collapse');
+    expect(el).not.toBeNull();
+    return el!;
+  });
+  expect(collapse.closest('.reqore-collapsible-content-actions')).not.toBeNull();
+  expect(document.querySelector('.reqore-collapsible-content-reveal')).toBeNull();
+});
+
+test("buttonPlacement='below' renders no button for content that fits", async () => {
+  mockScrollHeight(120);
+
+  renderContent(
+    <ReqoreCollapsibleContent maxCollapsedHeight={300} buttonPlacement='below'>
+      <span>Short body</span>
+    </ReqoreCollapsibleContent>
+  );
+
+  await waitFor(() =>
+    expect(document.querySelector('.reqore-collapsible-content-clip')).not.toBeNull()
+  );
+  expect(document.querySelector('.reqore-collapsible-content-actions')).toBeNull();
+  expect(document.querySelector('.reqore-collapsible-content-reveal')).toBeNull();
+});

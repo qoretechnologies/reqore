@@ -2,7 +2,14 @@ import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
-import { ReqoreButton, ReqoreControlGroup } from '../../index';
+import { SIZE_TO_PX } from '../../constants/sizes';
+import {
+  ReqoreButton,
+  ReqoreCheckbox,
+  ReqoreControlGroup,
+  ReqoreP,
+  ReqoreSelect,
+} from '../../index';
 import { StoryMeta } from '../utils';
 import { StoryForm, storyFormText } from '../utils/formPreview';
 import { ALL_SIZES, FlatArg, IconArg, MinimalArg, RadiusSizeArg, SizeArg } from '../utils/args';
@@ -609,5 +616,68 @@ export const PasswordToggleMobile: Story = {
 
     const field = input.closest('.reqore-control-wrapper') as HTMLElement;
     expect(field.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+
+/** Rows enough to need more height than the column has, so something in it has to give way. */
+const LONG_LIST = Array.from({ length: 20 }, (_, index) => `Variable ${index + 1}`);
+
+export const AFieldKeepsItsHeightInAShortColumn: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A short column (a phone editor) with a search field, a fixed field, a select and a fixed checkbox above a list taller than the column. A field may shrink, so the list used to take its room and the search box stood at half its height with the list over its lower half. Each control is its size high, and the list is what the column cuts.',
+      },
+    },
+  },
+  render: () => (
+    <div
+      className='story-short-column'
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        width: 360,
+        height: 260,
+        overflow: 'hidden',
+      }}
+    >
+      <ReqoreInput className='story-search' placeholder='Search variables' icon='SearchLine' />
+      <ReqoreInput className='story-fixed' placeholder='Name' fixed />
+      <div className='story-select' style={{ display: 'contents' }}>
+        <ReqoreSelect
+          items={[{ value: 'Orders' }, { value: 'Invoices' }]}
+          value='Orders'
+          onValueChange={() => undefined}
+        />
+      </div>
+      <ReqoreCheckbox className='story-checkbox' label='Show only failing' fixed />
+      <div>
+        {LONG_LIST.map((name) => (
+          <ReqoreP key={name} style={{ padding: '8px 0' }}>
+            {name}
+          </ReqoreP>
+        ))}
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const height = SIZE_TO_PX.normal;
+    const boxOf = (selector: string) =>
+      canvasElement.querySelector<HTMLElement>(selector)!.getBoundingClientRect().height;
+
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.story-select .reqore-control-wrapper')).toBeTruthy()
+    );
+
+    for (const [name, selector] of [
+      ['search field', '.reqore-control-wrapper:has(.story-search)'],
+      ['fixed field', '.reqore-control-wrapper:has(.story-fixed)'],
+      ['select', '.story-select .reqore-control-wrapper'],
+      ['fixed checkbox', '.story-checkbox'],
+    ]) {
+      await expect(boxOf(selector), `the ${name} is its size high`).toBe(height);
+    }
   },
 };

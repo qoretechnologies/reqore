@@ -12,7 +12,7 @@ import { TReqoreEffectColor } from '../Effect';
 import { IReqoreMenuProps } from '../Menu';
 import { IReqorePopoverProps } from '../Popover';
 import { TReqoreTabsContentPadding } from './content';
-import ReqoreTabsList from './list';
+import ReqoreTabsList, { TReqoreTabsOverflowLabel } from './list';
 
 export type TReqoreTabsActiveMarker = 'fill' | 'line';
 
@@ -25,6 +25,11 @@ export interface IReqoreTabsListItem extends Omit<IReqoreButtonProps, 'id'> {
   onCloseClick?: (id: string | number) => any;
   activeIntent?: TReqoreIntent;
   closeIcon?: IReqoreIconName;
+  /**
+   * The name of the tab's close button (its tooltip and accessible name: the button is an icon
+   * alone). Defaults to `'Close <label>'`, or `'Close'` for a tab whose label is not text.
+   */
+  closeLabel?: string;
   loadingIconType?: IWithReqoreLoading['loadingIconType'];
   show?: boolean;
 }
@@ -83,8 +88,13 @@ export interface IReqoreTabsProps extends IReqoreComponent, React.HTMLAttributes
    * when the currently active tab is visible in the strip — an overflowed
    * active tab keeps showing its own label so the user can see which tab is
    * selected.
+   *
+   * A function is given the tabs folded into the menu and names them, so the tab says
+   * what it holds rather than a bare "More". The strip folds against the width of the
+   * label it returns, so keep it short (a count, or the first tab and a count): a label
+   * listing every folded tab is as wide as they are and makes no room.
    */
-  overflowLabel?: string | number;
+  overflowLabel?: TReqoreTabsOverflowLabel;
   /**
    * When true the tab strip is not rendered at all — the tabs component
    * behaves as a bare content switcher driven only by `activeTab`. Use this

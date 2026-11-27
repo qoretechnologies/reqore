@@ -399,6 +399,51 @@ export const FormControlKeyboard: Story = {
   },
 };
 
+export const SwitchFilledOn: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Two switches, on and off, under a theme with `switchOnLook: \'filled\'`: the on switch\'s track is filled with the text colour (white on a dark theme) and its knob is the surface, so on and off read apart without a colour; the off switch is unchanged. Below them, a Yes / No switch that is on: Yes reads on the knob and No on the fill.',
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: { switchOnLook: 'filled' },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical>
+      <ReqoreCheckbox label='Share usage analytics' asSwitch checked className='switch-on' />
+      <ReqoreCheckbox label='Send weekly digest' asSwitch checked={false} className='switch-off' />
+      <ReqoreCheckbox
+        label='Remote'
+        asSwitch
+        checked
+        onText='Yes'
+        offText='No'
+        checkedIcon='CheckLine'
+        uncheckedIcon='CloseLine'
+        className='switch-words'
+      />
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    const track = (selector: string) =>
+      getComputedStyle(document.querySelector(`${selector} .reqore-checkbox-box`) as Element);
+    // The on track is light: its red, green and blue are each above half.
+    const [r, g, b] = (track('.switch-on').backgroundColor.match(/\d+/g) ?? []).map(Number);
+    await expect(Math.min(r, g, b)).toBeGreaterThan(128);
+    await expect(track('.switch-off').backgroundColor).not.toBe(track('.switch-on').backgroundColor);
+    // Each word is a different color from what it sits on: Yes on the knob, No on the fill.
+    const words = document.querySelector('.switch-words .reqore-checkbox-box') as HTMLElement;
+    const [off, on] = [...words.children].slice(0, 2).map((el) => getComputedStyle(el).color);
+    const knob = getComputedStyle(words.lastElementChild as Element).backgroundColor;
+    await expect(on).not.toBe(knob);
+    await expect(off).not.toBe(getComputedStyle(words).backgroundColor);
+    await expect(on).not.toBe(off);
+  },
+};
+
 export const FormControlSwitchKeyboard: Story = {
   parameters: {
     docs: {
@@ -531,7 +576,7 @@ export const FormControlMobile: Story = {
 
 /* -------------------------------------------------------------------------------------------
  * A label that wraps (`wrapLabel`) in less room than the box and the label on one line take
- * (qorus#646: the Qorus IDE's "Skip totals rows" ran past its 38px row). The label sat in two
+ * (an app's "Skip totals rows" ran past its 38px row). The label sat in two
  * control groups that kept the width of its one line, so it never wrapped, and the checkbox was
  * as high as one line, so a label that did wrap would have run out of it.
  * ----------------------------------------------------------------------------------------- */
@@ -578,7 +623,7 @@ const expectWrappedInside = async (name: string, lines: number, oneLine: number)
 
 /**
  * Every checkbox in every box of the story - its row, its box and its label - is inside that box: nothing a box holds
- * is drawn past its border (qorus#646, David: a label drawn outside its box).
+ * is drawn past its border.
  */
 const expectEveryCheckboxInsideItsBox = async () => {
   const boxes = Array.from(document.querySelectorAll<HTMLElement>('[class^="story-narrow-"]'));
@@ -588,7 +633,7 @@ const expectEveryCheckboxInsideItsBox = async () => {
     const border = box.getBoundingClientRect();
     for (const part of Array.from(
       box.querySelectorAll<HTMLElement>(
-        '.reqore-checkbox, .reqore-checkbox-box, .reqore-checkbox-label'
+        '.reqore-checkbox, .reqore-checkbox-box, .reqore-checkbox-label, .reqore-checkbox-description'
       )
     )) {
       const rect = part.getBoundingClientRect();
@@ -609,7 +654,7 @@ export const ALongLabelWrapsInANarrowBox: Story = {
     docs: {
       description: {
         story:
-          'Renders two checkboxes with `wrapLabel` in 160px boxes. The first has a long label, wider than the box can hold on one line: it wraps inside the box, beside the checkbox. The second has a short label, which fits the box on one line. Every checkbox and label is inside its box (qorus#646).',
+          'Renders two checkboxes with `wrapLabel` in 160px boxes. The first has a long label, wider than the box can hold on one line: it wraps inside the box, beside the checkbox. The second has a short label, which fits the box on one line. Every checkbox and label is inside its box.',
       },
     },
   },
@@ -635,7 +680,7 @@ export const ALongLabelOnTheLeftWrapsInANarrowBox: Story = {
     docs: {
       description: {
         story:
-          'The same with the label on the left of the checkbox (`labelPosition="left"`): the long label wraps inside its 160px box, the short one fits on one line, and each checkbox stays beside its label, inside its box (qorus#646).',
+          'The same with the label on the left of the checkbox (`labelPosition="left"`): the long label wraps inside its 160px box, the short one fits on one line, and each checkbox stays beside its label, inside its box.',
       },
     },
   },
@@ -661,7 +706,7 @@ export const AThreeLineLabelMakesTheCheckboxAsHigh: Story = {
     docs: {
       description: {
         story:
-          'Renders a checkbox whose label takes three lines in its 160px box, a switch whose label does in its 200px box, and a short label on one line. Each control is as high as its label, inside its box, and what comes after it starts below it (qorus#646).',
+          'Renders a checkbox whose label takes three lines in its 160px box, a switch whose label does in its 200px box, and a short label on one line. Each control is as high as its label, inside its box, and what comes after it starts below it.',
       },
     },
   },
@@ -695,7 +740,7 @@ export const LongLabelsWrapOnAPhone: Story = {
     docs: {
       description: {
         story:
-          'Renders settings with long labels on a phone (390px), each a checkbox or a switch that wraps its label. Every label wraps inside the screen, nothing runs past it, and a tap on a wrapped label checks its box (qorus#646).',
+          'Renders settings with long labels on a phone (390px), each a checkbox or a switch that wraps its label. Every label wraps inside the screen, nothing runs past it, and a tap on a wrapped label checks its box.',
       },
     },
     qlip: { viewport: { width: 390, height: 844 } },
@@ -745,5 +790,46 @@ export const LongLabelsWrapOnAPhone: Story = {
         ).toBe(true)
       );
     });
+  },
+};
+
+/** A sentence that explains a choice, wider than a 320px box holds on one line. */
+const LONG_DESCRIPTION =
+  "Nothing runs. The answer is the Simulated Output, or an example built from the endpoint's schema when there is none.";
+
+export const ADescriptionWrapsInsideItsBox: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders two checkboxes with a short label and a long description, the label on the right and on the left, in 320px boxes, with no `wrapLabel`. Each description wraps inside its box and the checkbox is as high as it; nothing is drawn past the box (reqore#662).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical>
+      <NarrowBox name='description-right' width={320}>
+        <ReqoreCheckbox label='Simulated' description={LONG_DESCRIPTION} checked />
+      </NarrowBox>
+      <NarrowBox name='description-left' width={320}>
+        <ReqoreCheckbox label='Simulated' description={LONG_DESCRIPTION} labelPosition='left' />
+      </NarrowBox>
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    await waitFor(() =>
+      expect(document.querySelector('.story-narrow-description-left .reqore-checkbox-description')).toBeTruthy()
+    );
+    await expectEveryCheckboxInsideItsBox();
+
+    for (const name of ['description-right', 'description-left']) {
+      const checkbox = partOf(name, '');
+      const label = partOf(name, ' .reqore-checkbox-label');
+      const description = partOf(name, ' .reqore-checkbox-description');
+
+      // wrapped, and inside the checkbox
+      await expect(description.height, name).toBeGreaterThan(label.height * 1.5);
+      await expect(description.bottom, name).toBeLessThanOrEqual(checkbox.bottom + 0.5);
+    }
   },
 };

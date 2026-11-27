@@ -1,4 +1,4 @@
-// A stacked control group hands each child the same style while it says the same (qorus#646). It made the style anew
+// A stacked control group hands each child the same style while it says the same. It made the style anew
 // on every render, so a memo child - a button, a dropdown - was handed a prop that always changed and was drawn again
 // with the group each time, whatever else it was handed. A table's header cell drew its button again whenever another
 // column was sorted (`tableHeaderCellKeepsItsControls.test`).

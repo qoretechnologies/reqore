@@ -22,7 +22,7 @@ export interface IReqoreHoveringPointerEvent {
  * not name (`pointerType` '' - which the specification allows where the type cannot be told, and which
  * user-event sends under jsdom - or none at all) is taken for one that hovers, as a `mouseenter` no pointer
  * event came before is. Taken for one that does not, it closed every tooltip a consumer's test opened with
- * `userEvent.hover` (qorus-ide: MiniBarChart, IncompleteCasesStrip, valueControlAndChips).
+ * `userEvent.hover` (a chart's, a strip's and a chip's tests in one app).
  */
 export const isHoveringPointer = ({ pointerType, buttons }: IReqoreHoveringPointerEvent): boolean =>
   pointerType !== 'touch' && !(pointerType === 'pen' && buttons !== 0);

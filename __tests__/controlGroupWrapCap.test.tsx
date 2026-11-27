@@ -1,4 +1,4 @@
-// A wrapped control group never lets a child be wider than itself (qorus#646). Its children had no cap: a child
+// A wrapped control group never lets a child be wider than itself. Its children had no cap: a child
 // as wide as content that does not wrap - a select saying its value and description, or a group holding one - stayed
 // that wide, and a data provider's path ran 487-712px wide in a 346px card on a phone. The browser stories
 // (Form/Control Group · Wrapped Group Keeps A Long Button Inside, and On A Phone) measure the layout; these check

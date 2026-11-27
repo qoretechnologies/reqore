@@ -10,8 +10,8 @@ export interface IReqoreErrorBoundaryProps extends Omit<IReqorePanelProps, 'onEr
   errorMessage?: string;
   onError?: (error: Error, info: ErrorInfo) => void;
   /**
-   * Label for the "Reset" action rendered on the built-in fallback panel.
-   * Defaults to English `'Reset'` — override this to translate the button copy.
+   * Label for the action that tries again, on the built-in fallback.
+   * Defaults to English `'Try again'` — override this to translate the button copy.
    */
   resetActionLabel?: string;
   /**
@@ -68,7 +68,7 @@ export class ErrorBoundary extends Component<IReqoreErrorBoundaryProps, IReqoreE
       fallback,
       errorMessage,
       children,
-      resetActionLabel = 'Reset',
+      resetActionLabel = 'Try again',
       detailsActionLabel = 'Details',
       errorNameLabel = 'Name',
       errorDetailsMessageLabel = 'Message',

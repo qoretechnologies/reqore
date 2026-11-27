@@ -26,8 +26,11 @@ import {
   RenderElementProps,
   RenderLeafProps,
 } from 'slate-react/dist/components/editable';
+import { rgba } from 'polished';
 import { ReqoreButton, ReqoreControlGroup, ReqorePanel, ReqoreTextarea } from '../..';
+import { getReadableColor } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItemProps } from '../Dropdown/item';
 import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
@@ -117,6 +120,19 @@ const EMPTY_TAGS_LIST_PROPS: IReqoreRichTextEditorProps['tagsListProps'] = {};
 export const TemplateElement = memo((props: RenderElementProps & { tagProps: IReqoreTagProps }) => {
   const selected = useSelected();
   const editor = useSlateStatic();
+  const theme = useReqoreTheme();
+  /* A chip in the selection is a chosen value, and keeps its own colour (its source's, or the plain chip) with a
+     ring in the text's colour around it: it was painted blue, which says only that a filter is on. */
+  const tagStyle = useMemo(
+    () =>
+      selected
+        ? {
+            ...props.tagProps?.style,
+            boxShadow: `0 0 0 2px ${rgba(getReadableColor(theme, undefined, undefined, true), 0.6)}`,
+          }
+        : props.tagProps?.style,
+    [selected, props.tagProps?.style, theme]
+  );
   /* Slate's own answer, which is the editor's `readOnly` — it reaches `Editable`
      as a DOM-valid prop and Slate reads it back. It is NOT the whole answer: the
      editor's `disabled` never reaches Slate, so `composeTagProps` marks the chip
@@ -132,7 +148,7 @@ export const TemplateElement = memo((props: RenderElementProps & { tagProps: IRe
      That is not merely a missing convenience. A field whose entire value is one
      reference renders as one chip and nothing else, so the chip IS the control:
      with no way to get a cursor into the editor, nothing could be typed into it
-     at all. Reported against a Qorus test assertion's `Value`, where it made a
+     at all. Reported against a test assertion's `Value`, where it made a
      path deeper than any offered candidate — the case the rich-text control
      exists for — impossible to write by hand.
 
@@ -216,10 +232,15 @@ export const TemplateElement = memo((props: RenderElementProps & { tagProps: IRe
            it is reached with the caret, as any character is. As a tab stop it
            was where Tab from the text went NEXT — into the editor's own chip —
            and what was typed after that went to the chip, which writes nothing:
-           the text field looked focused and took no typing (qorus#646). */
+           the text field looked focused and took no typing. */
         tabIndex={-1}
         contentEditable={false}
-        intent={selected ? 'info' : props.tagProps?.intent}
+        style={tagStyle}
+        className={
+          selected
+            ? `${props.tagProps?.className ?? ''} reqore-tag-selected`.trim()
+            : props.tagProps?.className
+        }
       />
       {props.children}
     </>
@@ -516,7 +537,7 @@ export const ReqoreRichTextEditor = forwardRef<
           ...finalProps,
           /* A chip is one size less than its editor, unless it says its own size: then it is that size. The
              editor's size won over the chip's, so a chip that has to be `small` to be pressed by a finger was
-             `tiny` in a `small` editor, its label taller than its box (reqraft's reference chips, qorus#646). */
+             `tiny` in a `small` editor, its label taller than its box (reqraft's reference chips). */
           size: finalProps.size ?? (rest.size ? getOneLessSize(rest.size) : 'small'),
           /* Says "not choosable" to the chip itself, which withholding the
              handlers below cannot: `TemplateElement` binds a click of its own to
@@ -782,7 +803,7 @@ export const ReqoreRichTextEditor = forwardRef<
          is dropped, and by the time the handler runs there is no caret left to
          adopt — the field reads as frozen.
 
-         Measured in the Qorus test editor: Slate's selection `null` at the first
+         Measured in an app's test editor: Slate's selection `null` at the first
          keystroke while the browser caret sat correctly beside the chip; the
          same story passed only when the key happened to land more than 100ms
          after the last throttled call.
@@ -955,6 +976,10 @@ export const ReqoreRichTextEditor = forwardRef<
                     </ReqoreControlGroup>,
                   ]
                 : undefined,
+              /* The templates as rows in one card, the calm list's look: each was drawn as it asked,
+                 and an item that asks for an edge was a card per template. A host can still ask
+                 for cards (`tagsListProps.listAsRows: false`). */
+              listAsRows: true,
               ...tagsListProps,
               items,
               onBeforeOpen: handleTemplatesBeforeOpen,

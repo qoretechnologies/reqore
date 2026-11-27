@@ -1,8 +1,10 @@
 import {
+  DateValue,
   getLocalTimeZone,
   parseAbsoluteToLocal,
   parseDate,
   parseDateTime,
+  toCalendarDate,
   toZoned,
   ZonedDateTime,
 } from '@internationalized/date';
@@ -28,8 +30,8 @@ export const getPreviousYears = (min: number, max = new Date().getFullYear()) =>
 
 /**
  * A date the way the date picker reads one, as a ZonedDateTime (the date picker cannot use a Date), or `undefined`
- * for one it cannot read. It never throws: a value read in a render that threw took the page with it (qorus#646:
- * the Qorus IDE's Workflow Orders page went to its router's error page for "2026-06-02T08:00:00").
+ * for one it cannot read. It never throws: a value read in a render that threw took the page with it (an app's
+ * orders page went to its router's error page for "2026-06-02T08:00:00").
  *
  * - A date-time with a zone or an offset (`2026-06-02T08:00:00Z`, `…+02:00`) is that instant, in the user's zone.
  * - A date-time without one (`2026-06-02T08:00:00`) is that wall-clock time in the user's zone: ISO 8601 reads a
@@ -65,6 +67,13 @@ export const isUnreadableDate = (date?: Date | string | null): boolean =>
 
 // utility to convert date to ZonedDateTime because datepicker can't use Date
 export const toDate = (date?: Date | string | null) => readDate(date);
+
+/**
+ * The day a date falls on where it is read, as a plain date: `YYYY-MM-DD`, with no time and no zone (the date
+ * picker's `plainDate`). The day is taken from the date's own fields, never through UTC, so a day picked east of
+ * UTC is not the day before.
+ */
+export const toPlainDate = (date: DateValue): string => toCalendarDate(date).toString();
 
 export type TDateFormat = 'date' | 'iso' | 'epoch' | 'object';
 export type TDateObjectFormat = {

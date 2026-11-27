@@ -3,17 +3,19 @@ import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import { css } from 'styled-components';
 import styled from '../../helpers/styled';
 import {
+  clearCorner,
   GAP_FROM_SIZE,
   PADDING_FROM_SIZE,
-  RADIUS_FROM_SIZE,
-  TEXT_FROM_SIZE,
+  resolvePanelRadius,
   TSizes,
 } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
-  changeDarkness,
   changeLightness,
   getMainBackgroundColor,
+  getPanelBackgroundColor,
+  getPanelHairlineColor,
   getReadableColor,
 } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
@@ -29,10 +31,11 @@ import {
   IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { ButtonBadge, TReqoreBadge } from '../Button';
+import { TReqoreBadge } from '../Button';
 import { IReqoreEffect, patchPrimaryGradient, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { StyledIconWrapper } from '../Icon';
+import { ReqoreTitleAndBadges } from '../Panel/TitleAndBadges';
 import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -111,6 +114,8 @@ interface IStyledAccordionItem {
 interface IStyledAccordionHeader {
   theme: IReqoreTheme;
   size: TSizes;
+  /** The accordion's inner corner radius, or 0 when it draws no corner (see `clearCorner`). */
+  $cornerInset?: number;
   $isOpen?: boolean;
   disabled?: boolean;
   intent?: string;
@@ -129,10 +134,11 @@ const StyledAccordionWrapper = styled(StyledEffect)<IStyledAccordionWrapper>`
   display: flex;
   flex-direction: column;
   width: ${({ $fluid }) => ($fluid ? '100%' : undefined)};
-  border-radius: ${({ rounded, size }) => (rounded ? RADIUS_FROM_SIZE[size] : 0)}px;
+  border-radius: ${({ rounded, size, theme }) =>
+    rounded ? resolvePanelRadius(theme, undefined, size) : 0}px;
   overflow: hidden;
   border: ${({ flat, theme }) =>
-    flat ? undefined : `1px solid ${changeLightness(getMainBackgroundColor(theme), 0.08)}`};
+    flat ? undefined : `1px solid ${getPanelHairlineColor(theme)}`};
 
   ${({ disabled }) =>
     disabled &&
@@ -144,7 +150,7 @@ const StyledAccordionWrapper = styled(StyledEffect)<IStyledAccordionWrapper>`
 const StyledAccordionItem = styled.div<IStyledAccordionItem>`
   &:not(:first-child) {
     border-top: ${({ flat, theme }) =>
-      flat ? undefined : `1px solid ${changeLightness(getMainBackgroundColor(theme), 0.08)}`};
+      flat ? undefined : `1px solid ${getPanelHairlineColor(theme)}`};
   }
 `;
 
@@ -152,7 +158,12 @@ const StyledAccordionHeader = styled.div<IStyledAccordionHeader>`
   display: flex;
   align-items: center;
   gap: ${() => GAP_FROM_SIZE.normal}px;
-  padding: ${({ size }) => `${PADDING_FROM_SIZE[size] * 1.5}px ${PADDING_FROM_SIZE[size] * 1.5}px`};
+  /* Every header is padded alike, so the first and the last (which sit against the corners)
+     line up with the rest: the sides clear the accordion's corner. */
+  padding: ${({ size, $cornerInset = 0 }) => {
+    const padding = PADDING_FROM_SIZE[size] * 1.5;
+    return `${padding}px ${clearCorner(padding, $cornerInset)}px`;
+  }};
   cursor: pointer;
   user-select: none;
   transition: background-color 0.15s ease-out;
@@ -163,7 +174,7 @@ const StyledAccordionHeader = styled.div<IStyledAccordionHeader>`
     return rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity);
   }};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
-  font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getTextSize(theme, size)}px;
 
   ${StyledIconWrapper} {
     transform: scale(${INACTIVE_ICON_SCALE});
@@ -207,11 +218,21 @@ const StyledAccordionContentInner = styled.div<{ theme: IReqoreTheme; size: TSiz
   overflow: hidden;
 `;
 
-const StyledAccordionContentBody = styled.div<{ theme: IReqoreTheme; size: TSizes }>`
-  padding: ${({ size }) => `${PADDING_FROM_SIZE[size] * 3}px ${PADDING_FROM_SIZE[size] * 4.6}px`};
-  font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
+const StyledAccordionContentBody = styled.div<{
+  theme: IReqoreTheme;
+  size: TSizes;
+  $cornerInset?: number;
+}>`
+  /* The body is indented past the header's chevron, to the header's text. When the header's sides
+     grow to clear the corner, the body moves by as much, so it stays under that text. */
+  padding: ${({ size, $cornerInset = 0 }) => {
+    const headerPadding = PADDING_FROM_SIZE[size] * 1.5;
+    const shift = clearCorner(headerPadding, $cornerInset) - headerPadding;
+    return `${PADDING_FROM_SIZE[size] * 3}px ${PADDING_FROM_SIZE[size] * 4.6 + shift}px`;
+  }};
+  font-size: ${({ size, theme }) => getTextSize(theme, size)}px;
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
-  background-color: ${({ theme }) => rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), 1)};
+  background-color: ${({ theme }) => rgba(getPanelBackgroundColor(theme), 1)};
   border-top: 1px solid ${({ theme }) => changeLightness(getMainBackgroundColor(theme), 0.05)};
 `;
 
@@ -230,6 +251,7 @@ interface IAccordionItemRendererProps {
   effectiveOpacity?: number;
   isFirst: boolean;
   isLast: boolean;
+  cornerInset: number;
   onToggle: (index: number) => void;
   onKeyDown: (event: React.KeyboardEvent, index: number) => void;
 }
@@ -250,6 +272,7 @@ const AccordionItemRenderer = memo(
     effectiveOpacity,
     isFirst,
     isLast,
+    cornerInset,
     onToggle,
     onKeyDown,
   }: IAccordionItemRendererProps) => {
@@ -279,6 +302,7 @@ const AccordionItemRenderer = memo(
           flat={flat}
           minimal={minimal}
           opacity={effectiveOpacity}
+          $cornerInset={cornerInset}
           onClick={() => onToggle(index)}
           onKeyDown={(e) => onKeyDown(e, index)}
           tabIndex={isItemDisabled ? undefined : 0}
@@ -297,20 +321,29 @@ const AccordionItemRenderer = memo(
               className='reqore-accordion-icon'
             />
           )}
-          <ReqoreHeading
-            size={getOneLessSize(size)}
-            effect={item.labelEffect}
-            className='reqore-accordion-title'
+          {/* The heading and its badges share one line, and the badges move under the heading
+              before it wraps, as in a panel's title. The room between them is what the header's
+              gap and a spacer kept before. */}
+          <ReqoreTitleAndBadges
+            badge={item.badge}
+            badgeSize={size}
+            gap={GAP_FROM_SIZE.normal * 2 + PADDING_FROM_SIZE[size]}
           >
-            {item.label}
-          </ReqoreHeading>
-          {(item.badge || item.badge === 0) && <ButtonBadge content={item.badge} size={size} />}
+            <ReqoreHeading
+              size={getOneLessSize(size)}
+              effect={item.labelEffect}
+              className='reqore-accordion-title'
+            >
+              {item.label}
+            </ReqoreHeading>
+          </ReqoreTitleAndBadges>
         </StyledAccordionHeader>
         <StyledAccordionContentWrapper theme={theme} size={size} $isOpen={isOpen}>
           <StyledAccordionContentInner theme={theme} size={size}>
             <StyledAccordionContentBody
               theme={theme}
               size={size}
+              $cornerInset={cornerInset}
               className='reqore-accordion-content'
             >
               {typeof item.content === 'string' ? (
@@ -403,6 +436,12 @@ export const ReqoreAccordion = memo(
       }, [effect, intent, theme]);
 
       const effectiveOpacity = transparent ? 0 : opacity;
+      // The corner the headers clear: the wrapper's radius less its border. A flat, minimal
+      // accordion with no intent fills nothing and edges nothing, so it draws no corner.
+      const cornerInset =
+        rounded && (!flat || !minimal || !!intent)
+          ? Math.max(0, resolvePanelRadius(theme, undefined, size) - (flat ? 0 : 1))
+          : 0;
 
       return (
         <ReqoreTooltipComponent
@@ -438,6 +477,7 @@ export const ReqoreAccordion = memo(
               effectiveOpacity={effectiveOpacity}
               isFirst={index === 0}
               isLast={index === items.length - 1}
+              cornerInset={cornerInset}
               onToggle={handleToggle}
               onKeyDown={handleKeyDown}
             />

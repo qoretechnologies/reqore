@@ -556,7 +556,7 @@ test('The ⋮ trigger is a direct child of its column, not boxed in a popover wr
   // popover is told the trigger is a Reqore component it wraps it in a span
   // with overflow:hidden — which becomes the flex child in the trigger's place,
   // so a labelled (fluid) trigger has nothing to stretch inside and the mark's
-  // raised shadow is clipped. Qlip build #253 caught the first.
+  // raised shadow is clipped. A visual review caught the first.
   const { unmount } = renderRail(
     <ReqoreNavRail items={ITEMS} defaultActiveId='dashboard' maxItems={2} showLabels />
   );

@@ -7,7 +7,7 @@
  *   scrolls under it - a table's pinned columns, anything with a `z-index` of its own;
  * - a pinned column's header cell is opaque, and drawn above the header cells that scroll under it.
  *
- * Seen in the Qorus IDE (qorus#646): scrolled, the pinned first and last columns of the workflow orders table were
+ * Seen in an app: scrolled, the pinned first and last columns of a workflow orders table were
  * drawn over its sticky header, cutting off its label and covering its menu, and the pinned Actions column's header
  * let the headers behind it show through ("ORDER DA" under "ACTIONS").
  */

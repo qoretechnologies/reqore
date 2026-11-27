@@ -14,7 +14,15 @@ import { css } from 'styled-components';
 import styled from '../../helpers/styled';
 import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import { getRowExpandId, getTotalColumnsWidth } from './helpers';
+import {
+  TABLE_FADE_ATTRIBUTE,
+  TABLE_OVERFLOW_ATTRIBUTE,
+  calculatePinOffsets,
+  getRowExpandId,
+  getTotalColumnsWidth,
+  tableEdgeFade,
+  tableFadeSides,
+} from './helpers';
 import ReqoreTableRow, { IReqoreTableRowOptions } from './row';
 import { ReqoreTableScrollbar } from './scrollbar';
 
@@ -69,6 +77,7 @@ const hideNativeScrollbar = css`
 const StyledFixedList = styled(FixedSizeList)`
   box-sizing: border-box;
   ${hideNativeScrollbar}
+  ${tableEdgeFade}
 `;
 
 /* Used only when rows can expand. A panel's height is not knowable up front and
@@ -77,6 +86,7 @@ const StyledFixedList = styled(FixedSizeList)`
 const StyledVariableList = styled(VariableSizeList)`
   box-sizing: border-box;
   ${hideNativeScrollbar}
+  ${tableEdgeFade}
 `;
 
 const StyledNonVirtualizedBody = styled.div<{ maxHeight?: number; minWidth: number }>`
@@ -84,6 +94,7 @@ const StyledNonVirtualizedBody = styled.div<{ maxHeight?: number; minWidth: numb
     box-sizing: border-box;
     overflow: auto;
     ${hideNativeScrollbar}
+    ${tableEdgeFade}
     ${maxHeight || maxHeight === 0
       ? css`
           max-height: ${maxHeight}px;
@@ -121,7 +132,20 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
 
     const itemCount = useMemo(() => count(data), [data]);
 
-    const totalColumnsWidth = useMemo(() => getTotalColumnsWidth(rest.columns), [rest.columns]);
+    const totalColumnsWidth = useMemo(
+      () => getTotalColumnsWidth(rest.columns, rest.tableWidth),
+      [rest.columns, rest.tableWidth]
+    );
+
+    /* The edges a column is pinned to: such an edge says it has more under it with the pinned
+       column's shadow, and is never faded (a fade there would fade the pinned column). */
+    const pinnedEdges = useMemo(() => {
+      const pins = Object.values(calculatePinOffsets(rest.columns, rest.tableWidth));
+      return {
+        left: pins.some(({ pin }) => pin === 'left'),
+        right: pins.some(({ pin }) => pin === 'right'),
+      };
+    }, [rest.columns, rest.tableWidth]);
 
     const expandable = !!rest.renderExpandedRow;
 
@@ -188,23 +212,59 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
     }
     const itemData = itemDataRef.current;
 
-    // Sync body horizontal scroll to the header and notify vertical scroll state
+    // Sync body horizontal scroll to the header, mark which pinned edges have
+    // columns hidden under them, and notify vertical scroll state
     useEffect(() => {
       const el = targetRef.current;
       if (!el) {
         return undefined;
       }
 
+      // A pinned column's edge shadow says "there is more under here". It is
+      // only true while there is: content scrolled past the left edge, or
+      // content still to the right of the viewport. Written as an attribute
+      // on the two scroll containers rather than through React state, so a
+      // scroll never re-renders a row to move a shadow.
+      const markOverflow = () => {
+        const sides = [
+          el.scrollLeft > 0 ? 'left' : undefined,
+          el.scrollLeft + el.clientWidth < el.scrollWidth - 1 ? 'right' : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ');
+        // An edge with more past it and no pinned column fades instead (TABLE_FADE_ATTRIBUTE):
+        // a phone draws no scrollbar, so without it a table that scrolls sideways hides
+        // columns without saying so.
+        const fade = tableFadeSides(el, pinnedEdges);
+        for (const target of [el, headerRef.current]) {
+          if (!target) continue;
+          if (sides) target.setAttribute(TABLE_OVERFLOW_ATTRIBUTE, sides);
+          else target.removeAttribute(TABLE_OVERFLOW_ATTRIBUTE);
+          if (fade) target.setAttribute(TABLE_FADE_ATTRIBUTE, fade);
+          else target.removeAttribute(TABLE_FADE_ATTRIBUTE);
+        }
+      };
+
       const handleScroll = () => {
         if (headerRef.current) {
           headerRef.current.scrollLeft = el.scrollLeft;
         }
+        markOverflow();
         onScrollChange?.(el.scrollTop > 0);
       };
 
+      markOverflow();
       el.addEventListener('scroll', handleScroll, { passive: true });
-      return () => el.removeEventListener('scroll', handleScroll);
-    }, [headerRef, onScrollChange, targetRef]);
+      // The viewport changing width changes what is hidden, without a scroll.
+      const observer =
+        typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(markOverflow);
+      observer?.observe(el);
+      return () => {
+        el.removeEventListener('scroll', handleScroll);
+        observer?.disconnect();
+      };
+      // `totalColumnsWidth`: the columns changing width changes what is hidden too.
+    }, [headerRef, onScrollChange, targetRef, totalColumnsWidth, pinnedEdges]);
 
     /**
      * Measured heights of open detail panels, keyed by expansion id.
@@ -274,6 +334,19 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
     useEffect(() => {
       if (expandable) listRef.current?.resetAfterIndex(0);
     }, [expandedIds, expandable]);
+
+    /* The rows' height changed on a mounted list: a caller's `rowHeight` that follows the
+       width, or a size or touch target that does. The variable list keeps every offset it
+       has worked out, each a multiple of the old height, so the rows went on sitting at
+       the old spacing at their new height (56px apart at 40px tall) until something else
+       reset it. Reset before paint, so no frame shows the old spacing. The fixed list
+       works its offsets out from `itemSize` on every render and needs nothing. */
+    const laidOutRowHeight = useRef(rowHeight);
+    useLayoutEffect(() => {
+      if (laidOutRowHeight.current === rowHeight) return;
+      laidOutRowHeight.current = rowHeight;
+      listRef.current?.resetAfterIndex(0);
+    }, [rowHeight]);
 
     /**
      * How tall the body's content is, with any open panels included.

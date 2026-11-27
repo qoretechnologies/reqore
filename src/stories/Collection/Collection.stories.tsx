@@ -2,6 +2,7 @@ import { StoryObj } from '@storybook/react';
 import { ReqoreButton, ReqoreControlGroup, ReqoreVerticalSpacer } from '../..';
 import { IReqoreCollectionProps, ReqoreCollection } from '../../components/Collection';
 import { IReqoreColumnsProps } from '../../components/Columns';
+import ReqoreTable from '../../components/Table';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import items, { bigCollection, collectionWithGroups } from '../../mock/collectionData';
 
@@ -15,7 +16,9 @@ import { ReqoreModal } from '../../components/Modal';
 import { expectControlsInside } from '../utils/controlsInside';
 import { StoryRowBox } from '../utils/rowBoxes';
 import { PHONE_STORY } from '../utils/touchScreen';
+import { expectDrawnRed, expectNotDrawnRed, openMenuItems } from '../utils/drawnRed';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 export interface IColumnsStoryArgs extends IReqoreColumnsProps {
   multipleColumns?: boolean;
 }
@@ -241,6 +244,33 @@ export const Stacked: Story = {
       { label: 'Custom action', icon: 'Home7Line', fixed: true },
       { actions: [{ label: 'Test' }] },
     ],
+  },
+};
+
+export const StackedList: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection stacked as a list: the items are one block of rows, without gaps, and each row after the first is divided from the one above by the panel hairline. Asserts the divider, which a stacked grid does not draw.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      const rows = canvasElement.querySelectorAll<HTMLElement>(
+        '.reqore-collection-content > .reqore-collection-item'
+      );
+      expect(rows.length).toBeGreaterThan(1);
+      expect(getComputedStyle(rows[0]).borderTopWidth).toBe('0px');
+      expect(getComputedStyle(rows[1]).borderTopWidth).toBe('1px');
+    });
+  },
+  args: {
+    label: 'Collection of items',
+    stacked: true,
+    showAs: 'list',
+    items,
   },
 };
 
@@ -771,6 +801,34 @@ export const WithConfiguredGroups: Story = {
   } as IReqoreCollectionProps,
 };
 
+export const GroupLabelEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A grouped collection with one `groupLabelEffect` for every heading (sentence case, no letter-spacing, full opacity), with no group listed by name in `groups`.',
+      },
+    },
+  },
+  args: {
+    label: 'Integrations',
+    items: [
+      { label: 'Send Email', groups: ['Communication'], content: 'Send an email through SMTP' },
+      { label: 'Run Query', groups: ['Database'], content: 'Execute a SQL query' },
+    ],
+    groupLabelEffect: { uppercase: false, spaced: 0, opacity: 1 },
+  } as IReqoreCollectionProps,
+  play: async () => {
+    await waitFor(() =>
+      expect(document.querySelectorAll('.reqore-collection-group').length).toBe(2)
+    );
+    document.querySelectorAll('.reqore-collection-group').forEach((group) => {
+      const heading = group.querySelector('h1, h2, h3, h4, h5, h6, .reqore-heading') as Element;
+      expect(getComputedStyle(heading).textTransform).not.toBe('uppercase');
+    });
+  },
+};
+
 export const SortByRelevanceAcrossGroups: Story = {
   parameters: {
     docs: {
@@ -1034,5 +1092,562 @@ export const NarrowContainerKeepsItsItemsInsideOnAPhone: Story = {
       return element!;
     });
     await expectFavoritesInside(content);
+  },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a collection on the default and on the themed surface: with `theme.panel` set each item sits on the panel surface.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreCollection
+        label='Connections'
+        items={[
+          { label: 'Gmail', content: 'Reads the inbox' },
+          { label: 'Slack', content: 'Ops workspace' },
+          { label: 'Telegram', content: 'The bot connection' },
+        ]}
+      />
+    </ThemedSurfaceComparison>
+  ),
+};
+
+/** A template's comments, listed as cards: each card's Delete is a calm red bin. */
+const COMMENT_CARDS: IReqoreCollectionProps['items'] = [
+  {
+    label: 'Lena Novak',
+    className: 'comment-lone-delete',
+    content: 'Works for our three warehouses after one change to the retry.',
+    wrapActionsBelowTitle: true,
+    actions: [
+      {
+        icon: 'DeleteBinLine',
+        tooltip: 'Delete comment',
+        'aria-label': 'Delete comment',
+        flat: true,
+        transparent: true,
+        iconColor: 'danger',
+        destructive: true,
+        className: 'comment-delete',
+      },
+    ],
+  },
+  {
+    label: 'Ivo Marek',
+    className: 'comment-more-menu',
+    content: 'The 6:00 run overlaps the stock count on Mondays.',
+    wrapActionsBelowTitle: true,
+    actions: [
+      {
+        icon: 'MoreLine',
+        tooltip: 'More',
+        'aria-label': 'More',
+        className: 'comment-more',
+        actions: [
+          { label: 'Pin', icon: 'Pushpin2Line' },
+          { label: 'Delete comment', icon: 'DeleteBinLine', destructive: true },
+        ],
+      },
+    ],
+  },
+];
+
+export const ACardsDestructiveActionOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "A template's comments on a phone (390 px), listed as cards. The first card's only action deletes the comment: a red bin marked `destructive`. Its cards put their actions under the title where the two do not fit (`wrapActionsBelowTitle`), but a lone destructive one stays at the end of the title's line, its bin alone. The second card's \"⋯\" opens Pin and Delete comment: Delete comment is drawn in danger there, where the red bin is not drawn. The marker never reaches the DOM.",
+      },
+    },
+  },
+  render: () => (
+    <div style={{ padding: '0 16px' }}>
+      <ReqoreCollection label='Comments' items={COMMENT_CARDS} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const card = await waitFor(() => {
+      const element = canvasElement.querySelector<HTMLElement>('.comment-lone-delete');
+      expect(element).toBeTruthy();
+      return element!;
+    });
+    const header = card.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+    const bin = card.querySelector<HTMLElement>('.reqore-button.comment-delete')!;
+    // on the title's line, at its end, its bin alone
+    expect(card.querySelector('.reqore-panel-title-actions')).toBeNull();
+    expect(bin.getBoundingClientRect().top).toBeLessThan(header.getBoundingClientRect().bottom);
+    expect(bin.getBoundingClientRect().left).toBeGreaterThanOrEqual(
+      header.getBoundingClientRect().right - 1
+    );
+    expect(bin.getBoundingClientRect().width).toBeLessThan(card.getBoundingClientRect().width / 3);
+    expect(bin.getAttribute('aria-label')).toBe('Delete comment');
+    expect(bin.hasAttribute('destructive')).toBe(false);
+
+    await userEvent.click(canvasElement.querySelector<HTMLElement>('.reqore-button.comment-more')!);
+    const [pin, remove] = await waitFor(() => {
+      const items = openMenuItems();
+      expect(items).toHaveLength(2);
+      return items;
+    });
+    expect(remove.textContent?.trim()).toBe('Delete comment');
+    expectDrawnRed(remove);
+    expectNotDrawnRed(pin);
+    expect(remove.hasAttribute('destructive')).toBe(false);
+  },
+};
+
+/** An app catalogue's apps by business category, and the ones in none under "Other applications". */
+const CATALOGUE_APPS: IReqoreCollectionProps['items'] = [
+  { label: 'Saved: Payroll export', content: 'Your saved favorite' },
+  { label: 'Payroll', content: 'Pays the monthly salaries', groups: ['Finance'] },
+  { label: 'Invoices', content: 'Sends and tracks invoices', groups: ['Finance'] },
+  { label: 'Label printer', content: 'Prints labels from a file', groups: ['Other applications'] },
+  { label: 'Shipments', content: 'Books carriers for orders', groups: ['Logistics'] },
+  { label: 'Stock levels', content: 'Counts what is in each warehouse', groups: ['Warehouse'] },
+];
+
+const CATALOGUE_GROUPS: IReqoreCollectionProps['groups'] = {
+  // after every business category, in either sort
+  'Other applications': { order: 1 },
+};
+
+/** The group headings drawn in `root`, in order. */
+const groupHeadings = (root: HTMLElement) =>
+  Array.from(root.querySelectorAll<HTMLElement>('.reqore-collection-group')).map(
+    (group) => group.querySelector('.reqore-panel-title-label-row')?.textContent?.trim()
+  );
+
+export const AGroupPlacedLastStaysLast: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'An app catalogue in two sorts, A to Z and Z to A. Its apps are grouped by business category, and those in none are under "Other applications", placed after them (`groups[\'Other applications\'].order: 1`). In both sorts the categories turn and "Other applications" stays last; the saved favorite, in no group, stays first. Sorted by name, "Other applications" landed between Logistics and Warehouse.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big' fluid>
+      <div className='catalogue-asc' style={{ width: 640 }}>
+        <ReqoreCollection
+          label='A to Z'
+          items={CATALOGUE_APPS}
+          groups={CATALOGUE_GROUPS}
+          defaultSort='asc'
+          columns={2}
+        />
+      </div>
+      <div className='catalogue-desc' style={{ width: 640 }}>
+        <ReqoreCollection
+          label='Z to A'
+          items={CATALOGUE_APPS}
+          groups={CATALOGUE_GROUPS}
+          defaultSort='desc'
+          columns={2}
+        />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const asc = canvasElement.querySelector<HTMLElement>('.catalogue-asc')!;
+    const desc = canvasElement.querySelector<HTMLElement>('.catalogue-desc')!;
+    await waitFor(() =>
+      expect(groupHeadings(asc)).toEqual(['Finance', 'Logistics', 'Warehouse', 'Other applications'])
+    );
+    expect(groupHeadings(desc)).toEqual(['Warehouse', 'Logistics', 'Finance', 'Other applications']);
+    // the favorite in no group leads, before the first heading
+    for (const root of [asc, desc]) {
+      const favorite = Array.from(root.querySelectorAll<HTMLElement>('.reqore-collection-item')).find(
+        (item) => item.textContent?.includes('Saved: Payroll export')
+      )!;
+      const firstGroup = root.querySelector<HTMLElement>('.reqore-collection-group')!;
+      expect(favorite.getBoundingClientRect().top).toBeLessThan(firstGroup.getBoundingClientRect().top);
+    }
+  },
+};
+
+/** The collection's header: its bar, its title and its search box. */
+const searchHeader = (root: HTMLElement) => {
+  const bar = root.querySelector<HTMLElement>('.reqore-collection > .reqore-panel-title')!;
+  const search = bar.querySelector<HTMLElement>('.reqore-input')!;
+  const title = bar.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+
+  return { bar, search, title };
+};
+
+/**
+ * The search takes the room the title leaves it: an input is worth exactly as much as it is given, so under the
+ * actions' default (they go under a title they do not fit beside) it still fills the bar where there is room,
+ * and the line under the title where they go there.
+ */
+const expectSearchFillsTheRoom = async (root: HTMLElement) => {
+  await waitFor(() => expect(searchHeader(root).search).toBeTruthy());
+  await waitFor(() => {
+    const { bar, search, title } = searchHeader(root);
+    const barBox = bar.getBoundingClientRect();
+    const searchBox = search.getBoundingClientRect();
+    const titleBox = title.getBoundingClientRect();
+    const besideTitle = searchBox.top < titleBox.bottom - 1;
+    // what is left of the search's line once the title (if beside it) and the other controls have theirs
+    const others = Array.from(
+      bar.querySelectorAll<HTMLElement>('.reqore-panel-title-actions .reqore-button')
+    ).reduce((sum, button) => sum + button.getBoundingClientRect().width, 0);
+    const room = barBox.width - (besideTitle ? titleBox.width : 0) - others;
+
+    // it fills its room, less the gaps between it and the other controls
+    expect(searchBox.width).toBeGreaterThan(room - 24);
+    // beside the title, its share of the bar, as before the default: not its placeholder's width
+    if (besideTitle) {
+      expect(searchBox.width).toBeGreaterThan(barBox.width * 0.4);
+    }
+  });
+};
+
+export const ItsSearchFillsTheBar: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A sortable, searchable collection in a 1440px page. The search box takes the room the title "Collection of items" and the sort control leave it, as it did before the actions went under a title they do not fit beside by default.',
+      },
+    },
+  },
+  args: { label: 'Collection of items', items, filterable: true, sortable: true },
+  render: (args) => (
+    <div style={{ width: 1440 }} className='search-fills'>
+      <ReqoreCollection {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectSearchFillsTheRoom(canvasElement.querySelector('.search-fills') as HTMLElement);
+  },
+};
+
+export const ItsSearchFillsItsLineOnAPhone: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'The same collection on a phone (390 px): the title has its line, and the search box fills the line under it beside the sort control.',
+      },
+    },
+  },
+  args: { label: 'Collection of items', items, filterable: true, sortable: true },
+  render: (args) => (
+    <div className='search-fills'>
+      <ReqoreCollection {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectSearchFillsTheRoom(canvasElement.querySelector('.search-fills') as HTMLElement);
+  },
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * an empty collection says so, and asks for another search only when a search emptied it
+ * ---------------------------------------------------------------------------------------------- */
+
+/** What the empty collection in `box` says. */
+const emptyMessageIn = (box: HTMLElement) => {
+  const message = box.querySelector<HTMLElement>('.reqore-collection-empty');
+
+  return message?.textContent?.trim();
+};
+
+export const AnEmptyListSaysSo: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A searchable collection with no items, in a 1440px and a 390px box, nobody having searched it: it says "Nothing here yet." and nothing about a search. Its sentence used to be "Nothing to show. Try another search, or fewer filters." whether or not anyone had searched, so many lists in an app with no message of their own asked the reader to change a search they never typed (a list of variables, for one). The third box gives the collection its own `emptyMessage`, which it still says.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      {[1440, 390].map((width) => (
+        <div key={width} className={`empty-${width}`} style={{ width }}>
+          <ReqoreCollection label='Variables' items={[]} filterable sortable />
+        </div>
+      ))}
+      <div className='empty-own' style={{ width: 390 }}>
+        <ReqoreCollection label='Variables' items={[]} filterable emptyMessage='No variables' />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const width of [1440, 390]) {
+      const box = canvasElement.querySelector<HTMLElement>(`.empty-${width}`)!;
+
+      await waitFor(() => expect(emptyMessageIn(box), `${width}px`).toBe('Nothing here yet.'));
+      expect(box.querySelector('.reqore-collection-empty-searched')).toBeNull();
+    }
+    const own = canvasElement.querySelector<HTMLElement>('.empty-own')!;
+
+    await waitFor(() => expect(emptyMessageIn(own)).toBe('No variables'));
+  },
+};
+
+export const ASearchThatHidesEveryItemSaysSo: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A searchable collection of items in a 1440px and a 390px box, searched for "zzz", which none of them holds: it says "Nothing to show. Try another search, or fewer filters.", because a search is what hid them. Cleared, the items are back; the picture is taken searched.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      {[1440, 390].map((width) => (
+        <div key={width} className={`searched-${width}`} style={{ width }}>
+          <ReqoreCollection label='Collection of items' items={items} filterable searchDelay={0} />
+        </div>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const width of [1440, 390]) {
+      const box = canvasElement.querySelector<HTMLElement>(`.searched-${width}`)!;
+      const search = await waitFor(() => {
+        const input = box.querySelector<HTMLInputElement>('input');
+
+        expect(input).toBeTruthy();
+
+        return input!;
+      });
+
+      expect(box.querySelector('.reqore-collection-empty')).toBeNull();
+      await userEvent.type(search, 'zzz');
+      await waitFor(() =>
+        expect(emptyMessageIn(box), `${width}px`).toBe(
+          'Nothing to show. Try another search, or fewer filters.'
+        )
+      );
+      expect(box.querySelector('.reqore-collection-empty-searched')).toBeTruthy();
+      // cleared, the items are back; searched again, so the picture is what the story is about
+      await userEvent.clear(search);
+      await waitFor(() => expect(box.querySelector('.reqore-collection-empty')).toBeNull());
+      await userEvent.type(search, 'zzz');
+      await waitFor(() => expect(box.querySelector('.reqore-collection-empty-searched')).toBeTruthy());
+    }
+  },
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * a search beside a title keeps the room its placeholder needs
+ * ---------------------------------------------------------------------------------------------- */
+
+/** Every character of the search's placeholder fits its box, beside its icon and its clear button. */
+const expectPlaceholderWhole = (search: HTMLInputElement) => {
+  const style = getComputedStyle(search);
+  const context = document.createElement('canvas').getContext('2d')!;
+
+  context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+  const text = context.measureText(search.placeholder).width;
+  const room =
+    search.clientWidth - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0);
+
+  expect(text, `"${search.placeholder}" in ${Math.round(room)}px`).toBeLessThanOrEqual(room + 1);
+  expect(search.getBoundingClientRect().width).toBeGreaterThanOrEqual(159);
+};
+
+/** A collection titled `label`, its search and sort beside or under the title. */
+const TitledCollection = ({ id, label, width }: { id: string; label: string; width: number }) => (
+  <div data-titled={id} style={{ width, maxWidth: '100%' }}>
+    <ReqoreCollection label={label} items={items} filterable sortable />
+  </div>
+);
+
+const titledParts = (canvasElement: HTMLElement, id: string) => {
+  const root = canvasElement.querySelector<HTMLElement>(`[data-titled="${id}"]`)!;
+  const { bar, title } = searchHeader(root);
+
+  return { root, bar, title, search: bar.querySelector<HTMLInputElement>('input.reqore-input')! };
+};
+
+export const ASearchBesideATitleKeepsTheRoomItsPlaceholderNeedsOnAPhone: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Two searchable, sortable collections in 390px boxes, a phone\'s width: one titled "Variables", one "Collection of items". Beside "Variables", half the bar left the search about 107px and cut its placeholder to "Sear". A search beside a title now keeps at least the width its placeholder needs (160px at the least): "Variables" leaves it that much, so it stays on the title\'s line with its placeholder whole. "Collection of items" leaves less, so the search goes to the line under the title and fills it.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <TitledCollection id='short' label='Variables' width={390} />
+      <TitledCollection id='long' label='Collection of items' width={390} />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const id of ['short', 'long']) {
+      await waitFor(() => {
+        const { bar, title, search } = titledParts(canvasElement, id);
+        const searchBox = search.getBoundingClientRect();
+        const under = searchBox.top >= title.getBoundingClientRect().bottom - 1;
+
+        expect(search, id).toBeTruthy();
+        // beside the title or under it, never too narrow for its placeholder
+        expectPlaceholderWhole(search);
+        if (under) {
+          // under the title it fills the line beside the other controls
+          expect(searchBox.width, id).toBeGreaterThan(bar.getBoundingClientRect().width * 0.5);
+        }
+        if (id === 'long') {
+          expect(under, 'the long title leaves it too little: it goes under').toBe(true);
+        }
+      });
+    }
+  },
+};
+
+export const ASearchBesideATitleStaysThereOnADesktop: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same two collections in 1440px boxes: the search stays on the title\'s line, at half the bar, its placeholder whole. The width a search keeps beside a title moves nothing where there is room.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <TitledCollection id='short' label='Variables' width={1440} />
+      <TitledCollection id='long' label='Collection of items' width={1440} />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const id of ['short', 'long']) {
+      await waitFor(() => {
+        const { bar, title, search } = titledParts(canvasElement, id);
+        const searchBox = search.getBoundingClientRect();
+
+        expect(search, id).toBeTruthy();
+        expect(searchBox.top, id).toBeLessThan(title.getBoundingClientRect().bottom - 1);
+        expect(searchBox.width, id).toBeGreaterThan(bar.getBoundingClientRect().width * 0.4);
+        expectPlaceholderWhole(search);
+      });
+    }
+  },
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * a filter the page draws itself (`filtered`)
+ * ---------------------------------------------------------------------------------------------- */
+
+export const AListThePageFilteredSaysSo: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'An empty collection and an empty table that a filter of the page\'s own (its toolbar, not their search) has emptied, said with `filtered`: each draws the search icon and says the search sentence, "Nothing to show. Try another search, or fewer filters.", or the page\'s own words where it gives some ("No tickets match these filters"). Without the flag they said "Nothing here yet." beside an inbox icon, as if nothing had been filtered (a support queue filtered to empty, for one).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <div data-filtered='collection' style={{ width: 720 }}>
+        <ReqoreCollection label='Tickets' items={[]} filterable filtered />
+      </div>
+      <div data-filtered='collection-own' style={{ width: 720 }}>
+        <ReqoreCollection
+          label='Tickets'
+          items={[]}
+          filterable
+          filtered
+          emptyMessage='No tickets match these filters'
+        />
+      </div>
+      <div data-filtered='table' style={{ width: 720 }}>
+        <ReqoreTable
+          label='Queue'
+          columns={[{ dataId: 'subject', header: { label: 'Subject' } }]}
+          data={[]}
+          filtered
+          emptyMessage='No tickets match these filters'
+        />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const message = (id: string) =>
+      canvasElement.querySelector<HTMLElement>(
+        `[data-filtered="${id}"] .reqore-collection-empty, [data-filtered="${id}"] .reqore-table-empty`
+      );
+
+    await waitFor(() => {
+      expect(message('collection')?.textContent?.trim()).toBe(
+        'Nothing to show. Try another search, or fewer filters.'
+      );
+      expect(message('collection-own')?.textContent?.trim()).toBe('No tickets match these filters');
+      expect(message('table')?.textContent?.trim()).toBe('No tickets match these filters');
+    });
+    for (const id of ['collection', 'collection-own', 'table']) {
+      expect(message(id)!.className, id).toContain('-searched');
+    }
+  },
+};
+
+/** A tile as an app catalogue draws one: a logo larger than its title, and a description or none. */
+const logoTile = (label: string, content?: string) => ({
+  label,
+  content,
+  iconImage: '/q-symbol.png',
+  size: 'small' as const,
+  minimal: true,
+  iconProps: { size: 'huge' as const, effect: { opacity: 1 } },
+});
+
+export const TitlesCentreOnTheirLogos: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: `Renders three tiles, each with a logo larger than its title: one with a description and two without. Every title is centred on its logo, so a tile with nothing under its title does not leave the name at the logo's top edge.`,
+      },
+    },
+  },
+  render: () => (
+    <div className='logo-tiles' style={{ width: 760 }}>
+      <ReqoreCollection
+        sortable={false}
+        filterable={false}
+        minColumnWidth='220px'
+        items={[
+          logoTile('Shopify', 'Sync orders between your shop and your ERP.'),
+          logoTile('Salesforce'),
+          logoTile('SAP'),
+        ]}
+      />
+    </div>
+  ),
+  play: async () => {
+    const tiles = await waitFor(() => {
+      const found = [...document.querySelectorAll<HTMLElement>('.logo-tiles .reqore-collection-item')];
+      expect(found).toHaveLength(3);
+      return found;
+    });
+    for (const tile of tiles) {
+      const logo = tile.querySelector<HTMLElement>('.reqore-panel-title-icon')!.getBoundingClientRect();
+      const title = tile.querySelector<HTMLElement>('.reqore-panel-title-label-box')!.getBoundingClientRect();
+      await expect(logo.height).toBeGreaterThan(title.height);
+      await expect(
+        Math.abs(title.top + title.height / 2 - (logo.top + logo.height / 2)),
+        tile.textContent ?? ''
+      ).toBeLessThanOrEqual(1.5);
+    }
   },
 };

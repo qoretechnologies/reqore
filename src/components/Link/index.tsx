@@ -1,8 +1,9 @@
 import { forwardRef, memo, useMemo, MouseEvent } from 'react';
 import { css } from 'styled-components';
 import styled from '../../helpers/styled';
-import { PADDING_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
-import { changeLightness } from '../../helpers/colors';
+import { PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
+import { getFocusRingColor } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
@@ -166,8 +167,12 @@ export const StyledLink = styled(StyledSpan)<IReqoreLinkStyle>`
   background: transparent;
   font-family: inherit;
   font-weight: inherit;
-  font-size: ${({ _size }) =>
-    _size ? (isStringSize(_size) ? `${TEXT_FROM_SIZE[_size]}px` : _size) : 'inherit'};
+  font-size: ${({ _size, theme }) =>
+    _size
+      ? isStringSize(_size)
+        ? `${getTextSize(theme, _size as TSizes)}px`
+        : _size
+      : 'inherit'};
   text-align: left;
   cursor: pointer;
   /* Doubled selector raises specificity above the Layout's global
@@ -198,8 +203,7 @@ export const StyledLink = styled(StyledSpan)<IReqoreLinkStyle>`
   }
 
   &:focus-visible {
-    outline: 2px solid
-      ${({ theme, intent }) => changeLightness(intent ? theme.intents[intent] : theme.main, 0.2)};
+    outline: 2px solid ${({ theme }) => getFocusRingColor(theme)};
     outline-offset: 2px;
     border-radius: 2px;
   }

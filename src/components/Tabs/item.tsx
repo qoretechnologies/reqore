@@ -1,5 +1,5 @@
 import { omit } from 'lodash';
-import { forwardRef, memo, useState, useTransition } from 'react';
+import { forwardRef, memo, useMemo, useState, useTransition } from 'react';
 import { useUnmount, useUpdateEffect } from 'react-use';
 import { css } from 'styled-components';
 import { IReqoreTabsListItem, TReqoreTabsActiveMarker } from '.';
@@ -8,6 +8,7 @@ import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import {
   changeLightness,
   getColorFromMaybeString,
+  getFocusRingColor,
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
@@ -164,7 +165,7 @@ export const StyledTabListItem = styled.div.withConfig({
         /* Keyboard users still need to see where they are; :focus-visible only
            matches keyboard focus, so this never returns on a mouse click. */
         ${StyledButton}:focus-visible {
-          outline: 2px solid ${activeColor || changeLightness(getMainBackgroundColor(theme), 0.4)} !important;
+          outline: 2px solid ${getFocusRingColor(theme)} !important;
           outline-offset: -2px;
         }
 
@@ -192,6 +193,11 @@ export const StyledTabListItem = styled.div.withConfig({
              label with it would collapse that distinction. */
           ${StyledButton} {
             color: ${getReadableColor(theme, undefined, undefined, false)} !important;
+            /* The bar again, on the button: the hover wash is the button's own
+               background, painted over the item's inset shadow, so hovering the
+               selected tab hid its bar — right after a click it looked unselected. */
+            box-shadow: inset ${vertical ? '-2px 0 0 0' : '0 -2px 0 0'}
+              ${activeColor || 'currentColor'} !important;
           }
         `}
       `}
@@ -228,6 +234,7 @@ const ReqoreTabsListItem = memo(
         intent,
         size = 'normal',
         closeIcon,
+        closeLabel,
         customTheme,
         className,
         flat = true,
@@ -242,6 +249,12 @@ const ReqoreTabsListItem = memo(
       const [isStillPending, setStillPending] = useState(false);
       const [loadingTimer, setLoadingTimer] = useState(null);
       const { setRef } = useCombinedRefs(ref);
+      const closeName = useMemo(
+        () =>
+          closeLabel ??
+          (typeof label === 'string' || typeof label === 'number' ? `Close ${label}` : 'Close'),
+        [closeLabel, label]
+      );
       const theme = useReqoreTheme('main', customTheme, undefined);
       // Marker colour, most specific first: an explicit colour, then the active
       // intent's, and failing both the tab's own text colour via `currentColor`.
@@ -339,6 +352,9 @@ const ReqoreTabsListItem = memo(
                   fixed
                   flat={isLineMarker ? true : intent ? false : flat}
                   icon={closeIcon || 'CloseLine'}
+                  // An icon alone named nothing for a screen reader: it says which tab it closes.
+                  tooltip={closeName}
+                  aria-label={closeName}
                   intent={active ? activeIntent || intent : intent}
                   minimal
                   wrap={wrapTabNames}

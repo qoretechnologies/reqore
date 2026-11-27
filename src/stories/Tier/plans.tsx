@@ -74,7 +74,7 @@ export const ENTERPRISE: IReqoreTierProps = {
 export const THREE_PLANS = [STARTER, PRO, ENTERPRISE];
 export const FOUR_PLANS = [STARTER, PRO, TEAM, ENTERPRISE];
 
-/** A phone 360px wide: the Storybook viewport the play runs at AND the one Qlip captures at. */
+/** A phone 360px wide: the Storybook viewport the play runs at AND the one its snapshot is captured at. */
 export const phoneParameters = (height = 900) => ({
   viewport: {
     options: {

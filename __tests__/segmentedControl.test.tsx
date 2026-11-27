@@ -1,5 +1,9 @@
 import { fireEvent, render } from '@testing-library/react';
+import { getContrast, getLuminance, parseToRgb } from 'polished';
 import { vi } from 'vitest';
+import { getSegmentedControlSurfaces } from '../src/components/SegmentedControl';
+import { DEFAULT_THEME, IReqoreTheme } from '../src/constants/theme';
+import { getReadableColorFrom } from '../src/helpers/colors';
 import {
   ReqoreContent,
   ReqoreIcon,
@@ -233,22 +237,48 @@ test('Shows "More" dropdown when items overflow container width', () => {
   expect(visibleItems.length).toBeLessThan(4);
 });
 
-test('Shows selected item label in "More" button when active item is hidden', () => {
+test('Keeps the chosen segment on screen while a plain one can fold in its place', () => {
+  const items = [
+    { value: 'day', label: 'Day' },
+    { value: 'week', label: 'Week' },
+    { value: 'month', label: 'Month' },
+    { value: 'year', label: 'Year' },
+  ];
+  const shown = () =>
+    Array.from(document.querySelectorAll('.reqore-segmented-control-item')).filter(
+      (item) => !item.classList.contains('reqore-segmented-control-more')
+    );
+  // the widest row that folds something, and still has a segment beside the fold
+  for (let width = 400; width >= 100; width -= 10) {
+    const { unmount } = renderControl({ _testWidth: width, items, value: 'year' });
+    if (document.querySelector('.reqore-segmented-control-more') && shown().length) break;
+    unmount();
+  }
+
+  const more = document.querySelector('.reqore-segmented-control-more')!;
+  // the chosen "Year", last in the row, is drawn as a segment; the fold holds plain ones
+  expect(shown().some((item) => item.textContent?.includes('Year'))).toBe(true);
+  expect(more.textContent).not.toContain('Year');
+});
+
+test('Shows the chosen item\'s label on "More" only when nothing else can fold', () => {
   renderControl({
-    _testWidth: 150,
+    _testWidth: 60,
     items: [
       { value: 'day', label: 'Day' },
       { value: 'week', label: 'Week' },
       { value: 'month', label: 'Month' },
       { value: 'year', label: 'Year' },
     ],
-    value: 'year', // This item will be hidden in the "More" group
+    value: 'year',
   });
 
   const moreButton = document.querySelector('.reqore-segmented-control-more');
   expect(moreButton).toBeTruthy();
-  // The "More" button should display the hidden selected item's label
+  // no room even for the chosen segment beside the fold: it folds and lends its label
   expect(moreButton!.textContent).toContain('Year');
+  // ...and is marked the way a visible selected segment is: by the highlight, not a fill
+  expect(document.querySelector('.reqore-segmented-control-indicator')).toBeTruthy();
 });
 
 /**
@@ -501,4 +531,263 @@ test('A segment folded into the More menu passes its props to its menu item', ()
   const menuItem = document.querySelector('.reqore-menu-item[data-track-label="year"]');
 
   expect(menuItem).toBeTruthy();
+});
+
+test('foldToFit draws the control inside a slot and keeps every segment at its own width', () => {
+  renderControl({ foldToFit: true, fluid: true });
+
+  const slot = document.querySelector('.reqore-segmented-control-slot');
+  expect(slot).toBeTruthy();
+  expect(slot!.querySelector('.reqore-segmented-control')).toBeTruthy();
+  // `fluid` does not stretch the segments while folding: they keep their own width.
+  const wrapper = document.querySelector('.reqore-segmented-control-item')!
+    .parentElement as HTMLElement;
+  expect(getComputedStyle(wrapper).flex).toBe('0 0 auto');
+});
+
+test('A segment folded to fit keeps its count in the More menu', () => {
+  renderControl({
+    foldToFit: true,
+    _testWidth: 150,
+    items: [
+      { value: 'day', label: 'Day' },
+      { value: 'week', label: 'Week' },
+      { value: 'month', label: 'Month' },
+      { value: 'year', label: 'Year', badge: { label: '42', appearance: 'text' } },
+    ],
+    value: 'day',
+  });
+
+  const more = document.querySelector('.reqore-segmented-control-more') as HTMLElement;
+  expect(more).toBeTruthy();
+  fireEvent.mouseEnter(more);
+  fireEvent.click(more);
+
+  const yearItem = Array.from(document.querySelectorAll('.reqore-menu-item')).find((item) =>
+    item.textContent?.includes('Year')
+  );
+  expect(yearItem?.textContent).toContain('42');
+});
+
+test('foldToFit folds on the widths segments are drawn at, and a picked folded segment comes back', () => {
+  // jsdom lays nothing out, so the drawn widths are given: a segment is 100px, "More" 60px
+  // (40px if it ever carried a folded segment's label).
+  const original = Element.prototype.getBoundingClientRect;
+  Element.prototype.getBoundingClientRect = function (this: HTMLElement) {
+    let width = 0;
+    if (this.parentElement?.classList.contains('reqore-segmented-control')) {
+      const more = this.querySelector('.reqore-segmented-control-more');
+      width = more ? (more.textContent?.includes('More') ? 60 : 40) : 100;
+    }
+    return { width, height: 30, top: 0, left: 0, right: width, bottom: 30, x: 0, y: 0 } as DOMRect;
+  };
+
+  try {
+    // 290px of room: two segments and "More" (260) fit, a third does not.
+    renderControl({ foldToFit: true, _testWidth: 290, value: 'day' });
+    const shown = () =>
+      Array.from(document.querySelectorAll('.reqore-segmented-control-item'))
+        .filter((item) => !item.classList.contains('reqore-segmented-control-more'))
+        // the button draws its label more than once (for its bold width); read which one it is
+        .map((item) => defaultItems.find((def) => item.textContent?.startsWith(def.label))?.label);
+    expect(shown()).toEqual(['Day', 'Week']);
+
+    const more = document.querySelector('.reqore-segmented-control-more') as HTMLElement;
+    fireEvent.mouseEnter(more);
+    fireEvent.click(more);
+    const year = Array.from(document.querySelectorAll('.reqore-menu-item')).find((item) =>
+      item.textContent?.includes('Year')
+    ) as HTMLElement;
+    fireEvent.click(year);
+
+    // the chosen "Year" comes back on screen and a plain segment folds in its place: Day, Year
+    // and "More" (260) fit on the drawn widths
+    expect(shown()).toEqual(['Day', 'Year']);
+    expect(document.querySelector('.reqore-segmented-control-more')?.textContent).not.toContain(
+      'Year'
+    );
+  } finally {
+    Element.prototype.getBoundingClientRect = original;
+  }
+});
+
+test('fitSize makes the whole control the size of a button beside it', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSegmentedControl
+            size='small'
+            fitSize
+            items={[
+              { value: 'a', label: 'All' },
+              { value: 'b', label: 'Open' },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+  const item = document.querySelector('.reqore-segmented-control-item') as HTMLElement;
+  // small = 32: the frame's 3px padding and 1px border, top and bottom, come out of the item.
+  expect(item.style.height).toBe('24px');
+});
+
+describe('getSegmentedControlSurfaces: the chosen segment on the surfaces a theme names', () => {
+  const CALM_DARK = {
+    ...DEFAULT_THEME,
+    main: '#121212',
+    panel: { main: '#141417', border: '#2d2d33' },
+    buttons: { main: '#1c1c20' },
+  } as IReqoreTheme;
+  const CALM_LIGHT = {
+    ...DEFAULT_THEME,
+    main: '#f4f4f6',
+    panel: { main: '#ffffff', border: '#e2e2e8' },
+    buttons: { main: '#efeff3' },
+  } as IReqoreTheme;
+
+  test('a theme that names no panel surface keeps the look derived from main', () => {
+    expect(getSegmentedControlSurfaces({ ...DEFAULT_THEME, main: '#121212' })).toBeUndefined();
+  });
+
+  test('a control with a surface of its own (a customTheme or an intent) keeps it', () => {
+    expect(
+      getSegmentedControlSurfaces({ ...CALM_DARK, main: '#2a1a40', originalMain: '#121212' })
+    ).toBeUndefined();
+  });
+
+  test.each([
+    ['dark', CALM_DARK],
+    ['light', CALM_LIGHT],
+  ])('on a %s calm theme the chosen segment stands off its track', (_name, theme) => {
+    const surfaces = getSegmentedControlSurfaces(theme)!;
+
+    // The track is the button surface, edged with the panel hairline.
+    expect(surfaces.track).toBe(theme.buttons!.main);
+    expect(surfaces.trackEdge).toBe(theme.panel!.border);
+    // The thumb is a step lighter than the track (it was darker on a dark theme)...
+    expect(getLuminance(surfaces.thumb)).toBeGreaterThan(getLuminance(surfaces.track));
+    // ...edged in a line that stands 3:1 against the track (WCAG 1.4.11)...
+    expect(getContrast(surfaces.thumbEdge, surfaces.track)).toBeGreaterThanOrEqual(3);
+    // ...and the other segments' words are quieter than the chosen one's, and still read.
+    const text = getReadableColorFrom(surfaces.track);
+    expect(getContrast(surfaces.otherText, surfaces.track)).toBeLessThan(
+      getContrast(text, surfaces.track)
+    );
+    expect(getContrast(surfaces.otherText, surfaces.track)).toBeGreaterThanOrEqual(4.5);
+    expect(surfaces.chosenText).toBeUndefined();
+  });
+
+  test.each([
+    ['dark', CALM_DARK],
+    ['light', CALM_LIGHT],
+  ])('on a %s calm theme a chosen intent edges and words the segment so it reads', (_name, theme) => {
+    const surfaces = getSegmentedControlSurfaces(theme, 'info')!;
+
+    expect(getContrast(surfaces.thumbEdge, surfaces.track)).toBeGreaterThanOrEqual(3);
+    expect(getContrast(surfaces.chosenText!, surfaces.thumb)).toBeGreaterThanOrEqual(4.5);
+    // In the intent's hue, not grey.
+    for (const color of [surfaces.thumbEdge, surfaces.chosenText!]) {
+      const { red, blue } = parseToRgb(color);
+      expect(blue - red).toBeGreaterThan(40);
+    }
+  });
+
+  test("the theme's secondary grey says the other segments' words where it reads", () => {
+    expect(
+      getSegmentedControlSurfaces({ ...CALM_DARK, text: { secondary: '#a6a6af' } })!.otherText
+    ).toBe('#a6a6af');
+  });
+
+  test('a calm theme draws the thumb with its edge; the default draws it unedged', () => {
+    const renderOn = (theme: Partial<IReqoreTheme>) =>
+      render(
+        <ReqoreUIProvider theme={theme}>
+          <ReqoreLayoutContent>
+            <ReqoreContent>
+              <ReqoreSegmentedControl items={defaultItems} value='week' />
+            </ReqoreContent>
+          </ReqoreLayoutContent>
+        </ReqoreUIProvider>
+      );
+    const thumbStyle = () =>
+      getComputedStyle(document.querySelector('.reqore-segmented-control-indicator')!);
+
+    const calm = renderOn({
+      main: '#121212',
+      panel: { main: '#141417', border: '#2d2d33' },
+      buttons: { main: '#1c1c20' },
+    });
+    expect(thumbStyle().borderTopStyle).toBe('solid');
+    calm.unmount();
+
+    renderOn({ main: '#121212' });
+    expect(thumbStyle().borderTopStyle).not.toBe('solid');
+  });
+});
+
+describe('an overflow label worded from the folded items', () => {
+  const nameTheFolded = (folded: { value?: string; label?: string | number }[]) =>
+    folded.length > 1 ? `${folded[0].label} +${folded.length - 1}` : String(folded[0]?.label ?? '');
+
+  const shownItems = () =>
+    Array.from(document.querySelectorAll('.reqore-segmented-control-item')).filter(
+      (item) => !item.classList.contains('reqore-segmented-control-more')
+    );
+
+  /** Draws the control at the widest width that folds part of it (some segments shown, some folded). */
+  const renderPartlyFolded = (props: Record<string, unknown>) => {
+    for (let width = 400; width >= 100; width -= 10) {
+      const { unmount } = renderControl({ ...props, _testWidth: width });
+      if (document.querySelector('.reqore-segmented-control-more') && shownItems().length) {
+        return;
+      }
+      unmount();
+    }
+    throw new Error('no width folds part of the control');
+  };
+
+  test('names the segments folded into it, never a bare "More"', () => {
+    const overflowLabel = vi.fn(nameTheFolded);
+    renderPartlyFolded({ value: 'day', overflowLabel });
+
+    const more = document.querySelector('.reqore-segmented-control-more')!;
+    const folded = defaultItems.slice(shownItems().length);
+    expect(more.textContent).toContain(nameTheFolded(folded));
+    expect(more.textContent).not.toContain('More');
+    // given the folded items themselves
+    const lastFolded = overflowLabel.mock.calls.at(-1)![0];
+    expect(lastFolded.map((item) => item.value)).toEqual(
+      folded.map((item) => item.value)
+    );
+  });
+
+  test('keeps the chosen segment on screen and names the others', () => {
+    renderPartlyFolded({ value: 'year', overflowLabel: nameTheFolded });
+
+    expect(shownItems().some((item) => item.textContent?.includes('Year'))).toBe(true);
+    const more = document.querySelector('.reqore-segmented-control-more')!;
+    expect(more.textContent).not.toContain('Year');
+  });
+
+  test('shortens the label to how many it holds when it does not fit in full', () => {
+    // a label far too long for any row: the fold falls back to its count
+    renderPartlyFolded({
+      value: 'day',
+      overflowLabel: (folded: { label?: string | number }[]) =>
+        `${folded.map((item) => item.label).join(' and ')} ${'and more '.repeat(20)}`,
+    });
+
+    const more = document.querySelector('.reqore-segmented-control-more')!;
+    const folded = defaultItems.length - shownItems().length;
+    // the button draws its label more than once (for its bold width)
+    expect(more.textContent).toMatch(new RegExp(`^(\\+${folded})+$`));
+  });
+
+  test('keeps the string form', () => {
+    renderPartlyFolded({ value: 'day', overflowLabel: 'Plus' });
+
+    expect(document.querySelector('.reqore-segmented-control-more')!.textContent).toContain('Plus');
+  });
 });

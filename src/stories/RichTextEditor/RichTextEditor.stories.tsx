@@ -172,6 +172,66 @@ export const ClickingATagPlacesTheCursor: Story = {
   },
 };
 
+/** A computed color's channels. */
+const channelsOf = (color: string) => (color.match(/[\d.]+/g) || []).map(Number);
+
+/** Whether a color is a grey: its channels within a few steps of each other. */
+const isGrey = (color: string) => {
+  const [r, g, b] = channelsOf(color);
+  return Math.max(r, g, b) - Math.min(r, g, b) <= 12;
+};
+
+export const ASelectedChipKeepsItsLook: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Selects the whole text, a chip with it. The chip in the selection keeps its own look, the plain chip, with a ring in the text colour around it: it was painted blue, and blue says only that a filter is on.',
+      },
+    },
+  },
+  args: {
+    value: [
+      {
+        type: 'paragraph',
+        children: [
+          { text: 'Order ' },
+          { type: 'tag', value: '$.order.id', label: 'id', children: [{ text: '' }] },
+          { text: ' was received' },
+        ],
+      },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await waitFor(() => {
+      const el = doc.querySelector<HTMLElement>('[contenteditable="true"]');
+      expect(el).toBeTruthy();
+      return el!;
+    });
+    const chip = () => {
+      // Slate's void attributes are spread onto the tag itself
+      const tag = doc.querySelector<HTMLElement>(
+        '.reqore-tag[data-slate-void="true"], [data-slate-void="true"] .reqore-tag'
+      );
+      expect(tag, 'the chip').toBeTruthy();
+      return tag!;
+    };
+    const unselected = getComputedStyle(await waitFor(chip)).backgroundColor;
+
+    await userEvent.click(editor);
+    await userEvent.keyboard('{Control>}a{/Control}');
+    await waitFor(() => expect(chip().classList.contains('reqore-tag-selected')).toBe(true));
+
+    const { backgroundColor, boxShadow } = getComputedStyle(await waitFor(chip));
+    await expect(backgroundColor, 'the chip keeps its own surface').toBe(unselected);
+    await expect(isGrey(backgroundColor), `the chip is not blue: ${backgroundColor}`).toBe(true);
+    // the ring that says it is chosen, in the text colour
+    await expect(boxShadow).not.toBe('none');
+    await expect(isGrey(boxShadow), `the ring is not blue: ${boxShadow}`).toBe(true);
+  },
+};
+
 export const WithCustomStyle: Story = {
   parameters: {
     docs: {
@@ -384,7 +444,7 @@ const CHIP_SAYS_NO_SIZE = (): IReqoreTagProps => ({ intent: 'info' });
 /**
  * A chip that says its own size is that size; one that does not is a size less than its editor. The editor's
  * size used to win: a chip that has to be `small` for a finger to press it was `tiny` in a `small` editor, its
- * label taller than its box (reqraft's reference chips, qorus#646).
+ * label taller than its box (reqraft's reference chips).
  */
 export const AChipKeepsTheSizeItAsksFor: Story = {
   parameters: {
@@ -800,7 +860,7 @@ export const UpdatesFromOutside: Story = {
 /**
  * Two clicks, then typing, on a value that already holds a tag.
  *
- * Reported from the Qorus IDE's assertion `Value` field: the row holds a
+ * Reported from an app's assertion `Value` field: the row holds a
  * `$.result` reference, the author clicks once to focus and again to put the
  * cursor after the template, and the control is then frozen — nothing types,
  * and the template does not go away either.
@@ -971,7 +1031,7 @@ export const TabFromTheTextDoesNotStopOnItsChip: Story = {
     docs: {
       description: {
         story:
-          'Tab from the text leaves the editor; it does not stop on a chip inside it. The editor is the tab stop and a chip is reached with the caret. A chip that was a tab stop of its own took the focus from the text, and what was typed next was lost (qorus#646).',
+          'Tab from the text leaves the editor; it does not stop on a chip inside it. The editor is the tab stop and a chip is reached with the caret. A chip that was a tab stop of its own took the focus from the text, and what was typed next was lost.',
       },
     },
   },

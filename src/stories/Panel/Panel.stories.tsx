@@ -1,10 +1,12 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
-import { useEffect, useState } from 'react';
-import { expect, fireEvent, userEvent, waitFor } from 'storybook/test';
-import ReqoreButton from '../../components/Button';
+import { Profiler, useEffect, useState } from 'react';
+import { expect, fireEvent, fn, userEvent, waitFor } from 'storybook/test';
+import ReqoreButton, { TReqoreBadge } from '../../components/Button';
 import ReqoreControlGroup from '../../components/ControlGroup';
+import { ReqoreH4 } from '../../components/Header';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
+import ReqoreSegmentedControl from '../../components/SegmentedControl';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
 import { ReqoreP } from '../../components/Paragraph';
 import { ReqoreHorizontalSpacer, ReqoreVerticalSpacer } from '../../components/Spacer';
@@ -20,9 +22,18 @@ import {
   SizeArg,
   argManager,
 } from '../utils/args';
+import { expectDrawnRed, expectNotDrawnRed, openMenuItems } from '../utils/drawnRed';
 import { requiredElement } from '../utils/required';
+import { PHONE_STORY } from '../utils/touchScreen';
 import { findDrawnOverStickyHeader, stickyHeaderOf } from '../utils/stickyStacking';
+import {
+  expectBadgesBesideTitle,
+  expectBadgesUnderTitle,
+  expectIconBesideTitle,
+  expectTitleWhole,
+} from '../utils/titleBadges';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const { createArg } = argManager<IReqorePanelProps>();
 
 const message =
@@ -1568,6 +1579,8 @@ export const WithLongDescription: Story = {
 // panels in an outer scroll container. One story scrolls it (headers pinned →
 // square corners), the other leaves it at rest (headers rounded) — so the two
 // radius states are covered by reusing the exact same content.
+const STICKY_DEMO_BODY_STYLE = { minHeight: 960 };
+
 const renderStickyOutsideScroll = () => (
   <div
     style={{
@@ -1588,6 +1601,8 @@ const renderStickyOutsideScroll = () => (
         icon='PushpinLine'
         padded
         fluid
+        // Tall enough to pin in the 600px area (more than 1.5 screens of it).
+        contentStyle={STICKY_DEMO_BODY_STYLE}
       >
         {message}
       </ReqorePanel>
@@ -1685,7 +1700,10 @@ export const StickyHeaderInPaddedScrollport: Story = {
           // lands inside the stuck window at one width falls outside it at
           // another — which is exactly how this story passed locally and failed
           // in CI.
-          contentStyle={{ minHeight: 160 }}
+          // Tall enough to pin: a header pins only while its panel is more than
+          // STICKY_HEADER_TALL_SCREENS times the scrollport's visible height
+          // (272px here), so a 160px body no longer pins at all.
+          contentStyle={{ minHeight: 480 }}
         >
           {/* Sized deliberately: tall enough that a panel can scroll under its
               own header (so "stuck" is reachable and lasts), short enough that
@@ -1750,6 +1768,63 @@ export const StickyHeaderInPaddedScrollport: Story = {
       // would keep its rounded corners across the whole gap.
       await expect(getComputedStyle(header).borderTopLeftRadius).toBe('0px');
     });
+  },
+};
+
+const SHORT_AND_TALL_PANELS = [
+  { label: 'Short panel', height: 120 },
+  { label: 'Tall panel', height: 720 },
+  { label: 'Another short panel', height: 120 },
+];
+
+export const StickyHeaderPinsOnlyWhenTall: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders three sticky-header panels in a 320px scroll area: a short one, a tall one and another short one. Scrolled into the tall panel, its header pins at the top; the short panels' headers never pin and scroll away with their panels, because a heading pins only while its panel is more than one and a half times the height its scroll area shows.",
+      },
+    },
+    chromatic: { viewports: [600] },
+  },
+  render: () => (
+    <div
+      style={{ height: 320, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}
+      data-testid='short-and-tall-scrollport'
+    >
+      {SHORT_AND_TALL_PANELS.map(({ label, height }) => (
+        <ReqorePanel
+          key={label}
+          label={label}
+          stickyHeader
+          icon='PushpinLine'
+          padded
+          fluid
+          contentStyle={{ minHeight: height }}
+        >
+          {label}
+        </ReqorePanel>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const port = canvasElement.querySelector('[data-testid="short-and-tall-scrollport"]') as HTMLElement;
+    const headers = Array.from(port.querySelectorAll<HTMLElement>('.reqore-panel-title'));
+    await expect(headers).toHaveLength(SHORT_AND_TALL_PANELS.length);
+    const [short, tall, anotherShort] = headers;
+    await waitFor(() => expect(tall.getAttribute('data-pins-header')).toBe('true'));
+    await expect(short.getAttribute('data-pins-header')).toBe('false');
+    await expect(anotherShort.getAttribute('data-pins-header')).toBe('false');
+    await expect(getComputedStyle(short).position).not.toBe('sticky');
+
+    // Into the tall panel: its header holds the top of the scroll area.
+    const tallPanel = tall.closest('.reqore-panel') as HTMLElement;
+    port.scrollTop =
+      tallPanel.getBoundingClientRect().top - port.getBoundingClientRect().top + port.scrollTop + 200;
+    fireEvent.scroll(port);
+    await waitFor(() =>
+      expect(Math.abs(tall.getBoundingClientRect().top - port.getBoundingClientRect().top)).toBeLessThanOrEqual(1)
+    );
   },
 };
 
@@ -1864,7 +1939,8 @@ export const StickyHeaderTransparentBlur: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Renders Panel with a sticky, transparent, blurred header.',
+        story:
+          "Renders minimal sticky-header panels tall enough to pin, scrolled so the first panel's transparent header is pinned at the top and blurs its own text scrolling beneath it.",
       },
     },
     chromatic: {
@@ -1895,6 +1971,8 @@ export const StickyHeaderTransparentBlur: Story = {
             icon='PushpinLine'
             padded
             fluid
+            // Tall enough to pin in the 600px area (more than 1.5 screens of it).
+            contentStyle={STICKY_DEMO_BODY_STYLE}
           >
             {message}
           </ReqorePanel>
@@ -1911,9 +1989,17 @@ export const StickyHeaderTransparentBlur: Story = {
       return;
     }
 
-    container.scrollTop = 720;
+    // Into the first panel's text, so the text runs under its pinned header.
+    container.scrollTop = 160;
     fireEvent.scroll(container);
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    // The first panel's header is pinned at the top, over its own text scrolling beneath it.
+    const header = stickyHeaderOf(container.querySelector('.reqore-panel') as HTMLElement);
+    await waitFor(() => {
+      expect(header.getAttribute('data-pins-header')).toBe('true');
+      expect(
+        Math.abs(header.getBoundingClientRect().top - container.getBoundingClientRect().top)
+      ).toBeLessThanOrEqual(1);
+    });
   },
 };
 
@@ -2112,7 +2198,6 @@ export const HoverActionReachableWithoutHover: Story = {
     // rest on a hovering pointer, so the capture is a plain panel with nothing
     // to review — noise on the dashboard. The play test below is the real
     // coverage and still runs in CI; only the screenshot is skipped.
-    // (Requested by Foxhoundn on qlip build #174.)
     qlip: { skip: true },
     docs: {
       description: {
@@ -2158,7 +2243,7 @@ export const HoverActionReachableWithoutHover: Story = {
  *  title and the text under it compete for the same column. Shared by all four columns so their
  *  heights compare. */
 const PANEL_DESCRIPTION =
-  'Share this Qog with your team and publish it to the marketplace so anyone can install it.';
+  'Share this flow with your team and publish it to the marketplace so anyone can install it.';
 
 export const FitLabelComparison: Story = {
   parameters: {
@@ -2181,7 +2266,7 @@ export const FitLabelComparison: Story = {
             <div key={w} style={{ width: `${w}px` }}>
               <ReqorePanel
                 {...(variant.below ? { descriptionPosition: 'below' as const } : {})}
-                label='Publish this Qog to the Template Marketplace'
+                label='Publish this flow to the Template Marketplace'
                 description={PANEL_DESCRIPTION}
                 icon='Upload2Line'
                 collapsible
@@ -2210,7 +2295,7 @@ export const DescriptionExpandsOnClick: Story = {
   render: () => (
     <div style={{ width: '300px' }}>
       <ReqorePanel
-        label='Publish this Qog'
+        label='Publish this flow'
         description={`${PANEL_DESCRIPTION} Anyone in the organisation can then find it in the marketplace, preview the flow, and install it into their own instance with one click.`}
         icon='Upload2Line'
         collapsible
@@ -2284,6 +2369,451 @@ export const CompactTitleWhenNarrow: Story = {
   ),
 };
 
+/** A tile's title bar, as a dashboard draws it: a quiet period after the title, a help button and
+ *  one "more" menu. */
+const TILE_BADGE: TReqoreBadge = {
+  label: 'Last 30 days',
+  appearance: 'text',
+  labelEffect: { weight: 'normal' },
+};
+
+const TILE_ACTIONS: IReqorePanelAction[] = [
+  { icon: 'QuestionLine', tooltip: 'What this counts', minimal: true, flat: true },
+  {
+    icon: 'MoreLine',
+    tooltip: 'More',
+    minimal: true,
+    flat: true,
+    actions: [{ label: 'Copy a link to this view', icon: 'LinksLine' }],
+  },
+];
+
+const TILE_TITLE = 'Deliveries by channel';
+
+const TILE_VARIANTS: {
+  id: string;
+  width: number;
+  label: IReqorePanelProps['label'];
+  icon?: IReqoreIconName;
+}[] = [
+  { id: 'string', width: 200, label: TILE_TITLE },
+  {
+    id: 'element',
+    width: 200,
+    // A title the caller draws itself, as some dashboards' tiles do: one line, cut by its own
+    // ellipsis when it has to be.
+    label: (
+      <ReqoreH4
+        effect={{ noWrap: true }}
+        style={{ display: 'block', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}
+      >
+        Deliveries
+      </ReqoreH4>
+    ),
+  },
+  { id: 'icon', width: 200, label: TILE_TITLE, icon: 'MailLine' },
+  { id: 'wide', width: 480, label: TILE_TITLE },
+];
+
+export const AFullBleedChildMeetsItsEdges: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a small and a normal bordered panel under a theme with a 14px panel corner, each holding a list whose rows reach the panel's sides: the list takes back the inset the panel says it padded its content by (`margin-inline: calc(-1 * var(--reqore-panel-inset-x))`). The small panel pads 13px to clear its corner, not its size's padding, and the rows still meet both sides exactly; a list that took back a fixed 16px ran 3px past them.",
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: { panel: { radius: 14 } },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      {(['small', 'normal'] as const).map((size) => (
+        <div key={size} style={{ width: 480 }}>
+          <ReqorePanel label={`Set (${size})`} size={size} flat={false} className={`story-${size}`}>
+            <div
+              className='story-bleed'
+              style={{ margin: '0 calc(-1 * var(--reqore-panel-inset-x))' }}
+            >
+              {['Client name', 'Redirect URI', 'Scopes'].map((name) => (
+                <div
+                  key={name}
+                  className='story-bleed-row'
+                  style={{
+                    padding: '10px var(--reqore-panel-inset-x)',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+                  }}
+                >
+                  {name}
+                </div>
+              ))}
+            </div>
+          </ReqorePanel>
+        </div>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const size of ['small', 'normal']) {
+      const content = await waitFor(() =>
+        requiredElement<HTMLElement>(
+          `.story-${size} .reqore-panel-content`,
+          `the ${size} panel's content`,
+          canvasElement
+        )
+      );
+      const style = getComputedStyle(content);
+      const inset = style.getPropertyValue('--reqore-panel-inset-x').trim();
+      const edge = content.getBoundingClientRect();
+
+      // The inset said is the inset padded.
+      await expect(inset, size).toBe(style.paddingLeft);
+      for (const row of content.querySelectorAll<HTMLElement>('.story-bleed-row')) {
+        const rect = row.getBoundingClientRect();
+
+        await expect(Math.abs(rect.left - edge.left), `${size} row's left`).toBeLessThanOrEqual(0.5);
+        await expect(Math.abs(rect.right - edge.right), `${size} row's right`).toBeLessThanOrEqual(
+          0.5
+        );
+      }
+      // Under the 14px corner the small panel pads to clear it, past its size's padding.
+      if (size === 'small') {
+        await expect(parseFloat(inset)).toBeGreaterThanOrEqual(13);
+      }
+    }
+  },
+};
+
+export const BadgesGiveWayToTheTitle: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a dashboard tile at 200px three ways — a plain title, a title the caller draws itself (a `ReactElement`), and a title with an icon — each with a quiet "Last 30 days" badge, a help button and a "more" menu, then the same tile at 480px, each keeping its bar on one line (`wrapActionsBelowTitle={false}`; by default the actions would go under the title). At 200px the title and the badge do not fit on one line, so the badge moves to a line under the title, its words on the title\'s left edge (past the icon, which stays centred on the title), and the title is whole at its natural size. At 480px the badge sits beside the title.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big' verticalAlign='flex-start'>
+      {TILE_VARIANTS.map(({ id, width, label, icon }) => (
+        <div key={id} data-tile={id} style={{ width }}>
+          <ReqorePanel
+            size='small'
+            label={label}
+            icon={icon}
+            badge={TILE_BADGE}
+            actions={TILE_ACTIONS}
+            responsiveActions={false}
+            // the bar that keeps one line: what gives way beside the actions
+            wrapActionsBelowTitle={false}
+            padded
+          >
+            {width}px
+          </ReqorePanel>
+        </div>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const tile = (id: string) =>
+      canvasElement.querySelector(`[data-tile="${id}"] .reqore-panel`) as HTMLElement;
+
+    for (const id of ['string', 'element', 'icon']) {
+      await expectBadgesUnderTitle(tile(id));
+      await expectTitleWhole(tile(id));
+    }
+
+    // The icon stays beside the title, not the badge's line under it.
+    await expectIconBesideTitle(tile('icon'));
+
+    await expectBadgesBesideTitle(tile('wide'));
+    await expectTitleWhole(tile('wide'));
+
+    // The badge moved before the title shrank: it is at the size it has with room to spare.
+    const fontSize = (id: string) =>
+      getComputedStyle(tile(id).querySelector('.reqore-panel-title .reqore-heading') as HTMLElement)
+        .fontSize;
+
+    expect(fontSize('string')).toBe(fontSize('wide'));
+  },
+};
+
+
+export const ATitleShrinksBeforeItsWordsAreCut: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A 190px tile under the calm heading sizes (`typeScale.heading[3]: 16`), titled "Design changes built" with a "Last 30 days" badge, a help button and a "more" menu, as a dashboard draws it, its bar kept on one line (`wrapActionsBelowTitle={false}`). The badge moves under the title, and the title has two lines of 98px. Its length (about 160px) fits those two lines, but its words do not: at 16px they break "Design / changes / built", and the clamp at two lines cut "built" from a title kept at full size. The fit now packs the words as the browser breaks them, so the title shrinks until they fit two lines, and reads whole (wrap, then shrink, then cut).',
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: { typeScale: { heading: { 3: 16 }, headingWeight: 600 } },
+  },
+  render: () => (
+    <div data-tile='words' style={{ width: 190 }}>
+      <ReqorePanel
+        size='small'
+        label='Design changes built'
+        labelSize={3}
+        badge={TILE_BADGE}
+        actions={TILE_ACTIONS}
+        responsiveActions={false}
+        // the bar that keeps one line: the title's own wrap, shrink and cut beside the actions
+        wrapActionsBelowTitle={false}
+        padded
+      >
+        12 designs
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const tile = canvasElement.querySelector('[data-tile="words"] .reqore-panel') as HTMLElement;
+
+    await expectBadgesUnderTitle(tile);
+    // every word of it, none cut
+    await expectTitleWhole(tile);
+
+    const heading = tile.querySelector('.reqore-panel-title .reqore-heading') as HTMLElement;
+
+    // ...because it shrank below the 16px it has with room, and no further than the floor
+    await waitFor(() => expect(parseFloat(getComputedStyle(heading).fontSize)).toBeLessThan(16));
+    expect(parseFloat(getComputedStyle(heading).fontSize)).toBeGreaterThanOrEqual(11);
+  },
+};
+
+/** The panels of `ATitleSettlesWhenItsBoxFollowsItsText`, and how many times each has drawn. */
+const SETTLING_TITLES = ['Notifications', 'Reviewers', 'Tokens', 'Preferences'];
+const settlingCommits = new Map<string, number>();
+/** More draws than this is not a panel settling: it is a panel that never will. */
+const SETTLING_COMMIT_BOUND = 60;
+
+/**
+ * Counts each panel's draws, and stops one that will not stop. Under React's `act`, as a story's
+ * play runs, a panel that kept measuring itself into a new state blocked the page for good: no
+ * timer of the test's could fire, and the run hung on the file instead of failing. Thrown here, in
+ * the commit, the loop ends with an error the story reports.
+ */
+const countSettlingCommits = (title: string) => {
+  const commits = (settlingCommits.get(title) ?? 0) + 1;
+
+  settlingCommits.set(title, commits);
+
+  if (commits > SETTLING_COMMIT_BOUND) {
+    throw new Error(`"${title}" is still drawing itself after ${commits} commits`);
+  }
+};
+
+export const ATitleSettlesWhenItsBoxFollowsItsText: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Four collapsed panels at a phone\'s width (343px), each with a "this browser" badge, in a host that lays its title bars out as a column, so a title\'s box is as wide as what it holds - as some apps\' pages do on a phone. Each title and its badge settle: the badge goes under the title, the title keeps that line at its own size, and each panel draws a handful of times and stops. A title that shrank to fit beside its badge took its line, fitted there at full size, gave the line back, no longer fitted, and shrank again, forever: "Notifications", "Reviewers" and "Tokens" did, and under the play\'s `act` the page never came back.',
+      },
+    },
+  },
+  beforeEach: () => {
+    settlingCommits.clear();
+  },
+  render: () => (
+    <div className='column-title-bars' style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* the host's own layout of a title bar, which Reqore does not draw itself */}
+      <style>
+        {'.column-title-bars .reqore-panel-title { flex-direction: column; align-items: flex-start; gap: 8px; }'}
+      </style>
+      {SETTLING_TITLES.map((title) => (
+        <div key={title} data-settling={title} style={{ width: 343 }}>
+          <Profiler id={title} onRender={() => countSettlingCommits(title)}>
+            <ReqorePanel
+              label={title}
+              icon='Notification3Line'
+              collapsible
+              isCollapsed
+              flat
+              padded='normal'
+              rounded
+              badge={[{ label: 'this browser', intent: 'muted' }]}
+            >
+              Preferences are kept in this browser.
+            </ReqorePanel>
+          </Profiler>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const drawn = () => SETTLING_TITLES.map((title) => settlingCommits.get(title) ?? 0);
+
+    // every panel has drawn, and a little later none has drawn again
+    await waitFor(() => expect(drawn().every((commits) => commits > 0)).toBe(true));
+    let before: number[] = [];
+    await waitFor(
+      async () => {
+        before = drawn();
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        expect(drawn()).toEqual(before);
+      },
+      { timeout: 5000 }
+    );
+    before.forEach((commits) => expect(commits).toBeLessThan(SETTLING_COMMIT_BOUND));
+
+    for (const title of SETTLING_TITLES) {
+      const panel = canvasElement.querySelector(`[data-settling="${title}"] .reqore-panel`) as HTMLElement;
+      // the title reads whole, whichever line its badge settled on
+      await expectTitleWhole(panel);
+    }
+  },
+};
+
+/** An app's titles: 16px at weight 600, in the platform's own face (its `TYPE_SCALE`). */
+const IDE_TITLE_THEME = {
+  fontFamily:
+    "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+  typeScale: { heading: { 3: 16 }, headingWeight: 600, lineHeight: 1.45 },
+  uppercaseLabels: false,
+};
+const SECTION_TITLES = ['Address', 'Name', 'Security'];
+const SECTION_WIDTHS = [590, 600];
+
+export const ATitleBesideALongDescriptionSettles: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Six small sections in a drawer\'s width (590px and 600px), titled "Address", "Name" and "Security", each with a sentence beside its title too long for the line, under an app\'s 16px titles. Each title settles at its size and each panel draws a handful of times. Its box was as wide as the title, so it read its room a pixel short and shrank; a smaller title shrinks its description with it, which left the header room to grow back into, and the title took turns between the two for ever - "Address" measured 56, 52, 80, 56... and a host app\'s Add Server story hung. A room the title has already been given, for the same title, description, actions and width, now ends the turns: it keeps the most room it was given.',
+      },
+    },
+  },
+  args: {
+    otherThemeOptions: IDE_TITLE_THEME,
+  },
+  beforeEach: () => {
+    settlingCommits.clear();
+  },
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {SECTION_WIDTHS.flatMap((width) =>
+        SECTION_TITLES.map((title) => (
+          <div key={`${width}-${title}`} data-settling={`${width}-${title}`} style={{ width }}>
+            <Profiler
+              id={`${width}-${title}`}
+              onRender={() => countSettlingCommits(`${width}-${title}`)}
+            >
+              <ReqorePanel
+                flat
+                minimal
+                raised
+                rounded
+                padded='normal'
+                size='small'
+                stickyHeader
+                label={title}
+                description='The base URL every path in this contract hangs off, and what a generated client uses when nothing overrides it.'
+              >
+                https://api.example.com/v1
+              </ReqorePanel>
+            </Profiler>
+          </div>
+        ))
+      )}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const ids = SECTION_WIDTHS.flatMap((width) => SECTION_TITLES.map((title) => `${width}-${title}`));
+    const drawn = () => ids.map((id) => settlingCommits.get(id) ?? 0);
+
+    await waitFor(() => expect(drawn().every((commits) => commits > 0)).toBe(true));
+    let before: number[] = [];
+    await waitFor(
+      async () => {
+        before = drawn();
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        expect(drawn()).toEqual(before);
+      },
+      { timeout: 5000 }
+    );
+    before.forEach((commits) => expect(commits).toBeLessThan(SETTLING_COMMIT_BOUND));
+
+    for (const id of ids) {
+      await expectTitleWhole(
+        canvasElement.querySelector(`[data-settling="${id}"] .reqore-panel`) as HTMLElement
+      );
+    }
+  },
+};
+
+/** A page head's actions on a phone: the two that matter keep their words, the rest may fold. */
+const PAGE_HEAD_ACTIONS: IReqorePanelAction[] = [
+  { label: 'Review next pending', icon: 'EyeLine', size: 'small', responsive: false },
+  { label: 'Save', icon: 'SaveLine', size: 'small', responsive: false },
+  { label: 'Upload', icon: 'UploadLine', size: 'small' },
+  { label: 'Settings', icon: 'Settings3Line', size: 'small' },
+];
+
+export const APageHeadsActionsFitAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "A page's head on a phone (390 px), as a visual review app's build page draws it: a large title with a sentence under it and four actions. The two that matter, Review next pending and Save, keep their words (`responsive: false`); Upload and Settings may give theirs up, and go into the \"⋯\" when there is no room for them at all; the \"⋯\" is their size. Every action, the \"⋯\" whole, stays inside the panel, and the panel draws a handful of times and stops. With all four keeping their words nothing could give way, and the fourth ran off the screen.",
+      },
+    },
+  },
+  beforeEach: () => {
+    settlingCommits.clear();
+  },
+  render: () => (
+    <div data-settling='page-head' style={{ padding: '12px 16px' }}>
+      <Profiler id='page-head' onRender={() => countSettlingCommits('page-head')}>
+        <ReqorePanel
+          transparent
+          flat
+          rounded={false}
+          label='Build #507 · feature/144'
+          iconWithLabel
+          isCollapsed
+          size='huge'
+          labelSize={2}
+          icon='Image2Line'
+          padded={false}
+          description='Snapshots captured for this build, against the baseline on develop.'
+          actions={PAGE_HEAD_ACTIONS}
+          // the "⋯" is a head action like the others, at their size
+          responsiveActionsWrapperProps={{ size: 'small' }}
+        />
+      </Profiler>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const panel = canvasElement.querySelector('[data-settling="page-head"] .reqore-panel') as HTMLElement;
+
+    await waitFor(() => expect(settlingCommits.get('page-head') ?? 0).toBeGreaterThan(0));
+    let before = 0;
+    await waitFor(
+      async () => {
+        before = settlingCommits.get('page-head') ?? 0;
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        expect(settlingCommits.get('page-head')).toBe(before);
+      },
+      { timeout: 5000 }
+    );
+    expect(before).toBeLessThan(SETTLING_COMMIT_BOUND);
+
+    const edge = panel.getBoundingClientRect().right;
+    const buttons = Array.from(panel.querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button'));
+    buttons.forEach((button) => expect(button.getBoundingClientRect().right).toBeLessThanOrEqual(edge + 1));
+    // the two that matter say what they do
+    const words = buttons.map((button) => button.textContent?.trim());
+    expect(words).toContain('Review next pending');
+    expect(words).toContain('Save');
+  },
+};
 
 /* ------------------------------------------------------------------------------------------------
  * media — a cover clipped to the panel's corners
@@ -2441,5 +2971,1671 @@ export const MediaMobile: Story = {
   play: async ({ canvasElement }) => {
     await expectMediaCards(canvasElement);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1);
+  },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders panels on the default and on the themed surface — plain, collapsible, with an intent, with a top accent and with a customTheme: the plain ones take the panel surface (title bar included) and hairline; the intent, the accent strip and the customTheme still win.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqorePanel label='Plain panel' padded>
+        The surface and the hairline come from the theme.
+      </ReqorePanel>
+      <ReqorePanel label='Collapsible panel' collapsible padded>
+        The title bar shares the surface.
+      </ReqorePanel>
+      <ReqorePanel label='Danger intent' intent='danger' padded>
+        The intent still tints the edge.
+      </ReqorePanel>
+      <ReqorePanel label='Top accent' intent='info' accentPosition='top' padded>
+        The strip carries the intent; the edge is the hairline.
+      </ReqorePanel>
+      <ReqorePanel label='customTheme' customTheme={{ main: '#1e2a3a' }} padded>
+        A panel with its own surface keeps it.
+      </ReqorePanel>
+    </ThemedSurfaceComparison>
+  ),
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * the page's order, whichever actions may fold
+ * ---------------------------------------------------------------------------------------------- */
+
+/** A build page's head actions, as a review app lists them: its primary first, keeping its words. */
+const ORDERED_ACTIONS: IReqorePanelAction[] = [
+  {
+    label: 'Start review',
+    icon: 'PlayLine',
+    className: 'order-start-review',
+    responsive: false,
+  },
+  { label: 'Show summary', icon: 'FileList3Line', className: 'order-show-summary' },
+  { label: 'Settings', icon: 'Settings3Line', className: 'order-settings' },
+];
+
+/** Its bottom bar, each side with one that keeps its words and one that may fold, in two orders. */
+const ORDERED_BOTTOM_ACTIONS: IReqorePanelProps['bottomActions'] = [
+  { label: 'Help', icon: 'QuestionLine', className: 'order-help', position: 'left' },
+  {
+    label: 'Keep',
+    icon: 'CheckLine',
+    className: 'order-keep',
+    position: 'left',
+    responsive: false,
+  },
+  {
+    label: 'Discard',
+    icon: 'DeleteBinLine',
+    className: 'order-discard',
+    position: 'right',
+    responsive: false,
+  },
+  { label: 'Preview', icon: 'EyeLine', className: 'order-preview', position: 'right' },
+];
+
+const OrderedActionsPanel = () => (
+  <ReqorePanel
+    label='Build #507'
+    icon='Image2Line'
+    actions={ORDERED_ACTIONS}
+    bottomActions={ORDERED_BOTTOM_ACTIONS}
+  >
+    Snapshots captured for this build, against the baseline on develop.
+  </ReqorePanel>
+);
+
+/** The left edges of the buttons with these classes that are drawn in `root`, in that order. */
+const leftsOf = (root: HTMLElement, classes: string[]) =>
+  classes.map((name) => {
+    const button = root.querySelector<HTMLElement>(`.reqore-button.${name}`);
+
+    expect(button, `${name} is drawn`).toBeTruthy();
+
+    return button!.getBoundingClientRect().left;
+  });
+
+/** Each is to the right of the one before it. */
+const expectLeftToRight = (lefts: number[]) =>
+  lefts.slice(1).forEach((left, index) => expect(left).toBeGreaterThan(lefts[index]));
+
+export const ActionsKeepThePagesOrder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A panel whose title bar lists Start review (it keeps its words, `responsive: false`), then Show summary and Settings (they may fold), and whose bottom bar lists Help then Keep on the left and Discard then Preview on the right. Each bar draws them in that order. The title bar drew the folding ones first, so Show summary came before Start review although the page lists them the other way round (a review app\'s build page); the bottom bar\'s right side did the same with Discard.',
+      },
+    },
+  },
+  render: OrderedActionsPanel,
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      const title = canvasElement.querySelector<HTMLElement>('.reqore-panel-title')!;
+      expectLeftToRight(
+        leftsOf(title, ['order-start-review', 'order-show-summary', 'order-settings'])
+      );
+      const bottom = canvasElement.querySelector<HTMLElement>('.reqore-panel-bottom-actions')!;
+      expectLeftToRight(leftsOf(bottom, ['order-help', 'order-keep']));
+      expectLeftToRight(leftsOf(bottom, ['order-discard', 'order-preview']));
+    });
+    // every one says its words where there is room
+    const words = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button')
+    ).map((button) => button.textContent?.trim());
+    expect(words).toEqual(['Start review', 'Show summary', 'Settings']);
+  },
+};
+
+export const ActionsKeepThePagesOrderOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'The same panel on a phone (390 px). Start review keeps its words and stays first; Show summary and Settings give theirs up for their icons, or go into the "⋯" where there is no room, after it. Nothing runs off the panel.',
+      },
+    },
+  },
+  render: OrderedActionsPanel,
+  play: async ({ canvasElement }) => {
+    const panel = canvasElement.querySelector<HTMLElement>('.reqore-panel')!;
+    const title = panel.querySelector<HTMLElement>('.reqore-panel-title')!;
+
+    await waitFor(() => {
+      const start = title.querySelector<HTMLElement>('.reqore-button.order-start-review')!;
+      expect(start.textContent?.trim()).toBe('Start review');
+      // every other button in the bar - an action's icon, the "⋯" - is after it
+      const others = Array.from(title.querySelectorAll<HTMLElement>('.reqore-button')).filter(
+        (button) => button !== start
+      );
+      expect(others.length).toBeGreaterThan(0);
+      others.forEach((button) =>
+        expect(button.getBoundingClientRect().left).toBeGreaterThan(
+          start.getBoundingClientRect().left
+        )
+      );
+      // the folding ones that are drawn keep their order among themselves
+      const drawn = ['order-show-summary', 'order-settings'].filter((name) =>
+        title.querySelector(`.reqore-button.${name}`)
+      );
+      expectLeftToRight(leftsOf(title, drawn));
+    });
+
+    const edge = panel.getBoundingClientRect().right;
+    panel
+      .querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button')
+      .forEach((button) => expect(button.getBoundingClientRect().right).toBeLessThanOrEqual(edge + 1));
+    const bottom = panel.querySelector<HTMLElement>('.reqore-panel-bottom-actions')!;
+    expectLeftToRight(leftsOf(bottom, ['order-discard', 'order-preview']));
+  },
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * the actions go under a title they do not fit beside
+ * ---------------------------------------------------------------------------------------------- */
+
+/** A pull request's page head in a review app: its primary and its way back keep their words. */
+const PULL_REQUEST_ACTIONS: IReqorePanelAction[] = [
+  { label: 'Start review', icon: 'PlayLine', size: 'small', responsive: false },
+  { label: 'Pull request', icon: 'GitPullRequestLine', size: 'small', responsive: false },
+  { label: 'Upload', icon: 'UploadLine', size: 'small' },
+  { label: 'Settings', icon: 'Settings3Line', size: 'small' },
+];
+
+/**
+ * A page head as a review app draws it, its actions going under the title where both do not fit: the
+ * default; `wrap={false}` is a page that opts out.
+ */
+const WrappingPageHead = ({
+  id,
+  label,
+  actions,
+  description,
+  wrap,
+}: {
+  id: string;
+  label: string;
+  actions: IReqorePanelAction[];
+  description?: string;
+  wrap?: boolean;
+}) => (
+  <div data-head={id}>
+    <Profiler id={id} onRender={() => countSettlingCommits(id)}>
+      <ReqorePanel
+        transparent
+        flat
+        rounded={false}
+        label={label}
+        iconWithLabel
+        isCollapsed
+        size='huge'
+        labelSize={2}
+        icon='GitBranchLine'
+        padded={false}
+        description={description}
+        actions={actions}
+        // the "⋯" is a head action like the others, at their size
+        responsiveActionsWrapperProps={{ size: 'small' }}
+        {...(wrap === undefined ? {} : { wrapActionsBelowTitle: wrap })}
+      />
+    </Profiler>
+  </div>
+);
+
+/** The panel of a page head, its title header and the box its actions are in. */
+const pageHead = (root: HTMLElement, id: string) => {
+  const panel = root.querySelector<HTMLElement>(`[data-head="${id}"] .reqore-panel`)!;
+  const header = panel.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+  const actions = panel.querySelector<HTMLElement>('.reqore-panel-title-actions');
+
+  return { panel, header, actions };
+};
+
+/** Every draw of these heads has stopped, and a handful did it. */
+const expectHeadsSettled = async (ids: string[]) => {
+  await waitFor(() => ids.forEach((id) => expect(settlingCommits.get(id) ?? 0).toBeGreaterThan(0)));
+  await waitFor(
+    async () => {
+      const before = ids.map((id) => settlingCommits.get(id) ?? 0);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(ids.map((id) => settlingCommits.get(id) ?? 0)).toEqual(before);
+    },
+    { timeout: 5000 }
+  );
+  ids.forEach((id) => expect(settlingCommits.get(id)).toBeLessThan(SETTLING_COMMIT_BOUND));
+};
+
+/** The head's actions are on the line under its title, at the line's end. */
+const expectActionsUnderTitle = (root: HTMLElement, id: string) => {
+  const { panel, header, actions } = pageHead(root, id);
+
+  expect(actions, `${id}: its actions are in a box of their own`).toBeTruthy();
+  expect(actions!.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+    header.getBoundingClientRect().bottom - 1
+  );
+  const bar = panel.querySelector<HTMLElement>('.reqore-panel-title')!;
+  const buttons = Array.from(actions!.querySelectorAll<HTMLElement>('.reqore-button'));
+  const right = Math.max(...buttons.map((button) => button.getBoundingClientRect().right));
+  expect(right).toBeGreaterThan(bar.getBoundingClientRect().right - 2);
+  buttons.forEach((button) =>
+    expect(button.getBoundingClientRect().right).toBeLessThanOrEqual(
+      panel.getBoundingClientRect().right + 1
+    )
+  );
+};
+
+/** The head's actions share its title's line, after it. */
+const expectActionsBesideTitle = (root: HTMLElement, id: string) => {
+  const { panel, header } = pageHead(root, id);
+  const headerBox = header.getBoundingClientRect();
+  const buttons = Array.from(
+    panel.querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button')
+  ).filter((button) => !header.contains(button));
+
+  expect(buttons.length).toBeGreaterThan(0);
+  buttons.forEach((button) => {
+    const box = button.getBoundingClientRect();
+    expect(box.top).toBeLessThan(headerBox.bottom);
+    expect(box.left).toBeGreaterThanOrEqual(headerBox.right - 1);
+  });
+};
+
+export const ActionsGoUnderATitleTheyDoNotFitBeside: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Three page heads with `wrapActionsBelowTitle`, as a review app draws a pull request\'s: at 900px the title and its four actions share a line, and the description under the title has the room the actions leave, on one line. In a 360px column the four do not fit beside "feature/mvp #42", so they go to the line under it, at its end, together and in order, and the title keeps its words at its own size. "Logs" and one action fit on one line, and stay there (the title keeps its words, what is beside it gives way first).',
+      },
+    },
+  },
+  beforeEach: () => {
+    settlingCommits.clear();
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <div style={{ width: 900 }}>
+        <WrappingPageHead
+          id='wide'
+          label='feature/mvp #42'
+          description='12 snapshots changed · main ← feature/mvp'
+          actions={PULL_REQUEST_ACTIONS}
+        />
+      </div>
+      <div style={{ width: 360 }}>
+        <WrappingPageHead
+          id='narrow'
+          label='feature/mvp #42'
+          description='12 snapshots changed · main ← feature/mvp'
+          actions={PULL_REQUEST_ACTIONS}
+        />
+      </div>
+      <div style={{ width: 360 }}>
+        <WrappingPageHead
+          id='short'
+          label='Logs'
+          actions={[{ icon: 'DownloadLine', tooltip: 'Download', size: 'small' }]}
+        />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectHeadsSettled(['wide', 'narrow', 'short']);
+    await waitFor(() => {
+      expectActionsBesideTitle(canvasElement, 'wide');
+      expectActionsUnderTitle(canvasElement, 'narrow');
+      expectActionsBesideTitle(canvasElement, 'short');
+    });
+    await expectTitleWhole(pageHead(canvasElement, 'narrow').panel);
+    // beside the actions, the description has the title's line, not half of it: one line at 900px
+    const wideDescription = pageHead(canvasElement, 'wide').panel.querySelector<HTMLElement>(
+      '.reqore-panel-title-description'
+    )!;
+    const descriptionLines = document.createRange();
+    descriptionLines.selectNodeContents(wideDescription);
+    expect(
+      new Set(
+        Array.from(descriptionLines.getClientRects())
+          .filter((rect) => rect.width > 0)
+          .map((rect) => Math.round(rect.top))
+      ).size
+    ).toBe(1);
+    // under the title, the actions keep the page's order and their words where they have room
+    const narrowWords = Array.from(
+      pageHead(canvasElement, 'narrow').actions!.querySelectorAll<HTMLElement>('.reqore-button')
+    )
+      .map((button) => button.textContent?.trim())
+      .filter(Boolean);
+    expect(narrowWords.slice(0, 2)).toEqual(['Start review', 'Pull request']);
+  },
+};
+
+export const ActionsGoUnderATitleOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'A review app\'s pull request page head on a phone (390 px), with `wrapActionsBelowTitle`. "feature/mvp #42" has its line to itself at its own size, whole; Start review and Pull request keep their words on the line under it, at its end, and Upload and Settings give theirs up or go into the "⋯". Without the option the title was squeezed beside the actions and ran to two lines in 130px. A second head whose only action is a destructive Delete keeps it at the end of the title\'s line, its bin alone, as a row keeps a lone Delete on a phone.',
+      },
+    },
+  },
+  beforeEach: () => {
+    settlingCommits.clear();
+  },
+  render: () => (
+    <div style={{ padding: '12px 16px' }}>
+      <WrappingPageHead
+        id='phone'
+        label='feature/mvp #42'
+        description='12 snapshots changed · main ← feature/mvp'
+        actions={PULL_REQUEST_ACTIONS}
+      />
+      <ReqoreVerticalSpacer height={24} />
+      <WrappingPageHead
+        id='lone-delete'
+        label='Order sync template'
+        actions={[
+          {
+            icon: 'DeleteBinLine',
+            tooltip: 'Delete template',
+            'aria-label': 'Delete template',
+            flat: true,
+            transparent: true,
+            iconColor: 'danger',
+            destructive: true,
+            size: 'small',
+            className: 'lone-delete',
+          },
+        ]}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectHeadsSettled(['phone', 'lone-delete']);
+    await waitFor(() => expectActionsUnderTitle(canvasElement, 'phone'));
+    const { panel } = pageHead(canvasElement, 'phone');
+    await expectTitleWhole(panel);
+    // the title is on one line: it did not wrap beside the actions
+    const title = panel.querySelector<HTMLElement>('.reqore-panel-title-label-and-badges')!;
+    const range = document.createRange();
+    range.selectNodeContents(title.firstElementChild!);
+    const lineTops = new Set(
+      Array.from(range.getClientRects())
+        .filter((rect) => rect.width > 0)
+        .map((rect) => Math.round(rect.top))
+    );
+    expect(lineTops.size).toBe(1);
+    const words = Array.from(panel.querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button'))
+      .map((button) => button.textContent?.trim())
+      .filter(Boolean);
+    expect(words).toContain('Start review');
+    expect(words).toContain('Pull request');
+
+    // the lone destructive action stays on its title's line, at its end, its bin alone
+    const lone = pageHead(canvasElement, 'lone-delete');
+    const bin = lone.panel.querySelector<HTMLElement>('.reqore-button.lone-delete')!;
+    expect(lone.actions).toBeNull();
+    expect(bin.getBoundingClientRect().top).toBeLessThan(lone.header.getBoundingClientRect().bottom);
+    expect(bin.getBoundingClientRect().width).toBeLessThan(56);
+    expect(bin.getAttribute('aria-label')).toBe('Delete template');
+    expect(bin.hasAttribute('destructive')).toBe(false);
+  },
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * a destructive action says so in a panel action's own menu
+ * ---------------------------------------------------------------------------------------------- */
+
+export const ADestructiveEntryInAPanelActionsMenu: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A template panel whose "⋯" action opens a menu of Rename and Delete template. Delete template is marked `destructive` and gives no intent: in the menu, where a calm red icon is not drawn, it is drawn in danger. Rename is not. The marker never reaches the DOM (it means the same wherever an action is drawn).',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ maxWidth: 480 }}>
+      <ReqorePanel
+        label='Order sync template'
+        icon='FileList3Line'
+        actions={[
+          {
+            icon: 'MoreLine',
+            className: 'template-menu',
+            tooltip: 'More',
+            actions: [
+              { label: 'Rename', icon: 'EditLine' },
+              { label: 'Delete template', icon: 'DeleteBinLine', destructive: true },
+            ],
+          },
+        ]}
+      >
+        Copies the day's orders to the warehouse at 6:00.
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(canvasElement.querySelector<HTMLElement>('.template-menu')!);
+    const items = await waitFor(() => {
+      const found = openMenuItems();
+      expect(found).toHaveLength(2);
+      return found;
+    });
+    const [rename, remove] = items;
+    expect(remove.textContent?.trim()).toBe('Delete template');
+    expectDrawnRed(remove);
+    expectNotDrawnRed(rename);
+    expect(remove.hasAttribute('destructive')).toBe(false);
+  },
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * under `wrapActionsBelowTitle`, a title that fits keeps its size, and its badges give way first
+ * ---------------------------------------------------------------------------------------------- */
+
+/** Short names an app drawer is titled with: "slack" was 50.4px wide and shrank a step in 50. */
+const SHORT_NAMES = ['slack', 'Slack', 'Telegram', 'NewApp', 'Order sync'];
+
+/** An app drawer's head, as a dashboard draws it: a status, a copy button and a close. */
+const AppHead = ({ name, wrap }: { name: string; wrap: boolean }) => (
+  <ReqorePanel
+    className={`app-head${wrap ? ' app-head-wrap' : ''}`}
+    data-name={name}
+    label={name}
+    icon='KeyLine'
+    isCollapsed
+    onClose={noop}
+    wrapActionsBelowTitle={wrap}
+    actions={[
+      {
+        label: 'Published',
+        icon: 'CheckLine',
+        actions: [{ label: 'Unpublish', icon: 'CloseLine' }],
+      },
+      { icon: 'FileCopyLine', tooltip: 'Copy the client ID' },
+    ]}
+  />
+);
+
+/** The px a panel's title is drawn at. */
+const titlePx = (panel: HTMLElement) =>
+  parseFloat(
+    getComputedStyle(
+      panel.querySelector<HTMLElement>('.reqore-panel-title-label-box')!.firstElementChild as HTMLElement
+    ).fontSize
+  );
+
+export const AShortTitleKeepsItsSizeWhereActionsMayGoUnder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'App drawer heads (a key icon, a status, a copy button and a close) titled slack, Slack, Telegram, NewApp and Order sync, in a 390px and a 1440px box, each drawn with `wrapActionsBelowTitle` and without. Every title fits, and each is drawn at the same size both ways. With the option, "slack" (50.4px wide) was drawn a step smaller, 19px for 20: the room its fit measured was its own width rounded down.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big' fluid>
+      {[390, 1440].map((width) => (
+        <div key={width} className={`heads-${width}`} style={{ width, maxWidth: '100%' }}>
+          <ReqoreControlGroup vertical fluid>
+            {SHORT_NAMES.map((name) => (
+              <ReqoreControlGroup key={name} vertical fluid>
+                <AppHead name={name} wrap={false} />
+                <AppHead name={name} wrap />
+              </ReqoreControlGroup>
+            ))}
+          </ReqoreControlGroup>
+        </div>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelectorAll('.app-head .reqore-panel-title-label-box')).toHaveLength(
+        SHORT_NAMES.length * 4
+      )
+    );
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    for (const width of [390, 1440]) {
+      const box = canvasElement.querySelector<HTMLElement>(`.heads-${width}`)!;
+      for (const name of SHORT_NAMES) {
+        const [plain, wrapping] = Array.from(
+          box.querySelectorAll<HTMLElement>(`.app-head[data-name="${name}"]`)
+        );
+        await waitFor(() =>
+          expect(titlePx(wrapping), `${name} at ${width}px`).toBe(titlePx(plain))
+        );
+      }
+    }
+  },
+};
+
+export const BadgesGiveWayBeforeTheActionsOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          'A template drawer\'s head on a phone (390 px, the screen\'s width), with `wrapActionsBelowTitle`: "Order Sync Template", its badges Submitted, v3 and flow, a sentence under it, a copy button and a close. The name and the actions fit on one line and the badges do not, so the badges go under the name (what is beside the title gives way before it wraps) and the actions stay beside it. The actions went under too, below the description, a line taller for nothing: the title claimed the width of its name and its badges.',
+      },
+    },
+  },
+  render: () => (
+    // a drawer on a phone: the screen's whole width
+    <div style={{ width: '100%' }}>
+      <ReqorePanel
+        className='template-head'
+        label='Order Sync Template'
+        icon='FileList3Line'
+        isCollapsed
+        onClose={noop}
+        wrapActionsBelowTitle
+        description='Copies the day’s orders to the warehouse at 6:00.'
+        badge={[
+          { label: 'Submitted', intent: 'warning' },
+          { label: 'v3' },
+          { label: 'flow' },
+        ]}
+        actions={[{ icon: 'FileCopyLine', tooltip: 'Copy the template ID' }]}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const panel = canvasElement.querySelector<HTMLElement>('.template-head')!;
+    await expectBadgesUnderTitle(panel);
+    await expectTitleWhole(panel);
+    await waitFor(() => {
+      const header = panel.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+      const headerBox = header.getBoundingClientRect();
+      // the copy button and the close are beside the name and its badges, at the line's end: not under them
+      const buttons = Array.from(
+        panel.querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button')
+      ).filter((button) => !header.contains(button));
+      expect(buttons.length).toBeGreaterThanOrEqual(2);
+      buttons.forEach((button) => {
+        const box = button.getBoundingClientRect();
+        expect(box.top).toBeLessThan(headerBox.bottom);
+        expect(box.left).toBeGreaterThanOrEqual(headerBox.right - 1);
+        expect(box.right).toBeLessThanOrEqual(panel.getBoundingClientRect().right + 1);
+      });
+    });
+  },
+};
+
+export const ActionsGoUnderATitleByDefault: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Two page heads in a 360px column, neither naming `wrapActionsBelowTitle`. The first takes the default: its four actions do not fit beside "feature/mvp #42", so they go to the line under it and the title keeps its line and its size. The second opts out (`wrapActionsBelowTitle={false}`) and keeps one line, the title squeezed beside the actions, as every bar did before the default.',
+      },
+    },
+  },
+  beforeEach: () => {
+    settlingCommits.clear();
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <div style={{ width: 360 }}>
+        <WrappingPageHead id='by-default' label='feature/mvp #42' actions={PULL_REQUEST_ACTIONS} />
+      </div>
+      <div style={{ width: 360 }}>
+        <WrappingPageHead
+          id='opted-out'
+          label='feature/mvp #42'
+          actions={PULL_REQUEST_ACTIONS}
+          wrap={false}
+        />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectHeadsSettled(['by-default', 'opted-out']);
+    await waitFor(() => {
+      expectActionsUnderTitle(canvasElement, 'by-default');
+      expectActionsBesideTitle(canvasElement, 'opted-out');
+    });
+    await expectTitleWhole(pageHead(canvasElement, 'by-default').panel);
+  },
+};
+
+export const AnObviousActionIsItsIcon: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A page head whose Refresh and Settings say what they do with their icon (`iconOnly`): each is drawn as its icon at every width, its words its tooltip and its accessible name. "Compare with period before" is a mode the icon cannot carry, so it keeps its words.',
+      },
+    },
+  },
+  beforeEach: () => {
+    settlingCommits.clear();
+  },
+  render: () => (
+    <div style={{ width: 900 }}>
+      <WrappingPageHead
+        id='obvious'
+        label='Orders this week'
+        actions={[
+          { label: 'Refresh', icon: 'RefreshLine', size: 'small', iconOnly: true, className: 'story-refresh' },
+          {
+            label: 'Compare with period before',
+            icon: 'ArrowLeftRightLine',
+            size: 'small',
+            responsive: false,
+            className: 'story-compare',
+          },
+          { label: 'Settings', icon: 'Settings3Line', size: 'small', iconOnly: true, className: 'story-settings' },
+        ]}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectHeadsSettled(['obvious']);
+    const button = (name: string) =>
+      canvasElement.querySelector<HTMLElement>(`.story-${name}`) as HTMLElement;
+
+    await waitFor(() => expect(button('refresh')).toBeTruthy());
+    for (const [name, words] of [
+      ['refresh', 'Refresh'],
+      ['settings', 'Settings'],
+    ]) {
+      expect(button(name).textContent?.trim()).toBe('');
+      expect(button(name).getAttribute('aria-label')).toBe(words);
+    }
+    expect(button('compare').textContent).toContain('Compare with period before');
+  },
+};
+
+/** How many lines `element`'s words are on. */
+const linesOf = (element: HTMLElement) => {
+  const range = document.createRange();
+  range.selectNodeContents(element);
+
+  return new Set(
+    Array.from(range.getClientRects())
+      .filter((rect) => rect.width > 0)
+      .map((rect) => Math.round(rect.top))
+  ).size;
+};
+
+export const ActionsStayBesideATitleThatNeedsTwoLinesAnyway: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'On a phone (390 px), a widget titled "Hero: Console input vs problem wizard" with its help and "more" buttons, and a short one, "Visitors", with the same two. The long title needs two lines even with the whole line to itself, and two beside the buttons, so the buttons going under it would save it nothing and cost the panel a line: they stay beside it, and the title takes its two lines there at its own size. "Visitors" fits beside them on one line. (An experiment drawer and a funnel widget on a phone lost 43px and 37px this way.)',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ padding: '12px 16px', display: 'grid', gap: 16 }}>
+      {/* full-width tiles, as a dashboard lays its widgets out on a phone */}
+      <div data-widget='long'>
+          <ReqorePanel
+            label='Hero: Console input vs problem wizard'
+            labelSize={3}
+            actions={[
+              { icon: 'QuestionLine', tooltip: 'What this shows', size: 'small', flat: true },
+              { icon: 'MoreLine', tooltip: 'More', size: 'small', flat: true },
+            ]}
+            responsiveActions={false}
+            padded
+          >
+            12.4%
+          </ReqorePanel>
+        </div>
+        <div data-widget='short'>
+          <ReqorePanel
+            label='Visitors'
+            labelSize={3}
+            actions={[
+              { icon: 'QuestionLine', tooltip: 'What this shows', size: 'small', flat: true },
+              { icon: 'MoreLine', tooltip: 'More', size: 'small', flat: true },
+            ]}
+            responsiveActions={false}
+            padded
+          >
+            322
+          </ReqorePanel>
+        </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const parts = (id: string) => {
+      const panel = canvasElement.querySelector<HTMLElement>(`[data-widget="${id}"] .reqore-panel`)!;
+      const header = panel.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+      const heading = panel.querySelector<HTMLElement>('.reqore-panel-title .reqore-heading')!;
+      const buttons = Array.from(
+        panel.querySelectorAll<HTMLElement>('.reqore-panel-title .reqore-button')
+      );
+
+      return { panel, header, heading, buttons };
+    };
+
+    for (const id of ['long', 'short']) {
+      await waitFor(() => {
+        const { header, buttons } = parts(id);
+        const headerBox = header.getBoundingClientRect();
+
+        expect(buttons.length).toBe(2);
+        // beside the title, on its first line, not on a line of their own under it
+        buttons.forEach((button) =>
+          expect(
+            button.getBoundingClientRect().top,
+            `${id}: header ${Math.round(headerBox.top)}-${Math.round(headerBox.bottom)}`
+          ).toBeLessThan(headerBox.top + 20)
+        );
+      });
+    }
+    await waitFor(() => expect(linesOf(parts('long').heading)).toBe(2));
+    expect(linesOf(parts('short').heading)).toBe(1);
+    await expectTitleWhole(parts('long').panel);
+  },
+};
+
+export const APanelWithNoActionsDrawsNoActionsRow: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'On a phone (390 px), a panel titled "Leaders this month by the revenue their deals closed" and no actions at all. Its bar is its title: no empty actions row under a title of two lines (it made a leader panel 5px taller).',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ padding: '12px 16px' }} data-widget='bare'>
+      <ReqorePanel label='Leaders this month by the revenue their deals closed' labelSize={3} padded>
+        Lena · 42 deals
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const panel = await waitFor(() => {
+      const element = canvasElement.querySelector<HTMLElement>('[data-widget="bare"] .reqore-panel');
+
+      expect(element).toBeTruthy();
+
+      return element!;
+    });
+
+    expect(panel.querySelector('.reqore-panel-title-actions')).toBeNull();
+    const bar = panel.querySelector<HTMLElement>('.reqore-panel-title')!;
+    const header = panel.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+    const barStyle = getComputedStyle(bar);
+    // the bar is as tall as its title and its own padding, nothing more
+    expect(bar.getBoundingClientRect().height).toBeLessThanOrEqual(
+      header.getBoundingClientRect().height +
+        (parseFloat(barStyle.paddingTop) || 0) +
+        (parseFloat(barStyle.paddingBottom) || 0) +
+        1
+    );
+  },
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * under the actions' default: a description below, a caption, a filter, and icons beside a title
+ * ---------------------------------------------------------------------------------------------- */
+
+/** A section heading as an operator dashboard draws it: a name, its count, a filter, a sentence under it. */
+const SectionHeading = ({ wrap, width }: { wrap?: boolean; width: number }) => (
+  <div
+    data-heading={`${width}-${wrap === false ? 'off' : 'default'}`}
+    style={{ width, maxWidth: '100%' }}
+  >
+    <ReqorePanel
+      label='Needs you'
+      badge={{ label: '25', appearance: 'text' } as TReqoreBadge}
+      description='What needs a person now: failures with a prepared fix, held orders and open questions.'
+      descriptionPosition='below'
+      descriptionMaxLines={0}
+      actions={[{ icon: 'FilterLine', label: 'All areas', flat: true, responsive: false }]}
+      responsiveActions={false}
+      responsiveTitle={false}
+      {...(wrap === false ? { wrapActionsBelowTitle: false } : {})}
+      transparent
+      flat
+      minimal
+      padded={false}
+      fluid
+    />
+  </div>
+);
+
+export const ADescriptionBelowTakesTheWholeWidth: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A dashboard section heading ("Needs you", its count 25 and an "All areas" filter) with a sentence under it (`descriptionPosition=\'below\'`), at 1440px and 390px, drawn with the actions\' default and with `wrapActionsBelowTitle={false}`. The sentence takes the full width under the name and the filter both ways, and reads on the same lines. Under the default it was laid out 0px wide, a word to a line ("What / needs / a / person…", an operator dashboard).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big' fluid>
+      {[1440, 390].map((width) => (
+        <ReqoreControlGroup key={width} vertical fluid>
+          <SectionHeading width={width} />
+          <SectionHeading width={width} wrap={false} />
+        </ReqoreControlGroup>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const sentence = (id: string) =>
+      canvasElement.querySelector<HTMLElement>(
+        `[data-heading="${id}"] .reqore-panel-title-description`
+      )!;
+
+    for (const width of [1440, 390]) {
+      await waitFor(() => {
+        const [byDefault, off] = [sentence(`${width}-default`), sentence(`${width}-off`)];
+        const bar = byDefault.closest<HTMLElement>('.reqore-panel-title')!;
+
+        expect(byDefault, `${width}px`).toBeTruthy();
+        // as wide as with the default off, on as many lines: one at 1440px, the bar's width on a phone
+        expect(Math.round(byDefault.getBoundingClientRect().width)).toBe(
+          Math.round(off.getBoundingClientRect().width)
+        );
+        expect(linesOf(byDefault), `${width}px`).toBe(linesOf(off));
+        expect(linesOf(byDefault), `${width}px`).toBeLessThanOrEqual(width < 600 ? 3 : 1);
+        if (width < 600) {
+          expect(byDefault.getBoundingClientRect().width).toBeGreaterThan(bar.clientWidth * 0.8);
+        }
+      });
+    }
+  },
+};
+
+/** Every word of `element` on one line: its text's boxes all start within a few px of the same top. */
+const onOneLine = (element: HTMLElement) => {
+  const range = document.createRange();
+
+  range.selectNodeContents(element);
+  const tops = Array.from(range.getClientRects())
+    .filter((rect) => rect.width > 0)
+    .map((rect) => rect.top);
+
+  return tops.length > 0 && Math.max(...tops) - Math.min(...tops) < 4;
+};
+
+/** A recent orders section: a name, its count, which orders it holds, a folding filter, a link. */
+const OrdersSection = ({ width }: { width: number }) => {
+  const [filter, setFilter] = useState<string | undefined>('all');
+
+  return (
+    <div data-orders={width} style={{ width, maxWidth: '100%' }}>
+      <ReqorePanel
+        label='Recent orders'
+        badge={{ label: '4 failing', appearance: 'text' } as TReqoreBadge}
+        description='Newest 4 of 120'
+        descriptionPosition='below'
+        descriptionMaxLines={0}
+        collapsible
+        actions={[
+          {
+            as: ReqoreSegmentedControl,
+            props: {
+              foldToFit: true,
+              size: 'small',
+              value: filter,
+              onChange: setFilter,
+              items: [
+                { value: 'all', label: 'All 120' },
+                { value: 'failed', label: 'Failed 4' },
+                { value: 'active', label: 'In progress 12' },
+                { value: 'complete', label: 'Complete 101' },
+                { value: 'canceled', label: 'Canceled 3' },
+              ],
+            },
+            responsive: false,
+          },
+          { icon: 'TableLine', label: 'Browse orders', minimal: true, flat: true, responsive: false },
+        ]}
+        responsiveActions={false}
+        responsiveTitle={false}
+        transparent
+        flat
+        minimal
+        padded={false}
+        fluid
+      />
+    </div>
+  );
+};
+
+export const ACaptionAndAFilterKeepTheirRoomWhenTheActionsGoUnder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A detail page\'s "Recent orders" section at 1440px and 390px: its count ("4 failing") beside the name, which orders it holds ("Newest 4 of 120") under it, a filter that folds to its room and "Browse orders". At 1440px the actions sit beside the name; at 390px they go under it, and the filter folds into that line. The count and the caption keep their width and their one line both ways, and the filter stays inside the panel. Under the default the caption was drawn a letter to a line ("N e w e s t 4"), and on a phone the filter kept its whole width under the name and ran off the panel\'s left edge (an app\'s detail pages).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big' fluid>
+      {[1440, 390].map((width) => (
+        <OrdersSection key={width} width={width} />
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const width of [1440, 390]) {
+      const box = canvasElement.querySelector<HTMLElement>(`[data-orders="${width}"]`)!;
+
+      await waitFor(() => {
+        const bar = box.querySelector<HTMLElement>('.reqore-panel-title')!;
+        const barBox = bar.getBoundingClientRect();
+        const caption = bar.querySelector<HTMLElement>('.reqore-panel-title-description')!;
+        const count = Array.from(
+          bar.querySelectorAll<HTMLElement>('.reqore-panel-title-header .reqore-tag')
+        ).find((tag) => tag.textContent?.includes('4 failing'))!;
+        const filter = bar.querySelector<HTMLElement>('.reqore-segmented-control-slot')!;
+        const heading = bar.querySelector<HTMLElement>('.reqore-heading')!;
+
+        expect(caption && count && filter && heading, `${width}px`).toBeTruthy();
+        // the caption and the count on one line each, at their own width
+        expect(onOneLine(caption), `${width}px caption`).toBe(true);
+        expect(onOneLine(count), `${width}px count`).toBe(true);
+        expect(count.scrollWidth, `${width}px count`).toBeLessThanOrEqual(count.clientWidth + 1);
+        // the filter inside the panel, on the name's line at 1440px and under it at 390px
+        const filterBox = filter.getBoundingClientRect();
+
+        expect(filterBox.left, `${width}px filter`).toBeGreaterThanOrEqual(barBox.left - 1);
+        expect(filterBox.right, `${width}px filter`).toBeLessThanOrEqual(barBox.right + 1);
+        if (width === 1440) {
+          expect(filterBox.top).toBeLessThan(heading.getBoundingClientRect().bottom);
+        } else {
+          expect(filterBox.top).toBeGreaterThanOrEqual(heading.getBoundingClientRect().bottom - 1);
+        }
+      });
+    }
+    await expectTitleWhole(
+      canvasElement.querySelector<HTMLElement>('[data-orders="390"] .reqore-panel')!
+    );
+  },
+};
+
+/** An issue drawer's head, as an app draws it: an icon, a name, its state, a help button and a close. */
+const IssueHead = ({ id, width, words }: { id: string; width: number; words?: boolean }) => (
+  <div data-issue={id} style={{ width, maxWidth: '100%' }}>
+    <ReqorePanel
+      label='#24011 in Order-to-Cash → payment-author'
+      icon='AlertLine'
+      badge={{ label: 'Open', appearance: 'text' } as TReqoreBadge}
+      isCollapsed
+      onClose={noop}
+      closeButtonProps={{ flat: true, transparent: true }}
+      actions={[
+        words
+          ? { icon: 'QuestionLine', label: 'Help', flat: true, size: 'small', responsive: false }
+          : { icon: 'QuestionLine', tooltip: 'What this shows', flat: true, size: 'small' },
+      ]}
+    />
+  </div>
+);
+
+/** The px the issue head `id`'s title is drawn at. */
+const issueTitlePx = (canvasElement: HTMLElement, id: string) =>
+  parseFloat(
+    getComputedStyle(
+      canvasElement.querySelector<HTMLElement>(`[data-issue="${id}"] .reqore-heading`)!
+    ).fontSize
+  );
+
+export const IconActionsStayBesideATitleThatFitsALittleSmaller: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'An issue drawer\'s head (an alert icon, "#24011 in Order-to-Cash → payment-author", its state "Open", a help button drawn as its icon and a close), each in a box sized from the wide one\'s own parts. At 1440px everything fits on one line. In a box 4px too narrow for the name beside the two icons at its own size (an issue drawer at 599px), the icons stay beside it and the name is drawn a step smaller, on one line and whole, its state under it. They went to a row of their own, a row lost for 4px. A name may be drawn up to a tenth smaller for icons. In a box where it would have to be drawn smaller than that, the icons go under it; and a help button that keeps its word ("Help") goes under in the 4px-short box, as actions with words always have.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big' fluid>
+      <IssueHead id='wide' width={1440} />
+      <IssueHead id='wide-words' width={1440} words />
+      <IssueHead id='icons' width={599} />
+      <IssueHead id='narrow' width={460} />
+      <IssueHead id='words' width={599} words />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const parts = (id: string) => {
+      const panel = canvasElement.querySelector<HTMLElement>(`[data-issue="${id}"] .reqore-panel`)!;
+      const header = panel.querySelector<HTMLElement>('.reqore-panel-title-header')!;
+      const heading = panel.querySelector<HTMLElement>('.reqore-heading')!;
+      const buttons = Array.from(
+        panel.querySelectorAll<HTMLElement>('.reqore-panel-title-actions .reqore-button')
+      );
+
+      return { panel, header, heading, buttons };
+    };
+    const beside = (id: string) => {
+      const { heading, buttons } = parts(id);
+
+      return buttons.every(
+        (button) => button.getBoundingClientRect().top < heading.getBoundingClientRect().bottom
+      );
+    };
+
+    await waitFor(() => expect(parts('wide').buttons).toHaveLength(2));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const naturalPx = issueTitlePx(canvasElement, 'wide');
+    /* The widths are the heads' own, read off the wide ones, so the name misses its line by the same few px
+       whatever font draws it: the bar's padding, the icon, the name, the gap and the actions. */
+    const widthFor = (wideId: string, nameShare: number, short: number) => {
+      const { panel, header, heading } = parts(wideId);
+      const bar = panel.querySelector<HTMLElement>('.reqore-panel-title')!;
+      const barStyle = getComputedStyle(bar);
+      const actions = panel.querySelector<HTMLElement>('.reqore-panel-title-actions')!;
+      const before = heading.getBoundingClientRect().left - header.getBoundingClientRect().left;
+
+      return (
+        (parseFloat(barStyle.paddingLeft) || 0) +
+        (parseFloat(barStyle.paddingRight) || 0) +
+        before +
+        heading.getBoundingClientRect().width * nameShare +
+        (parseFloat(barStyle.columnGap) || 0) +
+        actions.getBoundingClientRect().width -
+        short
+      );
+    };
+    const resize = (id: string, width: number) => {
+      canvasElement.querySelector<HTMLElement>(`[data-issue="${id}"]`)!.style.width = `${width}px`;
+    };
+
+    // 4px short at the name's own size; and short even at four fifths of it
+    resize('icons', widthFor('wide', 1, 4));
+    resize('words', widthFor('wide-words', 1, 4));
+    resize('narrow', widthFor('wide', 0.8, 0));
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    await waitFor(() => {
+      expect(beside('wide'), 'wide').toBe(true);
+      expect(beside('icons'), 'icons').toBe(true);
+      expect(linesOf(parts('icons').heading)).toBe(1);
+      expect(issueTitlePx(canvasElement, 'icons')).toBeLessThan(naturalPx);
+      expect(issueTitlePx(canvasElement, 'icons')).toBeGreaterThanOrEqual(
+        Math.floor(naturalPx * 0.9)
+      );
+      expect(beside('narrow'), 'narrow').toBe(false);
+      expect(beside('words'), 'words').toBe(false);
+      expect(issueTitlePx(canvasElement, 'words')).toBe(naturalPx);
+    });
+    await expectTitleWhole(parts('icons').panel);
+    await expectBadgesUnderTitle(parts('icons').panel);
+  },
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * icons beside a title kept to one line: the title never wraps beside them
+ * ---------------------------------------------------------------------------------------------- */
+
+/** A dashboard tile, as a dashboard's widget frame draws one: its name, help and "more" as icons. */
+const IconTile = ({ id, label, width }: { id: string; label: string; width: number }) => (
+  <div data-tile={id} style={{ width, maxWidth: '100%' }}>
+    <ReqorePanel
+      label={label}
+      labelSize={3}
+      labelEffect={{ color: '#e8e8e8' }}
+      responsiveTitle={false}
+      actions={[
+        { icon: 'QuestionLine', tooltip: 'What this shows', size: 'small', flat: true },
+        { icon: 'MoreLine', tooltip: 'More', size: 'small', flat: true },
+      ]}
+      padded
+    >
+      12.4%
+    </ReqorePanel>
+  </div>
+);
+
+const TILE_TITLES = { wizard: 'Problem wizard', revenue: 'Monthly revenue gained and lost' };
+
+/** What the controls in a bar's actions box span, without the sliver of the line the box grows by. */
+const controlsWidth = (actions: HTMLElement) => {
+  const groups = Array.from(actions.children) as HTMLElement[];
+
+  return (
+    groups.reduce((sum, group) => sum + group.getBoundingClientRect().width, 0) +
+    (parseFloat(getComputedStyle(actions).columnGap) || 0) * Math.max(0, groups.length - 1)
+  );
+};
+
+export const IconsBesideATitleKeepItOnOneLine: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Dashboard tiles titled "Problem wizard" and "Monthly revenue gained and lost", with a help and a "more" button drawn as icons, at 330px and 218px, and in boxes 1px too narrow for each title beside the icons at its own size (sized from the wide tile\'s own parts). Wherever the icons sit beside a title, the title is on one line and whole, a step smaller where it must be. In the 1px-short boxes the title fitted with the one-line fit\'s 2px of slack, kept its size and wrapped its last word beside the icons ("Problem / wizard", "… gained and / lost", on a phone).',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big' fluid>
+      {Object.entries(TILE_TITLES).map(([key, label]) => (
+        <ReqoreControlGroup key={key} vertical fluid>
+          <IconTile id={`${key}-wide`} label={label} width={1440} />
+          <IconTile id={`${key}-330`} label={label} width={330} />
+          <IconTile id={`${key}-218`} label={label} width={218} />
+          <IconTile id={`${key}-short`} label={label} width={330} />
+        </ReqoreControlGroup>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const parts = (id: string) => {
+      const panel = canvasElement.querySelector<HTMLElement>(`[data-tile="${id}"] .reqore-panel`)!;
+
+      return {
+        panel,
+        bar: panel.querySelector<HTMLElement>('.reqore-panel-title')!,
+        header: panel.querySelector<HTMLElement>('.reqore-panel-title-header')!,
+        heading: panel.querySelector<HTMLElement>('.reqore-panel-title .reqore-heading')!,
+        actions: panel.querySelector<HTMLElement>('.reqore-panel-title-actions')!,
+        buttons: Array.from(
+          panel.querySelectorAll<HTMLElement>('.reqore-panel-title-actions .reqore-button')
+        ),
+      };
+    };
+    const beside = (id: string) => {
+      const { heading, buttons } = parts(id);
+
+      return buttons.every(
+        (button) => button.getBoundingClientRect().top < heading.getBoundingClientRect().bottom
+      );
+    };
+
+    await waitFor(() => expect(parts('wizard-wide').buttons).toHaveLength(2));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    // 1px short of each title beside the icons at its own size, measured off the wide tile
+    for (const key of Object.keys(TILE_TITLES)) {
+      const { bar, header, heading, actions } = parts(`${key}-wide`);
+      const barStyle = getComputedStyle(bar);
+      // the tile's own edge (its border) and the bar's sides, the title, the gap and the controls
+      const edge =
+        canvasElement.querySelector<HTMLElement>(`[data-tile="${key}-wide"]`)!.getBoundingClientRect()
+          .width - bar.getBoundingClientRect().width;
+      const width =
+        edge +
+        (parseFloat(barStyle.paddingLeft) || 0) +
+        (parseFloat(barStyle.paddingRight) || 0) +
+        (heading.getBoundingClientRect().left - header.getBoundingClientRect().left) +
+        heading.getBoundingClientRect().width +
+        (parseFloat(barStyle.columnGap) || 0) +
+        controlsWidth(actions) -
+        1;
+
+      canvasElement.querySelector<HTMLElement>(`[data-tile="${key}-short"]`)!.style.width = `${width}px`;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const naturalPx = parseFloat(getComputedStyle(parts('wizard-wide').heading).fontSize);
+
+    for (const key of Object.keys(TILE_TITLES)) {
+      for (const at of ['330', '218', 'short']) {
+        const id = `${key}-${at}`;
+
+        await waitFor(() => {
+          // icons beside a title: the title on one line
+          if (beside(id)) {
+            expect(linesOf(parts(id).heading), id).toBe(1);
+          }
+        });
+        if (beside(id)) {
+          await expectTitleWhole(parts(id).panel);
+        }
+      }
+      // the short box keeps its icons beside the title, a step smaller
+      await waitFor(() => {
+        expect(beside(`${key}-short`), `${key}-short`).toBe(true);
+        expect(
+          parseFloat(getComputedStyle(parts(`${key}-short`).heading).fontSize),
+          `${key}-short`
+        ).toBeLessThan(naturalPx);
+      });
+    }
+  },
+};
+
+/** A collapsible panel whose head holds a segmented choice and a tag: custom (`as`) actions with no `onClick`. */
+const RunHistory = () => {
+  const [range, setRange] = useState<string | undefined>('day');
+
+  return (
+    <ReqorePanel
+      label='Run history'
+      collapsible
+      actions={[
+        {
+          as: ReqoreSegmentedControl,
+          props: {
+            size: 'small',
+            value: range,
+            onChange: setRange,
+            items: [
+              { value: 'day', label: 'Today' },
+              { value: 'week', label: 'This week' },
+            ],
+          },
+          responsive: false,
+        },
+        { as: ReqoreTag, props: { label: 'Draft', className: 'run-history-draft' }, responsive: false },
+      ]}
+    >
+      <ReqoreP className='run-history-body'>
+        {range === 'week' ? 'Eighty runs this week' : 'Twelve runs today'}, all of them on time.
+      </ReqoreP>
+    </ReqorePanel>
+  );
+};
+
+/** Whether the panel's body is on screen (a folded panel hides or drops it). */
+const runHistoryShown = (canvasElement: HTMLElement) =>
+  canvasElement.querySelector<HTMLElement>('.run-history-body')?.checkVisibility() ?? false;
+
+export const ACustomActionsClickNeverFoldsThePanel: Story = {
+  render: () => <RunHistory />,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a collapsible panel whose head holds a segmented choice and a tag, custom actions with no onClick of their own. Choosing "This week" and clicking the tag leave the panel open on its week; a click on the title still folds it, and another opens it again.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(runHistoryShown(canvasElement)).toBe(true));
+
+    const segment = [...canvasElement.querySelectorAll<HTMLElement>('button')].find((button) =>
+      button.textContent?.includes('This week')
+    );
+    // used, each action leaves the panel open (two folds would cancel out, so each is checked on its own)
+    for (const action of [segment, canvasElement.querySelector<HTMLElement>('.run-history-draft')]) {
+      await userEvent.click(action as HTMLElement);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(runHistoryShown(canvasElement)).toBe(true);
+    }
+    // on what was chosen
+    expect(canvasElement.querySelector('.run-history-body')?.textContent).toContain('this week');
+
+    // the bar itself still folds it, and opens it again
+    const title = () =>
+      [...canvasElement.querySelectorAll<HTMLElement>('.reqore-panel-title h4, .reqore-panel-title span')].find(
+        (element) => element.textContent === 'Run history'
+      ) as HTMLElement;
+    await userEvent.click(title());
+    await waitFor(() => expect(runHistoryShown(canvasElement)).toBe(false));
+    await userEvent.click(title());
+    await waitFor(() => expect(runHistoryShown(canvasElement)).toBe(true));
+  },
+};
+
+/** A clickable card (a list's order) whose head and foot hold actions: a menu, a tag and words, and a choice. */
+const OrderCard = ({ onOpen }: { onOpen?: () => void }) => {
+  const [view, setView] = useState<string | undefined>('lines');
+
+  return (
+    <ReqorePanel
+      label='Order 4211'
+      className='order-card'
+      onClick={onOpen}
+      actions={[
+        { as: ReqoreTag, props: { label: 'Paid', className: 'order-card-paid' }, responsive: false },
+        { label: 'Archive', icon: 'ArchiveLine', className: 'order-card-archive', responsive: false },
+        {
+          icon: 'More2Line',
+          className: 'order-card-menu',
+          tooltip: 'More',
+          responsive: false,
+          actions: [{ label: 'Retry the order', icon: 'RefreshLine', onClick: noop }],
+        },
+      ]}
+      bottomActions={[
+        {
+          as: ReqoreSegmentedControl,
+          props: {
+            size: 'small',
+            value: view,
+            onChange: setView,
+            items: [
+              { value: 'lines', label: 'Lines' },
+              { value: 'history', label: 'History' },
+            ],
+          },
+          responsive: false,
+        },
+        { label: 'Open in a new tab', className: 'order-card-tab', onClick: noop, position: 'right' },
+      ]}
+    >
+      <ReqoreP className='order-card-body'>Two lines, shipped on Monday.</ReqoreP>
+    </ReqorePanel>
+  );
+};
+
+export const AnActionsClickIsNotTheCards: Story = {
+  render: (args) => <OrderCard onOpen={args.onClick as () => void} />,
+  args: { onClick: fn() },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a clickable order card whose head holds a tag, "Archive" and a menu, and whose foot holds a Lines / History choice and "Open in a new tab". Using any of them, the menu\'s "Retry the order" included, never opens the card; a click on the card\'s own text does.',
+      },
+    },
+  },
+  play: async ({ canvasElement, args }) => {
+    const onOpen = args.onClick as ReturnType<typeof fn>;
+    const inCard = (selector: string) => canvasElement.querySelector(selector) as HTMLElement;
+    const button = (words: string) =>
+      [...canvasElement.querySelectorAll<HTMLElement>('button')].find((element) =>
+        element.textContent?.includes(words)
+      ) as HTMLElement;
+
+    await waitFor(() => expect(inCard('.order-card-body')).toBeTruthy());
+
+    // the head's tag and words, the foot's choice and link, each on its own
+    for (const action of [
+      () => inCard('.order-card-paid'),
+      () => inCard('.order-card-archive'),
+      () => button('History'),
+      () => inCard('.order-card-tab'),
+    ]) {
+      await userEvent.click(action());
+      expect(onOpen).not.toHaveBeenCalled();
+    }
+
+    // a menu the head opened, in a portal: its entry is not the card's either
+    await userEvent.click(inCard('.order-card-menu'));
+    const retry = await waitFor(() => {
+      const found = [...document.querySelectorAll<HTMLElement>('.reqore-menu-item')].find((item) =>
+        item.textContent?.includes('Retry the order')
+      );
+      expect(found).toBeTruthy();
+      return found as HTMLElement;
+    });
+    await userEvent.click(retry);
+    expect(onOpen).not.toHaveBeenCalled();
+
+    // the card's own text opens it
+    await userEvent.click(inCard('.order-card-body'));
+    await waitFor(() => expect(onOpen).toHaveBeenCalledTimes(1));
+  },
+};
+
+/** A dialog's actions that keep their words: none of them folds into a menu. */
+const KEPT_BOTTOM_ACTIONS: IReqorePanelProps['bottomActions'] = [
+  { label: 'Cancel', icon: 'CloseLine', responsive: false, position: 'left' },
+  { label: 'Save as a draft', icon: 'SaveLine', responsive: false, position: 'right' },
+  { label: 'Publish to production', icon: 'UploadCloudLine', responsive: false, position: 'right', intent: 'info' },
+];
+/** A bar with a folding action beside a kept one: it stays one line. */
+const MIXED_BOTTOM_ACTIONS: IReqorePanelProps['bottomActions'] = [
+  { label: 'Cancel', icon: 'CloseLine', position: 'left' },
+  { label: 'Publish to production', icon: 'UploadCloudLine', responsive: false, position: 'right', intent: 'info' },
+];
+
+/** The bottom actions of the panel in the box `name`, and the panel. */
+const keptBottomActionsOf = (name: string) => {
+  const panel = document.querySelector<HTMLElement>(`.kept-bottom-${name} .reqore-panel`)!;
+  const buttons = [
+    ...panel.querySelectorAll<HTMLElement>('.reqore-panel-bottom-actions .reqore-button'),
+  ].map((button) => button.getBoundingClientRect());
+
+  return { panel: panel.getBoundingClientRect(), buttons };
+};
+
+export const KeptBottomActionsStackInANarrowPanel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a 320px panel and a 720px one, each with three bottom actions that do not fold (Cancel, Save as a draft, Publish to production). In the narrow one they do not fit on one line, so they stack inside the panel, each as wide as the bar, Publish to production on top and Cancel at the bottom; in the wide one they share one line. A third 720px panel, with a Cancel that folds beside a kept Publish to production, keeps its bar on one line.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical>
+      {(
+        [
+          ['narrow', 320, KEPT_BOTTOM_ACTIONS],
+          ['wide', 720, KEPT_BOTTOM_ACTIONS],
+          ['mixed', 720, MIXED_BOTTOM_ACTIONS],
+        ] as const
+      ).map(([name, width, bottomActions]) => (
+        <div key={name} className={`kept-bottom-${name}`} style={{ width }}>
+          <ReqorePanel label='Publish the release' bottomActions={bottomActions}>
+            <ReqoreP>The release goes to every instance on the next deploy.</ReqoreP>
+          </ReqorePanel>
+        </div>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    await waitFor(() =>
+      expect(document.querySelectorAll('.reqore-panel-bottom-actions .reqore-button')).toHaveLength(8)
+    );
+
+    await waitFor(() =>
+      expect(
+        document.querySelector<HTMLElement>('.kept-bottom-narrow .reqore-panel-bottom-actions')?.dataset
+          .stacked
+      ).toBe('true')
+    );
+    const narrow = keptBottomActionsOf('narrow');
+    for (const button of narrow.buttons) {
+      await expect(button.right).toBeLessThanOrEqual(narrow.panel.right + 0.5);
+      await expect(button.left).toBeGreaterThanOrEqual(narrow.panel.left - 0.5);
+    }
+    // one to a line, each as wide as the others, the page's last action (Publish to production) on top
+    await expect(new Set(narrow.buttons.map((button) => Math.round(button.top))).size).toBe(3);
+    const [publish, save, cancel] = narrow.buttons;
+    await expect(publish.top).toBeLessThan(save.top);
+    await expect(save.top).toBeLessThan(cancel.top);
+    for (const button of [save, cancel]) {
+      await expect(Math.abs(button.width - publish.width)).toBeLessThanOrEqual(0.5);
+    }
+    await expect(
+      document.querySelector('.kept-bottom-narrow .reqore-panel-bottom-actions .reqore-button')?.textContent
+    ).toBe('Publish to production');
+
+    const wide = keptBottomActionsOf('wide');
+    await expect(new Set(wide.buttons.map((button) => Math.round(button.top))).size).toBe(1);
+    // a bar with a folding action stays one line: the folding group fills the bar and folds to fit
+    const mixed = keptBottomActionsOf('mixed');
+    await expect(new Set(mixed.buttons.map((button) => Math.round(button.top))).size).toBe(1);
+  },
+};
+
+/**
+ * Why the action beside it cannot be used, as text that gives way to the actions and wraps inside the bar (a
+ * reason line a host draws through `as`). Its box shrinks (`flex: 0 1 auto`, `min-width: 0`), and so does the
+ * group holding it.
+ */
+const ReasonBesideAction = ({ reason }: { reason: string }) => (
+  <span
+    className='story-unavailable-reason'
+    style={{
+      display: 'inline-flex',
+      alignSelf: 'center',
+      flex: '0 1 auto',
+      minWidth: 0,
+      maxWidth: 420,
+      paddingRight: 10,
+      fontSize: 12,
+      lineHeight: 1.4,
+      whiteSpace: 'normal',
+      overflowWrap: 'anywhere',
+    }}
+  >
+    {reason}
+  </span>
+);
+
+/** A run drawer's bar: Close, the disabled Run, and why Run cannot be used, beside it. */
+const REASON_BOTTOM_ACTIONS: IReqorePanelProps['bottomActions'] = [
+  { label: 'Close', icon: 'CloseLine', responsive: false, position: 'left' },
+  {
+    label: 'Run',
+    icon: 'PlayLine',
+    responsive: false,
+    position: 'right',
+    disabled: true,
+  },
+  {
+    as: ReasonBesideAction,
+    props: {
+      reason:
+        'This instance is already running 3 of the 3 test runs its plan allows at once. Run this one when one of them ends.',
+    },
+    position: 'right',
+    responsive: false,
+  },
+];
+
+/** The bar of the panel in the box `name`, its buttons and its reason line. */
+const reasonBarOf = (name: string) => {
+  const bar = document.querySelector<HTMLElement>(`.reason-bar-${name} .reqore-panel-bottom-actions`)!;
+  const buttons = [...bar.querySelectorAll<HTMLElement>('.reqore-button')];
+  const reason = bar.querySelector<HTMLElement>('.story-unavailable-reason');
+
+  return { bar, buttons, reason };
+};
+
+const renderReasonBar = (name: string, width: number | string) => (
+  <div className={`reason-bar-${name}`} style={{ width, maxWidth: '100%' }}>
+    <ReqorePanel label='Run the test' bottomActions={REASON_BOTTOM_ACTIONS}>
+      <ReqoreP>The test runs against this instance with the case's own data.</ReqoreP>
+    </ReqorePanel>
+  </div>
+);
+
+export const BottomBarKeepsItsLineBesideAWrappingReason: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: `Renders a 583px panel whose bottom bar holds Close, a disabled Run and a long sentence saying why Run cannot be used. The sentence is text that can wrap, so it does not count as not fitting: the bar keeps one line, the buttons keep their own width and the sentence wraps beside Run.`,
+      },
+    },
+  },
+  render: () => renderReasonBar('desktop', 583),
+  play: async () => {
+    await waitFor(() => expect(reasonBarOf('desktop').buttons).toHaveLength(2));
+    // the bar has had its frame to decide
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    const { bar, buttons, reason } = reasonBarOf('desktop');
+    await expect(bar.dataset.stacked).toBeUndefined();
+    const [close, run] = buttons.map((button) => button.getBoundingClientRect());
+    const barBox = bar.getBoundingClientRect();
+    // each button at its words' width, not as wide as the bar
+    await expect(close.width).toBeLessThan(barBox.width / 2);
+    await expect(run.width).toBeLessThan(barBox.width / 2);
+    // on one line
+    await expect(Math.abs(close.top - run.top)).toBeLessThanOrEqual(1);
+    // the sentence wraps inside the bar
+    const reasonBox = reason!.getBoundingClientRect();
+    await expect(reasonBox.height).toBeGreaterThan(20);
+    await expect(reasonBox.right).toBeLessThanOrEqual(barBox.right + 0.5);
+  },
+};
+
+export const BottomBarWithAWrappingReasonStacksOnAPhone: Story = {
+  ...PHONE_STORY,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story: `Renders the same bar (Close, a disabled Run and why it cannot be used) on a phone. Close and Run do not fit beside the sentence at their own width, so the bar stacks them, each as wide as the bar.`,
+      },
+    },
+  },
+  render: () => renderReasonBar('phone', '100%'),
+  play: async () => {
+    await waitFor(() => expect(reasonBarOf('phone').bar.dataset.stacked).toBe('true'));
+    const { bar, buttons } = reasonBarOf('phone');
+    const barBox = bar.getBoundingClientRect();
+    for (const button of buttons) {
+      await expect(button.getBoundingClientRect().width).toBeGreaterThan(barBox.width * 0.8);
+    }
+  },
+};
+
+/** A step's bar: Back on the left and Skip on the right, both folding, beside a primary Done that keeps its words. */
+const STEP_BOTTOM_ACTIONS: IReqorePanelProps['bottomActions'] = [
+  { label: 'Back', icon: 'ArrowLeftLine', compact: true, position: 'left', flat: true, transparent: true },
+  { label: 'Skip', compact: true, position: 'right', flat: true, transparent: true },
+  { label: 'Done', icon: 'CheckLine', compact: true, position: 'right', intent: 'info', responsive: false },
+];
+
+/**
+ * The kept group is squeezed while the bar first measures: a group whose style changes as the actions change
+ * (one step's actions replaced by the next's) transitions its `flex-shrink` from 1, and for that moment its
+ * button is cut. Drawn here as a short animation, so it happens on every run.
+ */
+const SQUEEZED_WHILE_IT_SETTLES = `
+  @keyframes story-kept-group-settles { from { max-width: 20px; } to { max-width: 100%; } }
+  .kept-beside-folding .reqore-panel-bottom-actions > .reqore-control-group-wrapped {
+    animation: story-kept-group-settles 300ms linear;
+  }
+`;
+
+export const KeptActionBesideFoldingActionsStaysOnTheLine: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: `Renders a 718px panel whose bottom bar holds Back on the left, Skip on the right (both may fold) and a Done that keeps its words, its group squeezed for a moment as the bar first lays out. The bar decides once that has settled: the three fit, so they share one line at their full width and the bar does not stack.`,
+      },
+    },
+  },
+  render: () => (
+    <div className='kept-beside-folding' style={{ width: 718 }}>
+      <style>{SQUEEZED_WHILE_IT_SETTLES}</style>
+      <ReqorePanel label='Which apps do you use?' bottomActions={STEP_BOTTOM_ACTIONS}>
+        <ReqoreP>Pick the apps you work with.</ReqoreP>
+      </ReqorePanel>
+    </div>
+  ),
+  play: async () => {
+    const bar = await waitFor(() =>
+      requiredElement<HTMLElement>('.kept-beside-folding .reqore-panel-bottom-actions', 'the bottom bar')
+    );
+    await waitFor(() => expect(bar.querySelectorAll('.reqore-button')).toHaveLength(3));
+    // past the squeeze, and a frame for the check that follows it
+    await waitFor(() => expect(bar.getAnimations({ subtree: true })).toHaveLength(0));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await expect(bar.dataset.stacked).toBeUndefined();
+    const buttons = [...bar.querySelectorAll<HTMLElement>('.reqore-button')];
+    await expect(new Set(buttons.map((button) => Math.round(button.getBoundingClientRect().top))).size).toBe(1);
+    for (const box of bar.querySelectorAll<HTMLElement>('.reqore-button, .reqore-button-text-content')) {
+      await expect(box.scrollWidth, box.textContent ?? '').toBeLessThanOrEqual(box.clientWidth + 1);
+    }
   },
 };

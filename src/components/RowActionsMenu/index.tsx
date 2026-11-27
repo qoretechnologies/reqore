@@ -3,7 +3,7 @@ import React, { memo, useCallback, useEffect, useId, useMemo, useRef, useState }
 import { TOUCH_TARGET_PX, TSizes } from '../../constants/sizes';
 import styled from '../../helpers/styled';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
-import { TReqoreTooltipProp } from '../../types/global';
+import { IWithReqoreDestructive, TReqoreTooltipProp } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
@@ -22,22 +22,32 @@ export const DEFAULT_ACTIONS_MENU_LABEL = 'Actions';
  *   is a phone's width or narrower (on a phone, or as narrow a container on any screen). In a wider container
  *   (a narrow `ReqoreSeverityRow`, between 480 and 640px) side by side, each as wide as its label, onto another
  *   line only where they do not fit, as with `'row'`: actions that answer one callout stay together (the law
- *   of proximity; Foxhoundn and David, qorus#646). For a callout whose actions are what it is there for
+ *   of proximity). For a callout whose actions are what it is there for
  *   ("Try again"), which a menu would hide.
  * - `'menu'`: one menu button, at the end of the label's line, opening a menu that names each action.
  *   The content keeps its width, and a list of rows does not grow by a line per action. Opted into, never a
- *   row's default: it hides what a row offers behind a button (qorus#646, Foxhoundn). A row of this mode
+ *   row's default: it hides what a row offers behind a button. A row of this mode
  *   with one action keeps it as a button there, at the end of the label's line, while its container is
  *   wider than a phone.
  *
  * In every mode, a lone action under the label is the row's width where the container is a phone's width or
- * narrower: the easiest target there is (Fitts's law; David and Foxhoundn, qorus#646).
+ * narrower: the easiest target there is (Fitts's law).
  */
 export type TReqoreNarrowRowActions = 'row' | 'stack' | 'menu';
 
+/**
+ * Whether a row's action destroys something, said apart from its look: `IWithReqoreDestructive`, the
+ * marker every action surface reads. Where a row's actions take the row's width on a phone, a
+ * destructive one does not: a lone one stays at the end of the label's line, its icon alone where it
+ * has a tooltip, and one in a stack keeps its own width. Folded into a row's "⋯", it is drawn in
+ * `danger`.
+ */
+export type IReqoreRowActionDestructive = IWithReqoreDestructive;
+
 /** An action a row offers: a button's props, a label, and - for a menu of its own - sub-actions. */
 export interface IReqoreRowMenuAction
-  extends Omit<IReqoreButtonProps, 'children' | 'label' | 'onClick'> {
+  extends Omit<IReqoreButtonProps, 'children' | 'label' | 'onClick'>,
+    IReqoreRowActionDestructive {
   label?: React.ReactNode;
   onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   /** An action that is itself a menu (`ReqoreEntityRow`): its entries are a submenu here. */
@@ -96,7 +106,7 @@ export interface IReqoreRowActionShortLabel {
 }
 
 /**
- * An action as reqore draws it compactly (a row-end action on a narrow screen, qorus#646):
+ * An action as reqore draws it compactly (a row-end action on a narrow screen):
  * - its `shortLabel`, its label its tooltip and its accessible name;
  * - with none, an action with an icon and a tooltip is its icon alone, named by its label: one its author gave a
  *   tooltip reads without its words;
@@ -126,6 +136,45 @@ export const getCompactRowAction = (action: {
     return { label: undefined, tooltip, 'aria-label': ownName ?? named };
   }
   return { label: hasRowActionLabel(label) ? label : undefined, tooltip, 'aria-label': ownName };
+};
+
+/**
+ * Whether a row's action destroys something: it says so (`destructive`), or - on an entity row - its
+ * intent is `danger`.
+ *
+ * Where a row's actions take the row's width - on a phone, under the label - a destructive one does
+ * not: a full-width Delete is a bigger target than the thing it destroys deserves (a primary
+ * action that wraps takes the line, a secondary or destructive one stays as wide as it is).
+ * A lone one stays at the end of the label's line, so a row is about its subject, not a third of it
+ * a red bar under a thumb (in a chat list, say).
+ *
+ * The intent counts only on an entity row (`byIntent`): on a severity row an action takes the
+ * severity's intent as the response to it (Investigate a critical incident), and there `danger` says
+ * nothing about destroying.
+ */
+export const isDestructiveRowAction = (
+  action: { intent?: unknown; destructive?: boolean } | undefined,
+  byIntent = true
+): boolean => action?.destructive === true || (byIntent && action?.intent === 'danger');
+
+/**
+ * What an action on a line of its own is drawn with: written out, and the row's width where the
+ * row's actions span it (`actionsSpanRow`) - except a destructive one, which keeps its own width
+ * even in a stack that stretches the others (`isDestructiveRowAction`).
+ */
+export const ownLineRowActionProps = (
+  action: { intent?: unknown; destructive?: boolean; style?: React.CSSProperties },
+  actionsSpanRow: boolean,
+  byIntent = true
+): { fluid: boolean; wrap: true; style?: React.CSSProperties } => {
+  const spans = actionsSpanRow && !isDestructiveRowAction(action, byIntent);
+
+  return {
+    fluid: spans,
+    wrap: true,
+    // a stack that spans the row stretches what it holds; this one is held to its own width
+    ...(actionsSpanRow && !spans ? { style: { ...action.style, alignSelf: 'flex-start' } } : {}),
+  };
 };
 
 /** A row's label in words, where it is text: what its actions menu is named for (`rowLabel`). */
@@ -159,7 +208,8 @@ const toMenuItem = (action: IReqoreRowMenuAction, touch: boolean): IReqoreDropdo
     label: getRowActionLabel(action) ?? (custom ? getRowActionLabel(custom) : undefined),
     ...(ownName ? { 'aria-label': ownName } : {}),
     icon: action.icon ?? custom?.icon,
-    intent: action.intent ?? custom?.intent,
+    // a destructive one says so in the menu, where its own look (a red icon on a quiet button) is not drawn
+    intent: action.intent ?? custom?.intent ?? (action.destructive ? 'danger' : undefined),
     // a finger's height, where the pointer is one
     ...(touch ? { size: 'big' as const } : {}),
     disabled: action.disabled ?? custom?.disabled,

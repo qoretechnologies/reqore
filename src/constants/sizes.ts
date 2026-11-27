@@ -361,6 +361,36 @@ export const resolveRadius = (
   radiusScale: Record<TSizes, number> = RADIUS_FROM_RADIUS_SIZE
 ): number => (radiusSize ? radiusScale[radiusSize] : sizeScale[size]);
 
+/**
+ * A rounded panel-like container's corner radius: its `radiusSize` when it names one, else the
+ * theme's `panel.radius`, else the radius of its `size` (`normal` for a panel). Panels,
+ * callouts and accordions read it here — and every place a panel draws an inner curve (a sticky
+ * header's top, an accent strip, a media frame) — so a card is one curve wherever it is drawn.
+ */
+export const resolvePanelRadius = (
+  theme: { panel?: { radius?: number } } | undefined,
+  radiusSize?: TSizes,
+  size: TSizes = 'normal'
+): number =>
+  radiusSize ? resolveRadius(size, radiusSize) : (theme?.panel?.radius ?? RADIUS_FROM_SIZE[size]);
+
+/**
+ * The side padding that keeps a rounded container's label clear of its corner: the container's
+ * own `padding`, or as much as it takes for the label to start `radius` px in from the outer edge
+ * when that is more. `border` is the width of the edge the padding sits inside.
+ *
+ * Padding steps with the size (8px at `normal`, 6px at `small`) while a corner is the theme's
+ * (`panel.radius`) or `radiusSize`'s, so a 14px corner on a small panel put its title 7px in, under
+ * the curve. Every container that draws a label against its top-left corner — a panel's title bar,
+ * padded content and bottom actions, an accordion's headers, a callout, a statistic, a feature
+ * card, a testimonial — pads it through here, and what sits under the label takes the same
+ * inset, so the container keeps one left edge. Pass `radius` 0 where the container draws no
+ * corner (not rounded, or neither a surface nor an edge), so a bare container keeps its label
+ * flush.
+ */
+export const clearCorner = (padding: number, radius: number, border = 0): number =>
+  Math.max(padding, radius - border);
+
 export const TAG_RADIUS_FROM_SIZE = {
   micro: 1,
   tiny: 2,

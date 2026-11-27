@@ -24,6 +24,7 @@ import { buttonSays } from '../utils/buttonSays';
 import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import { withViewport } from '../utils/viewport';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const meta = {
   title: 'Display/Entity Row',
   component: ReqoreEntityRow,
@@ -520,7 +521,7 @@ export const WithOverflowMenu: Story = {
   },
 };
 
-/* A narrow row's actions (qorus#646), as ReqoreSeverityRow's and a narrow table's. The row measures its
+/* A narrow row's actions, as ReqoreSeverityRow's and a narrow table's. The row measures its
    OWN container - not the viewport, because the case this exists for is a narrow drawer / sidebar / split
    panel on a wide screen - and below 480px of it its actions move under the label, as a row of buttons.
    A row can opt into `narrowActions='menu'` instead: two or more actions are then one menu button at the
@@ -663,7 +664,7 @@ export const ActionDoesNotFireTheRow: Story = {
     docs: {
       description: {
         story:
-          'The row and its actions are both clickable, and a click on an action must not read as a click on the row. Both counters below are wired: pressing **Run** increments only the action, pressing the row itself increments only the row. Without the guard both fire, and an action that toggles what the row toggles cancels itself out — which is what made a disclosure caret look dead in the Qorus IDE. Applied even to an action with no handler of its own.',
+          'The row and its actions are both clickable, and a click on an action must not read as a click on the row. Both counters below are wired: pressing **Run** increments only the action, pressing the row itself increments only the row. Without the guard both fire, and an action that toggles what the row toggles cancels itself out — which is what made a disclosure caret look dead in an app. Applied even to an action with no handler of its own.',
       },
     },
   },
@@ -994,7 +995,7 @@ export const LoneActionSpansTheRowOnAPhone: Story = {
 
 /* Rows of one action each: with a short label, with an icon and a tooltip but no short label, and with neither.
    An entity row is narrow only where its container is a phone's width or narrower, where its one action is a line
-   of its own under the label, the row's width, saying its full label: it draws a short label nowhere (qorus#646). */
+   of its own under the label, the row's width, saying its full label: it draws a short label nowhere. */
 const ONE_ACTION_ROWS: Array<Pick<IReqoreEntityRowProps, 'label' | 'actions'>> = [
   {
     label: 'orders-db · PostgreSQL',
@@ -1163,14 +1164,16 @@ const expectEntityActionsStacked = async (canvasElement: HTMLElement) => {
     boxes.slice(1).forEach((box, index) => {
       expect(box.top).toBeGreaterThanOrEqual(boxes[index].bottom - 0.5);
     });
-    // each the row's width at a phone's width, a finger's target; as wide as its label in a wider container
-    for (const box of boxes) {
-      if (atPhoneWidth) {
+    /* each the row's width at a phone's width, a finger's target; as wide as its label in a wider container. The
+       last, Remove, is destructive: it is as wide as its label even at a phone's width. */
+    boxes.forEach((box, index) => {
+      const destructive = index === boxes.length - 1;
+      if (atPhoneWidth && !destructive) {
         expect(Math.abs(box.width - column.width)).toBeLessThan(1);
       } else {
         expect(box.width).toBeLessThan(column.width - 1);
       }
-    }
+    });
   });
   // the icon-only Remove reads its tooltip as its label
   expect(row.querySelector('.reqore-entity-row-actions')?.textContent).toContain('Remove');
@@ -1220,7 +1223,7 @@ export const NarrowContainerActionsStack: Story = {
     docs: {
       description: {
         story:
-          "Renders a row with three actions kept in sight (`narrowActions='stack'`) in a 320px container on a wide screen: they stack under the label, one to a line, each the row's width - a 320px container is a phone's width or narrower, where a control spans its row on any screen - the labels whole and the Remove icon labelled with its tooltip; none reaches past the row.",
+          "Renders a row with three actions kept in sight (`narrowActions='stack'`) in a 320px container on a wide screen: they stack under the label, one to a line, each the row's width - a 320px container is a phone's width or narrower, where a control spans its row on any screen - but Remove, which destroys, stays as wide as its label; the labels whole and the Remove icon labelled with its tooltip; none reaches past the row.",
       },
     },
   },
@@ -1317,5 +1320,166 @@ export const NarrowContainerActionsStackOnTouch: Story = {
       await waitFor(() => expect(onOpenSettings).toHaveBeenCalledTimes(1));
       expect(onEntityRowClick).not.toHaveBeenCalled();
     });
+  },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders entity rows on the default and on the themed surface: with `theme.panel` set their edge is the panel hairline.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreEntityRow
+        label='Process Incoming Order'
+        description='Routes incoming orders into the warehouse pipeline'
+        metadata='Last run: success · just now'
+        icon='PlayCircleLine'
+        actions={[{ label: 'Run', icon: 'PlayLine' }]}
+      />
+    </ThemedSurfaceComparison>
+  ),
+};
+
+const onDeleteChat = fn();
+
+export const ADestructiveActionKeepsItsSizeOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders three chat rows in a 320px card on a phone (390 px): one whose only action is Delete chat (a bin with that tooltip, intent danger), one whose Delete chat is drawn as a calm theme draws it (a red icon on a quiet button, marked `destructive`, no intent), and one whose only action is Open. Each Delete stays at the end of its row's label line, its bin alone at a finger's size, named Delete chat - the row is about the conversation. The Open still goes under the label and spans the row, the easiest target for a finger. Spanning, the bin had been written out as a red Delete chat bar under every row, a third of the row a destructive target under a thumb (a destructive button stays as wide as it is).",
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 320, maxWidth: '100%' }}>
+      <ReqoreControlGroup vertical fluid>
+        <ReqoreEntityRow
+          className='chat-row-delete'
+          label='Payment holds for over-limit payers'
+          description='Yesterday · 12 messages'
+          fluid
+          onClick={onEntityRowClick}
+          actions={[
+            { icon: 'DeleteBinLine', tooltip: 'Delete chat', intent: 'danger', onClick: onDeleteChat },
+          ]}
+        />
+        <ReqoreEntityRow
+          className='chat-row-calm-delete'
+          label='Release timing for the EU payers'
+          description='2 days ago · 7 messages'
+          fluid
+          onClick={onEntityRowClick}
+          actions={[
+            // as a calm theme draws it: a red icon on a quiet button, destructive by its marker, not its intent
+            {
+              icon: 'DeleteBinLine',
+              tooltip: 'Delete chat',
+              flat: true,
+              transparent: true,
+              iconColor: 'danger',
+              destructive: true,
+              onClick: onDeleteChat,
+            },
+          ]}
+        />
+        <ReqoreEntityRow
+          className='chat-row-open'
+          label='Inventory sync retries'
+          description='2 days ago · 4 messages'
+          fluid
+          actions={[{ label: 'Open', icon: 'ArrowRightLine' }]}
+        />
+      </ReqoreControlGroup>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    onDeleteChat.mockClear();
+    onEntityRowClick.mockClear();
+    await withTouchScreen(async (touch) => {
+      const deleteRow = await waitFor(() => {
+        const row = canvasElement.querySelector<HTMLElement>('.chat-row-delete[data-narrow="true"]');
+        expect(row).toBeTruthy();
+        return row!;
+      });
+      // at the end of the label's line, the bin alone, named by what it does
+      expect(deleteRow.getAttribute('data-actions')).toBe('end');
+      const bin = deleteRow.querySelector<HTMLElement>('.reqore-entity-row-actions .reqore-button')!;
+      expect(bin.getAttribute('aria-label')).toBe('Delete chat');
+      expect(bin.textContent?.trim()).toBe('');
+      const rowWidth = deleteRow.getBoundingClientRect().width;
+      expect(bin.getBoundingClientRect().width).toBeLessThan(rowWidth / 3);
+
+      // a calm row's delete, a red icon with no danger intent, is destructive by its marker and stays put too
+      const calmRow = canvasElement.querySelector<HTMLElement>('.chat-row-calm-delete')!;
+      expect(calmRow.getAttribute('data-actions')).toBe('end');
+      const calmBin = calmRow.querySelector<HTMLElement>('.reqore-entity-row-actions .reqore-button')!;
+      expect(calmBin.getAttribute('aria-label')).toBe('Delete chat');
+      expect(calmBin.hasAttribute('destructive')).toBe(false);
+      expect(calmBin.getBoundingClientRect().width).toBeLessThan(calmRow.getBoundingClientRect().width / 3);
+
+      // the other row's lone action still spans the row
+      const openRow = canvasElement.querySelector<HTMLElement>('.chat-row-open')!;
+      expect(openRow.getAttribute('data-actions')).toBe('row');
+      await expectLoneActionSpansTheRow(openRow, 'entity');
+
+      await touch.tap(bin);
+      await waitFor(() => expect(onDeleteChat).toHaveBeenCalledTimes(1));
+      expect(onEntityRowClick).not.toHaveBeenCalled();
+    });
+  },
+};
+
+/** A drawn portrait, in the story itself so it loads without a network. */
+const MEMBER_PORTRAIT = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <rect width="64" height="64" fill="#d9a46b"/>
+    <circle cx="32" cy="26" r="12" fill="#5b3a29"/>
+    <ellipse cx="32" cy="58" rx="22" ry="16" fill="#2f5d7c"/>
+  </svg>`
+)}`;
+
+export const AMembersListWithAvatars: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A list of a team\'s members, each row led by an avatar (`avatar`) in place of the icon tile: a member with a picture shows it in a circle, one without shows the person icon in a filled circle, and one asked for initials shows them. The avatar is named by the row\'s label and takes the row\'s size. A picture used to sit in a rounded icon tile, and a member without one was a bare icon.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical style={{ width: 480 }}>
+      <ReqoreEntityRow
+        label='Ada Lovelace'
+        description='Owner'
+        avatar={{ image: MEMBER_PORTRAIT }}
+        actions={[{ icon: 'MoreLine', tooltip: 'Member actions' }]}
+      />
+      <ReqoreEntityRow label='Grace Hopper' description='Reviewer' avatar={{}} />
+      <ReqoreEntityRow label='Alan Turing' description='Invited' avatar={{ initials: true }} />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const rows = Array.from(canvasElement.querySelectorAll<HTMLElement>('.reqore-entity-row'));
+    await expect(rows.length).toBe(3);
+    for (const row of rows) {
+      const avatar = row.querySelector<HTMLElement>('.reqore-entity-row-avatar');
+      await expect(avatar, 'each row is led by an avatar').toBeTruthy();
+      await expect(row.querySelector('.reqore-entity-row-icon-tile'), 'not an icon tile').toBeNull();
+      await expect(Math.round(avatar!.getBoundingClientRect().width), "at the row's size").toBe(32);
+    }
+    await expect(rows[0].querySelector('.reqore-avatar-image')).toBeTruthy();
+    await expect(rows[1].querySelector('.reqore-avatar-icon')).toBeTruthy();
+    await expect(rows[2].querySelector('.reqore-avatar-initials')?.textContent).toBe('AT');
+    await expect(rows[2].querySelector('.reqore-entity-row-avatar')).toHaveAttribute('aria-label', 'Alan Turing');
   },
 };

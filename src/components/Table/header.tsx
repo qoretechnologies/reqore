@@ -1,3 +1,4 @@
+import type { IReqoreEffect, TReqoreHexColor } from '../Effect';
 import { omit } from 'lodash';
 import { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
 import { css } from 'styled-components';
@@ -19,6 +20,7 @@ import {
   getOnlyShownColumns,
   getTotalColumnsWidth,
   partitionPinnedColumns,
+  tableEdgeFade,
 } from './helpers';
 
 export type TColumnsUpdater = <T extends keyof IReqoreTableColumn>(
@@ -36,7 +38,11 @@ export interface IReqoreCustomHeaderCellProps
       | 'onFilterChange'
       | 'pinOffset'
       | 'pinEdge'
+      | 'pinnedSurface'
       | 'parentMinimal'
+      | 'parentHeaderEffect'
+      | 'dividers'
+      | 'sortIndicator'
       | 'sortAscendingLabel'
       | 'sortDescendingLabel'
       | 'pinLeftLabel'
@@ -69,6 +75,14 @@ export interface IReqoreTableSectionProps extends IWithReqoreSize {
    * `header.transparent` still wins.
    */
   minimal?: boolean;
+  /** See `IReqoreTableProps.headerEffect`. */
+  headerEffect?: IReqoreEffect;
+  /** See `IReqoreTableProps.pinnedSurface`: a pinned header cell paints it, as a pinned body cell does. */
+  pinnedSurface?: TReqoreHexColor;
+  /** See `IReqoreTableProps.headerDividers`. */
+  dividers?: boolean;
+  /** See `IReqoreTableProps.sortIndicator`. */
+  sortIndicator?: 'wash' | 'arrow';
   /** See `IReqoreTableProps.sortAscendingLabel`. */
   sortAscendingLabel?: string;
   /** See `IReqoreTableProps.sortDescendingLabel`. */
@@ -104,6 +118,8 @@ const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
     /* A sideways swipe is the table's to handle (it scrolls the body, which this
        header follows); the page still pans up and down under a finger. */
     touch-action: pan-y;
+    /* Fades with the body it follows, on the same edges (the body sets the attribute on both). */
+    ${tableEdgeFade}
 
     flex-shrink: 0;
     flex-flow: column;
@@ -190,6 +206,10 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
       bodyRef,
       tableWidth,
       minimal,
+      headerEffect,
+      pinnedSurface,
+      dividers,
+      sortIndicator,
       sortAscendingLabel,
       sortDescendingLabel,
       pinLeftLabel,
@@ -203,8 +223,14 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
   ) => {
     const { targetRef, setRef } = useCombinedRefs(ref);
 
-    const pinOffsets = useMemo(() => calculatePinOffsets(columns), [columns]);
-    const totalColumnsWidth = useMemo(() => getTotalColumnsWidth(columns), [columns]);
+    const pinOffsets = useMemo(
+      () => calculatePinOffsets(columns, tableWidth),
+      [columns, tableWidth]
+    );
+    const totalColumnsWidth = useMemo(
+      () => getTotalColumnsWidth(columns, tableWidth),
+      [columns, tableWidth]
+    );
 
     useEffect(() => {
       const el = targetRef.current;
@@ -269,7 +295,11 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
         onFilterChange,
         pinOffset: pinInfo?.offset,
         pinEdge: pinInfo?.isEdge,
+        pinnedSurface,
         parentMinimal: minimal,
+        parentHeaderEffect: headerEffect,
+        dividers,
+        sortIndicator,
         sortAscendingLabel,
         sortDescendingLabel,
         pinLeftLabel,
@@ -315,6 +345,9 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
             hasColumns: true,
             grow: 1,
             parentMinimal: minimal,
+        parentHeaderEffect: headerEffect,
+        dividers,
+        sortIndicator,
           })}
           <StyledColumnGroupHeaders className='reqore-table-headers'>
             {renderUnpinnedColumns(subColumns)}

@@ -17,6 +17,7 @@ import { TReqorePaginationType } from '../../constants/paging';
 import { SIZES, SIZE_TO_PX, TEXT_FROM_SIZE, TOUCH_TARGET_PX } from '../../constants/sizes';
 import { sleep } from '../../helpers/utils';
 import {
+  ReqoreButton,
   ReqoreControlGroup,
   ReqorePanel,
   ReqoreH3,
@@ -54,6 +55,7 @@ import { requiredElement } from '../utils/required';
 import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import { withViewport } from '../utils/viewport';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreTableProps>();
 
 /* What each row's three actions do: the stories that use them check the one picked ran, and no other. */
@@ -1011,7 +1013,7 @@ export const EmptyData: Story = {
     docs: {
       description: {
         story:
-          'Renders Table with no data so the empty state is visible.',
+          'A table with no rows, nothing searched or filtered: it says "Nothing here yet." and nothing about a search, which nobody made. Its action is still shown.',
       },
     },
   },
@@ -1026,6 +1028,14 @@ export const EmptyData: Story = {
     fill: true,
     actions: [{ icon: 'AddLine', intent: 'info', label: 'Should be shown!', minimal: true }],
   },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.reqore-table-empty')?.textContent?.trim()).toBe(
+        'Nothing here yet.'
+      )
+    );
+    expect(canvasElement.querySelector('.reqore-table-empty-searched')).toBeNull();
+  },
 };
 
 export const NoDataMessage: Story = {
@@ -1033,13 +1043,21 @@ export const NoDataMessage: Story = {
     docs: {
       description: {
         story:
-          'Renders Table with a custom no-data message.',
+          'A table searched for "asjkghakshgjkashg", which no row holds: a search hid every row, so it says "Nothing to show. Try another search, or fewer filters."',
       },
     },
   },
   args: {
     filterable: true,
     filter: 'asjkghakshgjkashg',
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.reqore-table-empty')?.textContent?.trim()).toBe(
+        'Nothing to show. Try another search, or fewer filters.'
+      )
+    );
+    expect(canvasElement.querySelector('.reqore-table-empty-searched')).toBeTruthy();
   },
 };
 
@@ -1909,6 +1927,67 @@ export const ExpandableRows: Story = {
   },
 };
 
+/** A table whose rows change height while it is mounted, as rows a page restyles at a wider width do. */
+const RowsThatChangeHeight = () => {
+  const [rowHeight, setRowHeight] = useState(56);
+
+  return (
+    <ReqoreControlGroup vertical fluid gapSize='big'>
+      <ReqoreButton fixed className='shorter-rows' onClick={() => setRowHeight(40)}>
+        Shorter rows
+      </ReqoreButton>
+      <ReqoreTable
+        label={`Rows ${rowHeight}px tall`}
+        rowHeight={rowHeight}
+        columns={[
+          { dataId: 'firstName', header: { label: 'First name' }, width: 200 },
+          { dataId: 'occupation', header: { label: 'Occupation' }, grow: 1 },
+        ]}
+        data={slice(tableData.data, 0, 18)}
+        renderExpandedRow={(row: any) => <ReqoreP>{row.occupation}</ReqoreP>}
+      />
+    </ReqoreControlGroup>
+  );
+};
+
+export const ExpandableRowsChangeHeightWhileMounted: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A table whose rows can open, sized to its 18 rows, mounted with rows 56px tall, then given 40px rows (Shorter rows), as a page that restyles its rows at a wider width does. The rows close up to 40px apart and the last row sits inside the body. The list used to keep the offsets it had worked out for 56px rows, so 40px rows sat 56px apart and the tail fell out of the body.',
+      },
+    },
+  },
+  render: () => <RowsThatChangeHeight />,
+  play: async ({ canvasElement }) => {
+    const rowTops = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('.reqore-table-row'))
+        .map((row) => row.getBoundingClientRect().top)
+        .sort((a, b) => a - b);
+    const gaps = () => {
+      const tops = rowTops();
+      return tops.slice(1, 6).map((top, index) => Math.round(top - tops[index]));
+    };
+
+    await waitFor(() => expect(rowTops().length).toBeGreaterThan(5));
+    await expect(gaps(), 'rows 56px apart at first').toEqual([56, 56, 56, 56, 56]);
+
+    await fireEvent.click(canvasElement.querySelector('.shorter-rows')!);
+
+    await waitFor(() =>
+      expect(canvasElement.textContent).toContain('Rows 40px tall')
+    );
+    await expect(gaps(), 'rows 40px apart once they are 40px tall').toEqual([40, 40, 40, 40, 40]);
+    // The body is as tall as its 18 rows, and the last of them is inside it, not past its end.
+    const body = canvasElement.querySelector<HTMLElement>('.reqore-table-body')!.getBoundingClientRect();
+    await waitFor(() => expect(rowTops().length).toBe(18));
+    await expect(Math.max(...rowTops()) + 40, 'the last row is inside the body').toBeLessThanOrEqual(
+      Math.ceil(body.bottom) + 1
+    );
+  },
+};
+
 /** One at a time — for detail heavy enough that two open at once is a scroll. */
 export const ExpandableRowsSingle: Story = {
   parameters: {
@@ -2556,14 +2635,14 @@ export const LongContentWrappedAndVirtualized: Story = {
   play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };
 
-/* A table's toolbar in a narrow box (qorus#646): on a phone, a table in a card is narrower than the screen,
+/* A table's toolbar in a narrow box: on a phone, a table in a card is narrower than the screen,
    and its search field and actions reached past the card - the search field kept its width and the
    toolbar did not wrap. */
 
-/** The width of a card on a 390px phone screen, inside its page's gutters: what the IDE's tables sit in. */
+/** The width of a card on a 390px phone screen, inside its page's gutters: what an app's tables sit in. */
 const NARROW_TABLE_WIDTH = 265;
 
-/* A narrow table's row actions (qorus#646): three icon buttons took a third of a phone's table from the
+/* A narrow table's row actions: three icon buttons took a third of a phone's table from the
    columns that say which row is which. Narrow, they are one menu button per row that names them. */
 
 /** The actions cells of the rows on screen. */
@@ -2636,12 +2715,12 @@ export const FilterableInANarrowBox: Story = {
   },
 };
 
-/* A narrow table's search (qorus#646): a button with its icon until it is used, so the title keeps the
+/* A narrow table's search: a button with its icon until it is used, so the title keeps the
    toolbar. Opened, the field takes the toolbar's line; empty, Escape or leaving it closes it again. */
 
 const onFiftyRows = fn();
 
-/** The IDE's list card: a title with its count, a page-size control, the search and the more button. */
+/** An app's list card: a title with its count, a page-size control, the search and the more button. */
 const WorkflowsCard = () => (
   <div className='workflows-card' style={{ width: 320, maxWidth: '100%' }}>
     <ReqoreTable
@@ -2817,7 +2896,7 @@ export const TitleWordWiderThanItsSpace: Story = {
     docs: {
       description: {
         story:
-          "Renders a searchable table in a 320px box whose title is one word wider than the space left beside its search button and more button: only then is the word broken, and it stays inside the title's box, as the controls stay inside the panel.",
+          "Renders a searchable table in a 320px box and in a 220px box, titled with one word wider than the space left beside its search button and more button. At 320px the word shrinks until it fits whole (a title keeps its words: it wraps, then shrinks, then is cut). At 220px it is too wide even at the smallest size a title takes, so only then is it broken, and it stays inside the title's box, as the controls stay inside the panel.",
       },
     },
   },
@@ -2827,22 +2906,40 @@ export const TitleWordWiderThanItsSpace: Story = {
     height: 400,
   },
   render: (args) => (
-    <div className='narrow-table-box' style={{ width: 320 }}>
-      <ReqoreTable {...args} />
-    </div>
+    <ReqoreControlGroup vertical gapSize='big'>
+      <div className='narrow-table-box' style={{ width: 320 }}>
+        <ReqoreTable {...args} />
+      </div>
+      <div className='narrower-table-box' style={{ width: 220 }}>
+        <ReqoreTable {...args} />
+      </div>
+    </ReqoreControlGroup>
   ),
   play: async ({ canvasElement }) => {
-    const box = canvasElement.querySelector('.narrow-table-box') as HTMLElement;
-    // narrow, the search is its button until it is used
-    await waitFor(() => expect(box.querySelector('.reqore-table-search-toggle')).toBeTruthy());
-    await expectControlsInside(box, box.querySelector('.reqore-panel-title') as HTMLElement);
-    const label = box.querySelector('.reqore-panel-title-label-box') as HTMLElement;
-    // broken, because it does not fit whole: not cut off at the box's edge
+    for (const selector of ['.narrow-table-box', '.narrower-table-box']) {
+      const box = canvasElement.querySelector(selector) as HTMLElement;
+      // narrow, the search is its button until it is used
+      await waitFor(() => expect(box.querySelector('.reqore-table-search-toggle')).toBeTruthy());
+      await expectControlsInside(box, box.querySelector('.reqore-panel-title') as HTMLElement);
+      const heading = box.querySelector('.reqore-panel-title-label-box .reqore-heading') as HTMLElement;
+      // never cut off at the box's edge
+      expect(heading.scrollWidth).toBeLessThanOrEqual(heading.clientWidth + 1);
+    }
+
+    const label = (selector: string) =>
+      canvasElement.querySelector(`${selector} .reqore-panel-title-label-box`) as HTMLElement;
+    const fontPx = (selector: string) =>
+      parseFloat(getComputedStyle(label(selector).querySelector('.reqore-heading') as HTMLElement).fontSize);
+
+    // 320px: whole, because it shrank to fit
+    await waitFor(() => expect(wordsBrokenAcrossLines(label('.narrow-table-box'))).toEqual([]));
+    // 220px: broken, because it does not fit whole even at the smallest size
     await waitFor(() =>
-      expect(wordsBrokenAcrossLines(label)).toEqual(['Supercalifragilisticexpialidocious'])
+      expect(wordsBrokenAcrossLines(label('.narrower-table-box'))).toEqual([
+        'Supercalifragilisticexpialidocious',
+      ])
     );
-    const heading = label.querySelector('.reqore-heading') as HTMLElement;
-    expect(heading.scrollWidth).toBeLessThanOrEqual(heading.clientWidth + 1);
+    expect(fontPx('.narrower-table-box')).toBeLessThanOrEqual(fontPx('.narrow-table-box'));
   },
 };
 
@@ -2910,7 +3007,7 @@ export const RowActionsMenuOpen: Story = {
 };
 
 /* A wide table draws a cell action's label in its button, as it did before the narrow menu existed
-   (qorus#646 had it as the button's tooltip only, at any width: a labelled action was a blank
+   (a first cut had it as the button's tooltip only, at any width: a labelled action was a blank
    button). */
 
 const LABELLED_ACTIONS_COLUMNS: IReqoreTableColumn[] = [
@@ -2978,7 +3075,7 @@ export const RowActionLabelsWhenWide: Story = {
   },
 };
 
-/* A narrow table's one-action column (qorus#646): where a table is a phone's width or narrower, its actions
+/* A narrow table's one-action column: where a table is a phone's width or narrower, its actions
    column folds. A row with one action keeps it as a button there; one with no icon says its `shortLabel`,
    or its label where it has none, and the column is as wide as those words take in their button - folded
    to the menu button's square, "Test" was cut to "T…". */
@@ -3134,7 +3231,7 @@ export const FoldedColumnSaysTheFullLabelWithoutAShortLabel: Story = {
     expectFoldedActionsSay(canvasElement, 'Test the connection', 'Test the connection'),
 };
 
-/* A wide toolbar beside a long one-line description (qorus#646): the narrow bar's rule - the title
+/* A wide toolbar beside a long one-line description: the narrow bar's rule - the title
    first, the actions from what it leaves - applied at every width took the description's one-line
    width as the title's claim, and squeezed the search to its least instead of wrapping the
    description. */
@@ -3242,6 +3339,78 @@ export const RowActionsMenuFromTheKeyboard: Story = {
   },
 };
 
+/* Three plain columns, so a row holds nothing of its own to tab to. */
+const KEYBOARD_COLUMNS: IReqoreTableColumn[] = [
+  { dataId: 'firstName', header: { label: 'First name' }, grow: 1 },
+  { dataId: 'lastName', header: { label: 'Last name' }, grow: 1 },
+  { dataId: 'address', header: { label: 'Address' }, grow: 2 },
+];
+
+export const RowsOpenFromTheKeyboard: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a table whose rows open on a click (`onRowClick`). Each row is a tab stop: Enter opens the focused row, Tab moves to the next row (past the second, which is disabled and opens on no click) and Space opens that one. The focused row draws the focus ring inside its edge, where the scroll area cannot cut it off, and the toolbar\'s icon buttons say what they are ("Show / hide columns", "More").',
+      },
+    },
+  },
+  args: {
+    columns: KEYBOARD_COLUMNS,
+    data: slice(tableData.data, 0, 4),
+    sort: undefined,
+    height: 300,
+    label: 'Customers',
+    exportable: true,
+    showColumnsOptions: true,
+    onRowClick: fn(),
+  },
+  render: (args) => (
+    <div style={{ width: 720 }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement, args }) => {
+    const rows = await waitFor(() => {
+      const found = Array.from(canvasElement.querySelectorAll<HTMLElement>('.reqore-table-row'));
+
+      expect(found).toHaveLength(4);
+
+      return found;
+    });
+    const opened = () => (args.onRowClick as ReturnType<typeof fn>).mock.calls.map(([row]) => row);
+
+    // The second row is disabled (`_disabled`): it opens on no click, so it is no tab stop.
+    expect(rows.map((row) => row.getAttribute('tabindex'))).toEqual(['0', null, '0', '0']);
+
+    rows[0].focus();
+    await userEvent.keyboard('{Enter}');
+    expect(opened()).toHaveLength(1);
+    expect(rows[0].textContent).toContain(opened()[0].firstName);
+
+    await userEvent.tab();
+    expect(document.activeElement).toBe(rows[2]);
+    await userEvent.keyboard(' ');
+    expect(opened()).toHaveLength(2);
+    expect(rows[2].textContent).toContain(opened()[1].firstName);
+
+    // The ring sits inside the row, a layer over it: the scroll area around the rows would cut one
+    // drawn outside, and pinned cells would cover one drawn under them.
+    expect(rows[2].matches(':focus-visible')).toBe(true);
+    const ring = getComputedStyle(rows[2], '::after');
+    expect(ring.borderTopStyle).toBe('solid');
+    expect(ring.borderTopWidth).toBe('2px');
+    expect(ring.top).toBe('0px');
+    expect(ring.left).toBe('0px');
+
+    expect(canvasElement.querySelector('.reqore-table-columns-options')).toHaveAttribute(
+      'aria-label',
+      'Show / hide columns'
+    );
+    expect(canvasElement.querySelector('.reqore-table-more')).toHaveAttribute('aria-label', 'More');
+  },
+};
+
 export const RowActionsMenuOnATouchScreen: Story = {
   tags: ['touch'],
   globals: PHONE_STORY.globals,
@@ -3304,5 +3473,242 @@ export const RowActionsMenuOnATouchScreen: Story = {
         );
       }
     });
+  },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a table with a pinned first column on the default and on the themed surface: with `theme.panel` set the rows and the pinned cells sit on the panel surface, their lines are the hairline, and the header cells take the themed button surface.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreTable
+        label='Business areas'
+        columns={[
+          { dataId: 'area', header: { label: 'Area' }, pin: 'left', width: 200 },
+          { dataId: 'events', header: { label: 'Events' }, width: 120 },
+          { dataId: 'success', header: { label: 'Success' }, width: 120 },
+        ]}
+        data={[
+          { area: 'Order Management', events: 4820, success: '96.9%' },
+          { area: 'Payment Processing', events: 1812, success: '91.3%' },
+          { area: 'Inventory Management', events: 1190, success: '99.2%' },
+        ]}
+      />
+    </ThemedSurfaceComparison>
+  ),
+};
+
+export const ANumberCellIsUpright: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a coverage table whose Covered and Lines columns are number cells (`cell: { content: "number" }`), right-aligned. Each figure is upright and in tabular figures, so the digits line up down the column; it was drawn in italics.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 480 }}>
+      <ReqoreTable
+        className='number-cells'
+        label='Coverage'
+        columns={[
+          { dataId: 'file', header: { label: 'File' }, width: 200 },
+          {
+            dataId: 'covered',
+            header: { label: 'Covered' },
+            cell: { content: 'number' },
+            width: 100,
+            align: 'right',
+          },
+          {
+            dataId: 'lines',
+            header: { label: 'Lines' },
+            cell: { content: 'number' },
+            width: 100,
+            align: 'right',
+          },
+        ]}
+        data={[
+          { _id: 1, file: 'orders.ts', covered: 128, lines: 140 },
+          { _id: 2, file: 'payments.ts', covered: 96, lines: 111 },
+          { _id: 3, file: 'stock.ts', covered: 1204, lines: 1310 },
+        ]}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const figures = await waitFor(() => {
+      const found = canvasElement.querySelectorAll<HTMLElement>(
+        '.number-cells .reqore-table-number'
+      );
+      expect(found).toHaveLength(6);
+      return [...found];
+    });
+    for (const figure of figures) {
+      const style = getComputedStyle(figure);
+      await expect(style.fontStyle).toBe('normal');
+      await expect(style.fontVariantNumeric).toContain('tabular-nums');
+    }
+  },
+};
+
+
+/** An endpoints list whose number column is declared narrower than its header, as a host declares one. */
+const NARROW_HEADER_COLUMNS: IReqoreTableColumn[] = [
+  { dataId: 'endpoint', header: { label: 'Endpoint' }, grow: 2 },
+  { dataId: 'calls', header: { label: 'Calls' }, width: 70, align: 'right' },
+  { dataId: 'slowest', header: { label: 'Slowest 5%' }, width: 60, align: 'right', sortable: true },
+];
+
+const NARROW_HEADER_DATA = [
+  { _selectId: 'orders', endpoint: '/orders', calls: 12040, slowest: '820 ms' },
+  { _selectId: 'invoices', endpoint: '/invoices', calls: 3112, slowest: '1.4 s' },
+  { _selectId: 'customers', endpoint: '/customers', calls: 845, slowest: '310 ms' },
+];
+
+/** Every header's words are whole: none of the boxes they are drawn in is cut short. */
+const expectHeadersWhole = (canvasElement: HTMLElement) => {
+  const cells = canvasElement.querySelectorAll<HTMLElement>('.reqore-table-header-cell');
+  expect(cells.length).toBeGreaterThan(0);
+  for (const cell of cells) {
+    for (const box of [cell, ...Array.from(cell.querySelectorAll<HTMLElement>('*'))]) {
+      expect(box.scrollWidth, `"${cell.textContent}" is whole`).toBeLessThanOrEqual(box.clientWidth + 1);
+    }
+  }
+};
+
+export const ANarrowColumnKeepsItsHeader: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'An endpoints list whose last column is declared 60px wide under the header Slowest 5%, sorted by it with an arrow. The column is as wide as its header as drawn (its words, the arrow and the padding), so no header is cut; it read "Slowest …" on a 2,560px desktop.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreTable
+      label='Endpoints'
+      columns={NARROW_HEADER_COLUMNS}
+      data={NARROW_HEADER_DATA}
+      sort={{ by: 'slowest', direction: 'desc' }}
+      sortIndicator='arrow'
+      height={300}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByText('/orders');
+    await waitFor(() => expectHeadersWhole(canvasElement));
+  },
+};
+
+export const ANarrowColumnKeepsItsHeaderOnAPhone: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'The same endpoints list on a phone (390 px): the Slowest 5% column is as wide as its header there too, and every header is whole.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreTable
+      label='Endpoints'
+      columns={NARROW_HEADER_COLUMNS}
+      data={NARROW_HEADER_DATA}
+      height={300}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByText('/orders');
+    await waitFor(() => expectHeadersWhole(canvasElement));
+  },
+};
+
+/** A table of six columns, far wider together than a phone, with nothing pinned. */
+const WIDE_COLUMNS: IReqoreTableColumn[] = [
+  { dataId: 'order', header: { label: 'Order' }, width: 120 },
+  { dataId: 'customer', header: { label: 'Customer' }, width: 160 },
+  { dataId: 'status', header: { label: 'Status' }, width: 120 },
+  { dataId: 'amount', header: { label: 'Amount' }, width: 120, align: 'right' },
+  { dataId: 'region', header: { label: 'Region' }, width: 140 },
+  { dataId: 'updated', header: { label: 'Updated' }, width: 140 },
+];
+
+const WIDE_DATA = [
+  { order: 'ORD-1001', customer: 'Northwind', status: 'Shipped', amount: '$1,240', region: 'Europe', updated: '2 min ago' },
+  { order: 'ORD-1002', customer: 'Contoso', status: 'Waiting', amount: '$310', region: 'Americas', updated: '8 min ago' },
+  { order: 'ORD-1003', customer: 'Fabrikam', status: 'Shipped', amount: '$5,020', region: 'Asia', updated: '1 h ago' },
+  { order: 'ORD-1004', customer: 'Adventure Works', status: 'Failed', amount: '$76', region: 'Europe', updated: '3 h ago' },
+];
+
+/** The mask a table's scroll box draws, as the browser computes it. */
+const maskOf = (element: Element) => {
+  const style = getComputedStyle(element);
+  return style.maskImage || style.getPropertyValue('-webkit-mask-image');
+};
+
+const renderWideTable = () => (
+  <ReqoreTable label='Orders' columns={WIDE_COLUMNS} data={WIDE_DATA} height={260} />
+);
+
+export const ScrollsSidewaysWithAFadeOnAPhone: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story: `Renders a table of six columns on a phone (390 px), far wider than the screen, with nothing pinned. A phone draws no scrollbar, so the right edge of the rows and the header fades out to say there are more columns; the left edge, with nothing before it, does not.`,
+      },
+    },
+  },
+  render: renderWideTable,
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByText('ORD-1001');
+    const body = requiredElement<HTMLElement>('.reqore-table-body', 'the body', canvasElement);
+    const header = requiredElement<HTMLElement>('.reqore-table-header-wrapper', 'the header', canvasElement);
+    await waitFor(() => expect(body.getAttribute('data-reqore-table-fade')).toBe('right'));
+    expect(header.getAttribute('data-reqore-table-fade')).toBe('right');
+    for (const box of [body, header]) {
+      expect(maskOf(box), 'the edge with more fades').toContain('linear-gradient');
+    }
+  },
+};
+
+export const ScrollsSidewaysWithAFadeOnAPhoneAtTheEnd: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story: `The same wide table on a phone, scrolled sideways as far as it goes: the left edge fades, since columns are now hidden before it, and the right edge, with nothing past it, is drawn whole. Scrolled to the middle, both edges fade.`,
+      },
+    },
+  },
+  render: renderWideTable,
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByText('ORD-1001');
+    const body = requiredElement<HTMLElement>('.reqore-table-body', 'the body', canvasElement);
+    const header = requiredElement<HTMLElement>('.reqore-table-header-wrapper', 'the header', canvasElement);
+    await waitFor(() => expect(body.getAttribute('data-reqore-table-fade')).toBe('right'));
+
+    body.scrollLeft = 120;
+    await waitFor(() => expect(body.getAttribute('data-reqore-table-fade')).toBe('left right'));
+
+    body.scrollLeft = body.scrollWidth;
+    await waitFor(() => expect(body.getAttribute('data-reqore-table-fade')).toBe('left'));
+    expect(header.getAttribute('data-reqore-table-fade')).toBe('left');
+    // the header follows the body to its end, and fades on the same edge
+    await waitFor(() => expect(header.scrollLeft).toBe(body.scrollLeft));
+    expect(maskOf(body)).toContain('linear-gradient');
   },
 };

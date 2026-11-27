@@ -1,11 +1,16 @@
 import { TReqoreFilterRanking, asSearchText, rankByQuery } from '../../helpers/search';
+import classNames from 'classnames';
 import { map, orderBy, size } from 'lodash';
 import React, { memo, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import { css } from 'styled-components';
 import { ReqoreErrorBoundary, ReqoreP, useReqoreProperty } from '../..';
 import { TReqorePaginationType } from '../../constants/paging';
+import { NO_ITEMS_MESSAGE, SEARCH_EMPTY_MESSAGE } from '../../constants/emptyState';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
+import { useReqoreTheme } from '../../hooks/useTheme';
+import { IReqoreTheme } from '../../constants/theme';
+import { getPanelHairlineColor } from '../../helpers/colors';
 import { ReqorePaginationContainer } from '../../containers/Paging';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
@@ -34,27 +39,67 @@ import {
   TReqoreZoom,
 } from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
+import { useUppercaseLabels } from '../../hooks/useUppercaseLabels';
+import type { IReqoreEffect } from '../Effect';
 
-const CollectionGroupHeader = memo(({ name }: { name: string }) => (
-  <ReqoreP
-    style={{ gridColumn: '1 / -1' }}
-    effect={{
-      opacity: 0.8,
-      uppercase: true,
-      weight: 'bold',
-      textSize: 'small',
-      spaced: 1,
-    }}
-  >
-    {name}
-  </ReqoreP>
-));
+const CollectionGroupHeader = memo(
+  ({ name, effect }: { name: string; effect?: IReqoreEffect }) => {
+    const upper = useUppercaseLabels();
+    return (
+      <ReqoreP
+        style={{ gridColumn: '1 / -1' }}
+        effect={{
+          opacity: 0.8,
+          uppercase: upper,
+          weight: 'bold',
+          textSize: 'small',
+          spaced: upper ? 1 : 0,
+          ...effect,
+        }}
+      >
+        {name}
+      </ReqoreP>
+    );
+  }
+);
 
 export type TReqoreCollectionActions = (IReqorePanelAction & { position?: 'left' | 'right' })[];
 
-export interface IReqoreCollectionGroup extends IReqorePanelProps {}
+export interface IReqoreCollectionGroup extends IReqorePanelProps {
+  /**
+   * The group's place among the groups: they are drawn by it, lowest first, and those at one place by
+   * name, in the collection's sort. A group with none is at 0, so a negative place puts a group before
+   * them and a positive one after them, in either sort ("Other applications" last, under the business
+   * categories). The items in no group ('Ungrouped') lead unless they are given a place.
+   */
+  order?: number;
+}
 
 export type TReqoreCollectionGroups = Record<string, IReqoreCollectionGroup>;
+
+/** The name the items in no group are gathered under. */
+const UNGROUPED = 'Ungrouped';
+
+/**
+ * How two groups are ordered: by their place (`order`; 0 where none is given, the items in no group
+ * first), then by name in the sort's direction. The direction turns the names only, never the places.
+ */
+export const compareCollectionGroups = (
+  a: string,
+  b: string,
+  groups: TReqoreCollectionGroups | undefined,
+  sort: 'asc' | 'desc' | undefined
+): number => {
+  const place = (name: string) =>
+    groups?.[name]?.order ?? (name === UNGROUPED ? -Infinity : 0);
+  const [placeA, placeB] = [place(a), place(b)];
+
+  if (placeA !== placeB) {
+    return placeA < placeB ? -1 : 1;
+  }
+
+  return sort === 'asc' ? a.localeCompare(b) : b.localeCompare(a);
+};
 
 export interface IReqoreCollectionProps
   extends IReqoreComponent,
@@ -85,6 +130,12 @@ export interface IReqoreCollectionProps
    *  Keys match group names found on items. Groups without an entry render
    *  with the default (flat header) styling for back-compat. */
   groups?: TReqoreCollectionGroups;
+  /**
+   * The effect of every group heading, over the default (bold, small, 0.8 opacity, and uppercase
+   * when the theme sets labels in uppercase); a group's own `groups[name].labelEffect` still wins.
+   * One heading style for the whole collection, without listing every group by name.
+   */
+  groupLabelEffect?: IReqoreEffect;
 
   filterable?: boolean;
   /**
@@ -112,7 +163,23 @@ export interface IReqoreCollectionProps
 
   onQueryChange?: (query: string | number) => void;
 
+  /**
+   * What a collection says when a search has hidden all its items. Defaults to
+   * `'Nothing to show. Try another search, or fewer filters.'`.
+   */
   emptyMessage?: string;
+  /**
+   * What a collection with no items says when nobody has searched it: an empty list must not ask
+   * the reader to change a search they never made. Defaults to the caller's `emptyMessage` where
+   * one is given (it was shown in both cases before), otherwise `'Nothing here yet.'`.
+   */
+  noItemsMessage?: string;
+  /**
+   * A filter the page draws itself (its own toolbar, not this collection's search) is narrowing `items`: an empty
+   * collection then says `emptyMessage`, with the search icon, as it does when its own search emptied it, and
+   * not that there is nothing yet (a support queue filtered to empty, say).
+   */
+  filtered?: boolean;
   sortButtonTooltip?: (sort?: 'asc' | 'desc') => string;
   displayButtonTooltip?: (display?: 'list' | 'grid') => string;
   inputPlaceholder?: (items?: IReqoreCollectionItemProps[]) => string;
@@ -126,16 +193,37 @@ export interface IReqoreCollectionProps
   paging?: TReqorePaginationType<IReqoreCollectionItemProps>;
 }
 
+/** A stacked collection's corner when the theme names no `panel.radius`. */
+const STACKED_RADIUS = 10;
+
+/**
+ * The corner of a stacked collection: the square rows are clipped into one rounded block, which
+ * takes the theme's one card corner (`theme.panel.radius`) like every other panel. Its rows clear
+ * it (`enclosingRadius`).
+ */
+const getStackedRadius = (theme?: IReqoreTheme): number => theme?.panel?.radius ?? STACKED_RADIUS;
+
 export const StyledCollectionWrapper = styled(StyledColumns).withConfig({
-  shouldForwardProp: omitStyleProps('fill', 'height'),
-})`
+  shouldForwardProp: omitStyleProps('fill', 'height', '$rows', '$radius'),
+})<{ $rows?: boolean; $radius?: number }>`
   height: ${({ height }) => (height ? `${height}` : 'auto')};
   flex: ${({ fill }) => (fill ? 1 : undefined)};
 
-  ${({ rounded, stacked }: IReqoreCollectionProps) =>
+  ${({ rounded, stacked, $radius }: IReqoreCollectionProps & { $radius?: number }) =>
     (!rounded || stacked) &&
     css`
-      border-radius: ${stacked && rounded ? '10px' : undefined};
+      border-radius: ${stacked && rounded ? `${$radius ?? STACKED_RADIUS}px` : undefined};
+    `}
+
+  /* Stacked items in one column are one block: its rows divided by the panel hairline.
+     Without it, flat items lay one under another with nothing between them, and a list of
+     three-line items read as one long column of text. A grid is not rows, so it is left as is. */
+  ${({ $rows, theme }: { $rows?: boolean; theme: IReqoreTheme }) =>
+    $rows &&
+    css`
+      & > .reqore-collection-item + .reqore-collection-item {
+        border-top: 1px solid ${getPanelHairlineColor(theme)};
+      }
     `}
 
   overflow: auto;
@@ -184,6 +272,7 @@ export const ReqoreCollection = memo(
     sortKeys = {},
     sortByGroupFirst = true,
     groups: groupsConfig,
+    groupLabelEffect,
 
     onQueryChange,
     contentRenderer = (children, _items, searchInput) => (
@@ -194,7 +283,9 @@ export const ReqoreCollection = memo(
       </>
     ),
     searchDelay = 300,
-    emptyMessage = 'No data in this collection, try changing your search query or filters',
+    emptyMessage: emptyMessageProp,
+    noItemsMessage: noItemsMessageProp,
+    filtered,
     sortButtonTooltip = (sort) => (sort === 'desc' ? 'Sort ascending' : 'Sort descending'),
     displayButtonTooltip = (display) => (display === 'grid' ? 'Show as list' : 'Show as grid'),
     inputPlaceholder = (items) => `Search in ${size(items)} items`,
@@ -215,6 +306,9 @@ export const ReqoreCollection = memo(
 
     ...rest
   }: IReqoreCollectionProps) => {
+    const uppercaseLabels = useUppercaseLabels();
+    const theme = useReqoreTheme();
+    const stackedRadius = getStackedRadius(theme);
     const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
     const [sort, setSort] = useState<'asc' | 'desc'>(defaultSort);
     const [sortBy, setSortBy] = useState<string>(defaultSortBy);
@@ -231,6 +325,12 @@ export const ReqoreCollection = memo(
       searchDelay,
       onQueryChange
     );
+    /* The search sentence only while a search is what emptied the list: many lists in an app with no message
+       of their own told a reader to change a search they never typed (a list of variables, say). */
+    const searched = String(query ?? '') !== '' || !!filtered;
+    const emptyText = searched
+      ? (emptyMessageProp ?? SEARCH_EMPTY_MESSAGE)
+      : (noItemsMessageProp ?? emptyMessageProp ?? NO_ITEMS_MESSAGE);
 
     useUpdateEffect(() => {
       setShowAs(showAs);
@@ -435,8 +535,15 @@ export const ReqoreCollection = memo(
           {(_items, _children, { applyPaging }) =>
             !size(applyPaging(filteredItems)) ? (
               children || (
-                <ReqoreMessage flat icon='Search2Line'>
-                  {emptyMessage}
+                <ReqoreMessage
+                  flat
+                  icon={searched ? 'Search2Line' : 'InboxLine'}
+                  className={classNames(
+                    'reqore-collection-empty',
+                    searched && 'reqore-collection-empty-searched'
+                  )}
+                >
+                  {emptyText}
                 </ReqoreMessage>
               )
             ) : (
@@ -445,6 +552,8 @@ export const ReqoreCollection = memo(
                 columnsGap={stacked ? '0px' : columnsGap}
                 rounded={rounded}
                 stacked={stacked}
+                $radius={stackedRadius}
+                $rows={stacked && (columns || (_showAs === 'grid' ? 'auto-fit' : 1)) === 1}
                 fill={fill}
                 ref={setContentRef}
                 height={height}
@@ -464,7 +573,7 @@ export const ReqoreCollection = memo(
 
                     return pagedItems.map((item, index) => {
                       const group = item.groups && !paging ? item.groups[0] : undefined;
-                      const showHeader = group && group !== 'Ungrouped' && group !== lastGroup;
+                      const showHeader = group && group !== UNGROUPED && group !== lastGroup;
 
                       if (group) {
                         lastGroup = group;
@@ -472,7 +581,9 @@ export const ReqoreCollection = memo(
 
                       return (
                         <React.Fragment key={index}>
-                          {showHeader && <CollectionGroupHeader name={group} />}
+                          {showHeader && (
+                            <CollectionGroupHeader name={group} effect={groupLabelEffect} />
+                          )}
                           <ReqoreErrorBoundary {...errorBoundaryOptions}>
                             <ReqoreCollectionItem
                               size={zoomSize}
@@ -480,6 +591,7 @@ export const ReqoreCollection = memo(
                               {...item}
                               icon={item.icon || (item.selected ? selectedIcon : undefined)}
                               rounded={!stacked}
+                              enclosingRadius={stacked && rounded ? stackedRadius : undefined}
                               maxContentHeight={maxItemHeight}
                             />
                           </ReqoreErrorBoundary>
@@ -492,7 +604,7 @@ export const ReqoreCollection = memo(
                   // Groups is a list of strings, so an item can be in multiple groups
                   // Sort the groups based on defaultSort
                   const grouped = pagedItems.reduce((acc, item) => {
-                    const groups = item.groups && !paging ? item.groups : ['Ungrouped'];
+                    const groups = item.groups && !paging ? item.groups : [UNGROUPED];
 
                     groups.forEach((group) => {
                       if (!acc[group]) {
@@ -512,17 +624,9 @@ export const ReqoreCollection = memo(
                     });
                   }
 
-                  // Also sort the group names, but keep 'Ungrouped' at the start, always
+                  // The groups by their place, then by name; 'Ungrouped' first unless it is given one
                   const orderedGrouped = Object.keys(grouped)
-                    .sort((a, b) => {
-                      if (a === 'Ungrouped') return -1;
-                      if (b === 'Ungrouped') return 1;
-                      if (defaultSort === 'asc') {
-                        return a.localeCompare(b);
-                      } else {
-                        return b.localeCompare(a);
-                      }
-                    })
+                    .sort((a, b) => compareCollectionGroups(a, b, groupsConfig, defaultSort))
                     .reduce((acc, group) => {
                       acc[group] = grouped[group];
                       return acc;
@@ -530,7 +634,8 @@ export const ReqoreCollection = memo(
 
                   // Render groups
                   return Object.entries(orderedGrouped).map(([groupName, groupItems]) => {
-                    const groupConfig = groupsConfig?.[groupName];
+                    // its place is the collection's to read, never its panel's
+                    const { order: _order, ...groupConfig } = groupsConfig?.[groupName] ?? {};
                     const itemsNodes = groupItems.map((item, index) => (
                       <ReqoreErrorBoundary {...errorBoundaryOptions} key={index}>
                         <ReqoreCollectionItem
@@ -539,12 +644,13 @@ export const ReqoreCollection = memo(
                           {...item}
                           icon={item.icon || (item.selected ? selectedIcon : undefined)}
                           rounded={!stacked}
+                          enclosingRadius={stacked && rounded ? stackedRadius : undefined}
                           maxContentHeight={maxItemHeight}
                         />
                       </ReqoreErrorBoundary>
                     ));
 
-                    if (groupName === 'Ungrouped') {
+                    if (groupName === UNGROUPED) {
                       return <React.Fragment key={groupName}>{itemsNodes}</React.Fragment>;
                     }
 
@@ -559,10 +665,11 @@ export const ReqoreCollection = memo(
                         {...groupConfig}
                         labelEffect={{
                           opacity: 0.8,
-                          uppercase: true,
+                          uppercase: uppercaseLabels,
                           weight: 'bold',
                           textSize: 'small',
-                          spaced: 1,
+                          spaced: uppercaseLabels ? 1 : 0,
+                          ...groupLabelEffect,
                           ...groupConfig?.labelEffect,
                         }}
                         key={groupName}
@@ -574,6 +681,10 @@ export const ReqoreCollection = memo(
                           columnsGap={stacked ? '0px' : columnsGap}
                           rounded={rounded}
                           stacked={stacked}
+                          $radius={stackedRadius}
+                          $rows={
+                            stacked && (columns || (_showAs === 'grid' ? 'auto-fill' : 1)) === 1
+                          }
                           alignItems={alignItems}
                           minColumnWidth={minColumnWidth || zoomWidth}
                           maxColumnWidth={maxColumnWidth || zoomWidth}
@@ -612,12 +723,14 @@ export const ReqoreCollection = memo(
       filteredItems,
       _showAs,
       columnsGap,
-      emptyMessage,
+      emptyText,
+      searched,
       maxItemHeight,
       rest,
       rounded,
       selectedIcon,
       stacked,
+      stackedRadius,
       zoom,
       groupsConfig,
     ]);
@@ -639,6 +752,7 @@ export const ReqoreCollection = memo(
             columnsGap={stacked ? '0px' : columnsGap}
             rounded={rounded}
             stacked={stacked}
+            $radius={stackedRadius}
             fill={fill}
             height={height}
             alignItems={alignItems}

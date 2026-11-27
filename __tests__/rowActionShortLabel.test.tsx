@@ -13,8 +13,8 @@ import { getCompactRowAction } from '../src/components/RowActionsMenu';
 import { SIZE_TO_PX } from '../src/constants/sizes';
 
 /*
- * A row-end action on a narrow screen uses a short label (qorus#646, David: "the button takes up too much space on
- * a narrow screen; on a narrow screen it should read 'Test'"). Where reqore draws an action compactly - the one
+ * A row-end action on a narrow screen uses a short label (the button took up too much space on
+ * a narrow screen, where it should read 'Test'). Where reqore draws an action compactly - the one
  * action of a narrow `narrowActions='menu'` row whose container is wider than a phone, at the end of its label's
  * line; a narrow table's folded column -
  * an action's `shortLabel` is what it says, its label its tooltip and its accessible name. With none, an action
@@ -147,7 +147,7 @@ describe.each([
 
   /* As narrow as a phone (480px, measured on the row's container), the one action of a 'menu' row is not drawn
      compactly at the end of the label's line: it goes under the label, on a line of its own the row's width, and
-     says its label (qorus#646, David and Foxhoundn: Fitts's law). */
+     says its label (Fitts's law). */
   test("as narrow as a phone, with narrowActions='menu' and one action, goes under the label and says its label", () => {
     renderRow(400, { narrowActions: 'menu', actions: [TEST_CONNECTION] });
 
@@ -261,7 +261,7 @@ describe("a narrow table's folded column", () => {
 });
 
 /*
- * A folded column is as wide as what its cells draw (qorus#646): folded to the menu button's square, a
+ * A folded column is as wide as what its cells draw: folded to the menu button's square, a
  * short label was cut to "T…" - the cell's text read "Test" while the screen showed one letter. The
  * table measures its words with the browser's text metrics, in a button drawn as the cell draws it, and
  * folds the column to them plus what the button draws around them. Here every character is 7px wide to

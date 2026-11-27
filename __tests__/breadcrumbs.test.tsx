@@ -517,7 +517,7 @@ const trailOf = (items: typeof PAGES, props: Record<string, unknown> = {}) => (
 const trailRow = () => document.querySelector<HTMLElement>('.reqore-breadcrumbs-overflow-list')!;
 
 // The bar made wider by its own props - a right element that shrinks or goes, a `maxWidth` lifted
-// (the IDE's page going full screen) - draws the trail wider in the same render; the observer
+// (a host page going full screen) - draws the trail wider in the same render; the observer
 // reports it after that render, and the trail unfolds what fits, as it does when it gets wider any
 // other way.
 test('A trail its own props make wider unfolds the crumbs that fit again', () => {

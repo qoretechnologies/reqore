@@ -1,5 +1,5 @@
 // A field's clear button is named, as a control is: a screen reader says what it does, and a test finds it by its
-// role and name (qorus#646: the Qorus IDE's tests could not find the expression's ×, and nothing said it).
+// role and name (an app's tests could not find an expression field's ×, and nothing said it).
 import { fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import { ReqoreInput, ReqoreTextarea, ReqoreUIProvider } from '../src';

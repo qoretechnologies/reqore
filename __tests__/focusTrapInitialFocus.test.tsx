@@ -4,7 +4,7 @@ import { useFocusTrap } from '../src/hooks/useFocusTrap';
 
 /* A trap focuses its first focusable element on its first frame, or the container when there is none yet. A drawer
    whose content arrives later then kept focus on the container, so which of the two it ended with depended on
-   whether its content had rendered by that frame (qorus#646: a drawer captured with its first tab focused on one
+   whether its content had rendered by that frame (a drawer captured with its first tab focused on one
    run and with the drawer focused on the next). Content that arrives later now takes focus when it appears, unless
    the user has moved focus by then. The frames are run by hand. */
 

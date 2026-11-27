@@ -1,34 +1,42 @@
 @~/Projects/instruction-files/CLAUDE.md
 @~/Projects/instruction-files/stacks/frontend/FRONTEND.md
+@~/Projects/instruction-files/projects/reqore.md
 
 # ReQore — Claude entry point
 
 ## Shared Qore rules (READ FIRST)
 
-The two `@`-imports above load the shared rules from the **instruction-files**
-repo: the org-wide baseline (`CLAUDE.md`) and the frontend ruleset
-(`stacks/frontend/FRONTEND.md`) — git safety, commit conventions, CI
-monitoring, `/audit`, the Reqore-first rule, the Storybook + Qlip visual-change
-flow, story descriptions, and more. Those files point on to
-`stacks/frontend/BRAND_DESIGN.md` for brand / UI-design decisions (read it
-before building any visual surface). **Everything below this section is
-specific to ReQore.**
+The `@`-imports above load the shared rules from the **instruction-files**
+repo: the org-wide baseline (`CLAUDE.md`), the frontend ruleset
+(`stacks/frontend/FRONTEND.md`) and reqore's own rules that need internal names
+(`projects/reqore.md`) — git safety, commit conventions, CI monitoring,
+`/audit`, the Reqore-first rule, the Storybook visual-change flow, story
+descriptions, the brand / UI-design rules (read them before building any visual
+surface), and more. **Everything below this section is specific to ReQore**;
+`projects/reqore.md` uses the same section names.
 
-**If the imports above did not load** — you don't see the shared rules because
-this repo is cloned somewhere other than `~/Projects/instruction-files` — find
-the shared repo before doing any frontend work:
+**If you're contributing from outside Qore, skip this:** the shared rules are a
+private repository of the maintainers', and the rules below and the repo's own
+docs (`src/components/COMPONENTS.md`, `.tasks/NEW_COMPONENT.md`) are all you need.
+
+**If the imports above did not load** (you are a maintainer, and you don't see the
+shared rules because this repo is cloned somewhere other than
+`~/Projects/instruction-files`), find the shared repo before doing any frontend
+work:
 
 1. Check for a gitignored **`.instruction-files-path`** file at this repo's
-   root. If it exists, read the path `P` from it, then read `P/CLAUDE.md` and
-   `P/stacks/frontend/FRONTEND.md` (+ `P/stacks/frontend/BRAND_DESIGN.md` for
-   UI work) and follow them.
+   root. If it exists, read the path `P` from it, then read `P/CLAUDE.md`,
+   `P/stacks/frontend/FRONTEND.md` and `P/projects/reqore.md` (and, for UI
+   work, the design files they point on to) and follow them.
 2. Otherwise locate the `instruction-files` repo on disk (try
    `~/Projects/instruction-files`, then your other project roots). If found at
    `P`, write `P` into `.instruction-files-path` (create it — it's gitignored)
    so future sessions skip the search, then read the files above.
-3. If it isn't cloned anywhere, **STOP and ask the user to clone it**:
+3. If it isn't cloned anywhere and you are a maintainer, **stop and ask the user
+   to clone it**:
    `git clone git@github.com:qoretechnologies/instruction-files.git ~/Projects/instruction-files`
-   Do not proceed with frontend work until the shared rules are loaded.
+   and do not go on with frontend work until the shared rules are loaded. An outside
+   contributor goes on without them (see above).
 
 # ReQore — project-specific rules
 
@@ -156,8 +164,8 @@ an existing version).
 **Once per PR, not per commit.** The rule is about the version at MERGE TIME, not per push
 to the PR branch. `publish.yml`'s release job fires on push to `develop`, so intermediate versions
 on a feature branch never publish. Bump ONCE — at the first commit of the PR or when
-opening it — and then LEAVE `package.json` alone through follow-up commits (Qlip feedback
-fixes, review responses, iteration on the same branch). Re-bump ONLY when both of these
+opening it — and then LEAVE `package.json` alone through follow-up commits (visual-review
+feedback fixes, review responses, iteration on the same branch). Re-bump ONLY when both of these
 are true:
 
 - `develop` moved during your PR (`git fetch origin && git log HEAD..origin/develop --oneline` is non-empty)
@@ -179,14 +187,9 @@ publishes stay in that one file and it keeps its name (renaming it stops publish
 publisher on npmjs.com names the new file). What the package ships is `package.json`'s `files` allowlist (`dist`,
 the `testing` stub, README, LICENSE): nothing else in the checkout reaches npm.
 
-**What happens after the publish.** `publish.yml`'s release job ends by telling the consumers
-(qorus-ide and toolkit-react) about the version with a `library-release` dispatch. Each
-answers with a `deps/reqore` PR that takes it, merges itself when its CI is green and Qlip
-saw no snapshot change, and comments the outcome on the PR behind the release. A consumer
-PR that stays open is a visual change in this release that someone has to review there.
-The dispatch needs the `qorus-github-bot` App secrets (`QORUS_BOT_APP_ID`,
-`QORUS_BOT_APP_PRIVATE_KEY`); when it fails the release is still fine, and the consumer's
-workflow can be run by hand.
+**What happens after the publish.** `publish.yml`'s release job ends by telling the projects that
+consume reqore about the new version with a `library-release` dispatch, and each takes it in
+a PR of its own. When the dispatch fails the release is still fine.
 
 ### Testing Patterns
 - **Setup:** `__tests__/setup.js` disables console debug/info/error.
@@ -200,6 +203,13 @@ workflow can be run by hand.
 - **Location:** `src/stories/` (e.g. `Collection.stories.tsx`).
 - **Pattern:** ArgTypes for props, canvas controls, visual testing via Chromatic.
 - **Command:** `yarn build-storybook` builds the static site.
+- **Parse a story file right after editing it:** `yarn stories:parse <files>` (no files: every story
+  file changed against HEAD) runs Storybook's own indexer (`scripts/parse-stories.mjs`) in about a
+  second and names the line it cannot read. Run it before anything else: a story run, a capture, a
+  commit. A story file Storybook cannot index fails the whole index of a running Storybook the moment
+  it is saved, and every story run fails before its first story (as unescaped quotes in a story
+  description once did). Gate: `__tests__/storyFilesAreIndexable.test.ts`. Mind the quotes in a story's
+  description, and give a subagent that edits story files the same instruction.
 - **Touch stories:** a story whose play calls `withTouchScreen` (`src/stories/utils/touchScreen.ts`)
   carries `tags: ['touch']`. `yarn test:stories` runs those stories in their own Vitest project
   (`storybook-touch`), whose browser context is a phone from the start (Playwright's `isMobile` and
@@ -218,7 +228,7 @@ workflow can be run by hand.
   measurement taken while the content overflows, or a width a scrollbar would narrow (`Form/TextArea
   · Scaled To Its Text …`). A touch story is not tagged, because a phone draws its scrollbars over
   the content. Write the tag in the story file, as `touch` is written: the projects read it from the
-  source. The project has no qlip plugin, so it makes no captures; the frames stay the desktop
+  source. The project takes no screenshots; the frames stay the desktop
   project's. `.storybook/vitest.setup.ts` checks that scrollbars take no room in the other projects,
   and that on Linux they do in this one. On a Mac that shows scrollbars only while scrolling they
   take no room, so this project checks nothing there: run it on Linux (CI, or the Playwright image
@@ -235,41 +245,55 @@ workflow can be run by hand.
   a host passes) to `Intl` or a date library, as `ReqoreDatePicker` does (its stories are tagged in
   their meta). Pass a locale on through `resolveLocale` / `toLanguageTag` (`src/helpers/locale.ts`),
   never raw. A touch story is not run there. Write the tag in the story file, as `touch` is written:
-  the projects read it from the source. The project has no qlip plugin, so it makes no captures.
+  the projects read it from the source. The project takes no screenshots.
   `.storybook/vitest.setup.ts` checks that its browser reports `en-US@posix`, on every platform.
+- **East-of-UTC stories:** the CI runs in UTC, where a local midnight is the same day in UTC, so a date
+  sent through UTC (an instant written as ISO) looks right there and moves to the day before for anyone east
+  of Greenwich. A story tagged `east-of-utc` runs a second time in the `storybook-east-of-utc` project, a
+  desktop whose browser is in `Pacific/Auckland` (`EAST_OF_UTC_ZONE`, `src/stories/utils/eastOfUtc.mts`,
+  given through Playwright's `timezoneId`). Tag a story `east-of-utc` when what it draws or gives back depends
+  on the browser's zone: a date read or written as a day (`ReqoreDatePicker plainDate`). Write the tag in the
+  story file, as `touch` is written. The project takes no screenshots; `.storybook/vitest.setup.ts` checks its
+  browser is in that zone. In a unit test, set Node's zone too (`process.env.TZ`) when you set
+  `@internationalized/date`'s (`setLocalTimeZone`): it reads the offset of the zone it calls local from
+  Node's `Date`, so a zone set for it alone keeps the machine's offset.
+- **A measurement settles:** an effect that measures the layout and sets state from it must
+  reach a state it leaves alone. A choice it makes from a measurement (a title taking its own
+  line, a fold) must not be undone by the very measurement it changes, or the two take turns for
+  ever: under the play's `act` that is a synchronous loop, and the run hangs on the file rather
+  than failing. Gate it with a React `Profiler` whose `onRender` counts the commits and throws
+  past a bound, which ends the loop as a failure (`Layout/Panel · A Title Settles When Its Box
+  Follows Its Text`).
 - **No layout change inside a ResizeObserver callback:** a story fails when the browser reports
   "ResizeObserver loop completed with undelivered notifications" (`.storybook/vitest.setup.ts`). It
   means a resize callback changed the layout it observes in the same frame, often by setting state
   synchronously (react-popper's `forceUpdate` renders with `flushSync`). Defer that change to the next
   frame (`requestAnimationFrame`, once per frame), or measure without changing the layout.
 
-### Verifying a visual fix locally with Qlip — reqore mechanics
+### Capturing a story locally
 
-(The principle — capture the story locally and Read the PNG before claiming a Qlip-flagged
+(The principle — capture the story locally and Read the PNG before claiming a flagged
 snapshot is fixed — is the frontend baseline. These are reqore's specific mechanics and
 guardrails.)
 
-Capture one story without triggering upload:
+Capture one story file without uploading anything:
 ```bash
-yarn test:stories src/stories/Tabs/Tabs.stories.tsx > /tmp/qlip-verify.log 2>&1
+yarn test:stories src/stories/Tabs/Tabs.stories.tsx > /tmp/story-capture.log 2>&1
 ```
 Then `Read` the PNG under `qlip/screenshots/<timestamp>/stories/auto/<Story__Id>.png`.
 To prove the fix moved the pixels, compare the `md5` of that PNG against the same story in
 the previous capture directory — identical hashes mean the render did not change.
 
 **Guardrails:**
-- **NEVER set `QLIP_UPLOAD_TOKEN` locally.** `vitest.config.mts` attaches qlip's `upload`
-  block only when that variable is present, and CI supplies it from the repo secret in
+- **NEVER set the upload token locally.** `vitest.config.mts` uploads the captures only
+  when that token is present, and CI supplies it from the repo secret in
   `.github/workflows/tests.yml`. With it set, **every** `yarn test:stories` publishes a
-  build the whole team then sees in review (the token was hardcoded here until July 2026 and
-  local runs posted four unwanted builds in one session).
-- **Check for the upload line.** qlip prints
-  `[qlip] uploaded build <id> … → https://qlip.qoretechnologies.com` when it publishes. If a
-  local run prints that, the gate is broken — stop and fix it before continuing.
+  build the whole team then sees in review. If a local run says it uploaded a build, the
+  gate is broken — stop and fix it before continuing.
 - **NEVER run `yarn vitest run` with no `--project`** — it includes the storybook project
   and captures the whole ~870-snapshot suite (and uploads it if the gate is broken). Use
   `yarn test` (`--project unit`) for unit tests; one story file at a time for stories.
-- **Delete the previous capture directory BEFORE re-capturing.** Qlip names files
+- **Delete the previous capture directory BEFORE re-capturing.** Captures are named
   `<StoryId>.png`; a renamed/deleted/skipped story leaves its old PNG behind and will
   mislead you into reviewing a render that is no longer produced.
 
@@ -305,6 +329,28 @@ const StyledButton = styled.button<IReqoreButtonStyle>`
   for popover clicks.
 - **Auto-focus:** `useAutoFocus()` for modal/drawer focus management.
 
+### Default copy
+- A default label, tooltip, empty state or error message says what the reader wants, never what
+  the code does: "Hide", "Show all", "Try again", "Nothing to show". No panel, drawer, row,
+  component, collapse / expand, rendering or "the rest of the…" in it.
+- `__tests__/defaultCopySaysWhatTheReaderWants.test.ts` reads every default written as
+  `…Label`, `…Message`, `…Tooltip`, `…Text`, `…Title` or `…Placeholder` in `src/` (stories and
+  mock data left out) and fails on those words.
+
+### Public text
+- Reqore is public and open source: its sources, stories, tests, docs, `COMPONENTS.md`, these agent rules
+  (`.claude/`), PR descriptions and commit messages name nothing of the private world it is built in. No app,
+  tool or screen of ours that uses or builds it, no private issue or PR, no person or persona, no review, board,
+  queue or decision id, no internal document, chat or host. Say what a component does and why, in words anyone
+  can read ("a 218px dashboard tile", "a host app that fails its stories on a React warning"); a public
+  `reqore#…` issue may be named.
+- `__tests__/publicText.test.ts` fails on a denylist of those names (`scripts/publicTextGate.mjs`; run
+  `node scripts/publicTextGate.mjs <files>` to see what a file still names). Lowercase config keys such as
+  `parameters.qlip` are code and stay allowed; made-up people in `src/mock/` are not checked.
+- In `.claude/` the gate allows only the name of the shared-rules repo and `.instruction-files-path`, because the
+  bootstrap above has to say where the shared rules live. A rule here that needs an internal name says what and
+  why generically, and its internal detail goes in the imported `projects/reqore.md`, under the same section name.
+
 ### Color Helpers (`src/helpers/colors.ts`)
 - **Text contrast:** `getReadableColor(theme)` returns light or dark based on `theme.main`.
 - **Gradients:** `getGradientMix()` blends multiple colors for effect gradients.
@@ -325,8 +371,13 @@ const StyledButton = styled.button<IReqoreButtonStyle>`
 4. **Portal:** modals/notifications render via `customPortalId` or default DOM portal.
 
 ### Responsive Breakpoints
-- **Mobile:** `isMobile` (width ≤ 480px).
-- **Tablet:** `isTablet` (width ≤ 1024px).
+- **Window size classes** are Material 3's: `compact` below 600px (`isMobile`),
+  `medium` 600–839 and `expanded` 840–1199 (`isTablet`), `large` 1200–1599, `extraLarge` from 1600.
+  The provider's `windowSizeClass` names the class; `isMobileOrTablet` is below 1200px.
+- **One source:** `src/constants/breakpoints.ts` (`REQORE_BREAKPOINTS`, `reqoreMedia`,
+  `getReqoreWindowSizeClass`), exported. Never write a window width in a component; a component's own
+  box keeps its container rule (`NARROW_CONTAINER_BREAKPOINT_PX` 480, `SEVERITY_ROW_NARROW_BREAKPOINT_PX`
+  640, `DRAWER_SHEET_BREAKPOINT` 900).
 - **Usage:** conditional rendering; affects dropdown/menu positioning.
 
 ### Icon System (`src/types/icons.ts`)
@@ -382,4 +433,4 @@ const StyledButton = styled.button<IReqoreButtonStyle>`
 - **Storybook:** `yarn storybook` for the interactive playground.
 - **Docusaurus:** `yarn docs:dev` for user guides + API docs.
 - **TypeDoc:** `yarn docs:api` generates API reference from JSDoc comments.
-- **Inline:** JSDoc comments on public props/methods for IDE tooltips.
+- **Inline:** JSDoc comments on public props/methods for editor tooltips.

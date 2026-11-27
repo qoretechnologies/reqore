@@ -1,13 +1,13 @@
 // Copyright 2026 Qore Technologies, s.r.o.
 
 /**
- * No story makes React warn (qorus#646).
+ * No story makes React warn.
  *
  * React's development build says what is wrong with a page as a warning on the console and goes on, so a story whose
  * page is wrong passed as long as it looked right: a component that spreads props it does not take onto an element
- * (a control group's `fluid`, `spaceBetween`) makes React warn in every page that uses it, and only the IDE's own
+ * (a control group's `fluid`, `spaceBetween`) makes React warn in every page that uses it, and only a host app's own
  * warning guard caught one (in reqraft). Each warning now fails the story it was given in, named by its rule
- * ({@link REACT_WARNING_RULES}) with what to do, as the IDE's story run does (qorus-ide 8d847360e), and as this
+ * ({@link REACT_WARNING_RULES}) with what to do, as a host app's story run does, and as this
  * story run already fails a ResizeObserver loop.
  *
  * React warns of some things once in a page (a kind of nesting, a deprecated API), and each story file is a page of

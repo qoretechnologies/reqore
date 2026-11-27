@@ -4,7 +4,7 @@ import { useAutoFocus } from '../src/hooks/useAutoFocus';
 /* An auto-focused field is focused once, when it appears — not again while it is being edited. A controlled
    input hands React a new ref callback on every render, so the SAME element arrives under a changing identity
    on each keystroke. useAutoFocus used to re-apply focus and move the selection to the end each time, which
-   dropped a character being typed (qorus#646). It now focuses an element once and leaves a re-appearing same
+   dropped a character being typed. It now focuses an element once and leaves a re-appearing same
    element alone. */
 
 const Harness = ({ element }: { element: HTMLInputElement | null }) => {

@@ -4,7 +4,7 @@ import { ReqoreLayoutContent, ReqoreTable, ReqoreUIProvider } from '../src';
 import { IReqoreInputProps } from '../src/components/Input';
 
 /*
- * A narrow table's search is a button until it is used (qorus#646). Shown only for the text in it -
+ * A narrow table's search is a button until it is used. Shown only for the text in it -
  * the table narrowed with a search in it - the field went away with its last character, or with its
  * clear button, and the focus that was in it fell to the page. And a caller's `filterProps`
  * handlers replaced the ones that close the open field.

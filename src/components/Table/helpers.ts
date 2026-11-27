@@ -9,24 +9,93 @@ import {
   IReqoreTableSort,
   TReqoreTableCellAction,
 } from '.';
+import { getFontFamily } from '../../constants/fonts';
 import {
+  CONTROL_VERTICAL_PADDING_FROM_SIZE,
   ICON_FROM_SIZE,
+  PADDING_FROM_SIZE,
   SIZES,
   SIZE_TO_MODIFIER,
   SIZE_TO_PX,
+  TEXT_FROM_SIZE,
   TOUCH_TARGET_PX,
   TSizes,
+  WEIGHT_TO_NUMBER,
 } from '../../constants/sizes';
+import { IReqoreTheme } from '../../constants/theme';
+import { getTextSize } from '../../helpers/typeScale';
+import { getOneLessSize, isStringSize } from '../../helpers/utils';
+import { IReqoreEffect } from '../Effect';
 import { NARROW_CONTAINER_BREAKPOINT_PX } from '../../hooks/useNarrowContainer';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqorePanelSubAction } from '../Panel';
 import { hasRowActionLabel } from '../RowActionsMenu/hasRowActionLabel';
+import { sidewaysFadeMask } from '../../helpers/sidewaysFade';
 
 /** A padded cell's space on each side of what it holds (`cell.padded` 'both' or 'horizontal'). */
 export const TABLE_CELL_HORIZONTAL_PADDING_PX = 10;
 
 export const flipSortDirection = (direction: 'asc' | 'desc'): 'asc' | 'desc' =>
   direction === 'asc' ? 'desc' : 'asc';
+
+/**
+ * Set by the body on itself and on the header while unpinned columns are hidden
+ * under a pinned edge: `left`, `right` or `left right`, absent when every column
+ * is in view. The pinned edge's shadow reads it, so a pinned column that has
+ * nothing scrolling under it looks exactly like an unpinned one.
+ */
+export const TABLE_OVERFLOW_ATTRIBUTE = 'data-reqore-table-overflow';
+
+/**
+ * Set by the body on itself and on the header while unpinned columns are hidden
+ * past an edge that no column is pinned to: `left`, `right` or `left right`,
+ * absent otherwise. That edge fades out (`tableEdgeFade`), so a table that
+ * scrolls sideways says so where no scrollbar does (a phone draws none). An
+ * edge with a pinned column already says it with the pinned column's shadow,
+ * and fading it would fade the pinned column itself.
+ */
+export const TABLE_FADE_ATTRIBUTE = 'data-reqore-table-fade';
+
+/** How far a table's faded edge fades out, in px. */
+export const TABLE_EDGE_FADE_PX = 32;
+
+/** Which edges of a sideways-scrolling box have more past them, as `TABLE_FADE_ATTRIBUTE` holds them. */
+export const tableFadeSides = (
+  element: { scrollLeft: number; clientWidth: number; scrollWidth: number },
+  pinned: { left: boolean; right: boolean }
+): string =>
+  [
+    !pinned.left && element.scrollLeft > 1 ? 'left' : undefined,
+    !pinned.right && element.scrollLeft + element.clientWidth < element.scrollWidth - 1
+      ? 'right'
+      : undefined,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+/**
+ * The faded edges of a table's scroll container (its body and its header), read
+ * from `TABLE_FADE_ATTRIBUTE`: a mask, so whatever the table sits on shows
+ * through, and the content reads as going on past the edge.
+ */
+export const tableEdgeFade = `
+  &[${TABLE_FADE_ATTRIBUTE}='left'] { ${sidewaysFadeMask(true, false, TABLE_EDGE_FADE_PX)} }
+  &[${TABLE_FADE_ATTRIBUTE}='right'] { ${sidewaysFadeMask(false, true, TABLE_EDGE_FADE_PX)} }
+  &[${TABLE_FADE_ATTRIBUTE}='left right'] { ${sidewaysFadeMask(true, true, TABLE_EDGE_FADE_PX)} }
+`;
+
+/** Carried by every pinned body and header cell: which edge it is pinned to. */
+export const TABLE_PIN_ATTRIBUTE = 'data-reqore-table-pin';
+
+/**
+ * The selector under which a pinned edge draws its shadow: the scroll container
+ * says a column is hidden under THIS edge, and the cell is pinned to it. Keyed on
+ * the cell's own attribute rather than on `&` alone, because styled-components
+ * resolves a nested `&` to the component's shared class — one rule for every
+ * pinned cell, left or right.
+ */
+export const pinnedEdgeShadowSelector = (pin: 'left' | 'right'): string =>
+  `[${TABLE_OVERFLOW_ATTRIBUTE}~='${pin}'] &[${TABLE_PIN_ATTRIBUTE}='${pin}']::after`;
 
 export { getQueryMatchScore };
 
@@ -201,16 +270,22 @@ export const zoomToWidth: Record<number, string> = SIZES.reduce(
 
 export const getExportActions = (
   onClick: (type: 'current' | 'full') => void,
-  withLabels: boolean = true
+  withLabels: boolean = true,
+  {
+    current = 'Export current view',
+    full = 'Export full data',
+  }: { current?: string; full?: string } = {}
 ): IReqorePanelSubAction[] => [
   {
-    label: withLabels ? 'Export current view' : undefined,
+    label: withLabels ? current : undefined,
     icon: 'Download2Line',
+    className: 'reqore-table-export-current',
     onClick: () => onClick('current'),
   },
   {
-    label: withLabels ? 'Export full data' : undefined,
+    label: withLabels ? full : undefined,
     icon: 'DownloadLine',
+    className: 'reqore-table-export-full',
     onClick: () => onClick('full'),
   },
 ];
@@ -325,7 +400,7 @@ export const isActionsMenuWidth = (column: IReqoreTableColumn, tableWidth?: numb
  * Only a column the table draws folds: a hidden (`show: false`) or disabled (`enabled: false`) one has
  * no cells, so nothing of it folds. Folding one anyway had the table ask it for its actions on every
  * row to measure them, and a consumer whose disabled column could not answer (its actions depended on
- * a callback it was not given) threw and took the whole table down at phone width (qorus-ide #301).
+ * a callback it was not given) threw and took the whole table down at phone width.
  */
 export const getActionsMenuColumnIds = (
   columns: IReqoreTableColumn[],
@@ -565,9 +640,13 @@ export const getColumnsMaxWidth = (columns: IReqoreTableColumn[]): number | unde
 };
 
 export const calculatePinOffsets = (
-  columns: IReqoreTableColumn[]
+  columns: IReqoreTableColumn[],
+  tableWidth?: number
 ): Record<string, IColumnPinInfo> => {
-  const leaves = flattenColumns(columns).filter(
+  // A pinned column hidden at this width takes no place on the edge.
+  const leaves = flattenColumns(
+    tableWidth === undefined ? columns : getOnlyShownColumns(columns, tableWidth)
+  ).filter(
     (column) => column.show !== false && column.enabled !== false
   );
   const map: Record<string, IColumnPinInfo> = {};
@@ -602,8 +681,18 @@ export const calculatePinOffsets = (
   return map;
 };
 
-export const getTotalColumnsWidth = (columns: IReqoreTableColumn[]): number => {
-  return getColumnsRenderedWidth(columns);
+/**
+ * The width the columns take. Given the table's width, a column `hideBelowWidth` hides at
+ * that width takes none: it is not drawn, so reserving its width made the row wider than
+ * its cells and pushed a column beside it off a narrow table.
+ */
+export const getTotalColumnsWidth = (
+  columns: IReqoreTableColumn[],
+  tableWidth?: number
+): number => {
+  return getColumnsRenderedWidth(
+    tableWidth === undefined ? columns : getOnlyShownColumns(columns, tableWidth)
+  );
 };
 
 export const getOnlyShownColumns = (
@@ -639,10 +728,101 @@ export const getOnlyShownColumns = (
   }, []);
 };
 
+/** How a table draws its headers, for measuring them (`getColumnHeaderWidth`). */
+export interface IReqoreTableHeaderLook {
+  /** The table's `headerEffect`: a header's words are drawn in the header's type with it. */
+  headerEffect?: IReqoreEffect;
+  /** The table's `sortIndicator`: with `'arrow'` a sorted header draws an arrow beside its words. */
+  sortIndicator?: 'wash' | 'arrow';
+  /** The theme, for its text sizes and its font. */
+  theme?: IReqoreTheme;
+}
+
+/** One canvas for every table header measured; none where there is no canvas (a test's DOM), and words are guessed. */
+let headerMeasureContext: CanvasRenderingContext2D | null | undefined;
+const getHeaderMeasureContext = (): CanvasRenderingContext2D | null => {
+  if (headerMeasureContext === undefined) {
+    try {
+      headerMeasureContext =
+        typeof document === 'undefined' ||
+        (typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent))
+          ? null
+          : document.createElement('canvas').getContext('2d');
+    } catch {
+      headerMeasureContext = null;
+    }
+  }
+
+  return headerMeasureContext;
+};
+
+/**
+ * The width a column's header takes as it is drawn: its words in the header's type (uppercase, thick and spaced by
+ * default, as `headerEffect` and the column's own `header.effect` say), its icon, the arrow it may show when sorted,
+ * and its button's padding and edge. 0 for a header that is not words (an element), which cannot be measured here.
+ */
+export const getColumnHeaderWidth = (
+  column: IReqoreTableColumn,
+  tableSize: TSizes = 'normal',
+  { headerEffect, sortIndicator, theme }: IReqoreTableHeaderLook = {}
+): number => {
+  const words = column.header?.label ?? column.header?.children;
+
+  if (typeof words !== 'string' && typeof words !== 'number') {
+    return 0;
+  }
+
+  const effect: IReqoreEffect = {
+    uppercase: true,
+    weight: 'thick',
+    textSize: getOneLessSize(tableSize),
+    spaced: 1,
+    ...headerEffect,
+    ...column.header?.effect,
+  };
+  const text = effect.uppercase ? String(words).toUpperCase() : String(words);
+  const textSize = effect.textSize ?? tableSize;
+  const fontSize = isStringSize(textSize)
+    ? theme
+      ? getTextSize(theme, textSize as TSizes)
+      : TEXT_FROM_SIZE[textSize as TSizes]
+    : parseFloat(String(textSize)) || TEXT_FROM_SIZE[tableSize];
+  const weight =
+    typeof effect.weight === 'number' ? effect.weight : WEIGHT_TO_NUMBER[effect.weight ?? 'normal'];
+  const family = theme?.fontFamily
+    ? getFontFamily(theme.fontFamily)
+    : typeof document !== 'undefined' && document.body
+      ? getComputedStyle(document.body).fontFamily
+      : 'sans-serif';
+  const context = getHeaderMeasureContext();
+  let textWidth = text.length * fontSize * 0.62;
+
+  if (context) {
+    context.font = `${weight} ${fontSize}px ${family}`;
+    textWidth = context.measureText(text).width;
+  }
+
+  const spacing = (effect.spaced ?? 0) * text.length;
+  const iconWidth = ICON_FROM_SIZE[tableSize] + PADDING_FROM_SIZE[tableSize] / 2;
+  const icon = column.header?.icon ? iconWidth : 0;
+  const sortArrow = column.sortable && sortIndicator === 'arrow' ? iconWidth : 0;
+  // the compact button's padding on both sides and its 1px edge, and a pixel each side for rounding
+  const chrome = 2 * CONTROL_VERTICAL_PADDING_FROM_SIZE[tableSize] + 2 + 2;
+
+  return Math.ceil(textWidth + spacing + icon + sortArrow + chrome);
+};
+
+/**
+ * The columns as a table draws them: each one's width at the table's size, and a floor of its header as drawn
+ * (`getColumnHeaderWidth`), so no column is narrower than its header and no header is cut. A column declared
+ * narrower (a 60px "Slowest 5%") is as wide as its header; one that cannot fit is dropped or scrolled to, as any
+ * column too wide for its table is. The floor is the column's `minWidth`, so `getColumnRenderedWidth` reports it.
+ */
 export const prepareColumns = (
   columns: IReqoreTableColumn[],
   columnModifiers: { [key: string]: { [key: string]: any } },
-  size: TSizes = 'normal'
+  size: TSizes = 'normal',
+  headerLook: IReqoreTableHeaderLook = {}
 ): IReqoreTableColumn[] => {
   // We need to set the width of each column
   return columns.map((column) => {
@@ -651,17 +831,26 @@ export const prepareColumns = (
         ...column,
         header: {
           ...column.header,
-          columns: prepareColumns(column.header.columns, columnModifiers, size),
+          columns: prepareColumns(column.header.columns, columnModifiers, size, headerLook),
         },
       };
     }
 
     const newWidth = calculateMinimumCellWidth(column.width || 20, size, column.header?.icon);
+    const headerWidth = getColumnHeaderWidth(column, size, headerLook);
+    // a cap below the header gives way to it: the header is never cut
+    const floor = headerWidth
+      ? {
+          minWidth: Math.max(column.minWidth ?? 0, headerWidth),
+          ...(column.maxWidth !== undefined ? { maxWidth: Math.max(column.maxWidth, headerWidth) } : {}),
+        }
+      : {};
 
     return {
       ...column,
       width: newWidth * SIZE_TO_MODIFIER[size],
       grow: column.grow || (column.width ? undefined : 1),
+      ...floor,
       ...(columnModifiers?.[column.dataId] || {}),
     };
   });
@@ -718,4 +907,52 @@ export const getRowExpandId = (row: IReqoreTableRowData, fallbackIndex?: number)
   if (row?._selectId !== undefined && row._selectId !== null) return `${row._selectId}`;
 
   return `${EXPAND_ID_POSITION_PREFIX}${row?._reqoreIndex ?? fallbackIndex ?? ''}`;
+};
+
+/**
+ * The column picker's entries: one per column a person may hide (a group lists its
+ * columns), selected while it is shown, under a divider titled `label`. The table's own
+ * header uses it, and so can a page that draws its own toolbar: keep the hidden columns,
+ * pass the table those columns with `show: false`, and put these entries in a
+ * `multiSelect` action of the toolbar.
+ */
+export const getTableColumnsPickerItems = (
+  columns: IReqoreTableColumn[],
+  onToggle: (dataId: string, show: boolean) => void,
+  label?: string
+): IReqorePanelSubAction[] => {
+  const items: IReqorePanelSubAction[] = [];
+
+  const addColumn = (column: IReqoreTableColumn) => {
+    // A column with no name (a row's actions) is not one a person can pick by name: it was a
+    // blank row in the picker.
+    if (column.header?.label === '') {
+      return;
+    }
+
+    items.push({
+      label: typeof column.header?.label === 'string' ? column.header.label : column.dataId,
+      selected: column.show !== false,
+      onClick: () => onToggle(column.dataId, column.show === false),
+      intent: column.show !== false ? 'info' : undefined,
+    });
+  };
+
+  columns.forEach((column) => {
+    // A column that is not hideable, or not enabled, is not the person's to choose.
+    if (column.hideable === false || column.enabled === false) {
+      return;
+    }
+    if (column.header?.columns) {
+      column.header.columns.forEach(addColumn);
+    } else {
+      addColumn(column);
+    }
+  });
+
+  if (items.length && label !== undefined) {
+    items.unshift({ divider: true, label });
+  }
+
+  return items;
 };

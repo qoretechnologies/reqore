@@ -1,4 +1,5 @@
 import { useMarqueeOnHover } from '../hooks/useMarqueeOnHover';
+import { reqoreMedia, TReqoreWindowSizeClass } from '../constants/breakpoints';
 import { last, size } from 'lodash';
 import { nanoid } from 'nanoid';
 import React, { memo, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -20,6 +21,7 @@ import { scheduleOnTimer } from '../helpers/schedule';
 import ThemeContext from '../context/ThemeContext';
 import { IReqoreIconName } from '../types/icons';
 import { IReqoreOptions } from './UIProvider';
+import { BACKDROP_BLUR_DEFAULT } from '../components/Drawer/backdrop';
 
 export interface IReqoreNotificationData extends IReqoreNotificationProps {
   duration?: number;
@@ -75,9 +77,36 @@ export interface IReqoreConfirmationModal {
   modalProps?: IReqoreModalProps;
 }
 
+/**
+ * Defaults for every confirmation `confirmAction` opens (`options.confirmations`), under each
+ * call's own data — what an app decides once instead of at every call site: its words (so they
+ * can be translated), its primary, and its look.
+ */
+export interface IReqoreConfirmationDefaults
+  extends Omit<IReqoreConfirmationModal, 'onConfirm' | 'onCancel' | 'isOpen' | 'content'> {
+  /**
+   * The line under the title when a call gives none. Default `'Are you sure you want to
+   * proceed?'`. `null`: no line — a title that asks the question needs no second one.
+   */
+  content?: string | null;
+  /** The dialog's own opacity: below 1 the page shows through it. Default `0.9`; `1` for a
+   *  solid dialog. */
+  surfaceOpacity?: number;
+  /** The blur of the page behind every dialog, in pixels. Default `BACKDROP_BLUR_DEFAULT` (5); `0` for none. */
+  backdropBlur?: number;
+  /**
+   * How the dialog shows a call's `intent`. `'wash'` (the default, unchanged) draws the dialog in
+   * it — its edge and title. `'icon'` keeps the dialog on its own surface and edge and colours
+   * only its icon, for a theme that keeps colour for state.
+   */
+  intentLook?: 'wash' | 'icon';
+}
+
+const NO_CONFIRMATION_BODY = { display: 'none' } as const;
+
 const DEFAULT_ERROR_BOUNDARY_OPTIONS = {
   errorMessage:
-    'There was an error rendering this component. You can try resetting or refreshing the page.',
+    'This part of the page could not be shown. Try again, or reload the page.',
 };
 const DEFAULT_TOOLTIP_OPTIONS = { delay: 0 };
 const NOTIFICATION_POSITIONS: IReqoreNotificationsPosition[] = [
@@ -125,18 +154,45 @@ export const modalStore = create<{
     }),
 }));
 
-const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options = {} }) => {
+/** Marks the element a dialog's focus trap gives focus to when it opens (see useFocusTrap). */
+const INITIAL_FOCUS: Record<string, unknown> = { 'data-reqore-initial-focus': true };
+
+/* One object, so a provider given no options does not rebuild its context on each of its own renders. */
+const NO_OPTIONS: IReqoreNotifications['options'] = {};
+
+const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options = NO_OPTIONS }) => {
   const [notifications, setNotifications] = useState<IReqoreNotificationData[] | null>([]);
   const { addModal, removeModal } = modalStore();
-  const [escClosableModals, setEscClosableModals] = useState<string[]>([]);
+  /* The Escape stack: one array for the provider's life, changed in place. It is not state, so a dialog opening or
+     closing re-renders nothing but itself; as state it gave the context a new value, and every component that reads
+     the context ran again on every open and close. */
+  const escClosableModals = useRef<string[]>([]).current;
+  /* The toasts on screen, mirrored into one array for the context the same way: the provider draws them from its
+     state, and a toast coming or going re-renders nothing that reads the context. */
+  const notificationsNow = useRef<IReqoreNotificationData[]>([]).current;
   const [confirmationModal, setConfirmationModal] = useState<IReqoreConfirmationModal>({});
   const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
   const latestZIndex = useRef<number>(9000);
 
   // Live media queries in a browser, fixed defaults in jsdom — see
   // `useReqoreMedia` for why that is decided once per module load.
-  const isMobile = useReqoreMedia('(max-width: 480px)');
-  const isTablet = useReqoreMedia('(min-width: 480px) and (max-width: 1200px)');
+  // One chain of "narrower than" queries, so a width is in exactly one window size class (the
+  // flags were two ranges that were both true at 480px). Material 3's classes.
+  const isBelowMedium = useReqoreMedia(reqoreMedia.below('medium'));
+  const isBelowExpanded = useReqoreMedia(reqoreMedia.below('expanded'));
+  const isBelowLarge = useReqoreMedia(reqoreMedia.below('large'));
+  const isBelowExtraLarge = useReqoreMedia(reqoreMedia.below('extraLarge'));
+  const windowSizeClass: TReqoreWindowSizeClass = isBelowMedium
+    ? 'compact'
+    : isBelowExpanded
+      ? 'medium'
+      : isBelowLarge
+        ? 'expanded'
+        : isBelowExtraLarge
+          ? 'large'
+          : 'extraLarge';
+  const isMobile = windowSizeClass === 'compact';
+  const isTablet = windowSizeClass === 'medium' || windowSizeClass === 'expanded';
   const isMobileOrTablet = isMobile || isTablet;
   // Pointer CAPABILITY, not viewport width — the two disagree often enough to
   // matter (a narrow desktop window hovers; a large tablet does not). Defaults to
@@ -165,24 +221,25 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
     }));
   }, []);
 
-  const addEscClosableModal = useCallback((id: string): void => {
-    setEscClosableModals((cur) => [...cur, id]);
-  }, []);
+  /* Escape or the × on a confirmation cancels it, as its Cancel does. */
+  const cancelConfirmationModal = useCallback((): void => {
+    closeConfirmationModal();
+    confirmationModal?.onCancel?.();
+  }, [closeConfirmationModal, confirmationModal]);
 
-  /* The Escape stack as it was last committed: every modal that hears one Escape asks it, so they agree on which
-     is on top, and only that one closes - taking itself off first would make the one under it the top for the
-     next listener. */
-  const committedEscClosableModals = useRef<string[]>([]);
-  useLayoutEffect(() => {
-    committedEscClosableModals.current = escClosableModals;
-  }, [escClosableModals]);
+  const addEscClosableModal = useCallback(
+    (id: string): void => {
+      if (!escClosableModals.includes(id)) escClosableModals.push(id);
+    },
+    [escClosableModals]
+  );
 
   /**
    * Takes a modal off the Escape stack. With `onRemove` it is Escape asking the modal to close: only the top-most
-   * one answers, and it is closed - after the confirmation, when it asks for one - by calling `onRemove` from the
-   * key or the confirmation, never from a state updater. An updater runs while React renders this provider, so
-   * the host's own state was set during another component's render (React warned, qorus#646). Without it the modal
-   * is going: it leaves the stack wherever it is in it, where only the top-most used to.
+   * one answers, and it is closed - after the confirmation, when it asks for one - by calling `onRemove`. It stays
+   * on the stack until it is gone (its own cleanup takes it off), so every dialog that hears the same Escape agrees
+   * on which one is on top, and the one under it does not close too. Without `onRemove` the modal is going: it
+   * leaves the stack wherever it is in it.
    */
   const removeEscClosableModal = useCallback(
     (
@@ -190,20 +247,18 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
       onRemove?: () => void,
       confirmOnClose?: boolean | IReqoreConfirmationModal
     ): void => {
-      const takeOff = () => setEscClosableModals((cur) => cur.filter((modalId) => modalId !== id));
-
       if (!onRemove) {
-        takeOff();
+        const index = escClosableModals.indexOf(id);
+        if (index >= 0) escClosableModals.splice(index, 1);
 
         return;
       }
 
-      if (last(committedEscClosableModals.current) !== id) {
+      if (last(escClosableModals) !== id) {
         return;
       }
 
       const close = () => {
-        takeOff();
         onRemove();
       };
 
@@ -218,8 +273,18 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
 
       close();
     },
-    [confirmAction]
+    [confirmAction, escClosableModals]
   );
+
+  /* The app's confirmation defaults (`options.confirmations`) under each call's own data. */
+  const confirmationDefaults = options?.confirmations;
+  const confirmationIntent = confirmationModal.intent ?? confirmationDefaults?.intent;
+  const confirmationIntentOnIcon = confirmationDefaults?.intentLook === 'icon';
+  const confirmationContent =
+    confirmationModal.content ||
+    (confirmationDefaults?.content === null
+      ? undefined
+      : confirmationDefaults?.content || 'Are you sure you want to proceed?');
 
   const notificationDefaults = options?.notifications;
   const addNotification = useCallback(
@@ -253,11 +318,15 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
     [notificationDefaults]
   );
 
-  const removeNotification = (id: string | number) => {
+  const removeNotification = useCallback((id: string | number) => {
     setNotifications((cur) => {
       return [...cur].filter((notification) => notification.id !== id);
     });
-  };
+  }, []);
+
+  useLayoutEffect(() => {
+    notificationsNow.splice(0, notificationsNow.length, ...(notifications ?? []));
+  }, [notifications, notificationsNow]);
 
   const getNotificationsByPosition = useCallback(
     (position: IReqoreNotificationsPosition) => {
@@ -294,6 +363,10 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
       uiScale: options?.uiScale,
       glowingIcons: options?.glowingIcons ?? false,
       shortcutHints: options?.shortcutHints ?? true,
+      backdropBlur: options?.backdropBlur,
+      dialogOpacity: options?.dialogOpacity,
+      dialogWidth: options?.dialogWidth,
+      dialogBlur: options?.dialogBlur,
       errorBoundaryOptions: options?.errorBoundaryOptions || DEFAULT_ERROR_BOUNDARY_OPTIONS,
       schedule: options?.schedule ?? scheduleOnTimer,
     }),
@@ -312,7 +385,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
   const contextValue: IReqoreContext = useMemo(
     () =>
       ({
-        notifications,
+        notifications: notificationsNow,
         theme,
         addNotification,
         removeNotification,
@@ -322,6 +395,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
         isMobile,
         isTablet,
         isMobileOrTablet,
+        windowSizeClass,
         isHoverCapable,
         latestZIndex: latestZIndex.current,
         getAndIncreaseZIndex,
@@ -329,6 +403,10 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
         tooltips: resolvedOptions.tooltips,
         glowingIcons: resolvedOptions.glowingIcons,
         shortcutHints: resolvedOptions.shortcutHints,
+        backdropBlur: resolvedOptions.backdropBlur,
+        dialogOpacity: resolvedOptions.dialogOpacity,
+        dialogWidth: resolvedOptions.dialogWidth,
+        dialogBlur: resolvedOptions.dialogBlur,
         closePopoversOnEscPress: resolvedOptions.closePopoversOnEscPress,
         // ESC Closable modals management
         closeModalsOnEscPress: resolvedOptions.closeModalsOnEscPress,
@@ -341,7 +419,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
         schedule: resolvedOptions.schedule,
       } satisfies IReqoreContext),
     [
-      notifications,
+      notificationsNow,
       theme,
       addNotification,
       removeNotification,
@@ -351,6 +429,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
       isMobile,
       isTablet,
       isMobileOrTablet,
+      windowSizeClass,
       isHoverCapable,
       latestZIndex,
       getAndIncreaseZIndex,
@@ -407,19 +486,32 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
           <ReqoreModal
             isOpen
             flat
-            opacity={0.9}
-            blur={2}
+            opacity={confirmationDefaults?.surfaceOpacity ?? 0.9}
+            blur={confirmationDefaults?.backdropBlur ?? resolvedOptions.backdropBlur ?? BACKDROP_BLUR_DEFAULT}
             width='500px'
-            intent={confirmationModal.intent}
-            label={confirmationModal.title || confirmationModal.label || 'Confirm your action'}
-            description={confirmationModal.description}
-            icon={confirmationModal.icon || 'ErrorWarningFill'}
+            intent={confirmationIntentOnIcon ? undefined : confirmationIntent}
+            iconColor={confirmationIntentOnIcon ? confirmationIntent : undefined}
+            label={
+              confirmationModal.title ||
+              confirmationModal.label ||
+              confirmationDefaults?.title ||
+              confirmationDefaults?.label ||
+              'Confirm your action'
+            }
+            description={confirmationModal.description ?? confirmationDefaults?.description}
+            icon={confirmationModal.icon || confirmationDefaults?.icon || 'ErrorWarningFill'}
             className='reqore-confirmation-modal'
+            /* Escape cancels, as its Cancel does (APG alertdialog), and only it: it is on top of
+               the Escape stack, so the drawer or modal under it stays. */
+            onClose={cancelConfirmationModal}
             bottomActions={[
               {
-                label: confirmationModal.cancelLabel || 'Cancel',
-                icon: confirmationModal.cancelIcon || 'CloseLine',
-                intent: confirmationModal.cancelButtonIntent,
+                label:
+                  confirmationModal.cancelLabel || confirmationDefaults?.cancelLabel || 'Cancel',
+                icon:
+                  confirmationModal.cancelIcon || confirmationDefaults?.cancelIcon || 'CloseLine',
+                intent:
+                  confirmationModal.cancelButtonIntent ?? confirmationDefaults?.cancelButtonIntent,
                 /* A panel short of room drops its actions' labels and keeps the
                    icons, which is the right trade for a toolbar — the label is a
                    verb the icon already carries. Not here: this dialog exists to
@@ -428,6 +520,10 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
                    nowhere. Pinned before the caller's props, so a caller that
                    wants the icon alone can still ask for it. */
                 responsive: false,
+                /* The dialog opens with Cancel focused, its least destructive answer, ahead of
+                   the x its title bar has for Escape's sake (the x came first in the tab order). */
+                ...INITIAL_FOCUS,
+                ...(confirmationDefaults?.cancelButtonProps || {}),
                 ...(confirmationModal.cancelButtonProps || {}),
                 onClick: () => {
                   closeConfirmationModal();
@@ -436,11 +532,19 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
                 position: 'left',
               },
               {
-                label: confirmationModal.confirmLabel || 'Confirm',
-                intent: confirmationModal.confirmButtonIntent || 'success',
-                icon: confirmationModal.confirmIcon || 'CheckLine',
+                label:
+                  confirmationModal.confirmLabel || confirmationDefaults?.confirmLabel || 'Confirm',
+                // The call's own, else the app's default, else the theme's primary, else green.
+                intent:
+                  confirmationModal.confirmButtonIntent ||
+                  confirmationDefaults?.confirmButtonIntent ||
+                  theme?.primaryActionIntent ||
+                  'success',
+                icon:
+                  confirmationModal.confirmIcon || confirmationDefaults?.confirmIcon || 'CheckLine',
                 /* Named at every width — see the cancel action above. */
                 responsive: false,
+                ...(confirmationDefaults?.confirmButtonProps || {}),
                 ...(confirmationModal.confirmButtonProps || {}),
                 onClick: () => {
                   closeConfirmationModal();
@@ -449,16 +553,24 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
                 position: 'right',
               },
             ]}
+            // With no line to show, no empty band between the title and the buttons.
+            contentStyle={
+              confirmationContent || confirmationModal.modalProps?.children
+                ? undefined
+                : NO_CONFIRMATION_BODY
+            }
+            {...(confirmationDefaults?.modalProps || {})}
             {...(confirmationModal.modalProps || {})}
           >
-            {confirmationModal.modalProps?.children || (
-              <ReqoreTextEffect
-                as='p'
-                effect={{ textAlign: 'center', weight: 'bold', textSize: 'big' }}
-              >
-                {confirmationModal.content || 'Are you sure you want to proceed?'}
-              </ReqoreTextEffect>
-            )}
+            {confirmationModal.modalProps?.children ||
+              (confirmationContent ? (
+                <ReqoreTextEffect
+                  as='p'
+                  effect={{ textAlign: 'center', weight: 'bold', textSize: 'big' }}
+                >
+                  {confirmationContent}
+                </ReqoreTextEffect>
+              ) : null)}
           </ReqoreModal>
         )}
       </ReqoreContext.Provider>

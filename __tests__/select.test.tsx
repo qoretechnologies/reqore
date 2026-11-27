@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import React from 'react';
 import { ReqoreSelect, ReqoreUIProvider } from '../src';
 import { IReqoreSelectSingleProps } from '../src/components/Select';
@@ -105,7 +105,11 @@ test('Renders <ReqoreSelect /> and REPLACES the value when another item is picke
     );
   });
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
 
   vi.advanceTimersByTime(1);
 
@@ -134,7 +138,11 @@ test('Renders <ReqoreSelect /> and deselects the value by picking it again', () 
     );
   });
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
 
   vi.advanceTimersByTime(1);
 
@@ -151,7 +159,11 @@ test('Renders <ReqoreSelect /> and does not select a disabled item', () => {
     render(<SelectTestComponent items={MultiSelectItems} onValueChange={onValueChange} />);
   });
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
 
   vi.advanceTimersByTime(1);
 
@@ -166,7 +178,11 @@ test('Renders disabled <ReqoreSelect /> when there are no items and none can be 
     render(<SelectTestComponent />);
   });
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
 
   expect(document.querySelector('.reqore-input')?.getAttribute('disabled')).toBe('');
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
@@ -247,7 +263,11 @@ test('Renders <ReqoreSelect /> that creates a value with the ENTER key', () => {
     );
   });
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: '$.create.status' },
   });
@@ -315,7 +335,11 @@ test('Renders <ReqoreSelect multi /> holding many values', () => {
     render(<MultiTestComponent />);
   });
 
+  // the list opens at a press on the box, not at a focus
+
   fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  fireEvent.click(document.querySelector('.reqore-input')!);
 
   vi.advanceTimersByTime(1);
 
@@ -342,4 +366,67 @@ test('Renders <ReqoreSelect multi /> with the multi labels, not the single ones'
   // a pure rename of ReqoreMultiSelect and has to render exactly as before
   expect(screen.getByText('No items selected')).toBeTruthy();
   expect(screen.queryByText('No value selected')).toBe(null);
+});
+
+test('A focus alone leaves the list closed; a key or a press on the box opens it', () => {
+  act(() => {
+    render(<SelectTestComponent items={MultiSelectItems} />);
+  });
+
+  const box = document.querySelector('.reqore-input') as HTMLInputElement;
+
+  // a form puts the caret in its first field: that is no request for the list
+  act(() => {
+    box.focus();
+    fireEvent.focus(box);
+  });
+  vi.advanceTimersByTime(1);
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+
+  // the keyboard asks for it
+  act(() => {
+    fireEvent.keyDown(box, { key: 'ArrowDown' });
+  });
+  vi.advanceTimersByTime(1);
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+
+  act(() => {
+    fireEvent.keyDown(document, { key: 'Escape' });
+  });
+  vi.advanceTimersByTime(1);
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+
+  // and so does a press
+  act(() => {
+    fireEvent.click(box);
+  });
+  vi.advanceTimersByTime(1);
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+});
+
+test('A pick from the list gives the focus back to the box, and the list stays closed', () => {
+  let container!: HTMLElement;
+  act(() => {
+    ({ container } = render(<SelectTestComponent items={MultiSelectItems} />));
+  });
+
+  const box = container.querySelector('.reqore-input') as HTMLInputElement;
+  act(() => {
+    box.focus();
+    fireEvent.click(box);
+  });
+  vi.advanceTimersByTime(1);
+
+  const list = document.querySelector('.reqore-popover-content') as HTMLElement;
+  const choice = within(list).getAllByText('Existing item 3')[0];
+  act(() => {
+    (choice.closest('button') ?? choice).focus();
+    fireEvent.click(choice);
+  });
+  act(() => {
+    vi.advanceTimersByTime(50);
+  });
+
+  expect(document.activeElement).toBe(box);
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 });

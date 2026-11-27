@@ -1,5 +1,13 @@
 import { omit, size } from 'lodash';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  KeyboardEvent as ReactKeyboardEvent,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { ReqoreDropdown, ReqoreInput } from '../..';
 import { TSizes } from '../../constants/sizes';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
@@ -298,6 +306,8 @@ export const ReqoreSelectBase = <TValue extends TReqoreSelectValue = string>({
   const [createdItems, setCreatedItems] = useState<TReqoreSelectItem<TValue>[]>([]);
   const [query, setQuery] = useState<string>('');
   const popoverData = useRef<IPopoverControls>(undefined);
+  /** The group holding the select's own box, to give the box its focus back after a pick. */
+  const boxGroupRef = useRef<HTMLDivElement>(null);
   const [focused, setFocused] = useState<boolean>(false);
   const isSelectorDisabled = Boolean(
     disabled || selectorProps?.disabled || (!size(items) && !size(createdItems) && !canCreateItems)
@@ -357,6 +367,19 @@ export const ReqoreSelectBase = <TValue extends TReqoreSelectValue = string>({
       // it, so close it here too.
       if (single) {
         popoverData.current?.close();
+
+        /* A pick made in the list took the focus into it, and the list went away with the focus:
+           it was left on the page, and a page that keeps a focused field where it is (a chat that
+           follows its newest line unless a field has the focus) scrolled the answered field away.
+           The box gets it back, as a combobox's does. A focus does not open the list, so it stays
+           closed. Not when the focus went somewhere on purpose. */
+        window.requestAnimationFrame(() => {
+          const box = boxGroupRef.current?.querySelector('input');
+          const active = document.activeElement;
+          if (box && (!active || active === document.body || !active.isConnected)) {
+            box.focus({ preventScroll: true });
+          }
+        });
       }
     },
     [createdItems, value, items, addRemoveItem, single]
@@ -452,6 +475,26 @@ export const ReqoreSelectBase = <TValue extends TReqoreSelectValue = string>({
     [items, createdItems, query, canCreateItems, focused]
   );
 
+  /* ArrowDown or ArrowUp, or Enter with nothing typed, on a box whose list is closed: the keyboard's
+     way to ask for the list, as a press is the pointer's. Typing opens it too (the query effect). */
+  const handleOpeningKey = useCallback(
+    (event: ReactKeyboardEvent<HTMLInputElement>) => {
+      selectorProps?.onKeyDown?.(event);
+      if (isSelectorDisabled || popoverData.current?.isOpen()) {
+        return;
+      }
+      if (
+        event.key === 'ArrowDown' ||
+        event.key === 'ArrowUp' ||
+        (event.key === 'Enter' && !query)
+      ) {
+        event.preventDefault();
+        popoverData.current?.open();
+      }
+    },
+    [isSelectorDisabled, query, selectorProps]
+  );
+
   const getItemByValue = useCallback(
     (value: TValue): TReqoreSelectItem<TValue> => {
       // A selected value with no matching item still gets a chip — without the
@@ -497,22 +540,30 @@ export const ReqoreSelectBase = <TValue extends TReqoreSelectValue = string>({
         </ReqoreTagGroup>
       ) : null}
 
-      <ReqoreControlGroup minimal={rest.minimal} flat={rest.flat} size={rest.size}>
+      <ReqoreControlGroup
+        ref={boxGroupRef}
+        minimal={rest.minimal}
+        flat={rest.flat}
+        size={rest.size}
+      >
         <ReqoreDropdown<IReqoreInputProps>
           useTargetWidth
           handler='click'
-          placement='auto-start'
+          /* Under the box, or over it where there is no room below: never beside it. `auto` took
+             whichever side had the most room, and in a form with its labels to the left of its
+             fields that was the left, so the list lay over the labels. */
+          placement='bottom-start'
           placeholder={canCreateItems ? createItemPlaceholder : searchPlaceholder}
           {...selectorProps}
           disabled={isSelectorDisabled}
           multiSelect={!single}
-          onFocus={() => {
-            setFocused(true);
-
-            if (!isSelectorDisabled) {
-              popoverData.current?.open();
-            }
-          }}
+          /* The list opens at the person's own gesture: a press on the box (the dropdown's
+             click), typing in it, or a key that asks for it (`handleOpeningKey`). Not at a
+             focus: a form that puts the caret in its first field opened the list over the form
+             by itself, before anyone asked. One way in, so a tap on a box that has the focus
+             opens the list and a second tap leaves it open. */
+          onFocus={() => setFocused(true)}
+          onKeyDown={handleOpeningKey}
           onBlur={() => setFocused(false)}
           passPopoverData={(data) => (popoverData.current = data)}
           component={ReqoreInput}

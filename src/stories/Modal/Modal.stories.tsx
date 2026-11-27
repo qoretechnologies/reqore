@@ -7,6 +7,7 @@ import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreModalProps } from '../../components/Modal';
 import { sleep } from '../../helpers/utils';
 import {
+  CALM_DIALOG_WIDTHS,
   ReqoreButton,
   ReqoreCollection,
   ReqoreModal,
@@ -17,8 +18,12 @@ import {
 } from '../../index';
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
+import { expectLabelsClearTheirCorners } from '../utils/cornerClearance';
 import { dragPointer } from '../utils/pointer';
+import { requiredElement } from '../utils/required';
+import { PHONE_STORY } from '../utils/touchScreen';
 
+import { ThemedSurface } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreModalProps>();
 
 const meta = {
@@ -299,6 +304,55 @@ export const Basic: Story = {
   render: Template,
 };
 
+export const SetsThePageBehindItBack: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: `Renders a dialog over a busy page with the default backdrop: the page behind it is blurred a little and covered by a scrim darker than the page, so the dialog stands in front of the panels around it rather than blending with them. Drawers and sheets use the same backdrop.`,
+      },
+    },
+  },
+  args: { width: '480px', height: undefined },
+  render: (args) => (
+    <>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+        {Array.from({ length: 6 }, (_, index) => (
+          <ReqorePanel key={index} label={`Panel ${index + 1}`} padded>
+            <ReqoreP>Text on the page behind the dialog, which should not compete with it.</ReqoreP>
+          </ReqorePanel>
+        ))}
+      </div>
+      <ReqoreModal {...args} blur={undefined} label='Welcome' onClose={noop}>
+        <ReqoreP>The dialog in front of the page.</ReqoreP>
+      </ReqoreModal>
+    </>
+  ),
+  play: async () => {
+    await _testsWaitForText('The dialog in front of the page.');
+    /* The screenshot tool turns every backdrop-filter off for its capture (headless Chromium draws one
+       black) and leaves that sheet on the page, so a story played after a captured one reads none.
+       This story measures the dialog's own CSS: it takes the sheet out for the check and puts it back
+       for the capture. */
+    const captureOverrides = document.getElementById('__qlip-capture-style-overrides');
+    const captureOverridesHost = captureOverrides?.parentNode;
+    captureOverrides?.remove();
+    try {
+      // one an earlier story left open may sit beside it; this dialog's is the blurred one
+      await waitFor(
+        () =>
+          expect(
+            Array.from(document.querySelectorAll<HTMLElement>('.reqore-drawer-backdrop')).map(
+              (el) => getComputedStyle(el).backdropFilter
+            )
+          ).toContain('blur(5px)'),
+        { timeout: 5000 }
+      );
+    } finally {
+      if (captureOverrides && captureOverridesHost) captureOverridesHost.appendChild(captureOverrides);
+    }
+  },
+};
+
 export const ConfirmationModal: Story = {
   parameters: {
     docs: {
@@ -312,6 +366,409 @@ export const ConfirmationModal: Story = {
 
   args: {
     confirm: true,
+  },
+};
+
+/** Opens a destructive confirmation as a caller would, under the app's defaults. */
+const AsksToDelete = () => {
+  const confirmAction = useReqoreProperty('confirmAction');
+  useMount(() => {
+    confirmAction({
+      title: 'Delete this job?',
+      description: 'Its runs and their logs go with it.',
+      intent: 'danger',
+      confirmButtonIntent: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: noop,
+    });
+  });
+  return null;
+};
+
+export const ConfirmationWithAppDefaults: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A destructive confirmation under app-wide defaults (`options.confirmations`): a solid dialog (`surfaceOpacity: 1`) over an unblurred backdrop (`backdropBlur: 0`), the intent on the icon only (`intentLook: \'icon\'`), no "Are you sure you want to proceed?" line under a title that already asks (`content: null`), and the Cancel button in the app\'s own words (`cancelLabel: \'Keep it\'`). The call still names its own confirm label and intent.',
+      },
+    },
+  },
+  render: () => <AsksToDelete />,
+  args: {
+    options: {
+      confirmations: {
+        surfaceOpacity: 1,
+        backdropBlur: 0,
+        intentLook: 'icon',
+        content: null,
+        cancelLabel: 'Keep it',
+      },
+    },
+  },
+  play: async () => {
+    await _testsWaitForText('Delete this job?');
+    await _testsWaitForText('Keep it');
+    await expect(document.body).not.toHaveTextContent('Are you sure you want to proceed?');
+  },
+};
+
+/** A confirmation whose message is a warning the reader has to see whole before they confirm. */
+const RETRY_WARNING =
+  'If ReleaseSupplierPayment had already done part of its work before it failed — sent a ' +
+  'payment, or created a shipment — that part may happen again. Check the supplier’s account ' +
+  'and the carrier’s bookings first. Retry runs the order again from the step that failed, with ' +
+  'the data it has now.';
+
+/** A message no screen holds: it has to scroll, and the buttons must stay in reach. */
+const HUGE_MESSAGE = Array.from(
+  { length: 150 },
+  (_, line) => `Line ${line + 1} of a message that is genuinely huge.`
+).join(' ');
+
+/** The app defaults the calm apps open every confirmation with. */
+const CALM_CONFIRMATIONS = {
+  content: null,
+  backdropBlur: 0,
+  intentLook: 'icon' as const,
+};
+
+const AsksToRetry = ({ description = RETRY_WARNING }: { description?: string }) => {
+  const confirmAction = useReqoreProperty('confirmAction');
+  useMount(() => {
+    confirmAction({
+      title: 'Retry this order?',
+      description,
+      intent: 'warning',
+      confirmLabel: 'Retry',
+      onConfirm: noop,
+    });
+  });
+  return null;
+};
+
+/** The confirmation's message box, once the dialog is open. */
+const confirmationMessage = async (): Promise<HTMLElement> => {
+  await _testsWaitForText('Retry this order?');
+  return requiredElement<HTMLElement>(
+    '.reqore-confirmation-modal .reqore-panel-title-description',
+    "the confirmation's message"
+  );
+};
+
+/** The message is there whole: not clamped, not clipped, every word of it rendered. */
+const expectWholeMessage = async (message: HTMLElement, text: string) => {
+  await expect(message.textContent).toBe(text);
+  await expect(getComputedStyle(message).webkitLineClamp).toMatch(/^(none|)$/);
+  await expect(message.scrollHeight).toBeLessThanOrEqual(message.clientHeight + 1);
+};
+
+/** How many lines `element`'s text is laid out on. */
+const linesOf = (element: HTMLElement): number => {
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  return new Set(Array.from(range.getClientRects(), (rect) => Math.round(rect.top))).size;
+};
+
+/** Both buttons are on screen, inside the viewport, where a reader can press them. */
+const expectButtonsInReach = async () => {
+  const buttons = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      '.reqore-confirmation-modal .reqore-panel-bottom-actions button'
+    )
+  );
+  for (const name of ['Cancel', 'Retry']) {
+    const button = buttons.find((candidate) => candidate.textContent?.trim() === name);
+    await expect(button, `the ${name} button`).toBeTruthy();
+    const rect = button!.getBoundingClientRect();
+    await expect(rect.height).toBeGreaterThan(0);
+    await expect(rect.top).toBeGreaterThanOrEqual(0);
+    await expect(rect.bottom).toBeLessThanOrEqual(window.innerHeight);
+  }
+};
+
+export const ConfirmationShowsItsWholeMessage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A retry confirmation whose message warns that a payment or a shipment may happen again: the whole message is shown under the title, wrapped, with no line clamp and nothing clipped, above Cancel and Retry. Its title starts clear of the dialog\'s 14px corner.',
+      },
+    },
+  },
+  render: () => <AsksToRetry />,
+  args: {
+    otherThemeOptions: { panel: { radius: 14 } },
+    options: { confirmations: CALM_CONFIRMATIONS },
+  },
+  play: async () => {
+    const message = await confirmationMessage();
+    await expectWholeMessage(message, RETRY_WARNING);
+    // More than two lines: a panel's default clamp of 2 would have cut it at "part of its…".
+    await expect(linesOf(message)).toBeGreaterThan(2);
+    // Measured once the dialog has finished opening: until then it is drawn scaled down.
+    await waitFor(async () => {
+      await expectButtonsInReach();
+      await expect(
+        expectLabelsClearTheirCorners(
+          requiredElement('.reqore-confirmation-modal', 'the confirmation')
+        )
+      ).toBe(1);
+    });
+  },
+};
+
+export const ConfirmationShowsItsWholeMessageOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'The same retry confirmation on a phone (390 px): the dialog takes the screen less a 16px gutter each side, and the message wraps to as many lines as it needs — shown whole, nothing clipped — with Cancel and Retry on screen under it.',
+      },
+    },
+  },
+  render: () => <AsksToRetry />,
+  args: {
+    otherThemeOptions: { panel: { radius: 14 } },
+    options: { confirmations: CALM_CONFIRMATIONS },
+  },
+  play: async () => {
+    const message = await confirmationMessage();
+    await expectWholeMessage(message, RETRY_WARNING);
+    // More than two lines: a panel's default clamp of 2 would have cut it at "If…".
+    await expect(linesOf(message)).toBeGreaterThan(2);
+    await waitFor(() => expectButtonsInReach());
+  },
+};
+
+export const ConfirmationWithAHugeMessage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A confirmation whose message is far longer than the screen: the message scrolls in its own box, at most half the screen tall, while the title above it and Cancel and Retry below it stay on screen.',
+      },
+    },
+  },
+  render: () => <AsksToRetry description={HUGE_MESSAGE} />,
+  args: {
+    options: { confirmations: CALM_CONFIRMATIONS },
+  },
+  play: async () => {
+    const message = await confirmationMessage();
+    await expect(message.textContent).toBe(HUGE_MESSAGE);
+    await expect(message.scrollHeight).toBeGreaterThan(message.clientHeight);
+    await expect(message.clientHeight).toBeLessThanOrEqual(window.innerHeight / 2 + 1);
+    await expect(getComputedStyle(message).overflowY).toBe('auto');
+    await waitFor(() => expectButtonsInReach());
+  },
+};
+
+/** A modal opened as a caller would, with a button to open it again after it closes. */
+const SearchDialog = ({ titleBar }: { titleBar?: boolean }) => {
+  const [isOpen, setIsOpen] = useState(true);
+  return (
+    <>
+      <ReqoreButton id='reopen' onClick={() => setIsOpen(true)}>
+        Open search
+      </ReqoreButton>
+      <ReqoreModal
+        isOpen={isOpen}
+        label='Search'
+        titleBar={titleBar}
+        onClose={() => setIsOpen(false)}
+        width='520px'
+      >
+        <ReqoreP>Type to search workflows, jobs and services.</ReqoreP>
+      </ReqoreModal>
+    </>
+  );
+};
+
+/** The width a modal is drawn at: its sized box, the one with an inline width. */
+const drawnWidth = () => {
+  const root = document.querySelector<HTMLElement>('.reqore-modal')!;
+  const sized = [root, ...Array.from(root.querySelectorAll<HTMLElement>('*'))].find(
+    (element) => element.style.width
+  )!;
+  return sized.getBoundingClientRect().width;
+};
+
+export const AFormDialogTakesTheAppsWidth: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A dialog that gives no width of its own, in an app that sets the calm dialog widths (`options.dialogWidth: CALM_DIALOG_WIDTHS`): a form dialog is 720px wide on a wide screen, where 80vw was about 1,500px here and 2,100px on a wider one.',
+      },
+    },
+  },
+  args: { options: { dialogWidth: CALM_DIALOG_WIDTHS } },
+  render: () => (
+    <ReqoreModal isOpen label='Add a connection'>
+      <ReqoreP>Name the connection and say where it points.</ReqoreP>
+    </ReqoreModal>
+  ),
+  play: async () => {
+    await waitFor(() => expect(Math.round(drawnWidth())).toBe(720));
+  },
+};
+
+export const AWideDialogTakesTheAppsWideWidth: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A dialog that says it is wide (`wide`), in an app that sets the calm dialog widths: 960px. A dialog\'s own `width` still wins over both.',
+      },
+    },
+  },
+  args: { options: { dialogWidth: CALM_DIALOG_WIDTHS } },
+  render: () => (
+    <ReqoreModal isOpen wide label='Compare the two versions'>
+      <ReqoreP>The left column is the saved version; the right is yours.</ReqoreP>
+    </ReqoreModal>
+  ),
+  play: async () => {
+    await waitFor(() => expect(Math.round(drawnWidth())).toBe(960));
+  },
+};
+
+export const WithoutTitleBar: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A modal with `titleBar={false}`: no label, icon or close button above its content — for a dialog whose content already says what it is, such as a command palette. Escape still closes it, and its `label` ("Search") is the dialog\'s accessible name.',
+      },
+    },
+  },
+  render: () => <SearchDialog titleBar={false} />,
+  play: async () => {
+    await _testsWaitForText('Type to search workflows, jobs and services.');
+    await expect(document.querySelector('.reqore-modal .reqore-panel-title')).toBeNull();
+    await expect(document.querySelector('[role="dialog"][aria-label="Search"]')).not.toBeNull();
+    await fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() =>
+      expect(document.querySelector('[role="dialog"][aria-label="Search"]')).toBeNull()
+    );
+    // Open again, so the capture shows the dialog without its bar.
+    await _testsClickButton({ selector: '#reopen' });
+    await _testsWaitForText('Type to search workflows, jobs and services.');
+  },
+};
+
+export const OnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'A modal opened on a phone (390 px), asked to be 520px wide: it takes the screen less the page\'s 16px gutter each side (`phoneWidth`, held to `calc(100vw - 32px)`), where 80vw left about 40px each side and a third of the screen unused.',
+      },
+    },
+  },
+  render: () => <SearchDialog />,
+  play: async () => {
+    await _testsWaitForText('Type to search workflows, jobs and services.');
+    const { clientWidth } = document.documentElement;
+    await waitFor(() => {
+      const box = document.querySelector('.reqore-modal') as HTMLElement;
+      expect(Math.round(box.getBoundingClientRect().width)).toBe(clientWidth - 32);
+    });
+  },
+};
+
+const REPORT_ACTIONS: IReqoreModalProps['bottomActions'] = [
+  { label: 'Cancel', position: 'left', minimal: true, flat: true, className: 'story-cancel' },
+  {
+    label: 'Say what went wrong to send it',
+    position: 'right',
+    icon: 'SendPlaneLine',
+    intent: 'info',
+    responsive: false,
+    className: 'story-send',
+  },
+];
+
+/** A report dialog whose Send says what is missing: a long primary beside a Cancel. */
+const ReportDialog = () => (
+  <ReqoreModal isOpen label='Report a problem' width='520px' bottomActions={REPORT_ACTIONS}>
+    <ReqoreP>What went wrong?</ReqoreP>
+  </ReqoreModal>
+);
+
+const cancelAndSend = () => ({
+  bar: document.querySelector<HTMLElement>('.reqore-modal .reqore-panel-bottom-actions')!,
+  cancel: document.querySelector<HTMLElement>('.reqore-modal .story-cancel')!,
+  send: document.querySelector<HTMLElement>('.reqore-modal .story-send')!,
+});
+
+/** Every word of a button is drawn: none of its boxes is cut short. */
+const expectWholeWords = (button: HTMLElement) => {
+  for (const box of [button, ...Array.from(button.querySelectorAll<HTMLElement>('*'))]) {
+    expect(box.scrollWidth, `${box.className} keeps its words`).toBeLessThanOrEqual(box.clientWidth + 1);
+  }
+};
+
+export const ALongActionStacksTheActionsOnAPhone: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'A dialog on a phone (390 px) whose primary action says what is missing ("Say what went wrong to send it") beside a Cancel. The two do not fit on one line, so they stack, each as wide as the bar, the primary on top, and Cancel keeps its word: on one line it was cut to "Can…".',
+      },
+    },
+  },
+  render: () => <ReportDialog />,
+  play: async () => {
+    await _testsWaitForText('What went wrong?');
+    await waitFor(() => expect(cancelAndSend().bar.dataset.stacked).toBe('true'));
+    const { bar, cancel, send } = cancelAndSend();
+    await expect(send.getBoundingClientRect().bottom).toBeLessThanOrEqual(cancel.getBoundingClientRect().top);
+    const barWidth = bar.getBoundingClientRect().width;
+    for (const button of [cancel, send]) {
+      await expect(button.getBoundingClientRect().width).toBeGreaterThan(barWidth * 0.8);
+      expectWholeWords(button);
+    }
+    await expect(cancel.textContent).toBe('Cancel');
+    // a sheet's words sit in the middle of its buttons
+    const words = cancel.querySelector<HTMLElement>('.reqore-button-text-content')!.getBoundingClientRect();
+    const box = cancel.getBoundingClientRect();
+    await expect(Math.abs(words.left - box.left - (box.right - words.right))).toBeLessThanOrEqual(2);
+  },
+};
+
+export const ALongActionStaysBesideCancelWhereItFits: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same dialog on a desktop: the long primary and the Cancel fit on one line, so they stay on it, Cancel at the start and the primary at the end.',
+      },
+    },
+  },
+  render: () => <ReportDialog />,
+  play: async () => {
+    await _testsWaitForText('What went wrong?');
+    // the bar has had its frame to measure itself
+    await sleep(300);
+    const { bar, cancel, send } = cancelAndSend();
+    await expect(bar.dataset.stacked).toBeUndefined();
+    await expect(Math.round(send.getBoundingClientRect().top)).toBe(
+      Math.round(cancel.getBoundingClientRect().top)
+    );
+    await expect(cancel.getBoundingClientRect().right).toBeLessThan(send.getBoundingClientRect().left);
+    expectWholeWords(cancel);
+    expectWholeWords(send);
   },
 };
 
@@ -680,27 +1137,34 @@ export const EscKeyClosestOnlyTopModalWithConfirmation: Story = {
   },
 };
 
-export const CanNotBeClosedWithEscKeyIfUnclosable: Story = {
+export const EscapeCancelsAConfirmation: Story = {
   ...ConfirmationModal,
   parameters: {
     docs: {
       description: {
         story:
-          'Renders Modal in unclosable mode — Escape does not close it.',
+          'Renders a modal with a confirmation over it. The confirmation opens with Cancel focused, its least destructive answer, though the x in its title bar comes first. Escape cancels it, as its Cancel does (APG alertdialog), and leaves the modal under it open: only the dialog in front answers Escape.',
       },
     },
     chromatic: { disable: true },
   },
   play: async ({ canvasElement }) => {
     await _testsWaitForText('Tell me something');
-
-    await sleep(1000);
+    await expect(document.querySelectorAll('.reqore-modal')).toHaveLength(2);
+    const confirmation = document.querySelector<HTMLElement>('.reqore-confirmation-modal')!;
+    await expect(confirmation.querySelector('[aria-label="Close"]')).not.toBeNull();
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        Array.from(confirmation.querySelectorAll('button')).find((button) =>
+          button.textContent?.includes('Cancel')
+        )
+      )
+    );
 
     await fireEvent.keyDown(canvasElement, { key: 'Escape' });
 
-    await sleep(1000);
-
-    await expect(document.querySelectorAll('.reqore-modal')).toHaveLength(2);
+    await waitFor(() => expect(document.querySelector('.reqore-confirmation-modal')).toBeNull());
+    await expect(document.querySelectorAll('.reqore-modal')).toHaveLength(1);
   },
 };
 
@@ -1215,6 +1679,24 @@ export const IsNotDraggableUnlessAsked: Story = {
   },
 };
 
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an open modal on the themed surface: with `theme.panel` set it is a panel like any other — the panel surface, title bar included, and the hairline.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurface>
+      <ReqoreModal isOpen label='A modal on the themed surface' width='420px'>
+        <ReqoreP>Modals are panels, so they follow theme.panel.</ReqoreP>
+      </ReqoreModal>
+    </ThemedSurface>
+  ),
+};
+
 /** The element that has focus, read through the modal's own content: its label, or the option's. */
 const focusedLabel = () => {
   const active = document.activeElement as HTMLElement | null;
@@ -1256,4 +1738,3 @@ export const FocusesTheCheckedOption: Story = {
     await waitFor(() => expect(focusedLabel()).toMatch(/^Week/));
   },
 };
-

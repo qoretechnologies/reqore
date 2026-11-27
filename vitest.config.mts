@@ -5,6 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { configDefaults, defineConfig, mergeConfig } from 'vitest/config';
+import { EAST_OF_UTC_ZONE } from './src/stories/utils/eastOfUtc.mts';
 import { POSIX_LANGUAGE } from './src/stories/utils/posixLocale.mts';
 import viteConfig from './vite.config.mts';
 
@@ -55,7 +56,9 @@ const qlip = qlipVitestPlugin({
  * is POSIX, which the stories tagged `posix-locale` run on (`src/stories/utils/posixLocale.mts`). A
  * new object for each project: Vitest names a project's browser instances on the objects themselves.
  */
-const storyBrowser = (kind: 'desktop' | 'phone' | 'scrollbars' | 'posix-locale' = 'desktop') => ({
+const storyBrowser = (
+  kind: 'desktop' | 'phone' | 'scrollbars' | 'posix-locale' | 'east-of-utc' = 'desktop'
+) => ({
   enabled: true,
   // Vitest 4's @vitest/browser-playwright no longer applies
   // `browser.viewport` to the Playwright context (the line is
@@ -72,21 +75,25 @@ const storyBrowser = (kind: 'desktop' | 'phone' | 'scrollbars' | 'posix-locale' 
   // off. Turning Chromium's touch emulation off over the DevTools protocol (how a touch story used to
   // borrow a desktop page) leaves the page with the hover and pointer the machine reports, not the mouse
   // Playwright launched it with (`--blink-settings=primaryHoverType=2,…`), and a Linux CI runner reports
-  // none: every later story in the page found `(hover: none)` (qorus#646).
+  // none: every later story in the page found `(hover: none)`.
   //
   // Playwright launches Chromium with `--hide-scrollbars`, so a scrollbar takes no room in the other
   // projects, wherever the browser runs. Without it, Chromium on Linux (the CI runner) draws classic
   // 15px scrollbars, as Linux, Windows and a Mac set to always show them do: a layout that has to
-  // leave room for one (a field measured while it draws one, qorus#646) is only seen there. A Mac
+  // leave room for one (a field measured while it draws one) is only seen there. A Mac
   // that shows its scrollbars as it scrolls draws them over the content, so there they take no room.
   //
   // A Chromium that takes its language from the POSIX locale (LC_ALL, then LANG: C, C.UTF-8, POSIX
   // or none, as in most Linux containers) reports `navigator.language` as `en-US@posix`, which is
-  // no BCP 47 tag: `Intl` throws on it (qorus#646). Not every build does: the arm64 Linux one does,
+  // no BCP 47 tag: `Intl` throws on it. Not every build does: the arm64 Linux one does,
   // and the amd64 Linux one the CI runs reports `en-US` whatever the locale or `--lang` says, as a
   // Mac's takes the system's. So the `posix-locale` project does not ask the platform for it: its
   // context is given the language itself (`locale`), which Chromium then reports as it is, Intl's
   // default locale following it, on every platform and build.
+  //
+  // The `east-of-utc` project's browser is in a zone well east of UTC (`EAST_OF_UTC_ZONE`), given
+  // through Playwright's `timezoneId`: there a local midnight is the day before in UTC, so a day sent
+  // through UTC moves. The CI runs in UTC, and the other projects in whatever zone the machine is in.
   provider: playwright({
     ...(kind === 'scrollbars'
       ? { launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } }
@@ -97,6 +104,7 @@ const storyBrowser = (kind: 'desktop' | 'phone' | 'scrollbars' | 'posix-locale' 
         : {
             viewport: { width: 1920, height: 1080 },
             ...(kind === 'posix-locale' ? { locale: POSIX_LANGUAGE } : {}),
+            ...(kind === 'east-of-utc' ? { timezoneId: EAST_OF_UTC_ZONE } : {}),
           },
   }),
   headless: true,
@@ -208,6 +216,26 @@ export default mergeConfig(
             exclude: [...configDefaults.exclude, ...storyFilesWithoutTag('posix-locale')],
             sequence: { groupOrder: 3 },
             browser: storyBrowser('posix-locale'),
+            ...storyTest,
+          },
+        },
+        // The stories tagged `east-of-utc` again, in a browser whose zone is well east of UTC: those
+        // whose dates depend on the browser's zone. No qlip: their frames are the desktop project's.
+        {
+          extends: true,
+          plugins: [
+            storybookTest({
+              configDir: path.join(dirname, '.storybook'),
+              storybookScript: 'yarn storybook --no-open',
+              // a touch story runs on the phone only (`.storybook/vitest.setup.ts`)
+              tags: { include: ['east-of-utc'], exclude: ['touch'] },
+            }),
+          ],
+          test: {
+            name: 'storybook-east-of-utc',
+            exclude: [...configDefaults.exclude, ...storyFilesWithoutTag('east-of-utc')],
+            sequence: { groupOrder: 3 },
+            browser: storyBrowser('east-of-utc'),
             ...storyTest,
           },
         },

@@ -6,6 +6,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, expect } from 'vitest';
 import { server } from 'vitest/browser';
 import * as previewAnnotations from './preview';
 import { reactWarningsFailure, type IReactWarning } from '../src/stories/utils/reactWarningGate';
+import { EAST_OF_UTC_STORY_PROJECT, EAST_OF_UTC_ZONE } from '../src/stories/utils/eastOfUtc.mts';
 import { POSIX_LANGUAGE, POSIX_LOCALE_STORY_PROJECT } from '../src/stories/utils/posixLocale.mts';
 import { SCROLLBARS_STORY_PROJECT, scrollbarWidth } from '../src/stories/utils/scrollbars';
 import { TOUCH_STORY_PROJECT } from '../src/stories/utils/touchScreen';
@@ -68,7 +69,7 @@ document.head.appendChild(style);
 
 /* A story fails when a ResizeObserver callback changes the layout it observes in the same frame: the
    browser leaves the change unreported until the next one and says so with an error event whose message
-   is "ResizeObserver loop completed with undelivered notifications" (qorus#646). Vitest only logs that
+   is "ResizeObserver loop completed with undelivered notifications". Vitest only logs that
    event (it carries no error object), so it is caught here. The listener goes on through EventTarget, not
    `window.addEventListener`: Vitest counts the error listeners a page adds that way and stops reporting
    any unhandled error once there is one. */
@@ -99,7 +100,7 @@ afterEach(async () => {
 
 /* Each story's browser is the one its project promises (vitest.config.mts): a desktop with a mouse, or, for
    the stories tagged `touch`, a phone. The phone's stories run first, so every desktop story checks, after
-   them, that it still has its mouse: a touch screen that left a desktop page without one (qorus#646) fails
+   them, that it still has its mouse: a touch screen that left a desktop page without one fails
    the next story here.
 
    And its scrollbars: hidden, taking no room, but in the project of the stories tagged `scrollbars`, whose
@@ -110,7 +111,10 @@ afterEach(async () => {
    And the browser of the stories tagged `posix-locale` reports the POSIX locale's language
    (`POSIX_LANGUAGE`), on every platform: given it another way (the platform's locale, which the
    amd64 Chromium the CI runs does not follow), it reported `en-US` there and passed those stories
-   without checking anything. */
+   without checking anything.
+
+   And the browser of the stories tagged `east-of-utc` is in `EAST_OF_UTC_ZONE`: in any other zone west of
+   it they would pass without checking anything. */
 beforeEach(() => {
   const project = server.config.name ?? '';
   const promised = onThePhone()
@@ -133,6 +137,13 @@ beforeEach(() => {
       [navigator.language, ...navigator.languages],
       `the "${project}" project's browser reports the POSIX locale's language`
     ).toEqual([POSIX_LANGUAGE, POSIX_LANGUAGE]);
+  }
+
+  if (inProject(EAST_OF_UTC_STORY_PROJECT)) {
+    expect(
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      `the "${project}" project's browser is east of UTC`
+    ).toBe(EAST_OF_UTC_ZONE);
   }
 });
 

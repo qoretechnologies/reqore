@@ -21,7 +21,7 @@ import { IReqoreButtonProps } from '../src/components/Button';
  * minimal buttons, and no prop the caller passes can fix it, because the group
  * is what overwrote it.
  *
- * Reported against a Qorus IDE connection page: three flat icon buttons in an
+ * Reported against an app's connection page: three flat icon buttons in an
  * action rail and one filled box, which was its ping button — a wrapper with
  * `minimal` defaulted.
  */

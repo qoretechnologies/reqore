@@ -13,7 +13,7 @@ import { IReqoreContext } from '../context/ReqoreContext';
 import { TReqoreDataAttributes } from '../types/global';
 import ThemeContext from '../context/ThemeContext';
 import { buildTheme, getMainBackgroundColor, getReadableColor } from '../helpers/colors';
-import ReqoreProvider from './ReqoreProvider';
+import ReqoreProvider, { IReqoreConfirmationDefaults } from './ReqoreProvider';
 import ReqoreThemeProvider from './ThemeProvider';
 
 export interface IReqoreOptions
@@ -27,12 +27,18 @@ export interface IReqoreOptions
     | 'errorBoundaryOptions'
     | 'glowingIcons'
     | 'shortcutHints'
+    | 'backdropBlur'
+    | 'dialogOpacity'
+    | 'dialogWidth'
+    | 'dialogBlur'
     | 'schedule'
   > {
   withSidebar?: boolean;
   uiScale?: number;
   /** Defaults for every notification added through `addNotification`. */
   notifications?: IReqoreNotificationDefaults;
+  /** Defaults for every confirmation opened through `confirmAction`: its words, its look. */
+  confirmations?: IReqoreConfirmationDefaults;
 }
 /**
  * Props for the top-level UI provider that wires Reqore theme and global layout.
@@ -59,7 +65,41 @@ export interface IReqoreUIProviderProps {
  */
 export const WRAPPED_CONTROL_GROUP_CHILD_SELECTOR = ':where(.reqore-control-group-wrapped) > *';
 
-const GlobalStyle = createGlobalStyle`
+/**
+ * What reduced motion stills: Reqore's own elements, each named by a class that starts with
+ * `reqore-`, and what they draw before and after them, in the layout and in the portal its dialogs,
+ * popovers and notifications open in: Reqore's own, and the one the app names (`customPortalId`,
+ * where drawers, modals and popovers then open). Not every element in there: the app's own elements
+ * inside the layout keep the transitions the app gave them.
+ */
+export const getReducedMotionSelectors = (customPortalId?: string): string[] => [
+  '.reqore-layout-wrapper',
+  ...['.reqore-layout-wrapper', '#reqore-portal', ...(customPortalId ? [customPortalId] : [])].flatMap(
+    (scope) =>
+      ['', '::before', '::after'].flatMap((part) =>
+        ["[class^='reqore-']", "[class*=' reqore-']"].map((own) => `${scope} ${own}${part}`)
+      )
+  ),
+];
+
+/** What reduced motion stills where the app names no portal of its own (`getReducedMotionSelectors`). */
+export const REDUCED_MOTION_SELECTORS: string[] = getReducedMotionSelectors();
+
+/**
+ * The provider's reduced-motion rule (WCAG 2.3.3): what Reqore draws changes at once, its own
+ * elements only (`getReducedMotionSelectors`), and only for a user who asked for reduced motion.
+ * A hair of a duration, not none: a transition of no time sends no `transitionend`, which some
+ * components wait for. Reqore's springs settle at once in their own components (immediate under
+ * `usePrefersReducedMotion`).
+ */
+export const getReducedMotionCss = (customPortalId?: string): string => `@media (prefers-reduced-motion: reduce) {
+  ${getReducedMotionSelectors(customPortalId).join(', ')} {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+}`;
+
+const GlobalStyle = createGlobalStyle<{ $customPortalId?: string }>`
   /* It does not inherit: it says what one child's own margin takes, not what is inside that child. */
   @property ${CONTROL_GROUP_COLLAPSE_VARIABLE} {
     syntax: '<length>';
@@ -86,11 +126,14 @@ const GlobalStyle = createGlobalStyle`
   /* A wrapped control group's child is never wider than the group (WRAPPED_CONTROL_GROUP_CHILD_SELECTOR). A child
      as wide as content that does not wrap - a button saying a value and its description, or a group holding one -
      stayed that wide, past the group and the card it was in: a data provider's path ran 487-712px wide in a 346px
-     card on a phone (qorus#646). */
+     card on a phone. */
   ${WRAPPED_CONTROL_GROUP_CHILD_SELECTOR} {
     max-width: ${CONTROL_GROUP_CHILD_MAX_WIDTH};
     min-width: 0;
   }
+
+  /* Reduced motion: see getReducedMotionCss. Nothing changes for anyone who has not asked for it. */
+  ${({ $customPortalId }) => getReducedMotionCss($customPortalId)}
 `;
 
 const StyledPortal = styled.div`
@@ -102,11 +145,18 @@ const StyledPortal = styled.div`
     color: ${getReadableColor(theme, undefined, undefined, true)};
   `}
 
-  /* The portal is outside the layout wrapper, so it names the theme's font itself. */
+  /* The portal is outside the layout wrapper, so it names the theme's font and line height
+     itself. */
   ${({ theme }) =>
     theme.fontFamily &&
     css`
       font-family: ${getFontFamily(theme.fontFamily)};
+    `}
+
+  ${({ theme }) =>
+    theme.typeScale?.lineHeight &&
+    css`
+      line-height: ${theme.typeScale.lineHeight};
     `}
 `;
 
@@ -138,7 +188,7 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = memo(
       <>
         <ThemeContext.Provider value={{ ...rebuiltTheme }}>
           <ReqoreThemeProvider>
-            <GlobalStyle />
+            <GlobalStyle $customPortalId={options?.customPortalId} />
           </ReqoreThemeProvider>
           <ReqoreLayoutWrapper {...layoutWrapperProps} withSidebar={options?.withSidebar}>
             {modalPortal ? <ReqoreProvider options={options}>{children}</ReqoreProvider> : null}

@@ -11,7 +11,7 @@ import {
 
 /**
  * A field that offers templates lists them when the author comes into it, by a click, a tap or the keyboard
- * (qorus#646, David: a value's field, tabbed into, offered nothing). The list a click opens is the click's:
+ * (a value's field, tabbed into, offered nothing). The list a click opens is the click's:
  * the focus the click brings does not open it a second time, which would close it again. And focus that
  * comes back to the field from the list - a template picked - does not open it again.
  */
@@ -151,7 +151,7 @@ describe('a template list', () => {
  * A chip in a rich-text field takes the focus from the editor for the moment it is pressed, and its click
  * hands it back. That focus never left the field: it is not the author coming into it from the keyboard.
  * Taken for one, it opened the list, whose keep-below rule scrolled the page by the list's height, and
- * handing the focus back closed it again: the page jumped by ~137px and showed nothing (qorus-ide).
+ * handing the focus back closed it again: the page jumped by ~137px and showed nothing.
  */
 describe('a chip in a rich-text field that offers templates', () => {
   const value = [
